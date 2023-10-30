@@ -1,187 +1,202 @@
-import { MouseEvent, useState } from "react";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { motion } from "framer-motion";
-import { MdEmail } from "react-icons/md";
-import { RiLockPasswordFill } from "react-icons/ri";
+import { useState } from "react";
 import { BeatLoader } from "react-spinners";
-import { firebaseApp } from "@/firebase/firebase.config";
+import { HiAtSymbol, HiFingerPrint } from "react-icons/hi";
 import { useRouter } from "next/router";
-import { useDispatch } from "react-redux";
-import { setUserInfo } from "@/store/calgarySlice";
+import AuthLayout from "@/components/layout/AuthLayout";
+import Link from "next/link";
+import styles from "@/styles/Form.module.css";
+import Image from "next/image";
+import { SignInResponse, signIn } from "next-auth/react";
+import { useFormik } from "formik";
+import { signInValidate } from "@/lib/validate";
 
 const HandleSignin = () => {
-  const dispatch = useDispatch();
   const router = useRouter();
-  const auth = getAuth(firebaseApp);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errEmail, setErrEmail] = useState("");
-  const [errPassword, setErrPassword] = useState("");
-  const [errFirebase, setErrFirebase] = useState("");
 
   // Loading state start
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
+  const [show, setShow] = useState(false);
 
-  const handleEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    setErrEmail("");
-  };
-
-  const handlePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    setErrPassword("");
-  };
-
-  const handleSignin = (e: MouseEvent) => {
-    e.preventDefault();
-
-    if (!email) {
-      setErrEmail("Enter your email");
-    }
-
-    if (!password) {
-      setErrPassword("Enter your password");
-    }
-
-    if (email && password) {
+  // Formik hook
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    validate: signInValidate,
+    onSubmit: async (values, { setStatus }) => {
       setLoading(true);
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log(user);
-          setLoading(false);
-
-          if (!user.emailVerified) {
-            setErrFirebase(
-              "Please confirm the verification link in your email."
-            );
-          } else {
-            dispatch(
-              setUserInfo({
-                _id: user.uid,
-                name: user.displayName,
-                email: user.email,
-                image: user.photoURL,
-              })
-            );
-            // TODO : After signin redirect to sucess page
-            router.push("/");
-          }
-        })
-        .catch((error) => {
-          setLoading(false);
-          setErrFirebase(
-            "Neither the email nor the password is incorrect. Please try with the correct credentials."
-          );
+      try {
+        const status: SignInResponse | undefined = await signIn("credentials", {
+          redirect: false,
+          email: values.email,
+          password: values.password,
         });
-      setEmail("");
-      setPassword("");
+
+        setLoading(false);
+        console.log(status);
+        if (status?.error) {
+          console.log(status.error);
+          setStatus({
+            error: { signInError: status.error },
+          });
+        } else {
+          router.push("/");
+        }
+      } catch (error) {
+        setLoading(false);
+        console.log("client signIn error");
+      }
+    },
+  });
+
+  const handleSignin = async (signinProvider: string) => {
+    try {
+      await signIn(signinProvider, { callbackUrl: "http://localhost:3000" });
+    } catch (error) {
+      console.log(error);
     }
   };
 
   return (
-    <div className="w-full">
-      <div className="w-full pb-10">
-        <div className="w-[370px] bg-white mx-auto items-center flex flex-col shadow-md rounded-xl px-4 sm:px-6 md:px-8 lg:px-10 py-8 max-w-md">
-          <div className="font-medium self-center text-xl sm:text-3xl text-gray-700">
-            로그인
-          </div>
-          <div className="mt-4 self-center text-xl sm:text-sm text-gray-800">
+    <AuthLayout>
+      <section className="w-3/4 mx-auto flex flex-col gap-10">
+        <div className="title">
+          <h1 className="text-gray-700 text-4xl font-bold py-4">로그인</h1>
+          <p className="w-3/4 mx-auto text-gray-300">
             Enter your credentials to get access account
-          </div>
-          <div className="mt-5 w-full">
-            <form>
-              <div className="flex flex-col mb-5">
-                <label
-                  htmlFor="email"
-                  className="mb-1 text-sm tracking-wide text-gray-700">
-                  이메일:
-                </label>
-                <div className="relative">
-                  <span className="inline-flex items-center justify-center absolute left-0 top-0 h-full w-10">
-                    <MdEmail className="text-teal-500" />
-                  </span>
-                  <input
-                    onChange={handleEmail}
-                    value={email}
-                    className="text-sm placeholder-gray-500 pl-10 pr-4 rounded-md border order-gray-400 w-full py-2 focus:outline-none focus:border-teal-400"
-                    placeholder="Enter your email"
-                  />
-                </div>
-                {errEmail && (
-                  <p className="text-red-600 text-xs font-semibold tracking-wide flex items-center gap-2 ml-1">
-                    <span className="italic text-base font-extrabold">!</span>{" "}
-                    {errEmail}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col mb-5">
-                <label
-                  htmlFor="password"
-                  className="mb-1 text-sm tracking-wide text-gray-700">
-                  비밀번호:
-                </label>
-                <div className="relative">
-                  <span className="inline-flex items-center justify-center absolute left-0 top-0 h-full w-10">
-                    <RiLockPasswordFill className="text-teal-500" />
-                  </span>
-                  <input
-                    onChange={handlePassword}
-                    value={password}
-                    type="password"
-                    className="text-sm placeholder-gray-500 pl-10 pr-4 rounded-md border  order-gray-400 w-full py-2 focus:outline-none focus:border-teal-400"
-                    placeholder="Enter your password"
-                  />
-                </div>
-                {errPassword && (
-                  <p className="text-red-600 text-xs font-semibold tracking-wide flex items-center gap-2 ml-1">
-                    <span className="italic text-base font-extrabold">!</span>{" "}
-                    {errPassword}
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={handleSignin}
-                type="submit"
-                className="flex mt-2 items-center justify-center focus:outline-none text-white text-sm sm:text-base bg-teal-500 hover:bg-teal-600 rounded-md py-2 w-full transition duration-150 ease-in"
-                disabled={loading}>
-                {!loading && <span className="mr-2 uppercase">Login</span>}
-                {loading && (
-                  <span className="flex justify-center">
-                    <BeatLoader color="#ffffff" size={20} />
-                  </span>
-                )}
-                <span>{/* 아이콘 넣기 */}</span>
-              </button>
-              {errFirebase && (
-                <p className="text-red-600 text-xs font-semibold tracking-wide flex items-center gap-2 ml-1 mt-5">
-                  <span className="italic text-base font-extrabold">!</span>{" "}
-                  {errFirebase}
-                </p>
-              )}
-              {successMsg && (
-                <div>
-                  <motion.p
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="text-base mt-5 font-titleFont font-semibold text-teal-500 border-[1px] border-teal-600 px-2 text-center">
-                    {successMsg}
-                  </motion.p>
-                </div>
-              )}
-            </form>
-            <p className="text-xs text-black leading-4 mt-4">
-              By Continuing, you agree to MakeCalgaryTalk{"'"}s{" "}
-              <span className="text-teal-600">Condition of Use</span> and{" "}
-              <span className="text-teal-600">Privacy Notice.</span>
-            </p>
-          </div>
+          </p>
         </div>
-      </div>
-    </div>
+        {/* form */}
+        <form onSubmit={formik.handleSubmit} className="flex flex-col gap-5">
+          <div
+            className={`${styles.inputGroup} ${
+              formik.errors.email && formik.touched.email
+                ? "border-rose-600"
+                : ""
+            }`}>
+            <input
+              type="email"
+              placeholder="Email"
+              className={styles.inputText}
+              {...formik.getFieldProps("email")}
+            />
+            <span className="icon flex items-center px-4 bg-slate-50 rounded-tr-xl rounded-br-xl ">
+              <HiAtSymbol size={25} />
+            </span>
+          </div>
+          {formik.errors.email && formik.touched.email ? (
+            <span className="text-red-600 text-xs font-semibold tracking-wide flex items-center justify-center">
+              {formik.errors.email}
+            </span>
+          ) : (
+            <></>
+          )}
+          <div
+            className={`${styles.inputGroup} ${
+              formik.errors.password && formik.touched.password
+                ? "border-rose-600"
+                : ""
+            }`}>
+            <input
+              type={`${show ? "text" : "password"}`}
+              placeholder="Password"
+              className={styles.inputText}
+              {...formik.getFieldProps("password")}
+            />
+            <span
+              onClick={() => setShow(!show)}
+              className="icon flex items-center px-4 bg-slate-50 rounded-tr-xl rounded-br-xl ">
+              <HiFingerPrint size={25} />
+            </span>
+          </div>
+          {formik.errors.password && formik.touched.password ? (
+            <span className="text-red-600 text-xs font-semibold tracking-wide flex items-center justify-center">
+              {formik.errors.password}
+            </span>
+          ) : (
+            <></>
+          )}
+          {formik.status && formik.status.error.signInError ? (
+            <span className="text-red-600 text-xs font-semibold tracking-wide flex items-center justify-center">
+              {formik.status.error.signInError}
+            </span>
+          ) : (
+            <></>
+          )}
+          {/* login button */}
+          <div className="input-button mb-5">
+            {!loading ? (
+              <button
+                type="submit"
+                className={`${styles.button} disabled=${loading}`}>
+                Login
+              </button>
+            ) : (
+              <span className="flex justify-center">
+                <BeatLoader color="rgb(99 102 241)" size={20} />
+              </span>
+            )}
+          </div>
+          <p className="w-full text-sm text-gray-600 mb-5 flex items-center">
+            <span className="w-1/3 h-[1px] bg-zinc-400 inline-flex"></span>
+            <span className="w-1/3 text-center font-semibold">간편 로그인</span>
+            <span className="w-1/3 h-[1px] bg-zinc-400 inline-flex"></span>
+          </p>
+          <div className="flex items-center justify-center">
+            <Image
+              src={"/assets/btn_kakao.svg"}
+              width={25}
+              height={25}
+              className="mr-3 cursor-pointer"
+              alt="kakao"
+              onClick={() => handleSignin("kakao")}
+            />
+            <Image
+              src={"/assets/btn_google.svg"}
+              width={25}
+              height={25}
+              className="mr-3 cursor-pointer"
+              alt="google"
+              onClick={() => handleSignin("google")}
+            />
+            <Image
+              src={"/assets/btn_naver.svg"}
+              width={25}
+              height={25}
+              className="mr-3 cursor-pointer"
+              alt="naver"
+              onClick={() => handleSignin("naver")}
+            />
+            <Image
+              src={"/assets/github.svg"}
+              width={25}
+              height={25}
+              className="mr-3 cursor-pointer"
+              alt="github"
+              onClick={() => handleSignin("github")}
+            />
+          </div>
+        </form>
+        <p className="text-center">
+          {" 아직 계정이 없으신가요? "}
+          <Link href="signup">
+            <span className="text-blue-700">회원가입</span>
+          </Link>
+        </p>
+        {/* bottom */}
+        <p className="text-xs leading-4">
+          By Continuing, you agree to MakeCalgaryTalk{"'"}s{" "}
+          <span className="text-blue-700">Condition of Use</span> and{" "}
+          <span className="text-blue-700">Privacy Notice.</span>
+        </p>
+        {loading && (
+          <span className="flex justify-center">
+            <BeatLoader color="#ffffff" size={20} />
+          </span>
+        )}
+      </section>
+    </AuthLayout>
   );
 };
 

@@ -3,7 +3,7 @@ import MainMenu from "@/components/MainMenu";
 export default function Home() {
   return (
     <>
-      <div className="mx-auto max-w-full md:max-w-8xl">
+      <div className="mx-auto max-w-full md:max-w-7xl">
         <div className="w-full px-6 grid grid-cols-8 gap-4">
           <aside className="hidden md:flex md:flex-col sticky top-0 md:col-span-2">
             <MainMenu />

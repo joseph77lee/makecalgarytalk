@@ -8,7 +8,7 @@ export const calgarySlice = createSlice({
   name: 'calgary',
   initialState,
   reducers: {
-    setUserInfo: (state, action) => {
+    addtUserInfo: (state, action) => {
       state.userInfo = action.payload;
     },
     removeUserInfo: (state) => {
@@ -18,5 +18,5 @@ export const calgarySlice = createSlice({
 });
 
 
-export const { setUserInfo, removeUserInfo } = calgarySlice.actions;
+export const { addtUserInfo, removeUserInfo } = calgarySlice.actions;
 export default calgarySlice.reducer;
