@@ -1,4 +1,7 @@
+import FeedFreeBoard from "@/components/FeedFreeBoard";
+import FeedFreeBoardItem from "@/components/FeedFreeBoardItem";
 import MainMenu from "@/components/MainMenu";
+import PostFreeBoard from "@/components/PostFreeBoard";
 
 export default function Home() {
   return (
@@ -9,7 +12,8 @@ export default function Home() {
             <MainMenu />
           </aside>
           <main className="col-span-8 md:col-span-6 min-h-screen bg-blue-100">
-            <p>Content</p>
+            <PostFreeBoard />
+            <FeedFreeBoard />
           </main>
         </div>
       </div>

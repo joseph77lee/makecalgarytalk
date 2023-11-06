@@ -6,16 +6,22 @@ import AuthLayout from "@/components/layout/AuthLayout";
 import Link from "next/link";
 import styles from "@/styles/Form.module.css";
 import Image from "next/image";
-import { SignInResponse, signIn } from "next-auth/react";
+// import { SignInResponse, signIn } from "next-auth/react";
 import { useFormik } from "formik";
 import { signInValidate } from "@/lib/validate";
+import { useSignInWithGoogle } from "react-firebase-hooks/auth";
+import { auth } from "@/firebase/firebase.config";
+import { FIREBASE_ERRORS } from "@/firebase/errors";
 
 const HandleSignin = () => {
   const router = useRouter();
 
   // Loading state start
-  const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
+  let [signinWIthGoogle, user, loading, authError] = useSignInWithGoogle(auth);
+
+  let [signInWithEmailAndPassword, user, loading, error] =
+    useSignInWithEmailAndPassword(auth);
 
   // Formik hook
   const formik = useFormik({
@@ -24,38 +30,11 @@ const HandleSignin = () => {
       password: "",
     },
     validate: signInValidate,
-    onSubmit: async (values, { setStatus }) => {
-      setLoading(true);
-      try {
-        const status: SignInResponse | undefined = await signIn("credentials", {
-          redirect: false,
-          email: values.email,
-          password: values.password,
-        });
-
-        setLoading(false);
-        console.log(status);
-        if (status?.error) {
-          console.log(status.error);
-          setStatus({
-            error: { signInError: status.error },
-          });
-        } else {
-          router.push("/");
-        }
-      } catch (error) {
-        setLoading(false);
-        console.log("client signIn error");
-      }
-    },
+    onSubmit: async (values, { setStatus }) => {},
   });
 
   const handleSignin = async (signinProvider: string) => {
-    try {
-      await signIn(signinProvider, { callbackUrl: "http://localhost:3000" });
-    } catch (error) {
-      console.log(error);
-    }
+    signinWIthGoogle();
   };
 
   return (
@@ -117,9 +96,16 @@ const HandleSignin = () => {
           ) : (
             <></>
           )}
-          {formik.status && formik.status.error.signInError ? (
+          {authError &&
+          FIREBASE_ERRORS[
+            authError?.message as keyof typeof FIREBASE_ERRORS
+          ] ? (
             <span className="text-red-600 text-xs font-semibold tracking-wide flex items-center justify-center">
-              {formik.status.error.signInError}
+              {
+                FIREBASE_ERRORS[
+                  authError?.message as keyof typeof FIREBASE_ERRORS
+                ]
+              }
             </span>
           ) : (
             <></>

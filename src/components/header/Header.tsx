@@ -6,6 +6,7 @@ import { IoCloseSharp } from "react-icons/io5";
 import { AiOutlineMenu } from "react-icons/ai";
 import { MdAccountCircle } from "react-icons/md";
 import { FiLogOut } from "react-icons/fi";
+import { FaUserCircle } from "react-icons/fa";
 import MainMenu from "../MainMenu";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,19 +14,21 @@ import { StateProps } from "../../../type";
 import { addtUserInfo, removeUserInfo } from "@/store/calgarySlice";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
+import { useRouter } from "next/router";
 
 const Header = () => {
   const { data: session } = useSession();
   const dispatch = useDispatch();
+  const router = useRouter();
   const { userInfo } = useSelector((state: StateProps) => state.calgary);
   const ref = useRef<HTMLDivElement>(null);
   const [sidebar, setSidebar] = useState(false);
 
   useEffect(() => {
-    console.log("Client session---->", session);
     if (session) {
       dispatch(
         addtUserInfo({
+          uid: session?.user?.uid,
           name: session?.user?.name,
           email: session?.user?.email,
           image: session?.user?.image,
@@ -43,7 +46,7 @@ const Header = () => {
   }, [dispatch, session]);
 
   const handleSignin = () => {
-    signIn();
+    router.push("/signin");
   };
 
   const handleLogout = async () => {
@@ -70,11 +73,15 @@ const Header = () => {
               <div className="text-gray-600 pl-6 border-gray-200 ml-auto">
                 {userInfo ? (
                   <div className="flex items-center">
-                    <img
-                      src={userInfo.image}
-                      alt="userImage"
-                      className="w-8 h-8 rounded-full object-cover mr-2"
-                    />
+                    {userInfo.image ? (
+                      <img
+                        src={userInfo.image}
+                        alt="userImage"
+                        className="w-8 h-8 rounded-full object-cover mr-2"
+                      />
+                    ) : (
+                      <FaUserCircle className="text-gray-600 w-8 h-8 mr-2" />
+                    )}
                     <p className="mr-3 pr-3 border-r border-gray-200">
                       {userInfo.name}
                     </p>

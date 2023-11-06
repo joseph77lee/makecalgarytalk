@@ -8,18 +8,23 @@ import {
 import { useState } from "react";
 import { HiAtSymbol, HiFingerPrint, HiOutlineUser } from "react-icons/hi";
 import { BeatLoader } from "react-spinners";
-import { firebaseApp } from "@/firebase/firebase.config";
+import { auth } from "@/firebase/firebase.config";
+import { FIREBASE_ERRORS } from "@/firebase/errors";
 import { useRouter } from "next/router";
 import AuthLayout from "@/components/layout/AuthLayout";
 import styles from "@/styles/Form.module.css";
 import { useFormik } from "formik";
 import { signUpValidate } from "@/lib/validate";
+import { FirebaseError } from "firebase/app";
+import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 
 const HandleSignup = () => {
   const router = useRouter();
-  const auth = getAuth(firebaseApp);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [show, setShow] = useState({ password: false, cpassword: false });
+
+  const [createUserWithEmailAndPassword, user, loading, authError] =
+    useCreateUserWithEmailAndPassword(auth);
 
   const formik = useFormik({
     initialValues: {
@@ -30,27 +35,32 @@ const HandleSignup = () => {
     },
     validate: signUpValidate,
     onSubmit: async (values, { setStatus, validateField }) => {
-      setLoading(true);
       try {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          values.email,
-          values.password
-        );
-        await updateProfile(userCredential.user, {
-          displayName: values.nickname,
-        });
-        setLoading(false);
-        router.push("/");
-      } catch (error: any) {
-        const errorCode = error.code;
-        if (errorCode.includes("auth/email-already-in-use")) {
+        createUserWithEmailAndPassword(values.email, values.password);
+        console.log(authError);
+        // if (user && auth.currentUser) {
+        //   try {
+        //     await sendEmailVerification(auth.currentUser);
+        //     router.push("finishSignUp");
+        //   } catch (error) {
+        //     throw new FirebaseError(
+        //       "email-verification-error",
+        //       "Email verification code not sent"
+        //     );
+        //   }
+        // }
+      } catch (error) {
+        console.log("Signup error--->", error);
+        const e = error as FirebaseError;
+        if (e.code.includes("auth/email-already-in-use")) {
           setStatus({
             error: { emailUsed: "Email already in use, Try another one." },
           });
+        } else if (e.code.includes("email-verification-error")) {
+          setStatus({
+            error: { verificationError: e.message },
+          });
         }
-        console.log(errorCode);
-        setLoading(false);
       }
     },
   });
@@ -92,7 +102,10 @@ const HandleSignup = () => {
           <div
             className={`${styles.inputGroup} ${
               (formik.errors.email && formik.touched.email) ||
-              (formik.status && formik.status.error.emailUsed)
+              (authError &&
+                FIREBASE_ERRORS[
+                  authError?.message as keyof typeof FIREBASE_ERRORS
+                ])
                 ? "border-rose-600"
                 : ""
             }`}>
@@ -113,9 +126,16 @@ const HandleSignup = () => {
           ) : (
             <></>
           )}
-          {formik.status && formik.status.error.emailUsed ? (
+          {authError &&
+          FIREBASE_ERRORS[
+            authError?.message as keyof typeof FIREBASE_ERRORS
+          ] ? (
             <span className="text-red-600 text-xs font-semibold tracking-wide flex items-center justify-center">
-              {formik.status.error.emailUsed}
+              {
+                FIREBASE_ERRORS[
+                  authError?.message as keyof typeof FIREBASE_ERRORS
+                ]
+              }
             </span>
           ) : (
             <></>
@@ -166,6 +186,13 @@ const HandleSignup = () => {
           {formik.errors.cpassword && formik.touched.cpassword ? (
             <span className="text-red-600 text-xs font-semibold tracking-wide flex items-center justify-center">
               {formik.errors.cpassword}
+            </span>
+          ) : (
+            <></>
+          )}
+          {formik.status && formik.status.error.verificationError ? (
+            <span className="text-red-600 text-xs font-semibold tracking-wide flex items-center justify-center">
+              {formik.status.error.verificationError}
             </span>
           ) : (
             <></>

@@ -11,14 +11,14 @@
   @apply bg-[url('/assets/cloud_1.png')] bg-no-repeat absolute top-[65%] left-[100%]
   w-[180px] h-[100px] bg-contain z-20;
   transform: translateX(110%);
-  /* animation: cloud_one 25.5s ease-in 5.9s infinite; */
+  animation: cloud_one 25.5s ease-in 5.9s infinite;
 }
 
 .cloud_two{
   @apply bg-[url('/assets/cloud_2.png')] bg-no-repeat absolute top-[49%] left-[100%]
   w-[120px] h-[100px] bg-contain z-0;
   transform: translateX(110%);
-  /* animation: cloud_two 18.5s ease-in .9s infinite; */
+  animation: cloud_two 18.5s ease-in .9s infinite;
 }
 
 /* css keyframes */
@@ -26,14 +26,14 @@
   0%{
       transform: translateX(110%);
   }100%{
-      transform: translateX(-350%);
+      transform: translateX(-450%);
   }
 }
 
 @keyframes cloud_two{
   0%{
-      transform: translateX(160%);
+      transform: translateX(130%);
   }100%{
-      transform: translateX(-350%);
+      transform: translateX(-600%);
   }
 }
