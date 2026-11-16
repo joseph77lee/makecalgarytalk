@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.3 |
+| Document version | v1.4 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-16 |
 | Status | Initial draft for starting MVP development |
@@ -395,7 +395,7 @@ Because every island has the same shape, each community gets its identity from:
 ### 19.0 MVP art policy
 - **The MVP uses only simple shapes, no detailed art.**
   - World Map: flat pastel 2D polygons of community boundaries (Vitality tone; grey = unsettled)
-  - Community view: **three.js scene built from coloured boxes** — island tiles, box trees, box houses with box roofs, labelled box buildings, translucent/grey boxes for locked silhouettes, two-box characters for avatar and mini villagers
+  - Community view: **react-three-fiber (three.js) scene built from coloured boxes** — island tiles, box trees, box houses with box roofs, labelled box buildings, translucent/grey boxes for locked silhouettes, two-box characters for avatar and mini villagers
   - Projects: box construction site + progress bar UI
 - Because the target style is voxel (made of boxes), the box-based MVP already looks close to the target. A working proof of concept was built on 2026-11-16 (~100 lines of three.js: floating island, layered dirt, box trees/houses, wandering villagers, HTML speech bubbles, tap-to-move avatar, construction progress, island growth).
 - Purpose: ship the full MVP fast and validate the core loop before investing in art.
@@ -437,16 +437,24 @@ Because every island has the same shape, each community gets its identity from:
 
 ### 20.1 Stack
 
+**All TypeScript (+ SQL), serverless. No always-on backend server.**
+
 | Area | Technology |
 |---|---|
-| Web UI (menus, news, login, etc.) | Angular |
-| Community view (3D voxel diorama) | three.js (orthographic camera, InstancedMesh for tiles, CSS2D/HTML overlays for bubbles and labels) |
-| World Map (2D) | SVG or Canvas rendering of community boundary polygons |
-| Backend API | Spring Boot |
+| Frontend app | **React + Vite + TypeScript** (SPA) |
+| Community view (3D voxel diorama) | **react-three-fiber** (React renderer for three.js) + **drei** helpers (`OrthographicCamera`, `Instances` for repeated blocks, `Html` for speech bubbles/labels, controls, shadows) |
+| World Map (2D) | SVG rendered by React (community boundary polygons) |
+| State management | **Zustand** |
+| UI styling | **Tailwind CSS** |
 | Database | Supabase PostgreSQL + PostGIS |
 | Auth | Supabase Auth (Anonymous + Google linking) |
-| Static files / snapshots | Cloudflare Pages / R2 |
-| Bot protection | Cloudflare Turnstile |
+| Game rules (server-side) | **Supabase Postgres functions (RPC)** with Row Level Security; **Supabase Edge Functions** (TypeScript) for location check, share cards, and logic too complex for SQL |
+| Scheduled jobs | **pg_cron** (snapshots every 5–10 min, Monday ranking reset) |
+| Real-time (later phase) | Supabase Realtime |
+| Hosting / static files / snapshots | Cloudflare Pages / R2 (CDN) |
+| Bot protection & rate limiting | Cloudflare Turnstile + Cloudflare rate limiting |
+| Testing | **Vitest** (unit), **Playwright** (end-to-end, phone viewport), database tests against local Supabase |
+| Error monitoring | Sentry (before launch) |
 | Analytics | Plausible or PostHog |
 | Voxel modelling | MagicaVoxel |
 
@@ -464,15 +472,24 @@ Because every island has the same shape, each community gets its identity from:
 6. Avatar movement is computed on the client and **not sent to the server** in the MVP (only actions are). Movement uses destination events so real-time presence can be added later by broadcasting them
 - Target: **2–3 server calls per player per day**
 
+### 20.3b Scalability principles (target: 10,000 concurrent users without redesign)
+1. **Actions are append-only records.** Never update a shared counter (e.g. project progress) on every action; insert a row into the action log and aggregate when building snapshots. Avoids row-lock contention in popular communities.
+2. **Stateless server logic.** No in-memory state in functions; everything lives in the database or snapshots, so capacity scales by plan/instances.
+3. **Connection pooling** to the database from day one (Supabase pooler).
+4. **Idempotent action submission.** Every action carries a client-generated unique ID; duplicates are ignored (prevents double energy spend on flaky networks).
+5. **Rate limiting at the edge** (Cloudflare) per IP, plus per-user limits in server logic.
+- Later, as traffic grows: upgrade Supabase plan and auth rate limits, cache share-card images per event, add monitoring/alerts, load test (e.g. k6) before big launches. Real-time presence (22.3) needs its own capacity plan (cap ~30 visible avatars per island, split popular communities into rooms).
+
 ### 20.3a 3D performance principles
-- Use **InstancedMesh** for repeated blocks (tiles, trees) to keep draw calls low
+- Use **instanced rendering** (drei `Instances` / InstancedMesh) for repeated blocks (tiles, trees) to keep draw calls low
+- Per-frame updates (avatar/villager movement) run in `useFrame` with refs, **not React state**, to avoid re-rendering every frame
 - Keep block counts and shadow map sizes modest; cap device pixel ratio at 2
 - Cap visible characters per island (MVP: mini villagers ≤ 20)
 - **Test on a low-end phone early** and regularly
 
 ### 20.4 Swappable rendering layer
 - Game objects (community, house, building, silhouette, mini villager, project) are rendered through a **visual layer referenced by asset keys**, separate from game logic.
-- MVP maps each asset key to a code-built box model; the Art Pass maps the same keys to refined voxel models. No game-logic changes required.
+- MVP maps each asset key to a code-built box model (a React component); the Art Pass maps the same keys to refined voxel models. No game-logic changes required.
 
 ### 20.5 Designed for city replication
 - City boundary, community boundaries, population, and World Map base are separated as **per-city data**
@@ -553,14 +570,14 @@ Because every island has the same shape, each community gets its identity from:
 - "Battle of Alberta" Calgary vs Edmonton season
 - Apartments/condos (multi-resident buildings) once communities get very large
 
-### 22.6 Development order (~10 hours/week, ~9–11 weeks)
+### 22.6 Development order (~10 hours/week, ~10–12 weeks)
 
 > High-level summary only. The detailed, module-based build order, scope and status live in **`PLAN.md`** (which takes precedence for ordering and estimates).
 
 | Step | Work | Duration |
 |---|---|---|
 | 1 | Load community boundary/population data, anonymous login, location → community, resident verification | 2 weeks |
-| 2 | three.js box-built diorama island (island growth, buildings, houses, mini villagers, Vitality, speech bubbles) + avatar tap-to-move with pathfinding + swappable rendering layer; includes time to learn three.js | 2–3 weeks |
+| 2 | react-three-fiber box-built diorama island (island growth, buildings, houses, mini villagers, Vitality, speech bubbles) + avatar tap-to-move with pathfinding + swappable rendering layer; includes time to learn React + react-three-fiber | 3–4 weeks |
 | 3 | Daily actions, projects, community streak, unlocks, action replay, newspaper | 2 weeks |
 | 4 | World Map, weekly ranking, share cards, invites | 2 weeks |
 | 5 | Legal pages, analytics, email subscription, polish → family/friends test | 1–2 weeks |
@@ -625,6 +642,40 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-16 — v1.4
+**Changed:** Tech stack switched to the best-fit combination for this project, regardless of the developer's existing experience: **React + Vite + TypeScript + react-three-fiber + drei + Zustand + Tailwind** on the frontend, and **Supabase only (Postgres functions/RLS, Edge Functions, pg_cron)** instead of a Spring Boot server. Added scalability principles.
+- 19.0: community view described as react-three-fiber scene
+- 20.1: stack table rewritten (serverless, all TypeScript + SQL; testing, monitoring added)
+- 20.3a: instanced rendering via drei/InstancedMesh; per-frame updates in `useFrame` with refs
+- 20.3b (new): scalability principles (append-only actions, stateless logic, connection pooling, idempotent actions, edge rate limiting)
+- 20.4: asset keys map to React components
+- 22.6: Step 2 uses react-three-fiber and includes learning React; 3–4 weeks; total 10–12 weeks
+
+**Why:** Development is done mostly by AI (vibe coding), so the stack was chosen for the project rather than for familiarity. react-three-fiber + drei is the largest web-3D ecosystem with ready-made parts (HTML bubbles, instancing, cameras) and the most examples for AI code generation. Removing the always-on Spring Boot server cuts hosting cost and operations to near zero, keeps one language end to end, and Supabase Realtime is available for later presence. Trade-off accepted: the developer must learn React/R3F, and complex rules in SQL functions are harder to test (move them to Edge Functions if they grow). Scalability principles were added after reviewing what a 10,000-concurrent-user success would require; they cost little now but are expensive to retrofit.
+
+**Previous:**
+- 19.0: `  - Community view: **three.js scene built from coloured boxes** — ...` (rest of line unchanged)
+- 20.1 table:
+```
+| Area | Technology |
+|---|---|
+| Web UI (menus, news, login, etc.) | Angular |
+| Community view (3D voxel diorama) | three.js (orthographic camera, InstancedMesh for tiles, CSS2D/HTML overlays for bubbles and labels) |
+| World Map (2D) | SVG or Canvas rendering of community boundary polygons |
+| Backend API | Spring Boot |
+| Database | Supabase PostgreSQL + PostGIS |
+| Auth | Supabase Auth (Anonymous + Google linking) |
+| Static files / snapshots | Cloudflare Pages / R2 |
+| Bot protection | Cloudflare Turnstile |
+| Analytics | Plausible or PostHog |
+| Voxel modelling | MagicaVoxel |
+```
+- 20.3a first bullet: `- Use **InstancedMesh** for repeated blocks (tiles, trees) to keep draw calls low`
+- 20.3b: did not exist
+- 20.4: `- MVP maps each asset key to a code-built box model; the Art Pass maps the same keys to refined voxel models. No game-logic changes required.`
+- 22.6 heading: `### 22.6 Development order (~10 hours/week, ~9–11 weeks)`
+- 22.6 Step 2: `| 2 | three.js box-built diorama island (island growth, buildings, houses, mini villagers, Vitality, speech bubbles) + avatar tap-to-move with pathfinding + swappable rendering layer; includes time to learn three.js | 2–3 weeks |`
 
 ### 2026-11-16 — v1.3
 **Changed:** 22.6 now notes that `PLAN.md` holds the detailed module-based build order, scope and status, and takes precedence for ordering and estimates.

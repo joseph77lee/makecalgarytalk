@@ -10,7 +10,7 @@ The site itself, **makecalgarytalk.com**, is the game.
 
 🚧 **Pre-MVP.** Requirements are defined; development has not started yet.
 
-- The MVP builds the 3D island entirely from **simple coloured boxes in three.js** (no detailed art) to validate the core loop quickly. Because the target style is voxel, the box version already looks close to the final look.
+- The MVP builds the 3D island entirely from **simple coloured boxes with react-three-fiber (three.js)** (no detailed art) to validate the core loop quickly. Because the target style is voxel, the box version already looks close to the final look.
 - Detailed voxel models, props and animations come later in the **Art Pass**.
 - A ~100-line three.js proof of concept (floating island, box trees/houses, wandering villagers, speech bubbles, tap-to-move avatar, construction progress, island growth) confirmed the approach is feasible.
 
@@ -37,15 +37,18 @@ Read `requirement.md`, `PLAN.md` and `CLAUDE.md` before starting any work.
 
 ## Planned tech stack
 
+All TypeScript (+ SQL), serverless — no always-on backend server.
+
 | Area | Technology |
 |---|---|
-| Web UI | Angular |
-| Community island (3D) | three.js |
-| World Map (2D) | SVG / Canvas |
-| Backend | Spring Boot |
+| Frontend | React + Vite + TypeScript, Tailwind CSS, Zustand |
+| Community island (3D) | react-three-fiber + drei (three.js) |
+| World Map (2D) | SVG in React |
 | Database / Auth | Supabase (PostgreSQL + PostGIS, Anonymous + Google sign-in) |
-| Static files / CDN | Cloudflare Pages / R2 |
+| Server-side game rules | Supabase Postgres functions (RPC) + Row Level Security, Edge Functions, pg_cron |
+| Hosting / CDN | Cloudflare Pages / R2 |
 | Bot protection | Cloudflare Turnstile |
+| Testing | Vitest, Playwright |
 | Voxel modelling (Art Pass) | MagicaVoxel |
 | Data | City of Calgary Open Data (community boundaries, population), OpenStreetMap |
 
@@ -59,8 +62,8 @@ makecalgarytalk/
 ├── CLAUDE.md          # working rules
 ├── docs/
 │   └── references/    # visual reference screenshots
-├── frontend/          # Angular + three.js app
-└── backend/           # Spring Boot API
+├── frontend/          # React + react-three-fiber app
+└── supabase/          # SQL migrations, Postgres functions, Edge Functions
 ```
 
 ## Getting started

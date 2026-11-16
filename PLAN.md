@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.0 |
+| Plan version | v1.1 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-16 |
-| Based on | `requirement.md` v1.2 |
+| Based on | `requirement.md` v1.4 |
 | Current module | M0 — Foundation (not started) |
 
 ---
@@ -35,9 +35,9 @@
 
 | # | Module | Layer | Core? | Depends on | Est. | Status |
 |---|---|---|---|---|---|---|
-| M0 | Foundation | FE + BE + infra | Base | — | 1 wk | ⬜ |
-| M1 | Island View | FE (three.js) | ⭐ Core | M0 | 1.5 wk | ⬜ |
-| M2 | Avatar | FE (three.js) | ⭐ Core | M1 | 1 wk | ⬜ |
+| M0 | Foundation | FE + Supabase + infra | Base | — | 1 wk | ⬜ |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 2 wk | ⬜ |
+| M2 | Avatar | FE (R3F) | ⭐ Core | M1 | 1 wk | ⬜ |
 | M3 | Game Core | BE | ⭐ Core | M0 | 1 wk | ⬜ |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | 1 wk | ⬜ |
 | M5 | Community State | BE + FE | ⭐ Core | M4 | 1.5 wk | ⬜ |
@@ -51,7 +51,9 @@
 | M13 | Feature Library | FE + data | | M1 | 0.5 wk | ⬜ |
 | M14 | Launch Readiness | All | | All above | 1 wk | ⬜ |
 
-Estimates assume ~10 hours/week. Total ≈ 13–14 weeks including learning time and playtests. Estimates are rough and will be revised.
+Estimates assume ~10 hours/week. Total ≈ 14–15 weeks including learning time (React + react-three-fiber) and playtests. Estimates are rough and will be revised.
+
+**Layers:** FE = React app (`frontend/`). BE = Supabase (`supabase/`: SQL migrations, Postgres functions/RPC with RLS, Edge Functions, pg_cron). There is no separate backend server.
 
 **Core loop is complete after M5.** At that point the game is playable end to end with a dev user and a manually chosen community: see the island → move the avatar → take daily actions → progress next day → streak, Vitality, unlocks, island growth.
 
@@ -72,27 +74,27 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M0 — Foundation ⬜
 **Goal:** Empty but runnable project skeleton so every later module has a home.
 - **In scope**
-  - Monorepo folders: `frontend/` (Angular), `backend/` (Spring Boot), `docs/`
-  - Supabase project (PostgreSQL + PostGIS enabled); DB migrations tool (e.g. Flyway)
+  - Monorepo folders: `frontend/` (React + Vite + TypeScript, Tailwind, Zustand, react-three-fiber + drei), `supabase/` (migrations, functions), `docs/`
+  - Supabase project (PostgreSQL + PostGIS enabled); Supabase CLI for local dev and SQL migrations; database connection pooling
   - Environment config via env vars (no secrets in git); `.env.example`
-  - Backend health endpoint; frontend calls it and shows "connected"
+  - Health check (Postgres function or Edge Function); frontend calls it and shows "connected"
   - Shared time utility: **Calgary day boundary (America/Edmonton)** with tests
   - Module folder conventions in place (see `CLAUDE.md` §2 Modular code)
-  - Basic CI: build + tests on push
+  - Basic CI: build + tests (Vitest; database tests against local Supabase) on push
 - **Out of scope:** any game feature
-- **Definition of Done:** both apps run locally with one command each; health check visible in the browser; CI green; day-boundary tests cover DST changes
+- **Definition of Done:** frontend and local Supabase run locally with one command each; health check visible in the browser; CI green; day-boundary tests cover DST changes
 
 ### M1 — Island View ⭐ ⬜
 **Goal:** The 3D diorama island renders from a state object, using box models through asset keys.
 - **In scope**
-  - three.js scene inside an Angular component: orthographic isometric camera, pastel lights, sky background, rotate/zoom limits
+  - react-three-fiber `<Canvas>` with drei `OrthographicCamera`: isometric view, pastel lights, sky background, rotate/zoom limits
   - Island of size N×N (tiers from `requirement.md` §7.8) with layered dirt
-  - **Asset registry**: asset key → box model (house, building, silhouette, tree, construction site, sign, mini villager)
+  - **Asset registry**: asset key → box model React component (house, building, silhouette, tree, construction site, sign, mini villager)
   - Render entirely from a **mock community state JSON** (no backend yet)
   - 3 Vitality moods (Lively / Normal / Gloomy) change colours and props
   - Island growth animation when N increases
-  - HTML overlay system for labels and speech bubbles
-  - InstancedMesh for tiles; phone-size viewport check
+  - Labels and speech bubbles via drei `Html`
+  - Instanced rendering for tiles (drei `Instances`); animations in `useFrame` with refs (no per-frame React state); phone-size viewport check
 - **Out of scope:** avatar, real data, detailed art
 - **Definition of Done:** changing values in the mock JSON (size, buildings, Vitality, silhouettes) updates the island correctly; runs smoothly at a phone-sized viewport; user has looked at it
 
@@ -110,12 +112,13 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M3 — Game Core ⭐ ⬜
 **Goal:** Backend domain for communities, projects and actions with server-side rules.
 - **In scope**
-  - Tables/migrations: communities (seeded with Calgary community list + population), projects, actions, users (dev user only for now)
+  - SQL migrations: communities (seeded with Calgary community list + population), projects, actions, users (dev user only for now)
   - Rules: **3 energy per day** (Calgary day), action must target an active project, project progress applied **next day** (compute-on-read)
-  - REST API: get community state, submit action(s)
-  - Unit tests for every rule including day boundary and energy limit
+  - Server API as **Supabase Postgres functions (RPC)** with Row Level Security: get community state, submit action(s)
+  - Actions are **append-only** with a client-generated unique ID (**idempotent**); progress is aggregated, never a shared counter updated per action (`requirement.md` §20.3b)
+  - Database tests for every rule including day boundary, energy limit, and duplicate submissions
 - **Out of scope:** auth, location, streaks/Vitality (M5)
-- **Definition of Done:** API rejects a 4th action in a day; progress appears after Calgary midnight; tests cover edge cases; API documented in `docs/api.md`
+- **Definition of Done:** API rejects a 4th action in a day; a duplicate action ID is ignored; progress appears after Calgary midnight; tests cover edge cases; API documented in `docs/api.md`
 
 ### M4 — Daily Actions ⭐ ⬜
 **Goal:** Connect the island to the backend so actions really change the community.
@@ -132,7 +135,7 @@ M0 ─┬─ M1 ── M2 ─┐
 **Goal:** The community feels alive and changes over days. **Core loop complete.**
 - **In scope**
   - Backend: community streak (≥ half of residents acted), Vitality (7-day, rises fast/falls slow), unlocks (Playground / Community Centre / Park), island size from cumulative residents
-  - Snapshot generation every 5–10 min (JSON) for community state
+  - Snapshot generation every 5–10 min (JSON) for community state via **pg_cron**
   - Frontend: streak bar ("2/6 today"), locked silhouettes with remaining conditions, "What changed since yesterday" panel, island growth goal
 - **Out of scope:** real residents/verification (dev users simulate residents)
 - **Definition of Done:** with simulated users over simulated days, streak, Vitality, unlocks and growth behave as specified; a 1-resident community works; user has played across at least 3 real days
@@ -144,7 +147,7 @@ M0 ─┬─ M1 ── M2 ─┐
 
 ### M7 — Residency ⬜
 **Goal:** Users belong to the community they live in.
-- **In scope:** browser geolocation → server-side point-in-polygon (PostGIS) → **coordinates discarded**, only community ID stored; pending contributions; **3 different days within 7** → Verified Resident; no location checks after verification; 90-day community change; "verify on your phone" hint
+- **In scope:** browser geolocation → server-side point-in-polygon (PostGIS, via Postgres function or Edge Function) → **coordinates discarded**, only community ID stored; pending contributions; **3 different days within 7** → Verified Resident; no location checks after verification; 90-day community change; "verify on your phone" hint
 - **Definition of Done:** tests prove coordinates are never persisted or logged; verification edge cases tested (other community visit same day, day boundary); user verified their own community
 
 ### M8 — Residents & Villagers ⬜
@@ -198,6 +201,21 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-16 — v1.1
+**Changed:** Updated for the new tech stack (`requirement.md` v1.4): React + Vite + TypeScript + react-three-fiber + drei on the frontend; Supabase only (SQL migrations, Postgres functions/RPC with RLS, Edge Functions, pg_cron) instead of Spring Boot. Added scalability rules to M3. M1 estimate 1.5 → 2 weeks for learning React/R3F; total 13–14 → 14–15 weeks.
+
+**Why:** Stack changed to the best-fit combination for this project (vibe coding, lowest ops cost, largest web-3D ecosystem).
+
+**Previous:**
+- Header: `| Plan version | v1.0 |` / `| Based on | \`requirement.md\` v1.2 |`
+- Overview rows: `| M0 | Foundation | FE + BE + infra | Base | — | 1 wk | ⬜ |` / `| M1 | Island View | FE (three.js) | ⭐ Core | M0 | 1.5 wk | ⬜ |` / `| M2 | Avatar | FE (three.js) | ⭐ Core | M1 | 1 wk | ⬜ |`
+- `Estimates assume ~10 hours/week. Total ≈ 13–14 weeks including learning time and playtests. Estimates are rough and will be revised.` (Layers note did not exist)
+- M0: `  - Monorepo folders: \`frontend/\` (Angular), \`backend/\` (Spring Boot), \`docs/\`` / `  - Supabase project (PostgreSQL + PostGIS enabled); DB migrations tool (e.g. Flyway)` / `  - Backend health endpoint; frontend calls it and shows "connected"` / `  - Basic CI: build + tests on push` / DoD: `both apps run locally with one command each;`
+- M1: `  - three.js scene inside an Angular component: orthographic isometric camera, pastel lights, sky background, rotate/zoom limits` / `  - **Asset registry**: asset key → box model (house, building, silhouette, tree, construction site, sign, mini villager)` / `  - HTML overlay system for labels and speech bubbles` / `  - InstancedMesh for tiles; phone-size viewport check`
+- M3: `  - Tables/migrations: communities ...` / `  - REST API: get community state, submit action(s)` / `  - Unit tests for every rule including day boundary and energy limit` / DoD: `API rejects a 4th action in a day;`
+- M5: `  - Snapshot generation every 5–10 min (JSON) for community state`
+- M7: `browser geolocation → server-side point-in-polygon (PostGIS)`
 
 ### 2026-11-16 — v1.0 (initial plan)
 **Changed:** Initial module-based development plan for the MVP (M0–M14), core-first order.

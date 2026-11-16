@@ -60,17 +60,22 @@ These rules apply to every task in this repository. Read this file and `requirem
 - Never commit secrets (API keys, Supabase service keys, etc.). Use environment variables.
 
 ### Game logic
-- All game rules (daily energy, streaks, verification, scoring) are **validated on the server**. The client may update the screen optimistically but is never trusted.
+- All game rules (daily energy, streaks, verification, scoring) are **validated on the server** (Supabase Postgres functions or Edge Functions). The client may update the screen optimistically but is never trusted.
+- **Row Level Security on every table.** The frontend only uses the anon key; the service-role key never reaches the frontend or git.
 - Day boundary is **America/Edmonton midnight**.
 - Follow the server-cost principles in `requirement.md` §20.3 (static files via CDN, compute-on-read, snapshots, no WebSockets).
+- Follow the scalability principles in `requirement.md` §20.3b: **append-only actions** (never update a shared counter per action), stateless functions, connection pooling, **idempotent action IDs**, rate limiting.
 
-### Rendering (three.js voxel island)
+### Rendering (react-three-fiber voxel island)
+- Stack: React + react-three-fiber + drei (see `requirement.md` §20.1). Use drei helpers before writing custom code (`OrthographicCamera`, `Instances`, `Html`, controls).
 - Keep rendering separate from game logic. Game objects are drawn through **asset keys** (`requirement.md` §20.4).
-- MVP maps asset keys to **code-built box models**. Do not hardcode models or meshes inside game logic.
+- MVP maps asset keys to **code-built box model components**. Do not hardcode models or meshes inside game logic.
+- **Per-frame updates (movement, animation) go in `useFrame` with refs, never React state.** Avoid re-rendering the scene every frame.
+- Game state lives in Zustand stores; subscribe with selectors so 3D components re-render only when their data changes.
 - Match the visual reference in `docs/references/` (pastel voxel floating island, isometric orthographic camera, soft light). If unsure about a visual choice, ask.
 - Follow the 3D performance principles (`requirement.md` §20.3a): InstancedMesh for repeated blocks, modest shadows, device pixel ratio ≤ 2, capped character counts. Mention phone performance in reports.
-- Speech bubbles and name labels are **HTML overlays**, not 3D text.
-- The World Map is **2D** (SVG/Canvas). Do not render all communities in 3D.
+- Speech bubbles and name labels are **HTML overlays** (drei `Html`), not 3D text.
+- The World Map is **2D** (SVG in React). Do not render all communities in 3D.
 
 ### Avatar & multiplayer
 - Avatar movement is expressed as **destination events** ("move to tile x,y") and computed on the client. Do not send per-frame positions to the server.
@@ -88,9 +93,9 @@ These rules apply to every task in this repository. Read this file and `requirem
 
 ### Modular code (modular monolith)
 Each `PLAN.md` module maps to a code module with clear boundaries, so a problem can be fixed in one place.
-- **Frontend (Angular):** one folder per module under `frontend/src/app/modules/<module-name>/` (e.g. `island-view`, `avatar`, `daily-actions`). Each module exposes a small public API through its `index.ts`; other modules import **only** from that API, never from internal files.
-- **Backend (Spring Boot):** package-by-feature, `com.makecalgarytalk.<module>` (e.g. `gamecore`, `communitystate`, `residency`). Each module owns its tables and migrations; other modules call its **service interface**, never its repositories or tables directly.
-- **Shared code** lives in a minimal `common` module only (e.g. Calgary day-boundary utility, IDs). Do not put feature logic in `common`.
+- **Frontend (React):** one folder per module under `frontend/src/modules/<module-name>/` (e.g. `island-view`, `avatar`, `daily-actions`), containing its components, hooks, stores and tests. Each module exposes a small public API through its `index.ts`; other modules import **only** from that API, never from internal files.
+- **Backend (Supabase):** each module owns its database objects, using a Postgres schema or name prefix per module (e.g. `gamecore`, `communitystate`, `residency`). Migrations are named with the module (e.g. `supabase/migrations/<timestamp>_gamecore_actions.sql`); Edge Functions live in `supabase/functions/<module>-<name>/`. Other modules call a module's **public functions (RPC)**, never its tables directly.
+- **Shared code** lives in a minimal `common` module only (e.g. Calgary day-boundary utility, IDs, shared types). Do not put feature logic in `common`.
 - Keep modules **loosely coupled**: pass data through interfaces/DTOs or events; no circular dependencies.
 - **Each module has its own tests.** Changing one module must not require changing another module's internals.
 - If a change needs to cross module boundaries, stop and propose the interface change first (Rule 1).
