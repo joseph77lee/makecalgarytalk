@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.4 |
+| Document version | v1.6 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-16 |
 | Status | Initial draft for starting MVP development |
@@ -225,18 +225,35 @@ Because every island has the same shape, each community gets its identity from:
 
 ## 9. Calgary World Map (city view)
 
-- A **top-down, stylized 2D map of Calgary** made from the **real community boundaries** (City of Calgary Open Data). It shows *where* each community is; the 3D island (Section 10) is the playable view.
+- A **top-down, stylized 2D map of Calgary** drawn from the **real community boundary polygons** (City of Calgary Open Data), so users instantly recognise where their community is. The 3D island (Section 10) is the playable view.
 - Not 3D: rendering ~200 islands at once is too heavy for phones. Keeps the first screen light.
-- **MVP**: flat pastel polygons per community
-  - Colour tone = Vitality; grey = unsettled
-  - Label/icon showing development tier (unsettled + 3 tiers)
-  - Flag/crown on this week's #1 community
-- **Art Pass** (target design):
-  - Pastel styling consistent with the voxel islands; Bow and Elbow rivers, downtown/Calgary Tower icon, Rocky Mountains on the western horizon, major parks (Nose Hill, Fish Creek, Glenmore Reservoir)
-  - Small development icons per community, day/night tint and snow from real Calgary time/weather
+- **Each community polygon shows its development with small illustrations inside it**, not just a colour (prototype demo built 2026-11-16):
+
+| Development level | Shown inside the polygon |
+|---|---|
+| Unsettled | Grey dashed boundary, a cloud, empty ground |
+| 1 | A couple of small houses |
+| 2 | More houses + playground |
+| 3 | Houses + playground + park |
+| 4 | Dense houses + playground + park + community centre with flag |
+
+  - Level is derived from cumulative Verified Residents and unlocked buildings (same data as the island; 7.6, 7.8)
+  - **Vitality is shown through mood**: lively = green ground, window lights, flowers; normal = plain; gloomy = greyish ground, roofs and trees
+  - Crown on this week's #1 community
+  - Illustrations use the **same designs as the island buildings** so the map and islands feel like one world
+- **Layout rules**
+  - Icons are placed inside the polygon (point-in-polygon), away from edges, without overlapping
+  - **Icon count scales with polygon area** so large and small communities at the same level look equally developed
+  - **Zoom-dependent detail**: at city zoom show a few representative icons per community; when zoomed in show more
+  - Render with **Canvas** (thousands of small icons) for phone performance; SVG is acceptable for prototypes
+- **Interaction**: tap a community → smooth zoom to it + info card (name, level, mood, residents) → "Enter island"; tap an unsettled community → **"Invite a friend from this community"** (pre-filled message)
+- **Art Pass / later enhancements** (target design):
+  - **Animated Bow and Elbow rivers** (flowing water), Glenmore Reservoir, major parks (Nose Hill, Fish Creek)
+  - **CTrain lines with moving trains** along the real Red and Blue line routes (decorative animation, not a live schedule)
+  - **Calgary landmarks** as special voxel-style buildings (e.g. Calgary Tower, Peace Bridge and other city symbols); no official logos or trademarks
+  - Rocky Mountains on the western horizon, day/night tint and snow from real Calgary time/weather
   - Tapping a community plays a short transition into its diorama island
-- Tap an empty community → **"Invite a friend from this community"** (pre-filled message)
-- Generated programmatically from data (community boundaries, OSM rivers/parks/major roads) → replicable to other cities
+- Generated programmatically from data (community boundaries, OSM rivers/parks/major roads, CTrain routes/stations) → replicable to other cities
 
 ---
 
@@ -429,7 +446,7 @@ Because every island has the same shape, each community gets its identity from:
 
 ### 19.4 Asset list (draft)
 - MVP (code boxes): island tiles (grass, path, snow), dirt layers, trees, resident house (roof/wall colour variants via code), project buildings (playground, community centre, park, ice rink) + construction stages (scaffolding/frame/complete) + silhouettes, name sign, avatar, mini villagers
-- Art Pass: refined buildings, feature-library blocks (lake, creek, hill, ravine, dog park, CTrain station, mall, school), props (lamps, fences, fields, stalls, benches), character variants with simple animation, surprise characters (e.g. moose), World Map icons (rivers, mountains, Calgary Tower), crown/flag
+- Art Pass: refined buildings, feature-library blocks (lake, creek, hill, ravine, dog park, CTrain station, mall, school), props (lamps, fences, fields, stalls, benches), character variants with simple animation, surprise characters (e.g. moose), World Map assets (development icons matching island buildings, animated rivers, CTrain trains and lines, landmark buildings such as Calgary Tower and Peace Bridge, mountains), crown/flag
 
 ---
 
@@ -460,7 +477,7 @@ Because every island has the same shape, each community gets its identity from:
 
 ### 20.2 Data
 - City of Calgary Open Data: **community boundaries**, **population per community**
-- OpenStreetMap: rivers, parks, major roads (for generating the World Map base) and suggesting each community's signature features (7.9)
+- OpenStreetMap: rivers, parks, major roads, CTrain routes/stations (for generating the World Map base) and suggesting each community's signature features (7.9)
 - Feature mapping CSV: operator-maintained overrides of community → feature-library blocks
 
 ### 20.3 Server cost principles
@@ -514,12 +531,12 @@ Because every island has the same shape, each community gets its identity from:
 
 ## 22. Release phases & scope
 
-### 22.1 MVP (target: late Jan – Feb 2027, winter theme)
+### 22.1 MVP (winter launch theme)
 
 **Included**
 - Anonymous account + Turnstile + Google linking
 - Location-based community detection, 3-of-7-days resident verification
-- Calgary World Map as **flat pastel 2D polygons** (Vitality colour tones, grey for unsettled, tier label, #1 flag)
+- Calgary World Map from **real community boundary polygons**, each showing **small development illustrations** (houses, playground, park, community centre by level) with Vitality mood, #1 crown, tap-to-zoom and invite for unsettled communities
 - Community view as a **box-built three.js voxel diorama island** (island growth by residents, buildings, resident houses, mini villagers, 3 Vitality levels, action replay with speech bubbles, name sign, a few signature features from the feature library)
 - **My avatar**: tap/click to move with pathfinding; action buttons make the avatar run to the spot and act
 - 3 daily energy + project choice + satisfying click feedback + a few surprises
@@ -540,7 +557,7 @@ Because every island has the same shape, each community gets its identity from:
 5. Community newspaper with my name (recognition)
 
 ### 22.2 Phase 2
-- **Art Pass**: refined pastel voxel models and props (Section 19.1–19.4), styled World Map with landmarks and transitions, character variants and animations, avatar customization, walk-up-and-tap actions, day/night and weather effects
+- **Art Pass**: refined pastel voxel models and props (Section 19.1–19.4), styled World Map with animated Bow/Elbow rivers, moving CTrain trains, Calgary landmark buildings and transitions, character variants and animations, avatar customization, walk-up-and-tap actions, day/night and weather effects
 - Activity-based signature feature upgrades (7.9)
 - Resident board + report moderation screen
 - Profile & ranks
@@ -570,17 +587,17 @@ Because every island has the same shape, each community gets its identity from:
 - "Battle of Alberta" Calgary vs Edmonton season
 - Apartments/condos (multi-resident buildings) once communities get very large
 
-### 22.6 Development order (~10 hours/week, ~10–12 weeks)
+### 22.6 Development order
 
-> High-level summary only. The detailed, module-based build order, scope and status live in **`PLAN.md`** (which takes precedence for ordering and estimates).
+> High-level summary only. The detailed, module-based build order, scope checklist and status live in **`PLAN.md`** (which takes precedence for ordering). No time estimates are kept: with AI-assisted coding, durations are unpredictable.
 
-| Step | Work | Duration |
-|---|---|---|
-| 1 | Load community boundary/population data, anonymous login, location → community, resident verification | 2 weeks |
-| 2 | react-three-fiber box-built diorama island (island growth, buildings, houses, mini villagers, Vitality, speech bubbles) + avatar tap-to-move with pathfinding + swappable rendering layer; includes time to learn React + react-three-fiber | 3–4 weeks |
-| 3 | Daily actions, projects, community streak, unlocks, action replay, newspaper | 2 weeks |
-| 4 | World Map, weekly ranking, share cards, invites | 2 weeks |
-| 5 | Legal pages, analytics, email subscription, polish → family/friends test | 1–2 weeks |
+| Step | Work |
+|---|---|
+| 1 | Load community boundary/population data, anonymous login, location → community, resident verification |
+| 2 | react-three-fiber box-built diorama island (island growth, buildings, houses, mini villagers, Vitality, speech bubbles) + avatar tap-to-move with pathfinding + swappable rendering layer |
+| 3 | Daily actions, projects, community streak, unlocks, action replay, newspaper |
+| 4 | World Map, weekly ranking, share cards, invites |
+| 5 | Legal pages, analytics, email subscription, polish → family/friends test |
 
 ### 22.7 Launch
 - After family/friends testing, post on r/Calgary and community Facebook groups with a "Calgary dev made this" story
@@ -642,6 +659,59 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-16 — v1.6
+**Changed:** Removed time estimates and target dates. 22.1 heading no longer has a target date; 22.6 heading and table no longer have durations; 22.6 note says `PLAN.md` takes precedence for ordering (not estimates) and that no time estimates are kept.
+
+**Why:** User decision: with vibe coding, work may finish faster or slower, so the plan is for checking completeness and progress, not schedule.
+
+**Previous:**
+- `### 22.1 MVP (target: late Jan – Feb 2027, winter theme)`
+- 22.6 (verbatim):
+```
+### 22.6 Development order (~10 hours/week, ~10–12 weeks)
+
+> High-level summary only. The detailed, module-based build order, scope and status live in **`PLAN.md`** (which takes precedence for ordering and estimates).
+
+| Step | Work | Duration |
+|---|---|---|
+| 1 | Load community boundary/population data, anonymous login, location → community, resident verification | 2 weeks |
+| 2 | react-three-fiber box-built diorama island (island growth, buildings, houses, mini villagers, Vitality, speech bubbles) + avatar tap-to-move with pathfinding + swappable rendering layer; includes time to learn React + react-three-fiber | 3–4 weeks |
+| 3 | Daily actions, projects, community streak, unlocks, action replay, newspaper | 2 weeks |
+| 4 | World Map, weekly ranking, share cards, invites | 2 weeks |
+| 5 | Legal pages, analytics, email subscription, polish → family/friends test | 1–2 weeks |
+```
+
+### 2026-11-16 — v1.5
+**Changed:** World Map design refined after a prototype demo: real community boundary polygons, each showing **small development illustrations** (houses → playground → park → community centre by level) instead of colour only; Vitality shown as mood; layout rules (area-scaled icon count, zoom-dependent detail, Canvas rendering); tap-to-zoom interaction. Later enhancements added: animated Bow/Elbow rivers, moving CTrain trains on real routes, Calgary landmark buildings.
+- 9: rewritten
+- 19.4: World Map Art Pass assets expanded
+- 20.2: OSM also used for CTrain routes/stations
+- 22.1: MVP World Map line updated
+- 22.2: Art Pass World Map items expanded
+
+**Why:** The user compared three demo styles (polygons, hex tiles, island icons) and chose real boundary polygons because residents can intuitively find their community. Colour alone felt plain; showing houses, parks and community centres growing inside each polygon makes development visible and prettier, and ties the map to the island world. Rivers, CTrain and landmarks make the map unmistakably Calgary.
+
+**Previous:**
+- 9 (body, verbatim):
+```
+- A **top-down, stylized 2D map of Calgary** made from the **real community boundaries** (City of Calgary Open Data). It shows *where* each community is; the 3D island (Section 10) is the playable view.
+- Not 3D: rendering ~200 islands at once is too heavy for phones. Keeps the first screen light.
+- **MVP**: flat pastel polygons per community
+  - Colour tone = Vitality; grey = unsettled
+  - Label/icon showing development tier (unsettled + 3 tiers)
+  - Flag/crown on this week's #1 community
+- **Art Pass** (target design):
+  - Pastel styling consistent with the voxel islands; Bow and Elbow rivers, downtown/Calgary Tower icon, Rocky Mountains on the western horizon, major parks (Nose Hill, Fish Creek, Glenmore Reservoir)
+  - Small development icons per community, day/night tint and snow from real Calgary time/weather
+  - Tapping a community plays a short transition into its diorama island
+- Tap an empty community → **"Invite a friend from this community"** (pre-filled message)
+- Generated programmatically from data (community boundaries, OSM rivers/parks/major roads) → replicable to other cities
+```
+- 19.4: `... World Map icons (rivers, mountains, Calgary Tower), crown/flag`
+- 20.2: `- OpenStreetMap: rivers, parks, major roads (for generating the World Map base) and suggesting each community's signature features (7.9)`
+- 22.1: `- Calgary World Map as **flat pastel 2D polygons** (Vitality colour tones, grey for unsettled, tier label, #1 flag)`
+- 22.2: `... styled World Map with landmarks and transitions, ...`
 
 ### 2026-11-16 — v1.4
 **Changed:** Tech stack switched to the best-fit combination for this project, regardless of the developer's existing experience: **React + Vite + TypeScript + react-three-fiber + drei + Zustand + Tailwind** on the frontend, and **Supabase only (Postgres functions/RLS, Edge Functions, pg_cron)** instead of a Spring Boot server. Added scalability principles.

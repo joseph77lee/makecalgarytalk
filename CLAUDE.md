@@ -88,6 +88,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 - `PLAN.md` defines the build order. **Work on one module at a time** — the module marked 🟦 In progress.
 - Do not start the next module until the current one is ✅ Done (user confirmed).
 - When a module reaches 🟨 Ready for playtest, update its status in `PLAN.md` and tell the user.
+- `PLAN.md` has **no time estimates**. Do not add schedules or durations; use the checklists to track completeness.
 - If a bug belongs to a finished module, mark it 🔁 Reopened, fix it there, and log it.
 - Plan changes follow the same rule as requirements: Change Log entry first (with previous text), then edit.
 
@@ -111,7 +112,7 @@ Each `PLAN.md` module maps to a code module with clear boundaries, so a problem 
 5. Test, including edge cases
 6. Run the app and check the screen
 7. Report: what changed, what was tested, what was not tested, what you saw on screen, status (`Implemented` / `Verified` / `Ready for playtest`)
-8. Update the module status in `PLAN.md`
+8. Update `PLAN.md`: tick completed checklist items (`- [x]`) and update the module status
 9. Commit with a clear message, scoped by module (e.g. `feat(island-view): add vitality moods`, `fix(gamecore): energy reset at Calgary midnight`)
 10. If a mistake happened, add one line to the Mistake Log
 
