@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.1 |
+| Document version | v1.2 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-16 |
 | Status | Initial draft for starting MVP development |
@@ -50,7 +50,8 @@ This document will keep changing during development. To never lose the reasons b
 **A web game where Calgary communities compete by growing their neighbourhood together.**
 
 - **The game has no separate name. The site itself (makecalgarytalk.com) is the game.**
-- Each real Calgary community (e.g. Mahogany, Bridgeland, Tuscany) is a pixel-art village.
+- Each real Calgary community (e.g. Mahogany, Bridgeland, Tuscany) is a **pastel voxel village on a floating diorama island** that grows as more residents join.
+- Visual reference: `docs/references/` (VibeBase "Voxel Village" screenshots — floating voxel island, isometric view, pastel colours, small characters with speech bubbles).
 - Residents take short daily actions **together** to **grow the community itself** (this is not a game about growing your own personal plot).
 - When a community develops, its mini villagers are happy and the scenery becomes beautiful; when neglected, they look gloomy and the scenery turns bleak.
 - Communities compete on development/participation.
@@ -76,9 +77,9 @@ This document will keep changing during development. To never lose the reasons b
 ## 5. Core user flows
 
 ### 5.1 First visit (60 seconds)
-1. Land on the site → snowy pixel-art **Calgary World Map**
+1. Land on the site → snowy pastel **Calgary World Map**
 2. "Which community do you live in?" → allow location
-3. Zoom into their community
+3. Tap into their community → the community's voxel diorama island appears, with **my avatar** standing in it
 4. First action click → **immediate visible change**
    - Empty community: fog clears, "You are the Founding Resident!"
    - Existing community: construction progress bar rises, mini villagers cheer
@@ -132,7 +133,7 @@ This document will keep changing during development. To never lose the reasons b
 - Residents not active today: lights off
 - **Inactive 30+ days**: house is temporarily removed from the village (archived); it reappears when they return
 - Houses are not something individuals grow; they show "I live in this community"
-- The village fills from the centre (Community Centre site) outward
+- Houses and buildings fill the island from the centre outward; the island itself grows with residents (see 7.8)
 - Houses have **no relation to real addresses/locations**
 
 ### 7.3 Mini villagers (ambient characters)
@@ -181,6 +182,34 @@ This document will keep changing during development. To never lose the reasons b
 - Construction visuals: scaffolding → frame → complete
 - Project list and required amounts: see [22.8 Open Items]
 
+### 7.8 Island size (grows with residents)
+- Every community is shown as the **same square floating island**, regardless of the real community's size or shape.
+- The island grows with the **cumulative number of Verified Residents**:
+
+| Cumulative Verified Residents | Island size (tiles) |
+|---|---|
+| 1–2 | 8×8 |
+| 3–5 | 12×12 |
+| 6–10 | 16×16 |
+| 11–25 | 20×20 |
+| 26–50 | 26×26 |
+| 51+ | 32×32 (max) |
+
+- Growth effect: a new ring of land **rises at the island edge**, mini villagers cheer, share card generated.
+- **The island never shrinks.** Inactivity is shown through Vitality (mood/scenery), not size.
+- Existing buildings stay in place; new ones fill the new outer area. Building positions follow a fixed layout template per size tier.
+- UI shows the next growth goal (e.g. "2 more neighbours until the island grows").
+
+### 7.9 Community identity & feature library
+Because every island has the same shape, each community gets its identity from:
+- **Name sign** at the island entrance
+- **Signature features** from a reusable **feature library** (not real size/position — symbolic):
+  - Example blocks: lake/pond, creek/river, hill, ravine, large park, off-leash dog park, ice rink, CTrain station, mall, school
+  - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator
+- **Activity-based feature upgrades** (Phase 2): features evolve with activity (e.g. Mahogany's lake → boat dock → lakeside trail)
+- **Resident petitions** (Phase 3): see 16.2
+- The real location/shape of each community is shown on the **World Map** (Section 9); the island is the cute, playable view.
+
 ---
 
 ## 8. Daily actions
@@ -196,31 +225,48 @@ This document will keep changing during development. To never lose the reasons b
 
 ## 9. Calgary World Map (city view)
 
-> MVP renders this with basic shapes (see 19.0). The description below is the target design for the Art Pass.
-
-- Not a real map (e.g. MapLibre) but a **pixel-art world map of Calgary**
-- Elements
-  - Bow River and Elbow River (shimmering), downtown with Calgary Tower, Rocky Mountains on the western horizon
-  - Major landforms: Nose Hill, Fish Creek Park, Glenmore Reservoir, etc.
-- A **miniature of each community's development** at its location (MVP: unsettled fog + 3 tiers)
-- Colour tone reflects Vitality
-- Reflects real Calgary **time (day/night)** and **weather (snow)**
-- Flag/crown on this week's #1 community
+- A **top-down, stylized 2D map of Calgary** made from the **real community boundaries** (City of Calgary Open Data). It shows *where* each community is; the 3D island (Section 10) is the playable view.
+- Not 3D: rendering ~200 islands at once is too heavy for phones. Keeps the first screen light.
+- **MVP**: flat pastel polygons per community
+  - Colour tone = Vitality; grey = unsettled
+  - Label/icon showing development tier (unsettled + 3 tiers)
+  - Flag/crown on this week's #1 community
+- **Art Pass** (target design):
+  - Pastel styling consistent with the voxel islands; Bow and Elbow rivers, downtown/Calgary Tower icon, Rocky Mountains on the western horizon, major parks (Nose Hill, Fish Creek, Glenmore Reservoir)
+  - Small development icons per community, day/night tint and snow from real Calgary time/weather
+  - Tapping a community plays a short transition into its diorama island
 - Tap an empty community → **"Invite a friend from this community"** (pre-filled message)
-- Zooming in transitions smoothly to the community view
-- The base is **generated programmatically** from data (community boundaries, OSM rivers/parks/major roads) onto a pixel grid; only landmarks are hand-drawn → replicable to other cities
+- Generated programmatically from data (community boundaries, OSM rivers/parks/major roads) → replicable to other cities
 
 ---
 
-## 10. Community view
+## 10. Community view (voxel diorama island)
 
-> MVP renders this with basic shapes (see 19.0); pixel art comes in the Art Pass.
-
-- Square-grid pixel village
-- Contents: community buildings (playground, community centre, park, etc.), resident houses, mini villagers, project construction sites, locked-building silhouettes
+### 10.1 Scene
+- A **floating square island** (size per 7.8) with visible layered dirt underneath, on a soft pastel sky background
+- **Isometric view** (orthographic camera); user can rotate/zoom within limits
+- **Pastel colours, flat-shaded voxel/box objects**, soft shadows
+- Contents: community buildings (playground, community centre, park, etc.), resident houses, mini villagers, signature features (7.9), project construction sites, locked-building silhouettes, name sign
+- Speech bubbles and name labels are **HTML overlays** positioned over 3D objects (crisp text, Korean/English supported)
 - On entry, show **"What changed since yesterday"** (construction progress, new residents, trees planted, etc.)
-- Show community streak status and remaining conditions for the next unlock
+- Show community streak status, remaining conditions for the next unlock, and the next island growth goal
 - Users can visit and view other communities (actions only in their own community)
+
+### 10.2 My avatar
+- Each user has an avatar in **their own community's island**
+- **Mobile: tap the ground to move** (pathfinding on the island grid, avoiding buildings/trees). **PC: click to move + WASD/arrow keys**
+- No virtual joystick (conflicts with camera drag on phones)
+- Camera gently follows the avatar
+- **Action buttons stay at the bottom**: pressing an action makes the avatar run to the related spot (e.g. construction site) and perform it. Walking up and tapping the spot directly is also allowed (Art Pass polish)
+- Tap a building/resident house to see info (e.g. Community Centre → newspaper; house → resident nickname and streak)
+- Avatar customization (colours, hat): Art Pass / rewards
+- Movement is driven by **destination events** ("avatar X moves to tile (5,7)"), not per-frame positions, so the same events can be broadcast for real-time presence later (22.3)
+
+### 10.3 Other residents' avatars (asynchronous)
+- In the MVP, **only my avatar moves under my control**; other residents are **not shown in real time**
+- Other active residents appear standing near their houses or **replaying today's actions** (with system speech bubbles)
+- Residents not active today are "indoors" (not shown)
+- Real-time presence of other online residents is a later phase (22.3)
 
 ---
 
@@ -299,10 +345,19 @@ This document will keep changing during development. To never lose the reasons b
 - Start with **preset phrases** → open free text based on response
 - Profanity filter + auto-hide on reports (same as the board)
 
-## 16. Requests (Phase 2)
+## 16. Requests & petitions
+
+### 16.1 Requests (Phase 2)
 - **Mini villager requests**: "!" above a mini villager → help with one click → recorded in the newspaper
 - **Player requests** ("Regular Neighbour" and above): other residents help with a click
 - Requests are **in-game only, chosen from a preset list** (no real-world meetups or favours)
+
+### 16.2 Community petitions (Phase 3)
+- Residents petition to add a feature to their island
+- **Start with choices from the feature library** (no free-text requests at first)
+- Eligible for operator review only when supported by **≥30% of the community's Verified Residents or at least 10**, whichever applies
+- The operator decides; **1–3 petitions granted per month** at a fixed cadence, announced as a "Petition results" event in the newspaper
+- Keeps operator workload predictable
 
 ---
 
@@ -337,6 +392,303 @@ This document will keep changing during development. To never lose the reasons b
 
 ## 19. Art requirements
 
+### 19.0 MVP art policy
+- **The MVP uses only simple shapes, no detailed art.**
+  - World Map: flat pastel 2D polygons of community boundaries (Vitality tone; grey = unsettled)
+  - Community view: **three.js scene built from coloured boxes** — island tiles, box trees, box houses with box roofs, labelled box buildings, translucent/grey boxes for locked silhouettes, two-box characters for avatar and mini villagers
+  - Projects: box construction site + progress bar UI
+- Because the target style is voxel (made of boxes), the box-based MVP already looks close to the target. A working proof of concept was built on 2026-11-16 (~100 lines of three.js: floating island, layered dirt, box trees/houses, wandering villagers, HTML speech bubbles, tap-to-move avatar, construction progress, island growth).
+- Purpose: ship the full MVP fast and validate the core loop before investing in art.
+- Detailed art (19.1–19.4) is applied in the **Art Pass** (22.2) without changing game logic.
+
+### 19.1 Style guide (target)
+- **Pastel voxel style**: everything built from blocks/boxes, flat-shaded, soft shadows
+- **Floating square diorama island** with layered dirt underneath, soft pastel sky background
+- **Isometric orthographic view**
+- **One fixed pastel palette** (to be defined; e.g. soft greens for grass, warm sand paths, coral/lavender/sky-blue roofs)
+- Light from top-left, gentle ambient light, no harsh contrast
+- Small, cute characters with HTML speech bubbles and name labels
+- **Launch theme: winter** (snow-covered island, chimney smoke, window lights)
+- Reference: `docs/references/` (VibeBase "Voxel Village" screenshots)
+
+### 19.2 Production
+- No outsourcing; made in-house
+- **Simple objects built in code** from boxes (trees, houses, stalls, fences, lamps)
+- **Detailed objects** made in **MagicaVoxel** (free) and exported (e.g. `.glb`/`.obj`)
+- Free/CC0 voxel or low-poly asset packs may be used — **check licences for commercial use**
+- AI is used for concepts/ideas only (AI is weak at clean voxel 3D models)
+- Test consistency with a small set first, then scale
+
+### 19.3 Effects handled in code
+- Day/night: light colour/intensity + sky tint driven by real Calgary time
+- Snow: particles
+- Water shimmer: animated material colour
+- Tree sway, character bounce/head-down: code tweens
+- Window lights: emissive boxes at night
+- Island growth: new edge tiles rise with a tween
+
+### 19.4 Asset list (draft)
+- MVP (code boxes): island tiles (grass, path, snow), dirt layers, trees, resident house (roof/wall colour variants via code), project buildings (playground, community centre, park, ice rink) + construction stages (scaffolding/frame/complete) + silhouettes, name sign, avatar, mini villagers
+- Art Pass: refined buildings, feature-library blocks (lake, creek, hill, ravine, dog park, CTrain station, mall, school), props (lamps, fences, fields, stalls, benches), character variants with simple animation, surprise characters (e.g. moose), World Map icons (rivers, mountains, Calgary Tower), crown/flag
+
+---
+
+## 20. Technical requirements
+
+### 20.1 Stack
+
+| Area | Technology |
+|---|---|
+| Web UI (menus, news, login, etc.) | Angular |
+| Community view (3D voxel diorama) | three.js (orthographic camera, InstancedMesh for tiles, CSS2D/HTML overlays for bubbles and labels) |
+| World Map (2D) | SVG or Canvas rendering of community boundary polygons |
+| Backend API | Spring Boot |
+| Database | Supabase PostgreSQL + PostGIS |
+| Auth | Supabase Auth (Anonymous + Google linking) |
+| Static files / snapshots | Cloudflare Pages / R2 |
+| Bot protection | Cloudflare Turnstile |
+| Analytics | Plausible or PostHog |
+| Voxel modelling | MagicaVoxel |
+
+### 20.2 Data
+- City of Calgary Open Data: **community boundaries**, **population per community**
+- OpenStreetMap: rivers, parks, major roads (for generating the World Map base) and suggesting each community's signature features (7.9)
+- Feature mapping CSV: operator-maintained overrides of community → feature-library blocks
+
+### 20.3 Server cost principles
+1. Anything that doesn't change (art, World Map base, community boundaries) is served as **static files via CDN**
+2. Growth/progress is **computed from stored timestamps + rules** (no bulk updates of all records)
+3. Daily actions update the screen immediately and are sent to the server in batches (**validation on the server**)
+4. Community state and rankings are built as **JSON snapshots every 5–10 minutes** and served via CDN
+5. No real-time connections (WebSocket) in the MVP. "Recently active" info is included in snapshots
+6. Avatar movement is computed on the client and **not sent to the server** in the MVP (only actions are). Movement uses destination events so real-time presence can be added later by broadcasting them
+- Target: **2–3 server calls per player per day**
+
+### 20.3a 3D performance principles
+- Use **InstancedMesh** for repeated blocks (tiles, trees) to keep draw calls low
+- Keep block counts and shadow map sizes modest; cap device pixel ratio at 2
+- Cap visible characters per island (MVP: mini villagers ≤ 20)
+- **Test on a low-end phone early** and regularly
+
+### 20.4 Swappable rendering layer
+- Game objects (community, house, building, silhouette, mini villager, project) are rendered through a **visual layer referenced by asset keys**, separate from game logic.
+- MVP maps each asset key to a code-built box model; the Art Pass maps the same keys to refined voxel models. No game-logic changes required.
+
+### 20.5 Designed for city replication
+- City boundary, community boundaries, population, and World Map base are separated as **per-city data**
+- New city = swap data + add landmark art + feature mapping CSV
+
+---
+
+## 21. Admin tools & analytics
+
+### MVP
+- Daily new verifications per community + spike flags
+- Analytics dashboard
+  - Daily new visitors, % reaching the first action
+  - D1 / D7 retention
+  - Share-card shares, invite-link visits
+  - Visits by community
+
+### Phase 2
+- Report moderation screen (list, hide/restore, suspend users)
+
+---
+
+## 22. Release phases & scope
+
+### 22.1 MVP (target: late Jan – Feb 2027, winter theme)
+
+**Included**
+- Anonymous account + Turnstile + Google linking
+- Location-based community detection, 3-of-7-days resident verification
+- Calgary World Map as **flat pastel 2D polygons** (Vitality colour tones, grey for unsettled, tier label, #1 flag)
+- Community view as a **box-built three.js voxel diorama island** (island growth by residents, buildings, resident houses, mini villagers, 3 Vitality levels, action replay with speech bubbles, name sign, a few signature features from the feature library)
+- **My avatar**: tap/click to move with pathfinding; action buttons make the avatar run to the spot and act
+- 3 daily energy + project choice + satisfying click feedback + a few surprises
+- Community streak, unlocks (Playground / Community Centre / Park), locked-building silhouettes
+- Next-day construction progress + "What changed since yesterday"
+- Auto community newspaper + roadmap notice + "Coming soon"
+- Weekly ranking (basic) + share cards
+- Invite link + invite rewards + Pioneer Sponsor badge
+- Update email subscription (optional, CASL opt-in)
+- Terms of Use, Privacy Policy
+- Analytics integration, abnormal sign-up flags
+
+**MVP retention engine (must work)**
+1. Community changes overnight (construction progress)
+2. Community streak (sense of responsibility)
+3. Silhouette of the next building (anticipation)
+4. Real weather/time (novelty)
+5. Community newspaper with my name (recognition)
+
+### 22.2 Phase 2
+- **Art Pass**: refined pastel voxel models and props (Section 19.1–19.4), styled World Map with landmarks and transitions, character variants and animations, avatar customization, walk-up-and-tap actions, day/night and weather effects
+- Activity-based signature feature upgrades (7.9)
+- Resident board + report moderation screen
+- Profile & ranks
+- Speech bubbles (preset phrases → free text)
+- Mini villager requests, player requests
+- 5 Vitality mood levels
+
+### 22.3 Phase 3
+- Seasonal events (Rodeo Season, winter aurora, etc.), collections
+- Visitor mode (interactions when visiting other communities)
+- Community landmark (60-day streak, chosen by resident vote)
+- Aurora events
+- **Real-time presence**: other online residents' avatars visible and moving in the same island (broadcast destination events per community channel, e.g. Supabase Realtime; cap ~30 visible avatars per island; distinct label colour for online residents; simple emoji greetings)
+- Community petitions (16.2)
+- Advanced share/update celebration events
+
+### 22.4 Phase 4 (monetization)
+- **Local business buildings as ads**
+  - Self-serve purchase page (choose community and period, card payment, choose building art)
+  - Must be labelled "Ad/Sponsored"; no effect on game outcomes
+  - Pricing based on each community's active resident count
+- Community coupons, new business news
+- Open only after there is traffic
+
+### 22.5 Expansion
+- Replicate to other cities (Edmonton → Vancouver, Toronto, etc.)
+- "Battle of Alberta" Calgary vs Edmonton season
+- Apartments/condos (multi-resident buildings) once communities get very large
+
+### 22.6 Development order (~10 hours/week, ~9–11 weeks)
+
+| Step | Work | Duration |
+|---|---|---|
+| 1 | Load community boundary/population data, anonymous login, location → community, resident verification | 2 weeks |
+| 2 | three.js box-built diorama island (island growth, buildings, houses, mini villagers, Vitality, speech bubbles) + avatar tap-to-move with pathfinding + swappable rendering layer; includes time to learn three.js | 2–3 weeks |
+| 3 | Daily actions, projects, community streak, unlocks, action replay, newspaper | 2 weeks |
+| 4 | World Map, weekly ranking, share cards, invites | 2 weeks |
+| 5 | Legal pages, analytics, email subscription, polish → family/friends test | 1–2 weeks |
+
+### 22.7 Launch
+- After family/friends testing, post on r/Calgary and community Facebook groups with a "Calgary dev made this" story
+- After the initial spark, growth comes from in-game invite/share mechanics
+
+### 22.8 Open items
+- [ ] Pastel palette and lighting values (before the Art Pass); save reference screenshots in `docs/references/`
+- [ ] Feature library list and community → feature mapping for launch communities
+- [ ] Island size tiers and building layout templates per tier (tuning)
+- [ ] Project list and required actions per project
+- [ ] Vitality smoothing details (rise/fall speed)
+- [ ] Random surprise types and probabilities
+- [ ] Newspaper sentence templates
+- [ ] Analytics tool choice (Plausible vs PostHog)
+- [ ] Terms of Use / Privacy Policy wording
+- [ ] Concrete invite reward items
+- All numbers are **starting values** to be tuned with post-launch data
+
+---
+
+## 23. Glossary
+
+| Term | Meaning |
+|---|---|
+| Community | A real City of Calgary community (neighbourhood), e.g. Mahogany. The team unit of the game |
+| Resident | A user who belongs to a community |
+| Newcomer | A user who has not finished resident verification |
+| Verified Resident | A user who opened the site from inside their community on 3 different days within 7 days |
+| House | One per Verified Resident in the community view; a presence marker, not something the user grows |
+| Mini villager | Ambient voxel character showing the community's mood; never represents or impersonates a real player |
+| Avatar | The user's own controllable character in their community's island (tap/click to move) |
+| Destination event | Avatar movement expressed as "move to tile (x, y)"; local-only in the MVP, broadcastable for real-time presence later |
+| Island / diorama | The floating square voxel island representing one community; grows with cumulative Verified Residents |
+| Feature library | Reusable signature blocks (lake, creek, hill, park, etc.) assigned to communities for identity |
+| Petition | Residents' request to add a feature-library block to their island; operator decides monthly |
+| Action replay | Mini villagers re-enacting real actions residents took today, with a system speech bubble |
+| Energy | Daily action allowance (3 per day) |
+| Project | A community construction/beautification goal residents contribute actions to |
+| Vitality | 0–100 score of recent community activity that drives mood and scenery |
+| Community Streak | Consecutive days on which at least half of Verified Residents took an action |
+| Unlock | A community building/feature that opens when streak/resident conditions are met |
+| Silhouette | Faded preview of a locked building |
+| World Map | Top-down 2D map of real Calgary community boundaries showing each community's development |
+| Community view | The 3D voxel diorama island screen of a single community |
+| Village Notice Board / Community newspaper | Auto-generated daily news of what happened in the community |
+| Share card | Shareable image that always includes the community name |
+| Founding Resident | Badge for the first resident of an unsettled community |
+| Pioneer Sponsor | Badge for inviting the first resident of an empty community |
+| Snapshot | Pre-computed JSON of community state/ranking, refreshed every 5–10 minutes and served via CDN |
+
+---
+
+## 24. Change Log
+
+> Always add new entries at the **top** of this section. Format:
+> ```
+> ### YYYY-MM-DD — vX.Y
+> **Changed:** what changed
+> **Why:** why it changed
+> **Previous:** the old text, verbatim
+> ```
+
+### 2026-11-16 — v1.2
+**Changed:** Visual direction switched from **2D pixel art (PixiJS)** to **pastel voxel diorama islands (three.js)**, based on the VibeBase "Voxel Village" reference. Added island growth, community identity/feature library, user avatar, and petitions.
+- 2: community = pastel voxel village on a floating diorama island; reference images in `docs/references/`
+- 5.1: World Map no longer pixel-art; entering a community shows the island and my avatar
+- 7.2: village fill rule references island growth
+- 7.8 (new): same square island for all communities, grows with cumulative Verified Residents (8×8 → 32×32), never shrinks
+- 7.9 (new): identity via name sign + feature library (OSM + CSV), activity upgrades (Phase 2), petitions (Phase 3)
+- 9: World Map is a top-down 2D map of real community boundaries (not pixel-art, not 3D)
+- 10: rewritten as voxel diorama island + my avatar (tap/click to move, action buttons make avatar run) + asynchronous other residents
+- 16: renamed to "Requests & petitions"; added 16.2 community petitions
+- 19: rewritten for voxel style (code-built boxes for MVP, MagicaVoxel for detail)
+- 20.1: PixiJS → three.js (community view) + SVG/Canvas (World Map); Aseprite → MagicaVoxel
+- 20.2: OSM also used for feature suggestions; feature mapping CSV
+- 20.3: principle 5 scoped to MVP; new principle 6 (client-side avatar movement via destination events); new 20.3a (3D performance)
+- 20.4: Art Pass maps asset keys to voxel models instead of pixel sprites
+- 20.5: replication includes feature mapping CSV
+- 22.1, 22.2, 22.3, 22.6, 22.8: updated for voxel/three.js, avatar, real-time presence later, petitions; estimate 9–11 weeks
+- 23: glossary updated (World Map, Community view, Mini villager) and new terms (Avatar, Destination event, Island/diorama, Feature library, Petition)
+
+**Why:** The user found a reference (pastel voxel floating island, isometric, small characters with speech bubbles, controllable character) that matches the desired look. A three.js proof of concept (~100 lines) confirmed it is feasible. Voxel style is built from boxes, so the box-based MVP already resembles the target and art needs less drawing skill than pixel art. Same-shape islands that grow with residents make growth visible and drive invites, while the World Map keeps real geography. Real-time avatars are deferred to keep server cost near zero until there are enough users.
+
+**Previous:**
+- 2: `- Each real Calgary community (e.g. Mahogany, Bridgeland, Tuscany) is a pixel-art village.`
+- 5.1: `1. Land on the site → snowy pixel-art **Calgary World Map**` / `3. Zoom into their community`
+- 7.2: `- The village fills from the centre (Community Centre site) outward`
+- 7.8, 7.9, 10.2, 10.3, 16.2, 20.3a: did not exist
+- 9 (full):
+```
+## 9. Calgary World Map (city view)
+
+> MVP renders this with basic shapes (see 19.0). The description below is the target design for the Art Pass.
+
+- Not a real map (e.g. MapLibre) but a **pixel-art world map of Calgary**
+- Elements
+  - Bow River and Elbow River (shimmering), downtown with Calgary Tower, Rocky Mountains on the western horizon
+  - Major landforms: Nose Hill, Fish Creek Park, Glenmore Reservoir, etc.
+- A **miniature of each community's development** at its location (MVP: unsettled fog + 3 tiers)
+- Colour tone reflects Vitality
+- Reflects real Calgary **time (day/night)** and **weather (snow)**
+- Flag/crown on this week's #1 community
+- Tap an empty community → **"Invite a friend from this community"** (pre-filled message)
+- Zooming in transitions smoothly to the community view
+- The base is **generated programmatically** from data (community boundaries, OSM rivers/parks/major roads) onto a pixel grid; only landmarks are hand-drawn → replicable to other cities
+```
+- 10 (full):
+```
+## 10. Community view
+
+> MVP renders this with basic shapes (see 19.0); pixel art comes in the Art Pass.
+
+- Square-grid pixel village
+- Contents: community buildings (playground, community centre, park, etc.), resident houses, mini villagers, project construction sites, locked-building silhouettes
+- On entry, show **"What changed since yesterday"** (construction progress, new residents, trees planted, etc.)
+- Show community streak status and remaining conditions for the next unlock
+- Users can visit and view other communities (actions only in their own community)
+```
+- 16 (full):
+```
+## 16. Requests (Phase 2)
+- **Mini villager requests**: "!" above a mini villager → help with one click → recorded in the newspaper
+- **Player requests** ("Regular Neighbour" and above): other residents help with a click
+- Requests are **in-game only, chosen from a preset list** (no real-world meetups or favours)
+```
+- 19.0–19.4 (full):
+```
 ### 19.0 MVP art policy
 - **The MVP uses only basic geometric shapes** (rectangles, circles, polygons, text labels, simple colours). No pixel art in the MVP.
   - World Map: community boundary polygons filled with flat colours (Vitality tone; grey = unsettled)
@@ -374,179 +726,18 @@ This document will keep changing during development. To never lose the reasons b
 - A few mini villager types × actions (walk 2–4 frames, idle, cheer, gloomy, work)
 - World Map: rivers, Rocky Mountains, landmarks like Calgary Tower, community miniatures (fog + 3 tiers), crown/flag
 - Surprise characters such as a moose
-
----
-
-## 20. Technical requirements
-
-### 20.1 Stack
-
-| Area | Technology |
-|---|---|
-| Web UI (menus, news, login, etc.) | Angular |
-| World Map + pixel community view | PixiJS (consider a viewport plugin for zoom/pan) |
-| Backend API | Spring Boot |
-| Database | Supabase PostgreSQL + PostGIS |
-| Auth | Supabase Auth (Anonymous + Google linking) |
-| Static files / snapshots | Cloudflare Pages / R2 |
-| Bot protection | Cloudflare Turnstile |
-| Analytics | Plausible or PostHog |
-| Pixel editing | Aseprite |
-
-### 20.2 Data
-- City of Calgary Open Data: **community boundaries**, **population per community**
-- OpenStreetMap: rivers, parks, major roads (for generating the World Map base)
-
-### 20.3 Server cost principles
-1. Anything that doesn't change (art, World Map base, community boundaries) is served as **static files via CDN**
-2. Growth/progress is **computed from stored timestamps + rules** (no bulk updates of all records)
-3. Daily actions update the screen immediately and are sent to the server in batches (**validation on the server**)
-4. Community state and rankings are built as **JSON snapshots every 5–10 minutes** and served via CDN
-5. No real-time connections (WebSocket). "Recently active" info is included in snapshots
-- Target: **2–3 server calls per player per day**
-
-### 20.4 Swappable rendering layer
-- Game objects (community, house, building, silhouette, mini villager, project) are rendered through a **visual layer referenced by asset keys**, separate from game logic.
-- MVP maps each asset key to a basic shape; the Art Pass maps the same keys to pixel sprites. No game-logic changes required.
-
-### 20.5 Designed for city replication
-- City boundary, community boundaries, population, and World Map base are separated as **per-city data**
-- New city = swap data + add landmark art
-
----
-
-## 21. Admin tools & analytics
-
-### MVP
-- Daily new verifications per community + spike flags
-- Analytics dashboard
-  - Daily new visitors, % reaching the first action
-  - D1 / D7 retention
-  - Share-card shares, invite-link visits
-  - Visits by community
-
-### Phase 2
-- Report moderation screen (list, hide/restore, suspend users)
-
----
-
-## 22. Release phases & scope
-
-### 22.1 MVP (target: late Jan – Feb 2027, winter theme)
-
-**Included**
-- Anonymous account + Turnstile + Google linking
-- Location-based community detection, 3-of-7-days resident verification
-- Calgary World Map **in basic shapes** (community polygons, Vitality colour tones, grey for unsettled; day/night tint and snow are optional nice-to-haves)
-- Community view **in basic shapes** (buildings, resident houses, mini villagers as dots, 3 Vitality levels, action replay as text/simple motion)
-- 3 daily energy + project choice + satisfying click feedback + a few surprises
-- Community streak, unlocks (Playground / Community Centre / Park), locked-building silhouettes
-- Next-day construction progress + "What changed since yesterday"
-- Auto community newspaper + roadmap notice + "Coming soon"
-- Weekly ranking (basic) + share cards
-- Invite link + invite rewards + Pioneer Sponsor badge
-- Update email subscription (optional, CASL opt-in)
-- Terms of Use, Privacy Policy
-- Analytics integration, abnormal sign-up flags
-
-**MVP retention engine (must work)**
-1. Community changes overnight (construction progress)
-2. Community streak (sense of responsibility)
-3. Silhouette of the next building (anticipation)
-4. Real weather/time (novelty)
-5. Community newspaper with my name (recognition)
-
-### 22.2 Phase 2
-- **Art Pass**: replace basic shapes with pixel art (Section 19.1–19.4), pixel World Map with landmarks, mini villager animations, day/night and weather effects
-- Resident board + report moderation screen
-- Profile & ranks
-- Speech bubbles (preset phrases → free text)
-- Mini villager requests, player requests
-- 5 Vitality mood levels
-
-### 22.3 Phase 3
-- Seasonal events (Rodeo Season, winter aurora, etc.), collections
-- Visitor mode (interactions when visiting other communities)
-- Community landmark (60-day streak, chosen by resident vote)
-- Aurora events, real-time presence indicator
-- Advanced share/update celebration events
-
-### 22.4 Phase 4 (monetization)
-- **Local business buildings as ads**
-  - Self-serve purchase page (choose community and period, card payment, choose building art)
-  - Must be labelled "Ad/Sponsored"; no effect on game outcomes
-  - Pricing based on each community's active resident count
-- Community coupons, new business news
-- Open only after there is traffic
-
-### 22.5 Expansion
-- Replicate to other cities (Edmonton → Vancouver, Toronto, etc.)
-- "Battle of Alberta" Calgary vs Edmonton season
-- Apartments/condos (multi-resident buildings) once communities get very large
-
-### 22.6 Development order (~10 hours/week, ~8–10 weeks)
-
-| Step | Work | Duration |
-|---|---|---|
-| 1 | Load community boundary/population data, anonymous login, location → community, resident verification | 2 weeks |
-| 2 | Shape-based community view (buildings, houses, mini villagers, Vitality) + swappable rendering layer | 1–2 weeks |
-| 3 | Daily actions, projects, community streak, unlocks, action replay, newspaper | 2 weeks |
-| 4 | World Map, weekly ranking, share cards, invites | 2 weeks |
-| 5 | Legal pages, analytics, email subscription, polish → family/friends test | 1–2 weeks |
-
-### 22.7 Launch
-- After family/friends testing, post on r/Calgary and community Facebook groups with a "Calgary dev made this" story
-- After the initial spark, growth comes from in-game invite/share mechanics
-
-### 22.8 Open items
-- [ ] Art style references, palette, reference images (before the Art Pass)
-- [ ] Project list and required actions per project
-- [ ] Vitality smoothing details (rise/fall speed)
-- [ ] Random surprise types and probabilities
-- [ ] Newspaper sentence templates
-- [ ] Analytics tool choice (Plausible vs PostHog)
-- [ ] Terms of Use / Privacy Policy wording
-- [ ] Concrete invite reward items
-- All numbers are **starting values** to be tuned with post-launch data
-
----
-
-## 23. Glossary
-
-| Term | Meaning |
-|---|---|
-| Community | A real City of Calgary community (neighbourhood), e.g. Mahogany. The team unit of the game |
-| Resident | A user who belongs to a community |
-| Newcomer | A user who has not finished resident verification |
-| Verified Resident | A user who opened the site from inside their community on 3 different days within 7 days |
-| House | One per Verified Resident in the community view; a presence marker, not something the user grows |
-| Mini villager | Ambient pixel character showing the community's mood; never represents or impersonates a real player |
-| Action replay | Mini villagers re-enacting real actions residents took today, with a system speech bubble |
-| Energy | Daily action allowance (3 per day) |
-| Project | A community construction/beautification goal residents contribute actions to |
-| Vitality | 0–100 score of recent community activity that drives mood and scenery |
-| Community Streak | Consecutive days on which at least half of Verified Residents took an action |
-| Unlock | A community building/feature that opens when streak/resident conditions are met |
-| Silhouette | Faded preview of a locked building |
-| World Map | Pixel-art map of all of Calgary showing each community's development |
-| Community view | Pixel village screen of a single community |
-| Village Notice Board / Community newspaper | Auto-generated daily news of what happened in the community |
-| Share card | Shareable image that always includes the community name |
-| Founding Resident | Badge for the first resident of an unsettled community |
-| Pioneer Sponsor | Badge for inviting the first resident of an empty community |
-| Snapshot | Pre-computed JSON of community state/ranking, refreshed every 5–10 minutes and served via CDN |
-
----
-
-## 24. Change Log
-
-> Always add new entries at the **top** of this section. Format:
-> ```
-> ### YYYY-MM-DD — vX.Y
-> **Changed:** what changed
-> **Why:** why it changed
-> **Previous:** the old text, verbatim
-> ```
+```
+- 20.1: `| World Map + pixel community view | PixiJS (consider a viewport plugin for zoom/pan) |` / `| Pixel editing | Aseprite |`
+- 20.2: `- OpenStreetMap: rivers, parks, major roads (for generating the World Map base)`
+- 20.3: `5. No real-time connections (WebSocket). "Recently active" info is included in snapshots`
+- 20.4: `- MVP maps each asset key to a basic shape; the Art Pass maps the same keys to pixel sprites. No game-logic changes required.`
+- 20.5: `- New city = swap data + add landmark art`
+- 22.1: `- Calgary World Map **in basic shapes** (community polygons, Vitality colour tones, grey for unsettled; day/night tint and snow are optional nice-to-haves)` / `- Community view **in basic shapes** (buildings, resident houses, mini villagers as dots, 3 Vitality levels, action replay as text/simple motion)`
+- 22.2: `- **Art Pass**: replace basic shapes with pixel art (Section 19.1–19.4), pixel World Map with landmarks, mini villager animations, day/night and weather effects`
+- 22.3: `- Aurora events, real-time presence indicator`
+- 22.6: `### 22.6 Development order (~10 hours/week, ~8–10 weeks)` / `| 2 | Shape-based community view (buildings, houses, mini villagers, Vitality) + swappable rendering layer | 1–2 weeks |`
+- 22.8: `- [ ] Art style references, palette, reference images (before the Art Pass)`
+- 23: `| Mini villager | Ambient pixel character showing the community's mood; never represents or impersonates a real player |` / `| World Map | Pixel-art map of all of Calgary showing each community's development |` / `| Community view | Pixel village screen of a single community |`
 
 ### 2026-11-16 — v1.1
 **Changed:** The MVP is built with basic geometric shapes only; pixel art moves to a new **Art Pass** in Phase 2.
