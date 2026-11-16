@@ -19,11 +19,12 @@ The site itself, **makecalgarytalk.com**, is the game.
 | File | Purpose |
 |---|---|
 | [`requirement.md`](./requirement.md) | **Source of truth.** Concept, rules, MVP scope, tech stack, roadmap, and the full change history |
+| [`PLAN.md`](./PLAN.md) | Module-by-module development plan, build order, and status |
 | [`CLAUDE.md`](./CLAUDE.md) | Working rules for Claude Code (and humans) in this repository |
 | `docs/references/` | Visual reference screenshots (pastel voxel island style) |
 | `docs/` | Data model, API, and screen sketches (to be added) |
 
-Read `requirement.md` and `CLAUDE.md` before starting any work.
+Read `requirement.md`, `PLAN.md` and `CLAUDE.md` before starting any work.
 
 ## Core loop (MVP)
 
@@ -54,6 +55,7 @@ Read `requirement.md` and `CLAUDE.md` before starting any work.
 makecalgarytalk/
 ├── README.md
 ├── requirement.md     # source of truth
+├── PLAN.md            # module plan and status
 ├── CLAUDE.md          # working rules
 ├── docs/
 │   └── references/    # visual reference screenshots
@@ -63,7 +65,7 @@ makecalgarytalk/
 
 ## Getting started
 
-_To be added once development begins (Step 1 in `requirement.md` §22.6)._
+_To be added once development begins (module M0 in `PLAN.md`)._
 
 ## Updating requirements
 

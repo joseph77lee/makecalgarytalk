@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.2 |
+| Document version | v1.3 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-16 |
 | Status | Initial draft for starting MVP development |
@@ -555,6 +555,8 @@ Because every island has the same shape, each community gets its identity from:
 
 ### 22.6 Development order (~10 hours/week, ~9–11 weeks)
 
+> High-level summary only. The detailed, module-based build order, scope and status live in **`PLAN.md`** (which takes precedence for ordering and estimates).
+
 | Step | Work | Duration |
 |---|---|---|
 | 1 | Load community boundary/population data, anonymous login, location → community, resident verification | 2 weeks |
@@ -623,6 +625,13 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-16 — v1.3
+**Changed:** 22.6 now notes that `PLAN.md` holds the detailed module-based build order, scope and status, and takes precedence for ordering and estimates.
+
+**Why:** A separate, frequently changing development plan (`PLAN.md`, modules M0–M14, core-first) was created. Avoids keeping two detailed schedules in sync.
+
+**Previous:** 22.6 had no reference to `PLAN.md` (the summary table itself is unchanged).
 
 ### 2026-11-16 — v1.2
 **Changed:** Visual direction switched from **2D pixel art (PixiJS)** to **pastel voxel diorama islands (three.js)**, based on the VibeBase "Voxel Village" reference. Added island growth, community identity/feature library, user avatar, and petitions.

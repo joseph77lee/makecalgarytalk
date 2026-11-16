@@ -79,19 +79,36 @@ These rules apply to every task in this repository. Read this file and `requirem
 ### Scope
 - Stay inside the current MVP scope (`requirement.md` §22.1). If a feature belongs to a later phase, say so and ask before building it.
 
+### Plan & modules
+- `PLAN.md` defines the build order. **Work on one module at a time** — the module marked 🟦 In progress.
+- Do not start the next module until the current one is ✅ Done (user confirmed).
+- When a module reaches 🟨 Ready for playtest, update its status in `PLAN.md` and tell the user.
+- If a bug belongs to a finished module, mark it 🔁 Reopened, fix it there, and log it.
+- Plan changes follow the same rule as requirements: Change Log entry first (with previous text), then edit.
+
+### Modular code (modular monolith)
+Each `PLAN.md` module maps to a code module with clear boundaries, so a problem can be fixed in one place.
+- **Frontend (Angular):** one folder per module under `frontend/src/app/modules/<module-name>/` (e.g. `island-view`, `avatar`, `daily-actions`). Each module exposes a small public API through its `index.ts`; other modules import **only** from that API, never from internal files.
+- **Backend (Spring Boot):** package-by-feature, `com.makecalgarytalk.<module>` (e.g. `gamecore`, `communitystate`, `residency`). Each module owns its tables and migrations; other modules call its **service interface**, never its repositories or tables directly.
+- **Shared code** lives in a minimal `common` module only (e.g. Calgary day-boundary utility, IDs). Do not put feature logic in `common`.
+- Keep modules **loosely coupled**: pass data through interfaces/DTOs or events; no circular dependencies.
+- **Each module has its own tests.** Changing one module must not require changing another module's internals.
+- If a change needs to cross module boundaries, stop and propose the interface change first (Rule 1).
+
 ---
 
 ## 3. Workflow
 
-1. Read `CLAUDE.md` (including the Mistake Log) and the relevant parts of `requirement.md`
+1. Read `CLAUDE.md` (including the Mistake Log), the current module in `PLAN.md`, and the relevant parts of `requirement.md`
 2. Ask questions about anything unclear
 3. Propose a plan → wait for approval
 4. Implement in small steps
 5. Test, including edge cases
 6. Run the app and check the screen
 7. Report: what changed, what was tested, what was not tested, what you saw on screen, status (`Implemented` / `Verified` / `Ready for playtest`)
-8. Commit with a clear message (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`)
-9. If a mistake happened, add one line to the Mistake Log
+8. Update the module status in `PLAN.md`
+9. Commit with a clear message, scoped by module (e.g. `feat(island-view): add vitality moods`, `fix(gamecore): energy reset at Calgary midnight`)
+10. If a mistake happened, add one line to the Mistake Log
 
 ---
 
