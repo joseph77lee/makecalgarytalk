@@ -1,0 +1,96 @@
+# CLAUDE.md — Working rules for this project
+
+These rules apply to every task in this repository. Read this file and `requirement.md` before starting any work.
+
+---
+
+## 1. Core working rules
+
+### Rule 1. Never code without enough information. Ask → plan together → implement.
+- Before writing code, confirm you understand the goal, the relevant section of `requirement.md`, and the current code.
+- If anything is unclear or missing, **ask first**. Do not guess requirements.
+- For any non-trivial task, propose a short plan (what changes, which files, how to verify) and **wait for approval** before implementing.
+- Work in small steps. One feature or change at a time.
+
+### Rule 2. Never just agree. Review problems and alternatives first.
+- When the user proposes something, check it against `requirement.md`, the existing code, cost, security, and privacy.
+- If you see a problem, say so clearly and suggest at least one alternative, with trade-offs.
+- If the request conflicts with `requirement.md`, point out the conflict and ask whether to update the requirement.
+- Agreeing is fine when the idea is good, but say why.
+
+### Rule 3. Passing basic tests is not "done".
+- Tests must cover the actual rules, including edge cases (e.g. day boundary at Calgary midnight, daily energy limit, half-of-residents streak rule, 3-of-7-days verification).
+- Report what was tested **and what was not tested**.
+- Never say "done" just because the build passes or a happy-path test passes.
+
+### Rule 4. Run it and look at the screen. It is not finished until a human has played it.
+- After implementing, run the app and check the actual screen/behaviour yourself (and describe what you saw).
+- Use these status words honestly:
+  - **Implemented** — code written, builds
+  - **Verified** — tests pass and you ran it and checked the screen/behaviour
+  - **Ready for playtest** — verified and waiting for the user to play it
+  - **Done** — only after the user has played it and confirmed
+- Never mark a task "Done" yourself. The furthest you can go is "Ready for playtest".
+
+### Rule 5. Never repeat the same mistake. Log every mistake here in one line.
+- When a mistake happens (yours or a recurring bug), add **one line** to [§4 Mistake Log](#4-mistake-log) at the bottom of this file.
+- Format: `- YYYY-MM-DD: <what went wrong> → <rule to follow from now on>`
+- Read the Mistake Log before starting each task.
+
+---
+
+## 2. Project rules
+
+### Source of truth
+- `requirement.md` is the source of truth for what to build.
+- **Never change requirements silently.** If a requirement must change:
+  1. Add a Change Log entry at the top of `requirement.md` §24 (date, version, Changed, Why, Previous text verbatim)
+  2. Then update the body
+  3. Bump the version and last-updated date
+- Get the user's approval before any requirement change.
+
+### Language
+- All code, comments, commit messages, docs, and identifiers in **English**. No Korean in code or comments.
+- Use the terms defined in `requirement.md` §23 Glossary for names in code (e.g. `Vitality`, `CommunityStreak`, `VerifiedResident`).
+
+### Privacy & security
+- **Never store exact location coordinates.** Check community boundary on the server, then discard coordinates; store only the community ID.
+- Never collect home addresses.
+- Never expose activity times in public data (day-level only).
+- Never commit secrets (API keys, Supabase service keys, etc.). Use environment variables.
+
+### Game logic
+- All game rules (daily energy, streaks, verification, scoring) are **validated on the server**. The client may update the screen optimistically but is never trusted.
+- Day boundary is **America/Edmonton midnight**.
+- Follow the server-cost principles in `requirement.md` §20.3 (static files via CDN, compute-on-read, snapshots, no WebSockets).
+
+### Rendering
+- Keep rendering separate from game logic. Game objects are drawn through **asset keys** (`requirement.md` §20.4).
+- MVP maps asset keys to basic shapes. Do not hardcode shapes inside game logic.
+
+### Scope
+- Stay inside the current MVP scope (`requirement.md` §22.1). If a feature belongs to a later phase, say so and ask before building it.
+
+---
+
+## 3. Workflow
+
+1. Read `CLAUDE.md` (including the Mistake Log) and the relevant parts of `requirement.md`
+2. Ask questions about anything unclear
+3. Propose a plan → wait for approval
+4. Implement in small steps
+5. Test, including edge cases
+6. Run the app and check the screen
+7. Report: what changed, what was tested, what was not tested, what you saw on screen, status (`Implemented` / `Verified` / `Ready for playtest`)
+8. Commit with a clear message (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`)
+9. If a mistake happened, add one line to the Mistake Log
+
+---
+
+## 4. Mistake Log
+
+<!-- One line per mistake. Newest at the bottom. Format:
+- YYYY-MM-DD: <what went wrong> → <rule to follow from now on>
+-->
+
+_No entries yet._
