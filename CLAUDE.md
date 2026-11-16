@@ -24,7 +24,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 - Never say "done" just because the build passes or a happy-path test passes.
 
 ### Rule 4. Run it and look at the screen. It is not finished until a human has played it.
-- After implementing, run the app and check the actual screen/behaviour yourself (and describe what you saw).
+- After implementing, run the app and check the actual screen/behaviour yourself (and describe what you saw). For 3D work, also check it at a phone-sized viewport.
 - Use these status words honestly:
   - **Implemented** — code written, builds
   - **Verified** — tests pass and you ran it and checked the screen/behaviour
@@ -64,9 +64,17 @@ These rules apply to every task in this repository. Read this file and `requirem
 - Day boundary is **America/Edmonton midnight**.
 - Follow the server-cost principles in `requirement.md` §20.3 (static files via CDN, compute-on-read, snapshots, no WebSockets).
 
-### Rendering
+### Rendering (three.js voxel island)
 - Keep rendering separate from game logic. Game objects are drawn through **asset keys** (`requirement.md` §20.4).
-- MVP maps asset keys to basic shapes. Do not hardcode shapes inside game logic.
+- MVP maps asset keys to **code-built box models**. Do not hardcode models or meshes inside game logic.
+- Match the visual reference in `docs/references/` (pastel voxel floating island, isometric orthographic camera, soft light). If unsure about a visual choice, ask.
+- Follow the 3D performance principles (`requirement.md` §20.3a): InstancedMesh for repeated blocks, modest shadows, device pixel ratio ≤ 2, capped character counts. Mention phone performance in reports.
+- Speech bubbles and name labels are **HTML overlays**, not 3D text.
+- The World Map is **2D** (SVG/Canvas). Do not render all communities in 3D.
+
+### Avatar & multiplayer
+- Avatar movement is expressed as **destination events** ("move to tile x,y") and computed on the client. Do not send per-frame positions to the server.
+- **No real-time multiplayer in the MVP.** Other residents appear asynchronously (near houses or replaying today's actions). Real-time presence is a later phase; keep the destination-event format so it can be broadcast later.
 
 ### Scope
 - Stay inside the current MVP scope (`requirement.md` §22.1). If a feature belongs to a later phase, say so and ask before building it.
