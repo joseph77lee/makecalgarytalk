@@ -43,7 +43,7 @@ All TypeScript (+ SQL), serverless — no always-on backend server.
 |---|---|
 | Frontend | React + Vite + TypeScript, Tailwind CSS, Zustand |
 | Community island (3D) | react-three-fiber + drei (three.js) |
-| World Map (2D) | SVG in React |
+| World Map (2D) | Canvas in React |
 | Database / Auth | Supabase (PostgreSQL + PostGIS, Anonymous + Google sign-in) |
 | Server-side game rules | Supabase Postgres functions (RPC) + Row Level Security, Edge Functions, pg_cron |
 | Hosting / CDN | Cloudflare Pages / R2 |

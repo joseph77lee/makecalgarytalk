@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.6 |
+| Document version | v1.7 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-16 |
+| Last updated | 2026-11-17 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -146,6 +146,7 @@ This document will keep changing during development. To never lose the reasons b
 
 ### 7.4 Community Vitality (0–100)
 - Definition: 7-day average of the "daily active resident ratio" × 100
+  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Active Verified Residents** that day, see 7.5); 0 if the denominator is 0
 - Tuned to **fall slowly and rise quickly**
 - MVP has 3 mood levels
 
@@ -159,10 +160,12 @@ This document will keep changing during development. To never lose the reasons b
 - Gloomy → recovered triggers a **"Community Revival" effect** (cheering, flowers bloom) + a share card
 
 ### 7.5 Community Streak
-- **Community attendance day** = a day when **at least half** of Verified Residents take an action
-  - In a community with only 1 Verified Resident, that 1 person is enough
+- **Active Verified Resident (7-day)** = a Verified Resident who took at least one action within the **last 7 Calgary days, including today**. Residents inactive longer (including those whose houses are archived after 30 days) are **not** counted, so dormant residents cannot make the streak impossible.
+- **Community attendance day** = a day when **at least half of the Active Verified Residents** take an action
+  - Half is rounded up (e.g. 6 active → 3 needed; 5 active → 3 needed); with 1 Active Verified Resident, that 1 person is enough
+  - If there are 0 Active Verified Residents, the day does not count (streak breaks)
 - Day boundary: Calgary time (America/Edmonton) midnight
-- UI example: "Mahogany 5-day streak! Today 2/6 — 3 residents keep it going"
+- UI example: "Mahogany 5-day streak! Today 2/6 active residents — 1 more keeps it going" (6 = Active Verified Residents)
 
 ### 7.6 Community unlocks (MVP)
 
@@ -303,7 +306,8 @@ Because every island has the same shape, each community gets its identity from:
 ### 12.1 Weekly community ranking
 - **Score = average daily active Verified Residents per 1,000 population**
   - Formula: (sum of daily active Verified Residents over the week ÷ 7) ÷ max(community population, 1,000) × 1,000
-- Only communities with **5+ active Verified Residents** are ranked
+  - "Daily active Verified Residents" = Verified Residents who took at least one action that Calgary day (each person counts at most once per day)
+- Only communities with **5+ Verified Residents who took at least one action during that ranking week** (Monday 00:00 – Sunday 23:59, Calgary time) are ranked
 - Display: TOP 10 + my community's rank
 - **Resets every Monday 00:00 (Calgary time)**; last week's results announced on Monday
 
@@ -460,7 +464,7 @@ Because every island has the same shape, each community gets its identity from:
 |---|---|
 | Frontend app | **React + Vite + TypeScript** (SPA) |
 | Community view (3D voxel diorama) | **react-three-fiber** (React renderer for three.js) + **drei** helpers (`OrthographicCamera`, `Instances` for repeated blocks, `Html` for speech bubbles/labels, controls, shadows) |
-| World Map (2D) | SVG rendered by React (community boundary polygons) |
+| World Map (2D) | **Canvas** rendered in a React component (community boundary polygons + thousands of small development icons); SVG acceptable for prototypes |
 | State management | **Zustand** |
 | UI styling | **Tailwind CSS** |
 | Database | Supabase PostgreSQL + PostGIS |
@@ -489,6 +493,13 @@ Because every island has the same shape, each community gets its identity from:
 6. Avatar movement is computed on the client and **not sent to the server** in the MVP (only actions are). Movement uses destination events so real-time presence can be added later by broadcasting them
 - Target: **2–3 server calls per player per day**
 
+### 20.3a 3D performance principles
+- Use **instanced rendering** (drei `Instances` / InstancedMesh) for repeated blocks (tiles, trees) to keep draw calls low
+- Per-frame updates (avatar/villager movement) run in `useFrame` with refs, **not React state**, to avoid re-rendering every frame
+- Keep block counts and shadow map sizes modest; cap device pixel ratio at 2
+- Cap visible characters per island (MVP: mini villagers ≤ 20)
+- **Test on a low-end phone early** and regularly
+
 ### 20.3b Scalability principles (target: 10,000 concurrent users without redesign)
 1. **Actions are append-only records.** Never update a shared counter (e.g. project progress) on every action; insert a row into the action log and aggregate when building snapshots. Avoids row-lock contention in popular communities.
 2. **Stateless server logic.** No in-memory state in functions; everything lives in the database or snapshots, so capacity scales by plan/instances.
@@ -496,13 +507,6 @@ Because every island has the same shape, each community gets its identity from:
 4. **Idempotent action submission.** Every action carries a client-generated unique ID; duplicates are ignored (prevents double energy spend on flaky networks).
 5. **Rate limiting at the edge** (Cloudflare) per IP, plus per-user limits in server logic.
 - Later, as traffic grows: upgrade Supabase plan and auth rate limits, cache share-card images per event, add monitoring/alerts, load test (e.g. k6) before big launches. Real-time presence (22.3) needs its own capacity plan (cap ~30 visible avatars per island, split popular communities into rooms).
-
-### 20.3a 3D performance principles
-- Use **instanced rendering** (drei `Instances` / InstancedMesh) for repeated blocks (tiles, trees) to keep draw calls low
-- Per-frame updates (avatar/villager movement) run in `useFrame` with refs, **not React state**, to avoid re-rendering every frame
-- Keep block counts and shadow map sizes modest; cap device pixel ratio at 2
-- Cap visible characters per island (MVP: mini villagers ≤ 20)
-- **Test on a low-end phone early** and regularly
 
 ### 20.4 Swappable rendering layer
 - Game objects (community, house, building, silhouette, mini villager, project) are rendered through a **visual layer referenced by asset keys**, separate from game logic.
@@ -637,7 +641,8 @@ Because every island has the same shape, each community gets its identity from:
 | Energy | Daily action allowance (3 per day) |
 | Project | A community construction/beautification goal residents contribute actions to |
 | Vitality | 0–100 score of recent community activity that drives mood and scenery |
-| Community Streak | Consecutive days on which at least half of Verified Residents took an action |
+| Community Streak | Consecutive days on which at least half of the Active Verified Residents took an action |
+| Active Verified Resident | A Verified Resident who took at least one action within the last 7 Calgary days (including today); denominator for the streak and Vitality |
 | Unlock | A community building/feature that opens when streak/resident conditions are met |
 | Silhouette | Faded preview of a locked building |
 | World Map | Top-down 2D map of real Calgary community boundaries showing each community's development |
@@ -659,6 +664,34 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-17 — v1.7
+**Changed:** Resolved inconsistencies and ambiguities found while reviewing documents before M0.
+- 7.4: daily active resident ratio uses Active Verified Residents as the denominator
+- 7.5: defined **Active Verified Resident (7-day)**; streak = at least half (rounded up) of Active Verified Residents; 0 active → day does not count; UI example clarified
+- 12.1: defined "daily active Verified Residents"; ranking eligibility = 5+ Verified Residents who acted during the ranking week (Mon–Sun, Calgary time)
+- 20.1: World Map rendering is Canvas (matches §9 and PLAN.md M10)
+- 20.3a / 20.3b: blocks reordered so 20.3a comes before 20.3b (numbers unchanged because CLAUDE.md references them)
+- 23: Community Streak updated; Active Verified Resident added
+
+**Why:** Review in VS Code found: (1) World Map was Canvas in §9/PLAN but SVG in §20.1/README/CLAUDE; (3) the streak "half" denominator was undefined — counting dormant/archived residents would make streaks nearly impossible; (4) "active" in ranking eligibility had no time window; (5) section order 20.3 → 20.3b → 20.3a. The 7-day window counts residents who actually play regularly, keeping streaks achievable, and the same denominator keeps Vitality consistent.
+
+**Previous:**
+- 7.4: `- Definition: 7-day average of the "daily active resident ratio" × 100`
+- 7.5 rule:
+```
+- **Community attendance day** = a day when **at least half** of Verified Residents take an action
+  - In a community with only 1 Verified Resident, that 1 person is enough
+```
+- 7.5 UI: `- UI example: "Mahogany 5-day streak! Today 2/6 — 3 residents keep it going"`
+- 12.1:
+```
+  - Formula: (sum of daily active Verified Residents over the week ÷ 7) ÷ max(community population, 1,000) × 1,000
+- Only communities with **5+ active Verified Residents** are ranked
+```
+- 20.1: `| World Map (2D) | SVG rendered by React (community boundary polygons) |`
+- 23: `| Community Streak | Consecutive days on which at least half of Verified Residents took an action |`
+- Section order was 20.3 → 20.3b → 20.3a (content unchanged)
 
 ### 2026-11-16 — v1.6
 **Changed:** Removed time estimates and target dates. 22.1 heading no longer has a target date; 22.6 heading and table no longer have durations; 22.6 note says `PLAN.md` takes precedence for ordering (not estimates) and that no time estimates are kept.

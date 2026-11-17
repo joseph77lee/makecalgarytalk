@@ -19,7 +19,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 - Agreeing is fine when the idea is good, but say why.
 
 ### Rule 3. Passing basic tests is not "done".
-- Tests must cover the actual rules, including edge cases (e.g. day boundary at Calgary midnight, daily energy limit, half-of-residents streak rule, 3-of-7-days verification).
+- Tests must cover the actual rules, including edge cases (e.g. day boundary at Calgary midnight, daily energy limit, half-of-Active-Verified-Residents streak rule with rounding and zero denominator, 3-of-7-days verification).
 - Report what was tested **and what was not tested**.
 - Never say "done" just because the build passes or a happy-path test passes.
 
@@ -75,7 +75,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 - Match the visual reference in `docs/references/` (pastel voxel floating island, isometric orthographic camera, soft light). If unsure about a visual choice, ask.
 - Follow the 3D performance principles (`requirement.md` §20.3a): InstancedMesh for repeated blocks, modest shadows, device pixel ratio ≤ 2, capped character counts. Mention phone performance in reports.
 - Speech bubbles and name labels are **HTML overlays** (drei `Html`), not 3D text.
-- The World Map is **2D** (SVG in React). Do not render all communities in 3D.
+- The World Map is **2D** (Canvas in a React component; SVG only for prototypes). Do not render all communities in 3D.
 
 ### Avatar & multiplayer
 - Avatar movement is expressed as **destination events** ("move to tile x,y") and computed on the client. Do not send per-frame positions to the server.
