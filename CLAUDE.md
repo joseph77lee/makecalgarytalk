@@ -124,4 +124,4 @@ Each `PLAN.md` module maps to a code module with clear boundaries, so a problem 
 - YYYY-MM-DD: <what went wrong> → <rule to follow from now on>
 -->
 
-_No entries yet._
+- 2026-11-17: requirement.md bumped without updating PLAN.md "Based on" → after every requirement version bump, update PLAN.md header in the same commit

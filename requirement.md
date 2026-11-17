@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.7 |
+| Document version | v1.8 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-17 |
 | Status | Initial draft for starting MVP development |
@@ -146,7 +146,8 @@ This document will keep changing during development. To never lose the reasons b
 
 ### 7.4 Community Vitality (0–100)
 - Definition: 7-day average of the "daily active resident ratio" × 100
-  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Active Verified Residents** that day, see 7.5); 0 if the denominator is 0
+  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents active within the last 30 Calgary days** that day, i.e. residents whose houses are shown, see 7.2); 0 if the denominator is 0
+  - This intentionally differs from the streak denominator (7.5, 7-day Active Verified Residents): the streak rewards regular players and must not be blocked by dormant residents, while Vitality honestly reflects the whole community — many dark houses make the community look gloomier, which motivates waking up neighbours
 - Tuned to **fall slowly and rise quickly**
 - MVP has 3 mood levels
 
@@ -172,9 +173,10 @@ This document will keep changing during development. To never lose the reasons b
 | Condition | Unlocks |
 |---|---|
 | 3-day community streak | Playground |
-| 7-day streak + 5 Verified Residents | Community Centre (resident board feature opens in Phase 2) |
+| 7-day streak + 5 Verified Residents (cumulative) | Community Centre (resident board feature opens in Phase 2) |
 | 30-day streak | Park |
 
+- Resident counts in unlock conditions are **cumulative Verified Residents** (same basis as island size, 7.8); an unlocked building never re-locks
 - Locked buildings appear as **faded silhouettes** with "1 more streak day until the Playground"
 - Community level is permanent (separate from the weekly ranking)
 
@@ -642,7 +644,7 @@ Because every island has the same shape, each community gets its identity from:
 | Project | A community construction/beautification goal residents contribute actions to |
 | Vitality | 0–100 score of recent community activity that drives mood and scenery |
 | Community Streak | Consecutive days on which at least half of the Active Verified Residents took an action |
-| Active Verified Resident | A Verified Resident who took at least one action within the last 7 Calgary days (including today); denominator for the streak and Vitality |
+| Active Verified Resident | A Verified Resident who took at least one action within the last 7 Calgary days (including today); denominator for the streak (Vitality uses the 30-day basis, 7.4) |
 | Unlock | A community building/feature that opens when streak/resident conditions are met |
 | Silhouette | Faded preview of a locked building |
 | World Map | Top-down 2D map of real Calgary community boundaries showing each community's development |
@@ -664,6 +666,20 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-17 — v1.8
+**Changed:**
+- 7.4: Vitality denominator is now Verified Residents active within the last 30 Calgary days (residents whose houses are shown), not the 7-day Active Verified Residents
+- 7.6: resident counts in unlock conditions are cumulative; unlocked buildings never re-lock
+- 23: Active Verified Resident definition clarified (streak only)
+
+**Why:** Review found that with the 7-day denominator, 1 daily player out of 50 Verified Residents would show Vitality 100 (Lively), which misrepresents how alive the community is. The 30-day basis matches the houses on screen (dark houses → gloomier community) and motivates waking neighbours, while the streak keeps the 7-day basis so dormant residents cannot block it. Unlock counts were ambiguous; cumulative matches island size and the "never shrink" principle.
+
+**Previous:**
+- 7.4: `  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Active Verified Residents** that day, see 7.5); 0 if the denominator is 0`
+- 7.6 table: `| 7-day streak + 5 Verified Residents | Community Centre (resident board feature opens in Phase 2) |`
+- 7.6 note: `(did not exist)`
+- 23: `| Active Verified Resident | A Verified Resident who took at least one action within the last 7 Calgary days (including today); denominator for the streak and Vitality |`
 
 ### 2026-11-17 — v1.7
 **Changed:** Resolved inconsistencies and ambiguities found while reviewing documents before M0.
