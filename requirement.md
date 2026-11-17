@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.9 |
+| Document version | v1.10 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-17 |
 | Status | Initial draft for starting MVP development |
@@ -116,8 +116,25 @@ This document will keep changing during development. To never lose the reasons b
 - After verification
   - **No more location checks** (play from anywhere)
   - Pending contributions are applied to the community
-- **Changing community**: once every 90 days (requires re-verification)
-- Users getting verified in their workplace community are allowed in the MVP (keep rules simple)
+- **Changing community**: see 6.4 (moving)
+- Users getting verified in their workplace community are allowed in the MVP (keep rules simple); a free correction is available (6.4)
+
+### 6.4 Moving to another community
+Goal: moving never punishes the person who moves or the residents who stay.
+- **Started by the user** ("I moved" in settings). Starts a location check and re-verification in the new community (3 different days within 7 days, same rules as 6.3). Moves cannot be detected automatically because Verified Residents are no longer location-checked.
+- **During a move** (until re-verification completes):
+  - The user stays a Verified Resident of the old community and keeps their house there (no limbo)
+  - From the moment the move starts, they are **excluded from the old community's streak and Vitality denominators** (7.4, 7.5), so they cannot break its streak or drag its mood down
+  - Their actions are stored as pending contributions for the new community (6.3)
+  - If re-verification is not completed within **7 days** of starting, the move is **cancelled automatically**: nothing is lost, they count normally in the old community again, the cooldown is not used, and they can start again at any time
+- **When the move completes**:
+  - Their house moves to the new community and pending contributions are applied there
+  - The old community **keeps** its cumulative Verified Resident count, completed buildings and unlocks (7.6, 7.8)
+  - The old community's newspaper shows a **farewell line** (11)
+  - **Personal records follow the person**: badges (including Founding Resident), total active days and, from Phase 2, profile and rank
+  - Invite rewards already granted stay; moving never creates a new invite reward (12.3)
+- **Cooldown**: 90 days from the last **completed** move (cancelled moves do not count)
+- **One free correction**: within **14 days of the first verification**, a user may move once without waiting for the cooldown (e.g. verified at their workplace by mistake). Once per account.
 
 ---
 
@@ -147,7 +164,7 @@ This document will keep changing during development. To never lose the reasons b
 
 ### 7.4 Community Vitality (0–100)
 - Definition: 7-day average of the "daily active resident ratio" × 100
-  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, i.e. residents whose houses are shown); the ratio therefore never exceeds 1; 0 if the denominator is 0
+  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, i.e. residents whose houses are shown, excluding residents with a move in progress, 6.4); the ratio therefore never exceeds 1; 0 if the denominator is 0
   - This intentionally differs from the streak denominator (7.5, 7-day Active Verified Residents): the streak rewards regular players and must not be blocked by dormant residents, while Vitality honestly reflects the whole community — many dark houses make the community look gloomier, which motivates waking up neighbours
 - Tuned to **fall slowly and rise quickly**
 - MVP has 3 mood levels
@@ -164,6 +181,7 @@ This document will keep changing during development. To never lose the reasons b
 ### 7.5 Community Streak
 - **Active Verified Resident (7-day)** = a Verified Resident who took at least one action within the **last 7 Calgary days, including today**. Residents inactive longer (including those whose houses are archived after 30 days) are **not** counted, so dormant residents cannot make the streak impossible.
   - Only **actions** count here; the verification day does not (unlike the house/Vitality "last active day" in 7.2), so newly verified residents who have not acted yet do not raise the bar for the streak.
+  - Residents with a move in progress (6.4) are excluded from the old community's Active Verified Residents.
 - **Community attendance day** = a day when **at least half of the Active Verified Residents** take an action
   - Half is rounded up (e.g. 6 active → 3 needed; 5 active → 3 needed); with 1 Active Verified Resident, that 1 person is enough
   - If there are 0 Active Verified Residents, the day does not count (streak breaks)
@@ -192,6 +210,7 @@ This document will keep changing during development. To never lose the reasons b
 ### 7.8 Island size (grows with residents)
 - Every community is shown as the **same square floating island**, regardless of the real community's size or shape.
 - The island grows with the **cumulative number of Verified Residents**:
+  - Cumulative = **distinct people who have ever been Verified Residents of this community**. Residents who moved away (6.4) stay counted; a person who leaves and later returns is not counted again
 
 | Cumulative Verified Residents | Island size (tiles) |
 |---|---|
@@ -300,6 +319,7 @@ Because every island has the same shape, each community gets its identity from:
 - **Auto-generated community newspaper** (no operator effort)
   - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed. Sarah hit a 7-day streak!"
   - Shows nicknames of active residents (recognition)
+  - Farewell line when a resident moves away (6.4), e.g. "Sarah moved to Bridgeland — thanks for everything, neighbour!" (no times)
 - **Upcoming updates (roadmap)**: e.g. "December: Community board opens"
 - Locked features are shown with a lock icon + "Coming soon"
 
@@ -323,6 +343,7 @@ Because every island has the same shape, each community gets its identity from:
 - Personal invite link
 - If the invitee becomes a **Verified Resident of the same community**, both get a reward (rare decoration/badge)
 - If my invite brings the **first resident to an empty community**, I get the "Pioneer Sponsor" badge
+- Rewards already granted are kept when either person moves (6.4); an invitee moving to another community never triggers a new reward
 
 ---
 
@@ -399,6 +420,7 @@ Because every island has the same shape, each community gets its identity from:
 - Trust ramp (new accounts' contributions weighted less; full weight after 2–3 weeks)
 - Phone number verification
 - Mutual vouching by Verified Residents
+- Count a mover toward a community's cumulative Verified Residents only after they have stayed **14+ days** (if community hopping to inflate island size/unlocks becomes a problem; 6.4 already limits it to physical 3-of-7-day visits and a 90-day cooldown)
 
 ---
 
@@ -648,6 +670,8 @@ Because every island has the same shape, each community gets its identity from:
 | Community Streak | Consecutive days on which at least half of the Active Verified Residents took an action |
 | Active Verified Resident | A Verified Resident who took at least one action within the last 7 Calgary days (including today); denominator for the streak (Vitality uses the 30-day basis, 7.4) |
 | Last active day | The later of a Verified Resident's last action day and verification day; decides whether their house is shown (30 days) and the Vitality denominator |
+| Move | A Verified Resident changing community: user-started, re-verification in the new community, no limbo, auto-cancel after 7 days, 90-day cooldown, one free correction within 14 days of first verification (6.4) |
+| Cumulative Verified Residents | Distinct people who have ever been Verified Residents of a community; never decreases (movers stay counted, returners are not counted twice) |
 | Unlock | A community building/feature that opens when streak/resident conditions are met |
 | Silhouette | Faded preview of a locked building |
 | World Map | Top-down 2D map of real Calgary community boundaries showing each community's development |
@@ -669,6 +693,34 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-17 — v1.10
+**Changed:** Defined how moving to another community works, choosing the most user-friendly approach.
+- 6.3: "Changing community" now points to 6.4; workplace line mentions the free correction
+- 6.4 (new): user-started move; stays in the old community until re-verified (no limbo); excluded from the old community's streak/Vitality denominators during the move; auto-cancel after 7 days with nothing lost; old community keeps cumulative count/buildings/unlocks; farewell line; personal records follow the person; 90-day cooldown from the last completed move; one free correction within 14 days of first verification
+- 7.4, 7.5: denominators exclude residents with a move in progress (cross-reference to 6.4)
+- 7.8: cumulative Verified Residents = distinct people ever verified in the community (movers stay counted, returners not counted twice)
+- 11: farewell line in the newspaper
+- 12.3: invite rewards kept on move; no new reward from moving
+- 17 (Add if needed): 14-day stay before a mover counts toward cumulative
+- 23: added Move, Cumulative Verified Residents
+
+**Why:** Review found the old rule ("once every 90 days, requires re-verification") left gaps: membership during re-verification was undefined, a mover stayed in the old community's 7-day streak denominator and could break its streak, a user verified at their workplace by mistake had to wait 90 days, and what happens to badges/contributions was undefined. Making the island depend on current residents was rejected because islands would shrink and punish the residents who stay. The abuse risk of inflating cumulative counts by hopping is small (physical 3-of-7-day visits, 90-day cooldown → at most ~4 communities/year), so it is accepted and monitored, with a stricter rule ready in §17.
+
+**Previous:**
+- 6.3:
+```
+- **Changing community**: once every 90 days (requires re-verification)
+- Users getting verified in their workplace community are allowed in the MVP (keep rules simple)
+```
+- 6.4: did not exist
+- 7.4: `... (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, i.e. residents whose houses are shown); the ratio therefore never exceeds 1`
+- 7.5: (move exclusion line did not exist)
+- 7.8: `- The island grows with the **cumulative number of Verified Residents**:` (no definition line)
+- 11: (farewell line did not exist)
+- 12.3: (move rule did not exist)
+- 17 Add if needed: (14-day stay rule did not exist)
+- 23: (Move, Cumulative Verified Residents did not exist)
 
 ### 2026-11-17 — v1.9
 **Changed:**

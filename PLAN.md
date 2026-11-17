@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.6 |
+| Plan version | v1.7 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-17 |
-| Based on | `requirement.md` v1.9 |
+| Based on | `requirement.md` v1.10 |
 | Current module | M0 — Foundation (not started) |
 
 ---
@@ -183,11 +183,13 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] pending contributions
   - [ ] **3 different days within 7** → Verified Resident
   - [ ] no location checks after verification
-  - [ ] 90-day community change
+  - [ ] moving (`requirement.md` §6.4): user-started "I moved", stays in old community until re-verified, excluded from old community's streak/Vitality denominators during the move, auto-cancel after 7 days, 90-day cooldown from last completed move, one free correction within 14 days of first verification
+  - [ ] cumulative Verified Residents counted as distinct people per community (movers stay counted, returners not counted twice)
   - [ ] "verify on your phone" hint
 - **Definition of Done**
   - [ ] tests prove coordinates are never persisted or logged
   - [ ] verification edge cases tested (other community visit same day, day boundary)
+  - [ ] move edge cases tested (auto-cancel at day 7, cooldown not used on cancel, free correction once only, old community keeps cumulative count, returner not double counted)
   - [ ] user verified their own community
 
 ### M8 — Residents & Villagers ⬜
@@ -206,6 +208,7 @@ M0 ─┬─ M1 ── M2 ─┐
 **Goal:** A daily reason to check in.
 - **In scope**
   - [ ] auto-generated daily newspaper from game events (templates)
+  - [ ] farewell line when a resident moves away (`requirement.md` §6.4, §11)
   - [ ] roadmap notices + "Coming soon" locks
   - [ ] Village Notice Board object on the island opens it
 - **Definition of Done**
@@ -286,6 +289,17 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-17 — v1.7
+**Changed:** "Based on" → `requirement.md` v1.10. M7: replaced "90-day community change" with the full moving flow (§6.4) and cumulative-count rule; added move edge-case tests to M7 Definition of Done. M9: added farewell line item.
+
+**Why:** Sync with requirement v1.10 (user-friendly moving rules).
+
+**Previous:**
+- `| Based on | `requirement.md` v1.9 |`
+- M7 In scope: `  - [ ] 90-day community change`
+- M7 Definition of Done: (move edge-case item did not exist)
+- M9 In scope: (farewell line item did not exist)
 
 ### 2026-11-17 — v1.6
 **Changed:** "Based on" → `requirement.md` v1.9. M5 item: Vitality denominator uses the last active day (later of last action and verification day), 30 days including today.
