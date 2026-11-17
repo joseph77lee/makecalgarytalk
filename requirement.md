@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.8 |
+| Document version | v1.9 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-17 |
 | Status | Initial draft for starting MVP development |
@@ -131,7 +131,8 @@ This document will keep changing during development. To never lose the reasons b
 - One house per Verified Resident, with a **name tag (nickname)**
 - Residents active today: lights on + chimney smoke
 - Residents not active today: lights off
-- **Inactive 30+ days**: house is temporarily removed from the village (archived); it reappears when they return
+- **Last active day** = the later of the resident's last action day and their verification day (so a newly verified resident who has not acted yet still has a house)
+- **No activity for 30+ days** (last active day is not within the last 30 Calgary days, including today): house is temporarily removed from the village (archived); it reappears when they return
 - Houses are not something individuals grow; they show "I live in this community"
 - Houses and buildings fill the island from the centre outward; the island itself grows with residents (see 7.8)
 - Houses have **no relation to real addresses/locations**
@@ -146,7 +147,7 @@ This document will keep changing during development. To never lose the reasons b
 
 ### 7.4 Community Vitality (0–100)
 - Definition: 7-day average of the "daily active resident ratio" × 100
-  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents active within the last 30 Calgary days** that day, i.e. residents whose houses are shown, see 7.2); 0 if the denominator is 0
+  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, i.e. residents whose houses are shown); the ratio therefore never exceeds 1; 0 if the denominator is 0
   - This intentionally differs from the streak denominator (7.5, 7-day Active Verified Residents): the streak rewards regular players and must not be blocked by dormant residents, while Vitality honestly reflects the whole community — many dark houses make the community look gloomier, which motivates waking up neighbours
 - Tuned to **fall slowly and rise quickly**
 - MVP has 3 mood levels
@@ -162,6 +163,7 @@ This document will keep changing during development. To never lose the reasons b
 
 ### 7.5 Community Streak
 - **Active Verified Resident (7-day)** = a Verified Resident who took at least one action within the **last 7 Calgary days, including today**. Residents inactive longer (including those whose houses are archived after 30 days) are **not** counted, so dormant residents cannot make the streak impossible.
+  - Only **actions** count here; the verification day does not (unlike the house/Vitality "last active day" in 7.2), so newly verified residents who have not acted yet do not raise the bar for the streak.
 - **Community attendance day** = a day when **at least half of the Active Verified Residents** take an action
   - Half is rounded up (e.g. 6 active → 3 needed; 5 active → 3 needed); with 1 Active Verified Resident, that 1 person is enough
   - If there are 0 Active Verified Residents, the day does not count (streak breaks)
@@ -645,6 +647,7 @@ Because every island has the same shape, each community gets its identity from:
 | Vitality | 0–100 score of recent community activity that drives mood and scenery |
 | Community Streak | Consecutive days on which at least half of the Active Verified Residents took an action |
 | Active Verified Resident | A Verified Resident who took at least one action within the last 7 Calgary days (including today); denominator for the streak (Vitality uses the 30-day basis, 7.4) |
+| Last active day | The later of a Verified Resident's last action day and verification day; decides whether their house is shown (30 days) and the Vitality denominator |
 | Unlock | A community building/feature that opens when streak/resident conditions are met |
 | Silhouette | Faded preview of a locked building |
 | World Map | Top-down 2D map of real Calgary community boundaries showing each community's development |
@@ -666,6 +669,21 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-17 — v1.9
+**Changed:**
+- 7.2: defined **Last active day** = later of last action day and verification day; archive rule uses it with "within the last 30 Calgary days, including today"
+- 7.4: Vitality denominator uses the last active day and explicitly includes that day (ratio never exceeds 1)
+- 7.5: clarified that only actions count for the 7-day Active Verified Resident (verification day does not)
+- 23: added Last active day
+
+**Why:** Review found (1) the 30-day window did not say "including today", so a resident returning after 31 days would be in the numerator but not the denominator (ratio > 1); (2) verification is based on visits, not actions, so a newly verified resident with no actions would immediately have no house and be excluded from Vitality. Counting the verification day fixes the house/Vitality case; the streak stays action-only so it rewards actual play and is not made harder by residents who have not acted yet.
+
+**Previous:**
+- 7.2: `- **Inactive 30+ days**: house is temporarily removed from the village (archived); it reappears when they return`
+- 7.4: `  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents active within the last 30 Calgary days** that day, i.e. residents whose houses are shown, see 7.2); 0 if the denominator is 0`
+- 7.5: (action-only note did not exist)
+- 23: (Last active day did not exist)
 
 ### 2026-11-17 — v1.8
 **Changed:**

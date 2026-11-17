@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.5 |
+| Plan version | v1.6 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-17 |
-| Based on | `requirement.md` v1.8 |
+| Based on | `requirement.md` v1.9 |
 | Current module | M0 — Foundation (not started) |
 
 ---
@@ -154,7 +154,7 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M5 — Community State ⭐ ⬜
 **Goal:** The community feels alive and changes over days. **Core loop complete.**
 - **In scope**
-  - [ ] Backend: community streak (≥ half, rounded up, of **Active Verified Residents** = acted within last 7 Calgary days), Vitality (7-day average; denominator = Verified Residents active within last 30 days, rises fast/falls slow), unlocks (Playground / Community Centre / Park; resident counts cumulative), island size from cumulative residents
+  - [ ] Backend: community streak (≥ half, rounded up, of **Active Verified Residents** = acted within last 7 Calgary days), Vitality (7-day average; denominator = Verified Residents whose **last active day** (later of last action and verification day) is within last 30 days incl. today, rises fast/falls slow), unlocks (Playground / Community Centre / Park; resident counts cumulative), island size from cumulative residents
   - [ ] Snapshot generation every 5–10 min (JSON) for community state via **pg_cron**
   - [ ] Frontend: streak bar ("2/6 today"), locked silhouettes with remaining conditions, "What changed since yesterday" panel, island growth goal
 - **Out of scope:** real residents/verification (dev users simulate residents)
@@ -286,6 +286,15 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-17 — v1.6
+**Changed:** "Based on" → `requirement.md` v1.9. M5 item: Vitality denominator uses the last active day (later of last action and verification day), 30 days including today.
+
+**Why:** Sync with requirement v1.9.
+
+**Previous:**
+- `| Based on | `requirement.md` v1.8 |`
+- M5 (part): `Vitality (7-day average; denominator = Verified Residents active within last 30 days, rises fast/falls slow)`
 
 ### 2026-11-17 — v1.5
 **Changed:** "Based on" → `requirement.md` v1.8. M5 item: Vitality uses the 30-day denominator; unlock resident counts are cumulative.
