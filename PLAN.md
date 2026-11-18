@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.16 |
+| Plan version | v1.17 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
-| Based on | `requirement.md` v1.16 |
-| Current module | M3 — Game Core (next; M2 ✅ Done) |
+| Based on | `requirement.md` v1.17 |
+| Current module | M4 — Daily Actions (in progress; M3 ✅ Done) |
 
 ---
 
@@ -41,8 +41,8 @@
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
 | M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
-| M3 | Game Core | BE | ⭐ Core | M0 | ⬜ |
-| M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ⬜ |
+| M3 | Game Core | BE | ⭐ Core | M0 | ✅ |
+| M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | 🟦 |
 | M5 | Community State | BE + FE | ⭐ Core | M4 | ⬜ |
 | M6 | Identity | FE + BE | | M4 | ⬜ |
 | M7 | Residency | FE + BE | | M6 | ⬜ |
@@ -155,23 +155,35 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** no real phone yet (touch only emulated); "smooth" camera follow judged from screenshots only; no automated tests of the R3F components (walker, pathfinding and keyboard logic are unit-tested). Avatar look is placeholder boxes (orange shirt, navy cap); the nickname is the placeholder "You" until M6.
   - **Environment gotchas:** the Playwright MCP browser may be locked by another session; a scratchpad Playwright script with `--use-angle=swiftshader` works for screenshots (FPS from it is meaningless). When scripting taps, compute positions in CSS pixels from the screenshot (screenshots are 2× device pixels).
 
-### M3 — Game Core ⭐ ⬜
+### M3 — Game Core ⭐ ✅
 **Goal:** Backend domain for communities, projects and actions with server-side rules.
 - **In scope**
-  - [ ] SQL migrations: communities (seeded with Calgary community list + population), projects, actions, users (dev user only for now)
-  - [ ] Rules: **3 energy per day** (Calgary day), action must target an active project, project progress applied **next day** (compute-on-read)
-  - [ ] Server API as **Supabase Postgres functions (RPC)** with Row Level Security: get community state, submit action(s)
-  - [ ] Actions are **append-only** with a client-generated unique ID (**idempotent**); progress is aggregated, never a shared counter updated per action (`requirement.md` §20.3b)
-  - [ ] Database tests for every rule including day boundary, energy limit, and duplicate submissions
+  - [x] SQL migrations: communities (seeded with Calgary community list + population), projects, actions, users (dev user only for now)
+  - [x] Rules: **3 energy per day** (Calgary day), action must target an active project, project progress applied **next day** (compute-on-read)
+  - [x] Server API as **Supabase Postgres functions (RPC)** with Row Level Security: get community state, submit action(s)
+  - [x] Actions are **append-only** with a client-generated unique ID (**idempotent**); progress is aggregated, never a shared counter updated per action (`requirement.md` §20.3b)
+  - [x] Database tests for every rule including day boundary, energy limit, and duplicate submissions
 - **Out of scope:** auth, location, streaks/Vitality (M5)
 - **Definition of Done**
-  - [ ] API rejects a 4th action in a day
-  - [ ] a duplicate action ID is ignored
-  - [ ] progress appears after Calgary midnight
-  - [ ] tests cover edge cases
-  - [ ] API documented in `docs/api.md`
+  - [x] API rejects a 4th action in a day
+  - [x] a duplicate action ID is ignored
+  - [x] progress appears after Calgary midnight
+  - [x] tests cover edge cases
+  - [x] API documented in `docs/api.md`
+  - [x] user has reviewed it (confirmed 2026-11-18)
+- **Handoff**
+  - **Code:** migrations `supabase/migrations/20261118120000_gamecore_schema.sql` (tables), `…120100_gamecore_communities.sql` (generated data), `…120200_gamecore_rules.sql` (rules + RPC); tests `supabase/tests/database/gamecore_rules.test.sql` (57 checks); API reference `docs/api.md`; data `supabase/data/` + `docs/data-sources.md`.
+  - **Pattern:** every rule is an internal `gamecore.*_at(…, p_now, p_uid)` function; the public RPC only passes `now()` and `auth.uid()`. Tests move through days by passing fixed instants. Public RPCs are `security definer` with `search_path = ''`; gamecore tables have RLS on and **no policies**, so they are reachable only through the RPCs.
+  - **Communities:** 223 residential Calgary communities (City Open Data `surr-xmvs`), population from the 2021 federal census (`f9wk-wej9`), 2019 civic census fallback, 17 new communities `null`. Keyed by uuid; `(city, code)` unique (per-city data, §20.5). Industrial/park districts are not game communities (the World Map can still draw them from the boundary data in M10).
+  - **Energy:** 3 per Calgary day, backed by `unique (user_id, calgary_day, energy_slot)` with slots 1–3, plus a per-player advisory lock. Verified: 6 parallel requests → exactly 3 stored. The action's day is the server's day on arrival.
+  - **Idempotency:** client action id = primary key. Same player + same id → `duplicate` (even after midnight, no new energy); another player's id → `id_conflict`.
+  - **Projects:** 3 active; rows are written only when a project starts (by `ensure_projects`, called from state reads and submissions, serialized per community with an advisory lock). Progress and completion are counted from actions before today. Required actions are frozen at start (`required_actions(members, level)`).
+  - **Players (temporary):** `gamecore.players` + `gamecore_choose_community` stand in for Residency until M7 (joining = verification day for the 30-day member count). M7 should replace the RPC and feed the member count from Verified Residents.
+  - **For M4:** the frontend has models only for `ice-rink`, `flower-path`, `holiday-decorations`; add box models + `PROJECT_KINDS` for `snowman-garden`, `lantern-street`, `bird-feeders` and show `level` (e.g. "Lv 2"). Map server state into `CommunityViewState` (projects → `{id, kind, title, stage, progress/required}`). Completed projects need permanent spots on the island (the M1 layout has only 3 project slots) — decide in M4/M5. Use `crypto.randomUUID()` per tap and resend the same id on retry. Sign in locally with the seeded dev user (`dev@makecalgarytalk.local` / `dev-password`, member of Mahogany; `supabase/seed.sql`, local only).
+  - **Not tested / known gaps:** no load test (single-player concurrency only); `ensure_projects` runs on every state read (cheap check first, lock only when a project must start) — M5 snapshots will take over the read path. `completed_on` is computed per completed project on every read (fine for now; snapshot later). Data attribution must also appear in the app's legal page (M14).
+  - **Environment gotchas:** `supabase db reset` wipes local data and re-runs `seed.sql`. To run a test file by hand with psql inside the DB container, first `create extension pgtap with schema extensions; set search_path = public, extensions;` (`supabase test db` does this automatically).
 
-### M4 — Daily Actions ⭐ ⬜
+### M4 — Daily Actions ⭐ 🟦
 **Goal:** Connect the island to the backend so actions really change the community.
 - **In scope**
   - [ ] Island loads real community state from the API (replacing mock JSON)
@@ -328,6 +340,15 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.17
+**Changed:** "Based on" → `requirement.md` v1.17. M3 set to 🟨 with Handoff; added a DoD item "user has reviewed it" (M3 is backend only, there is nothing to play).
+
+**Why:** Sync with requirement v1.17 (project starting values); CLAUDE.md Rule 4 needs a user check before ✅ even for backend modules.
+
+**Previous:**
+- `| Plan version | v1.16 |` / `| Based on | `requirement.md` v1.16 |`
+- M3 DoD had no user-review item.
 
 ### 2026-11-18 — v1.16
 **Changed:** "Based on" → `requirement.md` v1.16. M5: added the Village build map screen. M6: added avatar shirt colour choice.
