@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.10 |
+| Document version | v1.11 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-17 |
+| Last updated | 2026-11-18 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -186,6 +186,8 @@ Goal: moving never punishes the person who moves or the residents who stay.
   - Half is rounded up (e.g. 6 active → 3 needed; 5 active → 3 needed); with 1 Active Verified Resident, that 1 person is enough
   - If there are 0 Active Verified Residents, the day does not count (streak breaks)
 - Day boundary: Calgary time (America/Edmonton) midnight
+  - Alberta's Official Time Act (2026) ended daylight saving time: no fall-back on 2026-11-01, UTC-6 year-round from then on. Always use the IANA zone `America/Edmonton` from up-to-date tzdata (2026c+); never hardcode UTC offsets
+  - The boundary is computed **only on the server**; clients receive the current Calgary day and the next midnight instant from the server (browser tzdata may be outdated)
 - UI example: "Mahogany 5-day streak! Today 2/6 active residents — 1 more keeps it going" (6 = Active Verified Residents)
 
 ### 7.6 Community unlocks (MVP)
@@ -693,6 +695,13 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.11
+**Changed:** 7.5: added two notes under "Day boundary": Alberta has been on UTC-6 year-round since 2026-11-01 (use up-to-date `America/Edmonton` tzdata, never hardcode offsets), and the boundary is computed only on the server. The rule itself (Calgary midnight) is unchanged.
+
+**Why:** Found during M0: Alberta's Official Time Act (passed 2026-06-18, IANA tzdata 2026c) ended DST. The local Postgres (tzdata 2026f) follows it, but Node 20 (tzdata 2025a) and older browsers still switch back to UTC-7, which would put the client's day boundary one hour off from the server's.
+
+**Previous:** 7.5: `- Day boundary: Calgary time (America/Edmonton) midnight` (no notes)
 
 ### 2026-11-17 — v1.10
 **Changed:** Defined how moving to another community works, choosing the most user-friendly approach.

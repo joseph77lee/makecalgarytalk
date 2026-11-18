@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.8 |
+| Plan version | v1.9 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
-| Based on | `requirement.md` v1.10 |
-| Current module | M0 — Foundation (not started) |
+| Based on | `requirement.md` v1.11 |
+| Current module | M0 — Foundation (in progress) |
 
 ---
 
@@ -37,7 +37,7 @@
 
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
-| M0 | Foundation | FE + Supabase + infra | Base | — | ⬜ |
+| M0 | Foundation | FE + Supabase + infra | Base | — | 🟦 |
 | M1 | Island View | FE (R3F) | ⭐ Core | M0 | ⬜ |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ⬜ |
 | M3 | Game Core | BE | ⭐ Core | M0 | ⬜ |
@@ -73,22 +73,22 @@ M0 ─┬─ M1 ── M2 ─┐
 
 ## Module details
 
-### M0 — Foundation ⬜
+### M0 — Foundation 🟦
 **Goal:** Empty but runnable project skeleton so every later module has a home.
 - **In scope**
-  - [ ] Monorepo folders: `frontend/` (React + Vite + TypeScript, Tailwind, Zustand, react-three-fiber + drei), `supabase/` (migrations, functions), `docs/`
-  - [ ] Supabase project (PostgreSQL + PostGIS enabled); Supabase CLI for local dev and SQL migrations; database connection pooling
-  - [ ] Environment config via env vars (no secrets in git); `.env.example`
-  - [ ] Health check (Postgres function or Edge Function); frontend calls it and shows "connected"
-  - [ ] Shared time utility: **Calgary day boundary (America/Edmonton)** with tests
-  - [ ] Module folder conventions in place (see `CLAUDE.md` §2 Modular code)
-  - [ ] Basic CI: build + tests (Vitest; database tests against local Supabase) on push
+  - [x] Monorepo folders: `frontend/` (React + Vite + TypeScript, Tailwind, Zustand, react-three-fiber + drei), `supabase/` (migrations, functions), `docs/`
+  - [x] **Local** Supabase project (PostgreSQL + PostGIS enabled); Supabase CLI for local dev and SQL migrations; connection pooling via PostgREST (the frontend never opens direct DB connections). The cloud project and its pooler are set up at deploy (M14)
+  - [x] Environment config via env vars (no secrets in git); `.env.example`
+  - [x] Health check (Postgres function or Edge Function); frontend calls it and shows "connected"
+  - [x] Calgary day boundary (America/Edmonton) as **server-side** Postgres functions with tests; the client does no time zone math (receives `calgary_day` / `next_day_start` from the server)
+  - [x] Module folder conventions in place (see `CLAUDE.md` §2 Modular code), enforced by tests (frontend import boundaries; DB: RLS on every table, no tables in `public`, module-prefixed RPC)
+  - [x] Basic CI: build + tests (Vitest; database tests against local Supabase) on push
 - **Out of scope:** any game feature
 - **Definition of Done**
-  - [ ] frontend and local Supabase run locally with one command each
-  - [ ] health check visible in the browser
+  - [x] frontend and local Supabase run locally with one command each
+  - [x] health check visible in the browser
   - [ ] CI green
-  - [ ] day-boundary tests cover DST changes
+  - [x] day-boundary tests cover historic DST and Alberta's permanent UTC-6 from 2026-11-01 (Official Time Act)
 
 ### M1 — Island View ⭐ ⬜
 **Goal:** The 3D diorama island renders from a state object, using box models through asset keys.
@@ -268,6 +268,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] abnormal sign-up flags
   - [ ] optional update-email opt-in (CASL)
   - [ ] production deploy
+  - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6)
   - [ ] low-end phone performance pass
   - [ ] **family/friends playtest**
 - **Definition of Done**
@@ -290,6 +291,22 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.9
+**Changed:** M0 status 🟦 In progress. M0 items reworded to what was built: local Supabase (cloud project at M14), pooling via PostgREST, Calgary day boundary as server-side Postgres functions (no client time zone math), conventions enforced by tests; DoD day-boundary item now covers Alberta's permanent UTC-6. M14: added a production tzdata check. "Based on" → `requirement.md` v1.11.
+
+**Why:** Alberta's Official Time Act (2026) ended DST: no fall-back on 2026-11-01, UTC-6 year-round (IANA tzdata 2026c+). Database tests caught this; client tzdata (Node 20 = 2025a, many browsers) is outdated, so the day boundary must be server-only. Local-only Supabase for M0 was agreed with the user.
+
+**Previous:**
+- `| Based on | `requirement.md` v1.10 |`
+- M0 In scope (verbatim):
+```
+  - [ ] Supabase project (PostgreSQL + PostGIS enabled); Supabase CLI for local dev and SQL migrations; database connection pooling
+  - [ ] Shared time utility: **Calgary day boundary (America/Edmonton)** with tests
+  - [ ] Module folder conventions in place (see `CLAUDE.md` §2 Modular code)
+```
+- M0 DoD: `  - [ ] day-boundary tests cover DST changes`
+- M14: (tzdata check did not exist)
 
 ### 2026-11-18 — v1.8
 **Changed:** Added rule 9 to "How this plan works": one branch per module, merged to `main` with `--no-ff` only after ✅ Done, green CI, and ✅ already recorded on the branch; reopened modules use `fix/` branches.
