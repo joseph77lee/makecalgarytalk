@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Based on | `requirement.md` v1.13 |
-| Current module | M1 — Island View (🟨 Ready for playtest) |
+| Current module | M2 — Avatar (in progress; M1 ✅ Done) |
 
 ---
 
@@ -39,8 +39,8 @@
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
-| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🟨 |
-| M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ⬜ |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |
+| M2 | Avatar | FE (R3F) | ⭐ Core | M1 | 🟦 |
 | M3 | Game Core | BE | ⭐ Core | M0 | ⬜ |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ⬜ |
 | M5 | Community State | BE + FE | ⭐ Core | M4 | ⬜ |
@@ -99,7 +99,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
   - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
-### M1 — Island View ⭐ 🟨
+### M1 — Island View ⭐ ✅
 **Goal:** The 3D diorama island renders from a state object, using box models through asset keys.
 - **In scope**
   - [x] react-three-fiber `<Canvas>` with drei `OrthographicCamera`: isometric view, pastel lights, sky background, rotate/zoom limits
@@ -113,8 +113,8 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Out of scope:** avatar, real data, detailed art
 - **Definition of Done**
   - [x] changing values in the mock JSON (size, buildings, Vitality, silhouettes) updates the island correctly
-  - [ ] runs smoothly at a phone-sized viewport (checked at 390×844 in headless Chromium with a software GPU only; needs a real phone)
-  - [ ] user has looked at it
+  - [ ] runs smoothly at a phone-sized viewport (checked at 390×844 in headless Chromium with a software GPU only; user accepted M1 on 2026-11-18 without a real-phone check — carried to M2 and the M14 low-end phone pass)
+  - [x] user has looked at it (confirmed 2026-11-18)
 - **Handoff**
   - **Code:** `frontend/src/modules/island-view/`. Public API in `index.ts`: `IslandView({ state })`, `IslandHud`, `IslandDevPanel`, `useMockCommunityStore`, `parseCommunityViewState`, `buildIslandLayout`, `vitalityMood`, and the `CommunityViewState` types.
   - **State contract (`types.ts`):** `CommunityViewState` = community name, `islandSize` (tier number, decided by the server), `vitality` 0–100, shown `houses` (archived ones already removed), `buildings` (unlocked, or locked with `remaining: { streakDays, residents }`), up to 3 `projects` (`kind`, `title`, `stage`, `progress` 0..1), `miniVillagerCount` (≤ 20, decided by the server) and `speechBubbles` (anchored to a house id or a villager index). M3/M5 snapshots should produce exactly this shape; `parseCommunityViewState` validates it and lists every error.
@@ -130,7 +130,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** no real phone run yet (only headless Chromium with a software GPU; FPS figures from it mean nothing). No automated tests of the R3F scene itself (logic, models and registry are unit-tested; the scene was checked by screenshots at 1280×800 and 390×844). Not built yet: chimney-smoke and villager polish, mood transition animation, day/night, winter launch theme (user decision 2026-11-18: deferred to the Art Pass; features first. M1 uses the green pastel reference, snow only in Gloomy). Building/house tap info belongs to M2/M4.
   - **Environment gotchas:** in dev, React StrictMode makes drei `Html` log "Attempted to synchronously unmount a root…" once per label; the production build does not. three r187 logs a `THREE.Clock` deprecation warning from R3F internals (harmless). Bundle: ~326 KB gzipped (three + drei).
 
-### M2 — Avatar ⭐ ⬜
+### M2 — Avatar ⭐ 🟦
 **Goal:** The user's avatar walks around the island.
 - **In scope**
   - [ ] Box avatar with name label
