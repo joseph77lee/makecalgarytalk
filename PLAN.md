@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.11 |
+| Plan version | v1.12 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
-| Based on | `requirement.md` v1.11 |
+| Based on | `requirement.md` v1.12 |
 | Current module | M1 — Island View (🟨 Ready for playtest) |
 
 ---
@@ -108,7 +108,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] Render entirely from a **mock community state JSON** (no backend yet)
   - [x] 3 Vitality moods (Lively / Normal / Gloomy) change colours and props
   - [x] Island growth animation when N increases
-  - [x] Labels and speech bubbles via drei `Html`
+  - [x] Labels and speech bubbles via drei `Html`, with a show/hide labels toggle (`requirement.md` §10.1)
   - [x] Instanced rendering for tiles and repeated boxes (raw `InstancedMesh`, see Change Log v1.11); animations in `useFrame` with refs (no per-frame React state); phone-size viewport check
 - **Out of scope:** avatar, real data, detailed art
 - **Definition of Done**
@@ -123,9 +123,11 @@ M0 ─┬─ M1 ── M2 ─┐
   - **For M2 (Avatar):** `layout.walkable` = tiles reachable on foot from the plaza (houses, trees, buildings and project sites block; decorations, lamps and the arch do not). Use it for A*. Mini villagers already random-walk on it.
   - **Rendering:** every model is a list of boxes (`assets/models.ts`, pure and tested); `BoxBatch` draws them with one `InstancedMesh` per material layer (solid / glow / ghost), so draw calls stay flat with island size. Silhouettes are the real building drawn as translucent ghosts. Art Pass: swap entries in `assets/registry.ts`.
   - **Labels:** drei `Html`, `pointer-events: none`, z-bands so speech bubbles are above name tags (and the HUD/dev panel at z-30 above both). Detail depends on zoom: below 40 px per tile (phone default) labels are compact (🔒 chip, progress bar without title); pinch in for full text. With more than 12 houses, name tags show only when zoomed in.
+  - **Labels toggle:** HUD button (top right) shows/hides every island overlay, including villager bubbles. State lives in `uiStore.ts` (`useIslandUi`), on by default, remembered in `localStorage` (wrapped in try/catch; works without storage). Later modules that add island overlays must respect `showLabels`.
+  - **Mini villagers:** base speed per mood (Lively 0.75 / Normal 0.55 / Gloomy 0.3 tiles/s) × a per-villager factor 0.65–1.25; per-villager rest habits; only ~35% hop and only when Lively (`assets/villagerPersonality.ts`, deterministic per index). No extra cost: each villager was already simulated on its own.
   - **Growth:** new rings rise from below (1.4 s, ease-out-back), the camera zooms out to fit, objects on the new rings appear after landing, villagers cheer for 2.5 s. No share card yet (M11).
   - **Dev tools:** a panel (dev builds, or `?dev` in production) edits the mock state live (size, Vitality, houses, lights, villagers, unlocks, project stage and progress). `mockCommunityState.json` is validated on load and throws with every error listed.
-  - **Not tested / known gaps:** no real phone run yet (only headless Chromium with a software GPU; FPS figures from it mean nothing). No automated tests of the R3F scene itself (logic, models and registry are unit-tested; the scene was checked by screenshots at 1280×800 and 390×844). Not built yet: chimney-smoke and villager polish, mood transition animation, day/night, winter launch theme (§19.1 says the launch theme is winter; M1 uses the green pastel reference and shows snow only in Gloomy, so the theme decision is open). Building/house tap info belongs to M2/M4.
+  - **Not tested / known gaps:** no real phone run yet (only headless Chromium with a software GPU; FPS figures from it mean nothing). No automated tests of the R3F scene itself (logic, models and registry are unit-tested; the scene was checked by screenshots at 1280×800 and 390×844). Not built yet: chimney-smoke and villager polish, mood transition animation, day/night, winter launch theme (user decision 2026-11-18: deferred to the Art Pass; features first. M1 uses the green pastel reference, snow only in Gloomy). Building/house tap info belongs to M2/M4.
   - **Environment gotchas:** in dev, React StrictMode makes drei `Html` log "Attempted to synchronously unmount a root…" once per label; the production build does not. three r187 logs a `THREE.Clock` deprecation warning from R3F internals (harmless). Bundle: ~326 KB gzipped (three + drei).
 
 ### M2 — Avatar ⭐ ⬜
@@ -312,6 +314,15 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.12
+**Changed:** "Based on" → `requirement.md` v1.12. M1 label item now includes the show/hide labels toggle.
+
+**Why:** Sync with requirement v1.12 (labels toggle, slower individual villagers) after the user's first look at M1.
+
+**Previous:**
+- `| Plan version | v1.11 |` / `| Based on | `requirement.md` v1.11 |`
+- M1: `  - [x] Labels and speech bubbles via drei `Html``
 
 ### 2026-11-18 — v1.11
 **Changed:** M1 item "Instanced rendering for tiles (drei `Instances`)" now reads "Instanced rendering for tiles and repeated boxes (raw `InstancedMesh`, ...)". M1 set to 🟨 with its Handoff note.

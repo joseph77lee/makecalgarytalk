@@ -6,6 +6,8 @@ import type { Tile } from '../layout';
 import { ACCENTS } from '../mood';
 import { useIslandCtx, useSceneFx } from '../scene/islandContext';
 import type { AssetProps } from './BoxAsset';
+import { villagerPersonality } from './villagerPersonality';
+import { useIslandUi } from '../uiStore';
 import { SpeechBubbleLabel } from '../scene/Labels';
 import { BUBBLE_Z } from '../scene/labelText';
 
@@ -45,7 +47,9 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
   const head = useRef<Mesh>(null);
   const body = useRef<Group>(null);
   const sim = useRef({ from: startTile, to: startTile, t: 1, pause: 0, rng: mulberry32(index * 7919 + 17) });
-  const bubble = villagerBubbles.get(index);
+  const me = useRef(villagerPersonality(index)).current;
+  const showLabels = useIslandUi((u) => u.showLabels);
+  const bubble = showLabels ? villagerBubbles.get(index) : undefined;
 
   useFrame(({ clock }, rawDt) => {
     const g = group.current;
@@ -74,20 +78,21 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
           s.to = pool[Math.floor(s.rng() * pool.length)];
           s.t = 0;
         }
-        const restChance = mood === 'gloomy' ? 0.45 : mood === 'normal' ? 0.2 : 0.1;
-        if (s.rng() < restChance) s.pause = 0.8 + s.rng() * (mood === 'gloomy' ? 4 : 2);
+        // Villagers stroll and often stop to look around; gloomy ones mostly sit.
+        const restChance = (mood === 'gloomy' ? 0.5 : mood === 'normal' ? 0.3 : 0.22) * me.restFactor;
+        if (s.rng() < restChance) s.pause = (1.2 + s.rng() * (mood === 'gloomy' ? 5 : 3)) * me.restFactor;
       }
     } else {
-      s.t = Math.min(1, s.t + dt * palette.villagerSpeed);
+      s.t = Math.min(1, s.t + dt * palette.villagerSpeed * me.speedFactor);
     }
 
     const x = s.from.x + (s.to.x - s.from.x) * s.t + 0.5;
     const z = s.from.z + (s.to.z - s.from.z) * s.t + 0.5;
     const moving = s.t < 1;
     let y = 0;
-    if (cheering) y = Math.abs(Math.sin(time * 9 + index)) * 0.35;
-    else if (moving && mood === 'lively') y = Math.abs(Math.sin(time * 12 + index)) * 0.1;
-    else if (moving) y = Math.abs(Math.sin(time * 10 + index)) * 0.03;
+    if (cheering) y = Math.abs(Math.sin(time * 7 + index)) * 0.3;
+    else if (moving && me.hops && mood === 'lively') y = Math.abs(Math.sin(time * me.bobRate + index)) * 0.05;
+    else if (moving) y = Math.abs(Math.sin(time * me.bobRate + index)) * 0.015;
     g.position.set(x, y, z);
     if (moving) g.rotation.y = Math.atan2(s.to.x - s.from.x, s.to.z - s.from.z);
 

@@ -24,7 +24,7 @@ export interface MoodPalette {
   sky: string;
   sunIntensity: number;
   ambientIntensity: number;
-  /** Mini villager walking speed in tiles per second. */
+  /** Base mini villager walking speed in tiles per second (each villager varies it). */
   villagerSpeed: number;
   /** Lamps along the road glow only when lively ("lights", §7.4). */
   lampsLit: boolean;
@@ -41,7 +41,7 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
     sky: 'linear-gradient(to bottom, #c9e4ff 0%, #e8f1ff 60%, #f3eefe 100%)',
     sunIntensity: 2.4,
     ambientIntensity: 1.25,
-    villagerSpeed: 1.6,
+    villagerSpeed: 0.75,
     lampsLit: true,
   },
   normal: {
@@ -54,7 +54,7 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
     sky: 'linear-gradient(to bottom, #cfe0f3 0%, #e6edf6 60%, #efecf5 100%)',
     sunIntensity: 2.0,
     ambientIntensity: 1.15,
-    villagerSpeed: 1.0,
+    villagerSpeed: 0.55,
     lampsLit: false,
   },
   gloomy: {
@@ -68,7 +68,7 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
     sky: 'linear-gradient(to bottom, #c3c9d6 0%, #d9dde5 60%, #e3e1e8 100%)',
     sunIntensity: 1.3,
     ambientIntensity: 1.2,
-    villagerSpeed: 0.45,
+    villagerSpeed: 0.3,
     lampsLit: false,
   },
 };

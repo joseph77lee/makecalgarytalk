@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.11 |
+| Document version | v1.12 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Status | Initial draft for starting MVP development |
@@ -293,6 +293,8 @@ Because every island has the same shape, each community gets its identity from:
 - **Pastel colours, flat-shaded voxel/box objects**, soft shadows
 - Contents: community buildings (playground, community centre, park, etc.), resident houses, mini villagers, signature features (7.9), project construction sites, locked-building silhouettes, name sign
 - Speech bubbles and name labels are **HTML overlays** positioned over 3D objects (crisp text, Korean/English supported)
+  - A **labels toggle** shows or hides all island overlays (speech bubbles, name tags, construction progress, locked-building hints) so the scene can be viewed without clutter. On by default; the choice is remembered on the device
+  - Mini villagers stroll slowly, each with its own pace and resting habits (not in lockstep)
 - On entry, show **"What changed since yesterday"** (construction progress, new residents, trees planted, etc.)
 - Show community streak status, remaining conditions for the next unlock, and the next island growth goal
 - Users can visit and view other communities (actions only in their own community)
@@ -695,6 +697,13 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.12
+**Changed:** 10.1: added two notes under the HTML overlay item: a labels toggle (show/hide all island overlays, on by default, remembered on the device) and mini villagers strolling slowly with individual pace.
+
+**Why:** User feedback after the M1 first look: bubbles, construction progress and lock hints shown together look cluttered; villagers moved too fast and bounced in lockstep.
+
+**Previous:** 10.1: `- Speech bubbles and name labels are **HTML overlays** positioned over 3D objects (crisp text, Korean/English supported)` (no sub-notes)
 
 ### 2026-11-18 — v1.11
 **Changed:** 7.5: added two notes under "Day boundary": Alberta has been on UTC-6 year-round since 2026-11-01 (use up-to-date `America/Edmonton` tzdata, never hardcode offsets), and the boundary is computed only on the server. The rule itself (Calgary midnight) is unchanged.

@@ -110,3 +110,30 @@ describe('remainingText (requirement.md §7.6)', () => {
     expect(remainingText(remaining)).toBe(text);
   });
 });
+
+describe('villager personalities', () => {
+  it('are deterministic and stay in range', async () => {
+    const { villagerPersonality } = await import('./villagerPersonality');
+    expect(villagerPersonality(3)).toEqual(villagerPersonality(3));
+    for (let i = 0; i < 20; i++) {
+      const p = villagerPersonality(i);
+      expect(p.speedFactor).toBeGreaterThanOrEqual(0.65);
+      expect(p.speedFactor).toBeLessThanOrEqual(1.25);
+      expect(p.restFactor).toBeGreaterThanOrEqual(0.6);
+      expect(p.restFactor).toBeLessThanOrEqual(1.6);
+    }
+  });
+
+  it('differ between villagers (not in lockstep), and only some hop', async () => {
+    const { villagerPersonality } = await import('./villagerPersonality');
+    const all = Array.from({ length: 20 }, (_, i) => villagerPersonality(i));
+    expect(new Set(all.map((p) => p.speedFactor.toFixed(3))).size).toBeGreaterThan(15);
+    const hoppers = all.filter((p) => p.hops).length;
+    expect(hoppers).toBeGreaterThan(0);
+    expect(hoppers).toBeLessThan(20);
+  });
+
+  it('even the fastest villager walks slower than one tile per second', () => {
+    expect(MOOD_PALETTES.lively.villagerSpeed * 1.25).toBeLessThan(1);
+  });
+});

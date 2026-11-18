@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { useRef, useState, type ReactNode } from 'react';
 import type { PlacedObject } from '../layout';
 import type { BuildingKind } from '../types';
+import { useIslandUi } from '../uiStore';
 import { BUBBLE_Z, LABEL_Z, remainingText } from './labelText';
 
 /** HTML overlays (crisp text, any language) positioned over 3D objects (requirement.md §10.1). */
@@ -60,9 +61,11 @@ function useDetailedLabels(): boolean {
 
 export function IslandLabels({ objects, houseBubbles }: Props) {
   const detailed = useDetailedLabels();
+  const showLabels = useIslandUi((u) => u.showLabels);
   // Busy villages: names appear when zoomed in, so tags never cover the whole island.
   const houseCount = objects.filter((o) => o.assetKey === 'house').length;
   const showNames = detailed || houseCount <= MAX_NAMES_ZOOMED_OUT;
+  if (!showLabels) return null;
   return (
     <>
       {objects.map((o) => {
