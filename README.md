@@ -8,7 +8,7 @@ The site itself, **makecalgarytalk.com**, is the game.
 
 ## Status
 
-🚧 **Pre-MVP.** Requirements are defined; development has not started yet.
+🚧 **Pre-MVP.** Development has started (module M0 Foundation, see `PLAN.md`).
 
 - The MVP builds the 3D island entirely from **simple coloured boxes with react-three-fiber (three.js)** (no detailed art) to validate the core loop quickly. Because the target style is voxel, the box version already looks close to the final look.
 - Detailed voxel models, props and animations come later in the **Art Pass**.
@@ -23,6 +23,8 @@ The site itself, **makecalgarytalk.com**, is the game.
 | [`CLAUDE.md`](./CLAUDE.md) | Working rules for Claude Code (and humans) in this repository |
 | `docs/references/` | Visual reference screenshots (pastel voxel island style) |
 | `docs/` | Data model, API, and screen sketches (to be added) |
+| `frontend/` | React + react-three-fiber app (one folder per module in `src/modules/`) |
+| `supabase/` | SQL migrations, pgTAP tests, Edge Functions, local config |
 
 Read `requirement.md`, `PLAN.md` and `CLAUDE.md` before starting any work.
 
@@ -68,7 +70,44 @@ makecalgarytalk/
 
 ## Getting started
 
-_To be added once development begins (module M0 in `PLAN.md`)._
+### Prerequisites
+- Node.js 20.19+ and npm
+- Docker Desktop (running) — local Supabase runs in containers
+- Supabase CLI: `brew install supabase/tap/supabase`
+
+### First-time setup
+```bash
+# 1. Start local Supabase (applies migrations). Ports are 554xx, see supabase/config.toml.
+supabase start
+
+# 2. Frontend env: copy the example and paste the PUBLISHABLE_KEY from `supabase status`
+cp frontend/.env.example frontend/.env.local
+
+# 3. Install frontend dependencies
+cd frontend && npm install
+```
+
+### Daily development (one command each)
+| What | Command | URL |
+|---|---|---|
+| Backend (local Supabase) | `supabase start` (repo root) | API http://127.0.0.1:55421, Studio http://127.0.0.1:55423 |
+| Frontend | `npm run dev` (in `frontend/`) | http://localhost:5173 |
+
+The page should show **Connected** with today's Calgary day.
+
+### Tests and checks
+| What | Command |
+|---|---|
+| Frontend unit + architecture tests | `npm test` (in `frontend/`) |
+| Lint / type check / build | `npm run lint`, `npm run typecheck`, `npm run build` |
+| Database tests (pgTAP) | `supabase test db` (repo root) |
+| Reset local DB and re-apply migrations | `supabase db reset` |
+
+CI (`.github/workflows/ci.yml`) runs all of the above on every push.
+
+### Notes
+- The Calgary day boundary is computed **only on the server** (`common.calgary_day()`). Alberta has been on UTC-6 year-round since 2026-11-01.
+- Never put the Supabase secret / service-role key in the frontend or in git.
 
 ## Updating requirements
 

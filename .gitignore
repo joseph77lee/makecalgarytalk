@@ -1,0 +1,22 @@
+# OS / editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Env files: never commit secrets (only *.example files are tracked)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Claude Code personal settings
+.claude/settings.local.json
+
+# Logs
+*.log
+
+# Playwright MCP screenshots/logs
+.playwright-mcp/

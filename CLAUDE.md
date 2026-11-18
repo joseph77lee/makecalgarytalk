@@ -62,7 +62,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 ### Game logic
 - All game rules (daily energy, streaks, verification, scoring) are **validated on the server** (Supabase Postgres functions or Edge Functions). The client may update the screen optimistically but is never trusted.
 - **Row Level Security on every table.** The frontend only uses the anon key; the service-role key never reaches the frontend or git.
-- Day boundary is **America/Edmonton midnight**.
+- Day boundary is **America/Edmonton midnight**, computed **only on the server** (`common.calgary_day()` / `common.calgary_day_start()`). Alberta is UTC-6 year-round since 2026-11-01; never hardcode offsets, and never compute Calgary time zones in the client (send it `calgary_day` / next-midnight instants instead). A frontend test enforces this.
 - Follow the server-cost principles in `requirement.md` §20.3 (static files via CDN, compute-on-read, snapshots, no WebSockets).
 - Follow the scalability principles in `requirement.md` §20.3b: **append-only actions** (never update a shared counter per action), stateless functions, connection pooling, **idempotent action IDs**, rate limiting.
 
@@ -113,7 +113,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 ### Modular code (modular monolith)
 Each `PLAN.md` module maps to a code module with clear boundaries, so a problem can be fixed in one place.
 - **Frontend (React):** one folder per module under `frontend/src/modules/<module-name>/` (e.g. `island-view`, `avatar`, `daily-actions`), containing its components, hooks, stores and tests. Each module exposes a small public API through its `index.ts`; other modules import **only** from that API, never from internal files.
-- **Backend (Supabase):** each module owns its database objects, using a Postgres schema or name prefix per module (e.g. `gamecore`, `communitystate`, `residency`). Migrations are named with the module (e.g. `supabase/migrations/<timestamp>_gamecore_actions.sql`); Edge Functions live in `supabase/functions/<module>-<name>/`. Other modules call a module's **public functions (RPC)**, never its tables directly.
+- **Backend (Supabase):** each module owns its database objects in **its own Postgres schema** (e.g. `gamecore`, `communitystate`, `residency`), which is **not exposed** by the API. The only callable surface is `public.<module>_<name>()` RPC functions, granted explicitly to `anon`/`authenticated` (`auto_expose_new_tables = false` in `supabase/config.toml`). No tables or views in `public`. Migrations are named with the module (e.g. `supabase/migrations/<timestamp>_gamecore_actions.sql`); Edge Functions live in `supabase/functions/<module>-<name>/`. Other modules call a module's **public functions (RPC)**, never its tables directly. These rules are enforced by `supabase/tests/database/common_health.test.sql` (add new module prefixes to its list).
 - **Shared code** lives in a minimal `common` module only (e.g. Calgary day-boundary utility, IDs, shared types). Do not put feature logic in `common`.
 - Keep modules **loosely coupled**: pass data through interfaces/DTOs or events; no circular dependencies.
 - **Each module has its own tests.** Changing one module must not require changing another module's internals.
@@ -145,3 +145,4 @@ Each `PLAN.md` module maps to a code module with clear boundaries, so a problem 
 -->
 
 - 2026-11-17: requirement.md bumped without updating PLAN.md "Based on" → after every requirement version bump, update PLAN.md header in the same commit
+- 2026-11-18: wrote day-boundary test cases from memory assuming Alberta still had DST (it ended 2026-11-01) → derive time zone expectations from current tzdata/official sources, never from memory; keep time zone math on the server
