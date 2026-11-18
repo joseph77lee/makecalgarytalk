@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Based on | `requirement.md` v1.11 |
-| Current module | M0 — Foundation (in progress) |
+| Current module | M1 — Island View (next; M0 ✅ Done) |
 
 ---
 
@@ -37,7 +37,7 @@
 
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
-| M0 | Foundation | FE + Supabase + infra | Base | — | 🟦 |
+| M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
 | M1 | Island View | FE (R3F) | ⭐ Core | M0 | ⬜ |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ⬜ |
 | M3 | Game Core | BE | ⭐ Core | M0 | ⬜ |
@@ -73,7 +73,7 @@ M0 ─┬─ M1 ── M2 ─┐
 
 ## Module details
 
-### M0 — Foundation 🟦
+### M0 — Foundation ✅
 **Goal:** Empty but runnable project skeleton so every later module has a home.
 - **In scope**
   - [x] Monorepo folders: `frontend/` (React + Vite + TypeScript, Tailwind, Zustand, react-three-fiber + drei), `supabase/` (migrations, functions), `docs/`
@@ -87,7 +87,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done**
   - [x] frontend and local Supabase run locally with one command each
   - [x] health check visible in the browser
-  - [ ] CI green
+  - [x] CI green
   - [x] day-boundary tests cover historic DST and Alberta's permanent UTC-6 from 2026-11-01 (Official Time Act)
 
 ### M1 — Island View ⭐ ⬜
