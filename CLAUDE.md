@@ -157,3 +157,4 @@ Each module is usually worked on in a **new session** with no memory of earlier 
 
 - 2026-11-17: requirement.md bumped without updating PLAN.md "Based on" → after every requirement version bump, update PLAN.md header in the same commit
 - 2026-11-18: wrote day-boundary test cases from memory assuming Alberta still had DST (it ended 2026-11-01) → derive time zone expectations from current tzdata/official sources, never from memory; keep time zone math on the server
+- 2026-11-18: gamecore DB tests silently depended on local seed data (dev user counted as a member) → DB tests start by clearing their module's tables inside the test transaction; run `supabase test db` both after `db reset` (with seed) and in CI (without)

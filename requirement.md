@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.16 |
+| Document version | v1.17 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Status | Initial draft for starting MVP development |
@@ -216,7 +216,10 @@ Goal: moving never punishes the person who moves or the residents who stay.
 - When acting, residents **choose** which project to contribute to
 - Construction progress is **applied the next day** (progress overnight → a reason to check tomorrow)
 - Construction visuals: scaffolding → frame → complete
-- Project list and required amounts: see [22.8 Open Items]
+- Project list and required amounts (starting values, tune after launch):
+  - **3 active projects** at a time; when one completes, the next one starts on the day its completion becomes visible
+  - Catalog in order: Build an ice rink → Make a flower path → Holiday decorations → Build a snowman garden → Light up a lantern street → Hang bird feeders; after the sixth, the catalog repeats at **level 2, 3, …**
+  - Required actions, fixed when the project starts: **5 per active resident, minimum 10**, ×1.25 per level (active resident = last active day within the last 30 Calgary days, same basis as the Vitality denominator, 7.4). About 3 days when half the residents act
 
 ### 7.8 Island size (grows with residents)
 - Every community is shown as the **same square floating island**, regardless of the real community's size or shape.
@@ -673,7 +676,7 @@ Because every island has the same shape, each community gets its identity from:
 - [ ] Pastel palette and lighting values (before the Art Pass); save reference screenshots in `docs/references/`
 - [ ] Feature library list and community → feature mapping for launch communities
 - [ ] Island size tiers and building layout templates per tier (tuning)
-- [ ] Project list and required actions per project
+- [x] Project list and required actions per project (decided 2026-11-18, see 7.7)
 - [ ] Vitality smoothing details (rise/fall speed)
 - [ ] Random surprise types and probabilities
 - [ ] Newspaper sentence templates
@@ -729,6 +732,15 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.17
+**Changed:** 7.7: replaced the pointer to open items with the decided starting values (3 active projects, 6-kind catalog repeating with levels, required actions = 5 per active resident, min 10, ×1.25 per level, fixed at project start). 22.8: project list item marked decided.
+
+**Why:** User decisions during M3 (2026-11-18): scaling with active residents keeps projects fair for 1-resident and 200-resident communities; six kinds plus levels avoid repetition without many new models.
+
+**Previous:**
+- 7.7: `- Project list and required amounts: see [22.8 Open Items]`
+- 22.8: `- [ ] Project list and required actions per project`
 
 ### 2026-11-18 — v1.16
 **Changed:** Added 7.6a Village build map (MVP). 10.2: MVP shirt colour choice; further customization via ranks. Added 13.3 Avatar growth (Phase 2: rank = level by active days, cosmetic-only rewards, community-linked rewards, badge collection, Me tab). 22.1 MVP list: build map and shirt colour. 22.2 Phase 2: avatar growth.
