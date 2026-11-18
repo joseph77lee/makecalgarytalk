@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.14 |
+| Document version | v1.15 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Status | Initial draft for starting MVP development |
@@ -231,11 +231,12 @@ Goal: moving never punishes the person who moves or the residents who stay.
 ### 7.9 Community identity & feature library
 Because every island has the same shape, each community gets its identity from:
 - **Name sign** at the island entrance
-  - Inspired by the community's real entrance sign (operator photos are reference only, never shipped): shape, colours and materials **reinterpreted in voxel style**, showing only the community name — **no developer logos or branding**. Communities without a custom sign use the default sign
+  - **All communities start with the default sign** (community name on a shared voxel sign), including launch communities
+  - A **custom sign** comes only from a resident photo petition (16.2, Phase 3): the real entrance sign's shape, colours and materials **reinterpreted in voxel style**, showing only the community name — **no developer logos or branding**
 - **Signature features** from a reusable **feature library** (not real size/position — symbolic):
   - Example blocks: lake/pond, creek/river, hill, ravine, large park, off-leash dog park, ice rink, CTrain station, mall, school
   - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator
-- **Community landmarks (optional, launch communities only)**: a community-specific landmark model (e.g. a lakeside clubhouse) added on top of the shared feature library for the launch communities; all other communities use shared library blocks only
+- **Community landmarks** (Phase 3): a community-specific landmark model (e.g. a lakeside clubhouse), made only from a resident photo petition (16.2); until then communities use shared library blocks only
 - Source data for feature suggestions: City of Calgary Open Data (e.g. hydrology water bodies) and OpenStreetMap; features stay symbolic (presence, not real size/position)
 - **Activity-based feature upgrades** (Phase 2): features evolve with activity (e.g. Mahogany's lake → boat dock → lakeside trail)
 - **Resident petitions** (Phase 3): see 16.2
@@ -413,6 +414,12 @@ Because every island has the same shape, each community gets its identity from:
 - Eligible for operator review only when supported by **≥30% of the community's Verified Residents or at least 10**, whichever applies
 - The operator decides; **1–3 petitions granted per month** at a fixed cadence, announced as a "Petition results" event in the newspaper
 - Keeps operator workload predictable
+- **Photo petitions for a custom sign or landmark** (Phase 3, part of the petition system):
+  - **Unlock:** the community has its Community Centre (7.6), and the requester is **Regular Neighbour** (13.2) or above
+  - A resident uploads a photo of the community's entrance sign or a public landmark with a short description; other Verified Residents support it; the same support threshold applies (≥30% or at least 10)
+  - The operator recreates it in voxel style (no logos/branding, community name only); granted photo petitions count towards the same **1–3 per month**
+  - The newspaper credits the requester by nickname (e.g. "Mahogany's new entrance sign, made from Sarah's photo!")
+  - **Photo rules:** public places only (signs, parks, public buildings; **no homes, people or licence plates**); location metadata (EXIF/GPS) is removed on upload; originals are **never shown publicly**, are seen only by the operator, and are **deleted after the decision**; uploads are limited per resident; the uploader agrees the photo may be used as reference for the voxel model
 
 ---
 
@@ -442,6 +449,7 @@ Because every island has the same shape, each community gets its identity from:
 - Ads: must be labelled "Ad/Sponsored"
 - Trademarks: do not use official names/logos like "Calgary Stampede" → use generic terms like "Rodeo Season"
 - Never expose activity times in public information
+- Petition photos (16.2): location metadata stripped on upload, never published, operator-only, deleted after the decision
 - Provide a contact email
 
 ---
@@ -607,7 +615,7 @@ Because every island has the same shape, each community gets its identity from:
 ### 22.3 Phase 3
 - Seasonal events (Rodeo Season, winter aurora, etc.), collections
 - Visitor mode (interactions when visiting other communities)
-- Community landmark (60-day streak, chosen by resident vote)
+- Community landmark (60-day streak, chosen by resident vote; custom landmarks come from photo petitions, 16.2)
 - Aurora events
 - **Real-time presence**: other online residents' avatars visible and moving in the same island (broadcast destination events per community channel, e.g. Supabase Realtime; cap ~30 visible avatars per island; distinct label colour for online residents; simple emoji greetings)
 - Community petitions (16.2)
@@ -702,6 +710,17 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.15
+**Changed:** 7.9: all communities (including launch communities) start with the default sign; custom signs and community landmarks come only from resident photo petitions (Phase 3). 16.2: added photo petitions (unlock: Community Centre + Regular Neighbour; same support threshold and 1–3/month cadence; newspaper credit; photo privacy rules). 22.3: landmark line links to photo petitions. 18: petition photo privacy line.
+
+**Why:** User decision (2026-11-18): residents, not the operator, should drive custom signs and landmarks to encourage participation; fits the existing petition system and keeps operator work predictable. Photos can carry location metadata, faces, homes and plates, so strict handling is required.
+
+**Previous:**
+- 7.9 sign note: `  - Inspired by the community's real entrance sign (operator photos are reference only, never shipped): shape, colours and materials **reinterpreted in voxel style**, showing only the community name — **no developer logos or branding**. Communities without a custom sign use the default sign`
+- 7.9: `- **Community landmarks (optional, launch communities only)**: a community-specific landmark model (e.g. a lakeside clubhouse) added on top of the shared feature library for the launch communities; all other communities use shared library blocks only`
+- 22.3: `- Community landmark (60-day streak, chosen by resident vote)`
+- 16.2 photo petitions and the 18 photo line did not exist.
 
 ### 2026-11-18 — v1.14
 **Changed:** 11: the newspaper opens on tap of the Village Notice Board / Community Centre without the avatar walking there (clarification); added global operator announcements shown to all communities at the top of the newspaper (no per-community announcements in the MVP).
