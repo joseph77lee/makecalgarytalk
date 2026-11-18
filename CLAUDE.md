@@ -123,6 +123,17 @@ Each `PLAN.md` module maps to a code module with clear boundaries, so a problem 
 
 ## 3. Workflow
 
+### Session start (every new session)
+Each module is usually worked on in a **new session** with no memory of earlier ones. Before doing anything, rebuild context from the repository:
+1. `git status`, `git branch -a` — which branch you are on, uncommitted work, an unfinished module/fix branch
+2. `git log --oneline --graph -20 main` (and the current branch if it is not `main`) — what was done recently
+3. `PLAN.md`: the header (current module, plan version), the **newest Change Log entries**, and the **Handoff** notes of finished modules the current module depends on
+4. `requirement.md` §24 Change Log (newest entries) and the sections the current module touches
+5. This file's Mistake Log
+6. Local environment: Docker Desktop running, `supabase status` (ports 554xx), `frontend/.env.local` present; run the tests once to confirm a green starting point
+7. Tell the user in a few lines what you found (last finished module, current module, anything unfinished) before starting
+
+### Module steps
 1. Read `CLAUDE.md` (including the Mistake Log), the current module in `PLAN.md`, and the relevant parts of `requirement.md`
 2. Ask questions about anything unclear
 3. Propose a plan → wait for approval
@@ -131,7 +142,7 @@ Each `PLAN.md` module maps to a code module with clear boundaries, so a problem 
 6. Test, including edge cases
 7. Run the app and check the screen
 8. Report: what changed, what was tested, what was not tested, what you saw on screen, status (`Implemented` / `Verified` / `Ready for playtest`)
-9. Update `PLAN.md`: tick completed checklist items (`- [x]`) and update the module status
+9. Update `PLAN.md`: tick completed checklist items (`- [x]`), update the module status, and write the module's **Handoff** note (decisions not obvious from the code, deviations from the plan, known gaps / not tested, follow-ups for later modules, environment gotchas)
 10. Commit on the branch with a clear message, scoped by module (e.g. `feat(island-view): add vitality moods`, `fix(gamecore): energy reset at Calgary midnight`), and push the branch
 11. Check it together with the user; when it works, CI is green and `PLAN.md` says ✅, merge to `main` with `--no-ff`, push, delete the branch
 12. If a mistake happened, add one line to the Mistake Log
