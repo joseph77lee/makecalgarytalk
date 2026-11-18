@@ -1,15 +1,25 @@
 import { createContext, useContext } from 'react';
 import { create } from 'zustand';
 import type { BuildCtx } from '../assets/models';
+import type { Tile } from '../layout';
 
 export interface IslandCtx extends BuildCtx {
-  /** "x,z" keys of tiles reachable on foot. */
+  /** Tiles reachable on foot that are currently shown (not still rising after growth). */
+  walkable: Tile[];
+  /** "x,z" keys of `walkable`. */
   walkableKeys: Set<string>;
+  islandSize: number;
   /** Speech bubble text per mini villager index. */
   villagerBubbles: Map<number, string>;
 }
 
 export const IslandContext = createContext<IslandCtx | null>(null);
+
+/** Walkable tiles for characters drawn inside <IslandView> (avatar pathfinding). */
+export function useIslandWalkable(): Pick<IslandCtx, 'walkable' | 'walkableKeys' | 'islandSize'> {
+  const { walkable, walkableKeys, islandSize } = useIslandCtx();
+  return { walkable, walkableKeys, islandSize };
+}
 
 export function useIslandCtx(): IslandCtx {
   const ctx = useContext(IslandContext);
