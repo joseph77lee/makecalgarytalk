@@ -106,7 +106,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 - Push the branch to `origin` regularly (backup + CI runs on every push).
 - **Merge to `main` only when all of these are true:**
   1. The user and Claude Code have checked it together and it works (for modules: the user played it and confirmed ✅)
-  2. CI is green on the branch
+  2. CI is green on the branch (check with `gh run list --branch <branch>`)
   3. `PLAN.md` status is already updated on the branch (✅ for modules) so `main` is correct the moment it is merged
 - Merge with `git merge --no-ff` (keeps the branch's commits and one clear merge commit per module), push `main`, then delete the branch (local and remote).
 

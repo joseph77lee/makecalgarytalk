@@ -96,7 +96,8 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Frontend module pattern:** `frontend/src/modules/<name>/index.ts` is the only import surface; `common` must not import feature modules; no cycles (`src/architecture.test.ts`). App shell is `src/app/App.tsx` (currently the health screen — M1 replaces it with the island).
   - **Keys:** frontend uses the publishable key (`sb_publishable_…`) only; `readSupabaseConfig` throws on a secret-looking key.
   - **Local env gotchas:** ports are 554xx (54321 is taken by CleanMyMac on this Mac); the Supabase CLI needs Docker on PATH (`export PATH="$HOME/.docker/bin:$PATH"`); `frontend/.env.local` holds the local publishable key (`supabase status`).
-  - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet). Claude Code cannot read CI results (private repo, no `gh`) — ask the user, or install and log in to `gh`.
+  - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
+  - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
 ### M1 — Island View ⭐ ⬜
 **Goal:** The 3D diorama island renders from a state object, using box models through asset keys.
