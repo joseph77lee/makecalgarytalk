@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.15 |
+| Document version | v1.16 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Status | Initial draft for starting MVP development |
@@ -202,6 +202,15 @@ Goal: moving never punishes the person who moves or the residents who stay.
 - Locked buildings appear as **faded silhouettes** with "1 more streak day until the Playground"
 - Community level is permanent (separate from the weekly ranking)
 
+### 7.6a Village build map (MVP)
+- A screen opened from the community view that shows the **whole growth path at a glance**, so residents know what can still be built:
+  - Unlock track: Settled → Playground → Community Centre → Park → later content as "Coming soon" (e.g. Community landmark, Phase 3)
+  - Island size track: current tier → next tier with "N more neighbours"
+  - Each step shows done / next / locked, with **remaining conditions and progress bars** (e.g. "Community Centre: streak 3/7 days · residents 4/5")
+  - Completed projects list
+- Read-only, built from the same server-computed values as the community state (streak, cumulative Verified Residents, unlock status); no extra game rules on the client
+- Shares one screen with the personal growth view (13.3, Phase 2) as tabs: **Village | Me**
+
 ### 7.7 Projects (construction)
 - A community has **2–3 active projects** at a time (e.g. Build an ice rink / Make a flower path / Holiday decorations)
 - When acting, residents **choose** which project to contribute to
@@ -310,7 +319,7 @@ Because every island has the same shape, each community gets its identity from:
 - Camera gently follows the avatar
 - **Action buttons stay at the bottom**: pressing an action makes the avatar run to the related spot (e.g. construction site) and perform it. Walking up and tapping the spot directly is also allowed (Art Pass polish)
 - Tap a building/resident house to see info (e.g. Community Centre → newspaper; house → resident nickname and streak)
-- Avatar customization (colours, hat): Art Pass / rewards
+- **MVP: choose a shirt colour** from a small palette on first visit (changeable later); more customization (hats, accessories, emotes) is earned through ranks (13.3, Phase 2)
 - Movement is driven by **destination events** ("avatar X moves to tile (5,7)"), not per-frame positions, so the same events can be broadcast for real-time presence later (22.3)
 
 ### 10.3 Other residents' avatars (asynchronous)
@@ -373,6 +382,14 @@ Because every island has the same shape, each community gets its identity from:
 | Neighbour | 14 active days | Speech bubbles |
 | Regular Neighbour | 30 active days | Post requests, bubble styles |
 | Local Legend | 90 active days | Special badge, house decoration items |
+
+### 13.3 Avatar growth (Phase 2)
+- **Rank = avatar level.** One system, not two; ranks rise with **active days** (not action counts), so nobody can grind ahead and daily play stays the core
+- **Rewards are cosmetic only** (hats, outfit colours, name tag frames, emotes, house decorations, a small companion such as a moose calf at Local Legend). Never gameplay advantages: daily energy stays 3 for everyone
+- **Community-linked rewards**: when the community unlocks a building, residents who contributed during that period get a matching cosmetic (e.g. "Park Builder" hat), so village growth and avatar growth push each other
+- **Contribution badge collection** per project type (e.g. "Snow Shoveler", "Gardener")
+- **Me tab** of the build map (7.6a): next rank, active days remaining, and what it unlocks
+- If paid cosmetics come later (22.4), earned and purchased items stay clearly separated
 
 ---
 
@@ -588,6 +605,8 @@ Because every island has the same shape, each community gets its identity from:
 - **My avatar**: tap/click to move with pathfinding; action buttons make the avatar run to the spot and act
 - 3 daily energy + project choice + satisfying click feedback + a few surprises
 - Community streak, unlocks (Playground / Community Centre / Park), locked-building silhouettes
+- **Village build map** (7.6a): the whole growth path with remaining conditions
+- Avatar shirt colour choice (10.2)
 - Next-day construction progress + "What changed since yesterday"
 - Auto community newspaper + roadmap notice + "Coming soon"
 - Weekly ranking (basic) + share cards
@@ -607,7 +626,7 @@ Because every island has the same shape, each community gets its identity from:
 - **Art Pass**: refined pastel voxel models and props (Section 19.1–19.4), styled World Map with animated Bow/Elbow rivers, moving CTrain trains, Calgary landmark buildings and transitions, character variants and animations, avatar customization, walk-up-and-tap actions, day/night and weather effects
 - Activity-based signature feature upgrades (7.9)
 - Resident board + report moderation screen
-- Profile & ranks
+- Profile & ranks, **avatar growth** (rank = level, cosmetic rewards, community-linked rewards, badge collection, Me tab; 13.3)
 - Speech bubbles (preset phrases → free text)
 - Mini villager requests, player requests
 - 5 Vitality mood levels
@@ -710,6 +729,16 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.16
+**Changed:** Added 7.6a Village build map (MVP). 10.2: MVP shirt colour choice; further customization via ranks. Added 13.3 Avatar growth (Phase 2: rank = level by active days, cosmetic-only rewards, community-linked rewards, badge collection, Me tab). 22.1 MVP list: build map and shirt colour. 22.2 Phase 2: avatar growth.
+
+**Why:** User idea (2026-11-18): residents are more motivated when they can see what can be built (village build-up) and when their avatar grows too (avatar build-up). Cosmetic-only, active-day-based growth keeps play fair and community-first.
+
+**Previous:**
+- 10.2: `- Avatar customization (colours, hat): Art Pass / rewards`
+- 22.2: `- Profile & ranks`
+- 7.6a, 13.3 and the two 22.1 lines did not exist.
 
 ### 2026-11-18 — v1.15
 **Changed:** 7.9: all communities (including launch communities) start with the default sign; custom signs and community landmarks come only from resident photo petitions (Phase 3). 16.2: added photo petitions (unlock: Community Centre + Regular Neighbour; same support threshold and 1–3/month cadence; newspaper credit; photo privacy rules). 22.3: landmark line links to photo petitions. 18: petition photo privacy line.
