@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Based on | `requirement.md` v1.17 |
-| Current module | M3 — Game Core (🟨 Ready for review) |
+| Current module | M4 — Daily Actions (in progress; M3 ✅ Done) |
 
 ---
 
@@ -41,8 +41,8 @@
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
 | M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
-| M3 | Game Core | BE | ⭐ Core | M0 | 🟨 |
-| M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ⬜ |
+| M3 | Game Core | BE | ⭐ Core | M0 | ✅ |
+| M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | 🟦 |
 | M5 | Community State | BE + FE | ⭐ Core | M4 | ⬜ |
 | M6 | Identity | FE + BE | | M4 | ⬜ |
 | M7 | Residency | FE + BE | | M6 | ⬜ |
@@ -155,7 +155,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** no real phone yet (touch only emulated); "smooth" camera follow judged from screenshots only; no automated tests of the R3F components (walker, pathfinding and keyboard logic are unit-tested). Avatar look is placeholder boxes (orange shirt, navy cap); the nickname is the placeholder "You" until M6.
   - **Environment gotchas:** the Playwright MCP browser may be locked by another session; a scratchpad Playwright script with `--use-angle=swiftshader` works for screenshots (FPS from it is meaningless). When scripting taps, compute positions in CSS pixels from the screenshot (screenshots are 2× device pixels).
 
-### M3 — Game Core ⭐ 🟨
+### M3 — Game Core ⭐ ✅
 **Goal:** Backend domain for communities, projects and actions with server-side rules.
 - **In scope**
   - [x] SQL migrations: communities (seeded with Calgary community list + population), projects, actions, users (dev user only for now)
@@ -170,7 +170,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] progress appears after Calgary midnight
   - [x] tests cover edge cases
   - [x] API documented in `docs/api.md`
-  - [ ] user has reviewed it (backend only: no screen to play; review the API doc and test list)
+  - [x] user has reviewed it (confirmed 2026-11-18)
 - **Handoff**
   - **Code:** migrations `supabase/migrations/20261118120000_gamecore_schema.sql` (tables), `…120100_gamecore_communities.sql` (generated data), `…120200_gamecore_rules.sql` (rules + RPC); tests `supabase/tests/database/gamecore_rules.test.sql` (57 checks); API reference `docs/api.md`; data `supabase/data/` + `docs/data-sources.md`.
   - **Pattern:** every rule is an internal `gamecore.*_at(…, p_now, p_uid)` function; the public RPC only passes `now()` and `auth.uid()`. Tests move through days by passing fixed instants. Public RPCs are `security definer` with `search_path = ''`; gamecore tables have RLS on and **no policies**, so they are reachable only through the RPCs.
@@ -183,7 +183,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** no load test (single-player concurrency only); `ensure_projects` runs on every state read (cheap check first, lock only when a project must start) — M5 snapshots will take over the read path. `completed_on` is computed per completed project on every read (fine for now; snapshot later). Data attribution must also appear in the app's legal page (M14).
   - **Environment gotchas:** `supabase db reset` wipes local data and re-runs `seed.sql`. To run a test file by hand with psql inside the DB container, first `create extension pgtap with schema extensions; set search_path = public, extensions;` (`supabase test db` does this automatically).
 
-### M4 — Daily Actions ⭐ ⬜
+### M4 — Daily Actions ⭐ 🟦
 **Goal:** Connect the island to the backend so actions really change the community.
 - **In scope**
   - [ ] Island loads real community state from the API (replacing mock JSON)
