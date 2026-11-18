@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.14 |
+| Plan version | v1.15 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
-| Based on | `requirement.md` v1.14 |
+| Based on | `requirement.md` v1.15 |
 | Current module | M3 — Game Core (next; M2 ✅ Done) |
 
 ---
@@ -287,10 +287,9 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M13 — Feature Library ⬜
 **Goal:** Each island feels like its community.
 - **In scope**
-  - [ ] name sign (voxel reinterpretation of the real entrance sign from operator photos; community name only, no developer logos; default sign otherwise)
+  - [ ] default name sign for every community (custom signs come from Phase 3 photo petitions)
   - [ ] a few feature blocks (lake, creek, hill, park) as box models
   - [ ] community → feature mapping (OSM / City hydrology suggestion + CSV override) for launch communities
-  - [ ] optional community-specific landmark for launch communities only (e.g. Mahogany)
   - [ ] reserve feature/landmark slots in the island layout (M1 layout has none yet; house lots will be re-laid once, acceptable before launch)
 - **Definition of Done**
   - [ ] launch communities show their features
@@ -327,6 +326,15 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.15
+**Changed:** "Based on" → `requirement.md` v1.15. M13: name sign item is now the default sign for every community; removed the launch-community landmark item (custom signs/landmarks move to Phase 3 photo petitions).
+
+**Why:** Sync with requirement v1.15 (resident-driven signs and landmarks).
+
+**Previous:**
+- `| Plan version | v1.14 |` / `| Based on | `requirement.md` v1.14 |`
+- M13: `  - [ ] name sign (voxel reinterpretation of the real entrance sign from operator photos; community name only, no developer logos; default sign otherwise)` / `  - [ ] optional community-specific landmark for launch communities only (e.g. Mahogany)`
 
 ### 2026-11-18 — v1.14
 **Changed:** "Based on" → `requirement.md` v1.14. M9: notice board opens on tap without walking; added global operator announcements.
