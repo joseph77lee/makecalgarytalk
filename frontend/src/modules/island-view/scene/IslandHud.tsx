@@ -1,0 +1,43 @@
+import { vitalityMood, type VitalityMood } from '../mood';
+import type { CommunityViewState } from '../types';
+import { useIslandUi } from '../uiStore';
+
+const MOOD_LABEL: Record<VitalityMood, { text: string; className: string }> = {
+  lively: { text: 'Lively', className: 'bg-emerald-100 text-emerald-700' },
+  normal: { text: 'Normal', className: 'bg-sky-100 text-sky-700' },
+  gloomy: { text: 'Gloomy', className: 'bg-slate-200 text-slate-600' },
+};
+
+/** Top bar: community name, Vitality mood and the labels toggle. M5 adds the streak bar and goals. */
+export function IslandHud({ state }: { state: CommunityViewState }) {
+  const mood = MOOD_LABEL[vitalityMood(state.vitality)];
+  const showLabels = useIslandUi((u) => u.showLabels);
+  const setShowLabels = useIslandUi((u) => u.setShowLabels);
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 p-3">
+      <span className="w-10 shrink-0" aria-hidden />
+      <div className="flex min-w-0 items-center gap-2 rounded-full bg-white/85 px-4 py-1.5 shadow-sm backdrop-blur">
+        <span className="truncate text-sm font-bold text-slate-800">{state.communityName}</span>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${mood.className}`}>
+          {mood.text} · {Math.round(state.vitality)}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={() => setShowLabels(!showLabels)}
+        aria-pressed={showLabels}
+        aria-label={showLabels ? 'Hide labels' : 'Show labels'}
+        title={showLabels ? 'Hide labels' : 'Show labels'}
+        className={`pointer-events-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full shadow-sm backdrop-blur transition-colors ${
+          showLabels ? 'bg-white/85 text-slate-700' : 'bg-slate-800/75 text-white'
+        }`}
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.4A8 8 0 1 1 21 12Z" />
+          {!showLabels && <path d="M4 4l16 16" />}
+        </svg>
+      </button>
+    </div>
+  );
+}

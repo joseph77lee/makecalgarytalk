@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.11 |
+| Document version | v1.13 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Status | Initial draft for starting MVP development |
@@ -231,9 +231,12 @@ Goal: moving never punishes the person who moves or the residents who stay.
 ### 7.9 Community identity & feature library
 Because every island has the same shape, each community gets its identity from:
 - **Name sign** at the island entrance
+  - Inspired by the community's real entrance sign (operator photos are reference only, never shipped): shape, colours and materials **reinterpreted in voxel style**, showing only the community name — **no developer logos or branding**. Communities without a custom sign use the default sign
 - **Signature features** from a reusable **feature library** (not real size/position — symbolic):
   - Example blocks: lake/pond, creek/river, hill, ravine, large park, off-leash dog park, ice rink, CTrain station, mall, school
   - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator
+- **Community landmarks (optional, launch communities only)**: a community-specific landmark model (e.g. a lakeside clubhouse) added on top of the shared feature library for the launch communities; all other communities use shared library blocks only
+- Source data for feature suggestions: City of Calgary Open Data (e.g. hydrology water bodies) and OpenStreetMap; features stay symbolic (presence, not real size/position)
 - **Activity-based feature upgrades** (Phase 2): features evolve with activity (e.g. Mahogany's lake → boat dock → lakeside trail)
 - **Resident petitions** (Phase 3): see 16.2
 - The real location/shape of each community is shown on the **World Map** (Section 9); the island is the cute, playable view.
@@ -293,6 +296,8 @@ Because every island has the same shape, each community gets its identity from:
 - **Pastel colours, flat-shaded voxel/box objects**, soft shadows
 - Contents: community buildings (playground, community centre, park, etc.), resident houses, mini villagers, signature features (7.9), project construction sites, locked-building silhouettes, name sign
 - Speech bubbles and name labels are **HTML overlays** positioned over 3D objects (crisp text, Korean/English supported)
+  - A **labels toggle** shows or hides all island overlays (speech bubbles, name tags, construction progress, locked-building hints) so the scene can be viewed without clutter. On by default; the choice is remembered on the device
+  - Mini villagers stroll slowly, each with its own pace and resting habits (not in lockstep)
 - On entry, show **"What changed since yesterday"** (construction progress, new residents, trees planted, etc.)
 - Show community streak status, remaining conditions for the next unlock, and the next island growth goal
 - Users can visit and view other communities (actions only in their own community)
@@ -695,6 +700,20 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.13
+**Changed:** 7.9: name sign is a voxel reinterpretation of the real entrance sign (photos reference only, community name only, no developer logos); added optional community-specific landmarks for launch communities only; named City of Calgary Open Data hydrology + OpenStreetMap as feature-suggestion sources. Timing unchanged (M13).
+
+**Why:** User discussion after the M1 first look: communities should feel like themselves (e.g. Mahogany's lake, its entrance sign, a representative building). Photos of real signs would clash with the voxel style and may carry developer trademarks; unique landmarks for 200+ communities are too costly, so only launch communities get them.
+
+**Previous:** 7.9: `- **Name sign** at the island entrance` (no sub-note); the landmark and source-data items did not exist.
+
+### 2026-11-18 — v1.12
+**Changed:** 10.1: added two notes under the HTML overlay item: a labels toggle (show/hide all island overlays, on by default, remembered on the device) and mini villagers strolling slowly with individual pace.
+
+**Why:** User feedback after the M1 first look: bubbles, construction progress and lock hints shown together look cluttered; villagers moved too fast and bounced in lockstep.
+
+**Previous:** 10.1: `- Speech bubbles and name labels are **HTML overlays** positioned over 3D objects (crisp text, Korean/English supported)` (no sub-notes)
 
 ### 2026-11-18 — v1.11
 **Changed:** 7.5: added two notes under "Day boundary": Alberta has been on UTC-6 year-round since 2026-11-01 (use up-to-date `America/Edmonton` tzdata, never hardcode offsets), and the boundary is computed only on the server. The rule itself (Calgary midnight) is unchanged.
