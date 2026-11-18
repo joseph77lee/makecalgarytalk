@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Based on | `requirement.md` v1.13 |
-| Current module | M2 — Avatar (🟨 Ready for playtest) |
+| Current module | M3 — Game Core (next; M2 ✅ Done) |
 
 ---
 
@@ -40,7 +40,7 @@
 |---|---|---|---|---|---|
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
 | M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |
-| M2 | Avatar | FE (R3F) | ⭐ Core | M1 | 🟨 |
+| M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | ⬜ |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ⬜ |
 | M5 | Community State | BE + FE | ⭐ Core | M4 | ⬜ |
@@ -130,7 +130,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** no real phone run yet (only headless Chromium with a software GPU; FPS figures from it mean nothing). No automated tests of the R3F scene itself (logic, models and registry are unit-tested; the scene was checked by screenshots at 1280×800 and 390×844). Not built yet: chimney-smoke and villager polish, mood transition animation, day/night, winter launch theme (user decision 2026-11-18: deferred to the Art Pass; features first. M1 uses the green pastel reference, snow only in Gloomy). Building/house tap info belongs to M2/M4.
   - **Environment gotchas:** in dev, React StrictMode makes drei `Html` log "Attempted to synchronously unmount a root…" once per label; the production build does not. three r187 logs a `THREE.Clock` deprecation warning from R3F internals (harmless). Bundle: ~326 KB gzipped (three + drei).
 
-### M2 — Avatar ⭐ 🟨
+### M2 — Avatar ⭐ ✅
 **Goal:** The user's avatar walks around the island.
 - **In scope**
   - [x] Box avatar with name label
@@ -142,8 +142,8 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done**
   - [x] avatar never walks through buildings (simulated walks on 8/12/20/32 islands; every step checked)
   - [x] works with touch and mouse (headless Chromium: mouse click and touch emulation; not yet on a real phone)
-  - [ ] camera follow feels smooth (looks smooth in screenshots; needs the user's feel)
-  - [ ] user has walked around
+  - [x] camera follow feels smooth (user confirmed 2026-11-18)
+  - [x] user has walked around (confirmed 2026-11-18)
 - **Handoff**
   - **Code:** `frontend/src/modules/avatar/`. Public API: `Avatar({ nickname })`, `moveTo({ x, z })`, `useAvatarStore` (`lastEvent`, `arrival`), `findPath`, `nearestWalkable`, `AVATAR_SPEED` (2.2 tiles/s).
   - **Destination events:** `moveTo` emits `{ avatarId, to, seq, at }` — no positions. Taps and keyboard steps both produce events in this format. The avatar renderer turns events into paths; when a path ends it sets `arrival = { seq, tile }`. **M4:** call `moveTo(siteTile)`, keep the returned `seq`, act when `arrival.seq` matches. `avatarId` is `'local'` until Identity (M6).
