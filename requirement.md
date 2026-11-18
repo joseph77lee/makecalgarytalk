@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.13 |
+| Document version | v1.14 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Status | Initial draft for starting MVP development |
@@ -323,11 +323,13 @@ Because every island has the same shape, each community gets its identity from:
 ## 11. Village news (community newspaper)
 
 - **Available from the MVP** (Village Notice Board). Moves into/expands at the Community Centre once built
+  - Opens when the player taps the Village Notice Board (or the Community Centre once built); the avatar does not need to walk there
 - **Auto-generated community newspaper** (no operator effort)
   - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed. Sarah hit a 7-day streak!"
   - Shows nicknames of active residents (recognition)
   - Farewell line when a resident moves away (6.4), e.g. "Sarah moved to Bridgeland — thanks for everything, neighbour!" (no times)
 - **Upcoming updates (roadmap)**: e.g. "December: Community board opens"
+- **Operator announcements (global)**: short notices written by the operator (events, maintenance, rule changes), shown to **all communities** at the top of the newspaper. No per-community announcements in the MVP
 - Locked features are shown with a lock icon + "Coming soon"
 
 ---
@@ -700,6 +702,13 @@ Because every island has the same shape, each community gets its identity from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.14
+**Changed:** 11: the newspaper opens on tap of the Village Notice Board / Community Centre without the avatar walking there (clarification); added global operator announcements shown to all communities at the top of the newspaper (no per-community announcements in the MVP).
+
+**Why:** User decisions (2026-11-18): tapping the building is enough; operator notices should be one global feed to keep operation effort low.
+
+**Previous:** 11: `- **Available from the MVP** (Village Notice Board). Moves into/expands at the Community Centre once built` (no sub-note); the operator announcements item did not exist.
 
 ### 2026-11-18 — v1.13
 **Changed:** 7.9: name sign is a voxel reinterpretation of the real entrance sign (photos reference only, community name only, no developer logos); added optional community-specific landmarks for launch communities only; named City of Calgary Open Data hydrology + OpenStreetMap as feature-suggestion sources. Timing unchanged (M13).

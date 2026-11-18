@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.13 |
+| Plan version | v1.14 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
-| Based on | `requirement.md` v1.13 |
+| Based on | `requirement.md` v1.14 |
 | Current module | M3 — Game Core (next; M2 ✅ Done) |
 
 ---
@@ -244,7 +244,8 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] auto-generated daily newspaper from game events (templates)
   - [ ] farewell line when a resident moves away (`requirement.md` §6.4, §11)
   - [ ] roadmap notices + "Coming soon" locks
-  - [ ] Village Notice Board object on the island opens it
+  - [ ] Village Notice Board object on the island opens it on tap (Community Centre once built); no walking required
+  - [ ] global operator announcements (one feed for all communities) at the top of the newspaper, managed by the operator (no per-community announcements)
 - **Definition of Done**
   - [ ] newspaper reflects yesterday's real events with nicknames
   - [ ] no activity times exposed
@@ -326,6 +327,15 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.14
+**Changed:** "Based on" → `requirement.md` v1.14. M9: notice board opens on tap without walking; added global operator announcements.
+
+**Why:** Sync with requirement v1.14 (user decisions).
+
+**Previous:**
+- `| Plan version | v1.13 |` / `| Based on | `requirement.md` v1.13 |`
+- M9: `  - [ ] Village Notice Board object on the island opens it` (announcements item did not exist)
 
 ### 2026-11-18 — v1.13
 **Changed:** "Based on" → `requirement.md` v1.13. M13: name sign wording (voxel reinterpretation, no logos), mapping sources include City hydrology, added optional launch-community landmark and a layout-slot item.
