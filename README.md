@@ -74,6 +74,7 @@ makecalgarytalk/
 - Node.js 20.19+ and npm
 - Docker Desktop (running) — local Supabase runs in containers
 - Supabase CLI: `brew install supabase/tap/supabase`
+- If `supabase` cannot find Docker, add Docker's CLI to PATH: `export PATH="$HOME/.docker/bin:$PATH"`
 
 ### First-time setup
 ```bash

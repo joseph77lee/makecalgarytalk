@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.9 |
+| Plan version | v1.10 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Based on | `requirement.md` v1.11 |
@@ -21,6 +21,7 @@
 7. **No time estimates.** The plan exists to check that nothing is missing and to see progress. Tick each checkbox (`- [x]`) when that item is implemented and verified.
 8. `requirement.md` defines **what** to build. This plan defines **in what order and in what pieces**. If they conflict, `requirement.md` wins — update one of them.
 9. **One branch per module** (`module/m<number>-<name>`). It is merged to `main` (`--no-ff`) only after the module is ✅ Done, CI is green, and this file already shows ✅ on the branch. Reopened modules use `fix/m<number>-<topic>`. See `CLAUDE.md` §2 Branches & merging.
+10. **Each module ends with a Handoff note** (in its section below) before it goes to 🟨: decisions not obvious from the code, deviations from the plan, known gaps / not tested, follow-ups for later modules, environment gotchas. Modules are built in separate sessions; a new session reads `git log`, the newest Change Log entries and the Handoff notes first (see `CLAUDE.md` §3 Session start).
 
 ### Status legend
 | Mark | Meaning |
@@ -89,6 +90,13 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] health check visible in the browser
   - [x] CI green
   - [x] day-boundary tests cover historic DST and Alberta's permanent UTC-6 from 2026-11-01 (Official Time Act)
+- **Handoff**
+  - **Day boundary is server-only.** Use `common.calgary_day(ts)` / `common.calgary_day_start(day)` in SQL; the client receives `calgary_day` / `next_day_start` from RPCs and only computes distances (`msUntil`, `formatCountdown` in `frontend/src/modules/common`). Client tzdata is often outdated (Node 20 = 2025a). A test fails if client code mentions `America/Edmonton` or `timeZone:`.
+  - **DB module pattern:** tables live in a module schema (e.g. `gamecore`), not exposed by the API (`auto_expose_new_tables = false`); the only callable surface is `public.<module>_<name>()` functions with explicit `grant execute`. When a new module adds RPCs, its prefix must already be in the list in `supabase/tests/database/common_health.test.sql` (all MVP prefixes are listed).
+  - **Frontend module pattern:** `frontend/src/modules/<name>/index.ts` is the only import surface; `common` must not import feature modules; no cycles (`src/architecture.test.ts`). App shell is `src/app/App.tsx` (currently the health screen — M1 replaces it with the island).
+  - **Keys:** frontend uses the publishable key (`sb_publishable_…`) only; `readSupabaseConfig` throws on a secret-looking key.
+  - **Local env gotchas:** ports are 554xx (54321 is taken by CleanMyMac on this Mac); the Supabase CLI needs Docker on PATH (`export PATH="$HOME/.docker/bin:$PATH"`); `frontend/.env.local` holds the local publishable key (`supabase status`).
+  - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet). Claude Code cannot read CI results (private repo, no `gh`) — ask the user, or install and log in to `gh`.
 
 ### M1 — Island View ⭐ ⬜
 **Goal:** The 3D diorama island renders from a state object, using box models through asset keys.
@@ -291,6 +299,16 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.10
+**Changed:** Added rule 10 (each module ends with a Handoff note; new sessions read `git log`, Change Logs and Handoff notes first). Added the M0 Handoff note. M0 marked ✅ and current module set to M1 (status update, recorded here for completeness).
+
+**Why:** Each module is built in a new Claude Code session with no memory of earlier sessions. Commits and Change Logs record *what* changed; Handoff notes record decisions, gaps and gotchas that are not obvious from the code.
+
+**Previous:**
+- Rule 10: (none)
+- M0 Handoff: (none)
+- Header: `| Plan version | v1.9 |` / `| Current module | M0 — Foundation (in progress) |`
 
 ### 2026-11-18 — v1.9
 **Changed:** M0 status 🟦 In progress. M0 items reworded to what was built: local Supabase (cloud project at M14), pooling via PostgREST, Calgary day boundary as server-side Postgres functions (no client time zone math), conventions enforced by tests; DoD day-boundary item now covers Alberta's permanent UTC-6. M14: added a production tzdata check. "Based on" → `requirement.md` v1.11.
