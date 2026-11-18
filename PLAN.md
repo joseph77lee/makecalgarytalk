@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.15 |
+| Plan version | v1.16 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
-| Based on | `requirement.md` v1.15 |
+| Based on | `requirement.md` v1.16 |
 | Current module | M3 — Game Core (next; M2 ✅ Done) |
 
 ---
@@ -191,6 +191,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] Backend: community streak (≥ half, rounded up, of **Active Verified Residents** = acted within last 7 Calgary days), Vitality (7-day average; denominator = Verified Residents whose **last active day** (later of last action and verification day) is within last 30 days incl. today, rises fast/falls slow), unlocks (Playground / Community Centre / Park; resident counts cumulative), island size from cumulative residents
   - [ ] Snapshot generation every 5–10 min (JSON) for community state via **pg_cron**
   - [ ] Frontend: streak bar ("2/6 today"), locked silhouettes with remaining conditions, "What changed since yesterday" panel, island growth goal
+  - [ ] Village build map screen (`requirement.md` §7.6a): unlock track + island size track with remaining conditions and progress, completed projects; Village tab only (Me tab is Phase 2)
 - **Out of scope:** real residents/verification (dev users simulate residents)
 - **Definition of Done**
   - [ ] with simulated users over simulated days, streak, Vitality, unlocks and growth behave as specified
@@ -202,6 +203,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **In scope**
   - [ ] Supabase anonymous sign-in on first visit
   - [ ] optional Google linking
+  - [ ] avatar shirt colour choice on first visit, changeable later (`requirement.md` §10.2)
   - [ ] Cloudflare Turnstile
   - [ ] sign-up rate limits
   - [ ] re-join with same Google account restores record
@@ -326,6 +328,15 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.16
+**Changed:** "Based on" → `requirement.md` v1.16. M5: added the Village build map screen. M6: added avatar shirt colour choice.
+
+**Why:** Sync with requirement v1.16 (village build-up and avatar build-up; avatar growth itself is Phase 2).
+
+**Previous:**
+- `| Plan version | v1.15 |` / `| Based on | `requirement.md` v1.15 |`
+- M5 and M6 had no build map / shirt colour items.
 
 ### 2026-11-18 — v1.15
 **Changed:** "Based on" → `requirement.md` v1.15. M13: name sign item is now the default sign for every community; removed the launch-community landmark item (custom signs/landmarks move to Phase 3 photo petitions).
