@@ -92,6 +92,24 @@ These rules apply to every task in this repository. Read this file and `requirem
 - If a bug belongs to a finished module, mark it 🔁 Reopened, fix it there, and log it.
 - Plan changes follow the same rule as requirements: Change Log entry first (with previous text), then edit.
 
+### Branches & merging
+- **Never commit directly to `main`.** `main` only contains work the user has checked together with Claude Code.
+- One branch per piece of work, created from an up-to-date `main`:
+
+| Work | Branch | Example |
+|---|---|---|
+| A `PLAN.md` module | `module/m<number>-<name>` | `module/m0-foundation` |
+| Bug in a ✅ Done module (🔁 Reopened) | `fix/m<number>-<topic>` | `fix/m3-energy-reset` |
+| Docs/rules change not tied to a module | `docs/<topic>` | `docs/moving-rules` |
+
+- Requirement or plan changes made during a module go on that module's branch.
+- Push the branch to `origin` regularly (backup + CI runs on every push).
+- **Merge to `main` only when all of these are true:**
+  1. The user and Claude Code have checked it together and it works (for modules: the user played it and confirmed ✅)
+  2. CI is green on the branch
+  3. `PLAN.md` status is already updated on the branch (✅ for modules) so `main` is correct the moment it is merged
+- Merge with `git merge --no-ff` (keeps the branch's commits and one clear merge commit per module), push `main`, then delete the branch (local and remote).
+
 ### Modular code (modular monolith)
 Each `PLAN.md` module maps to a code module with clear boundaries, so a problem can be fixed in one place.
 - **Frontend (React):** one folder per module under `frontend/src/modules/<module-name>/` (e.g. `island-view`, `avatar`, `daily-actions`), containing its components, hooks, stores and tests. Each module exposes a small public API through its `index.ts`; other modules import **only** from that API, never from internal files.
@@ -108,13 +126,15 @@ Each `PLAN.md` module maps to a code module with clear boundaries, so a problem 
 1. Read `CLAUDE.md` (including the Mistake Log), the current module in `PLAN.md`, and the relevant parts of `requirement.md`
 2. Ask questions about anything unclear
 3. Propose a plan → wait for approval
-4. Implement in small steps
-5. Test, including edge cases
-6. Run the app and check the screen
-7. Report: what changed, what was tested, what was not tested, what you saw on screen, status (`Implemented` / `Verified` / `Ready for playtest`)
-8. Update `PLAN.md`: tick completed checklist items (`- [x]`) and update the module status
-9. Commit with a clear message, scoped by module (e.g. `feat(island-view): add vitality moods`, `fix(gamecore): energy reset at Calgary midnight`)
-10. If a mistake happened, add one line to the Mistake Log
+4. Create the branch from an up-to-date `main` (see Branches & merging)
+5. Implement in small steps
+6. Test, including edge cases
+7. Run the app and check the screen
+8. Report: what changed, what was tested, what was not tested, what you saw on screen, status (`Implemented` / `Verified` / `Ready for playtest`)
+9. Update `PLAN.md`: tick completed checklist items (`- [x]`) and update the module status
+10. Commit on the branch with a clear message, scoped by module (e.g. `feat(island-view): add vitality moods`, `fix(gamecore): energy reset at Calgary midnight`), and push the branch
+11. Check it together with the user; when it works, CI is green and `PLAN.md` says ✅, merge to `main` with `--no-ff`, push, delete the branch
+12. If a mistake happened, add one line to the Mistake Log
 
 ---
 

@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.7 |
+| Plan version | v1.8 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-17 |
+| Last updated | 2026-11-18 |
 | Based on | `requirement.md` v1.10 |
 | Current module | M0 — Foundation (not started) |
 
@@ -20,6 +20,7 @@
 6. This plan will change. Before changing it, add an entry at the top of the [Change Log](#change-log) (date, version, Changed, Why, Previous text verbatim), then edit the body.
 7. **No time estimates.** The plan exists to check that nothing is missing and to see progress. Tick each checkbox (`- [x]`) when that item is implemented and verified.
 8. `requirement.md` defines **what** to build. This plan defines **in what order and in what pieces**. If they conflict, `requirement.md` wins — update one of them.
+9. **One branch per module** (`module/m<number>-<name>`). It is merged to `main` (`--no-ff`) only after the module is ✅ Done, CI is green, and this file already shows ✅ on the branch. Reopened modules use `fix/m<number>-<topic>`. See `CLAUDE.md` §2 Branches & merging.
 
 ### Status legend
 | Mark | Meaning |
@@ -289,6 +290,13 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.8
+**Changed:** Added rule 9 to "How this plan works": one branch per module, merged to `main` with `--no-ff` only after ✅ Done, green CI, and ✅ already recorded on the branch; reopened modules use `fix/` branches.
+
+**Why:** User decision: `main` should only contain modules that were checked together and work. Branches also make it easy to discard a failed attempt.
+
+**Previous:** Rules 1–8 only (rule 9 did not exist).
 
 ### 2026-11-17 — v1.7
 **Changed:** "Based on" → `requirement.md` v1.10. M7: replaced "90-day community change" with the full moving flow (§6.4) and cumulative-count rule; added move edge-case tests to M7 Definition of Done. M9: added farewell line item.
