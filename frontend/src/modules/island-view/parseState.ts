@@ -11,6 +11,7 @@ import {
   type IslandSize,
   type ProjectState,
   type ResidentHouse,
+  type ShowcaseItem,
   type SpeechBubble,
 } from './types';
 
@@ -37,7 +38,9 @@ export function parseCommunityViewState(input: unknown): ParseResult {
   if (!includes(ISLAND_SIZES, input.islandSize)) {
     errors.push(`islandSize must be one of ${ISLAND_SIZES.join(', ')}`);
   }
-  if (!isFiniteIn(input.vitality, 0, 100)) errors.push('vitality must be a number from 0 to 100');
+  if (input.vitality !== null && !isFiniteIn(input.vitality, 0, 100)) {
+    errors.push('vitality must be a number from 0 to 100, or null');
+  }
   if (!isCount(input.miniVillagerCount) || (input.miniVillagerCount as number) > MAX_MINI_VILLAGERS) {
     errors.push(`miniVillagerCount must be an integer from 0 to ${MAX_MINI_VILLAGERS}`);
   }
@@ -67,13 +70,15 @@ export function parseCommunityViewState(input: unknown): ParseResult {
       const v = b[kind];
       if (isObj(v) && v.unlocked === true) {
         buildings[kind] = { unlocked: true };
+      } else if (isObj(v) && v.unlocked === false && v.remaining === null) {
+        buildings[kind] = { unlocked: false, remaining: null };
       } else if (isObj(v) && v.unlocked === false && isObj(v.remaining) && isCount(v.remaining.streakDays) && isCount(v.remaining.residents)) {
         buildings[kind] = {
           unlocked: false,
           remaining: { streakDays: v.remaining.streakDays, residents: v.remaining.residents },
         };
       } else {
-        errors.push(`buildings.${kind} must be { unlocked: true } or { unlocked: false, remaining: { streakDays, residents } }`);
+        errors.push(`buildings.${kind} must be { unlocked: true } or { unlocked: false, remaining: { streakDays, residents } | null }`);
       }
     }
     for (const key of Object.keys(b)) {
@@ -96,14 +101,31 @@ export function parseCommunityViewState(input: unknown): ParseResult {
         !includes(PROJECT_KINDS, p.kind) ||
         !isNonEmptyString(p.title) ||
         !includes(PROJECT_STAGES, p.stage) ||
-        !isFiniteIn(p.progress, 0, 1)
+        !isFiniteIn(p.progress, 0, 1) ||
+        !(Number.isInteger(p.level) && (p.level as number) >= 1)
       ) {
-        errors.push(`projects[${i}] needs id, kind (${PROJECT_KINDS.join('|')}), title, stage (${PROJECT_STAGES.join('|')}), progress 0..1`);
+        errors.push(`projects[${i}] needs id, kind (${PROJECT_KINDS.join('|')}), title, stage (${PROJECT_STAGES.join('|')}), progress 0..1, level >= 1`);
         return;
       }
       if (ids.has(p.id)) errors.push(`projects[${i}] duplicate id '${p.id}'`);
       ids.add(p.id);
-      projects.push({ id: p.id, kind: p.kind, title: p.title, stage: p.stage, progress: p.progress });
+      projects.push({ id: p.id, kind: p.kind, title: p.title, stage: p.stage, progress: p.progress, level: p.level as number });
+    });
+  }
+
+  const showcase: ShowcaseItem[] = [];
+  if (!Array.isArray(input.showcase)) {
+    errors.push('showcase must be an array');
+  } else {
+    const kinds = new Set<string>();
+    input.showcase.forEach((sItem, i) => {
+      if (!isObj(sItem) || !includes(PROJECT_KINDS, sItem.kind) || !(Number.isInteger(sItem.level) && (sItem.level as number) >= 1)) {
+        errors.push(`showcase[${i}] needs kind (${PROJECT_KINDS.join('|')}) and level >= 1`);
+        return;
+      }
+      if (kinds.has(sItem.kind)) errors.push(`showcase[${i}] duplicate kind '${sItem.kind}'`);
+      kinds.add(sItem.kind);
+      showcase.push({ kind: sItem.kind, level: sItem.level as number });
     });
   }
 
@@ -135,10 +157,11 @@ export function parseCommunityViewState(input: unknown): ParseResult {
     state: {
       communityName: (input.communityName as string).trim(),
       islandSize: input.islandSize as IslandSize,
-      vitality: input.vitality as number,
+      vitality: input.vitality as number | null,
       houses,
       buildings,
       projects,
+      showcase,
       miniVillagerCount: input.miniVillagerCount as number,
       speechBubbles,
     },

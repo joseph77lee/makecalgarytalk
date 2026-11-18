@@ -68,14 +68,25 @@ export function Avatar({ nickname }: Props) {
     if (f.arrivedSeq !== null) useAvatarStore.getState().reportArrival(f.arrivedSeq, w.tile);
 
     const time = clock.elapsedTime;
-    g.position.set(f.x, f.moving ? Math.abs(Math.sin(time * 14)) * 0.05 : 0, f.z);
+    const { workUntil, workFacing } = useAvatarStore.getState();
+    const working = !f.moving && performance.now() < workUntil;
+    g.position.set(f.x, f.moving ? Math.abs(Math.sin(time * 14)) * 0.05 : working ? Math.abs(Math.sin(time * 9)) * 0.08 : 0, f.z);
+    if (working && workFacing) {
+      const yaw = Math.atan2(workFacing.x + 0.5 - f.x, workFacing.z + 0.5 - f.z);
+      let d = yaw - g.rotation.y;
+      d = Math.atan2(Math.sin(d), Math.cos(d));
+      g.rotation.y += d * Math.min(1, dt * 12);
+    }
     if (f.moving) {
       const targetYaw = Math.atan2(f.dx, f.dz);
       let diff = targetYaw - g.rotation.y;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       g.rotation.y += diff * Math.min(1, dt * 14);
     }
-    if (body.current) body.current.rotation.z = f.moving ? Math.sin(time * 14) * 0.06 : 0;
+    if (body.current) {
+      body.current.rotation.z = f.moving ? Math.sin(time * 14) * 0.06 : 0;
+      body.current.rotation.x = working ? Math.max(0, Math.sin(time * 9)) * 0.35 : 0; // hammering bow
+    }
     setCameraFocus(f.x, f.z);
 
     // Destination marker pulses while walking.

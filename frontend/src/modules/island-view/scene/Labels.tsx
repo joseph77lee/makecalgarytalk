@@ -2,11 +2,20 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState, type ReactNode } from 'react';
 import type { PlacedObject } from '../layout';
-import type { BuildingKind } from '../types';
+import type { BuildingKind, ProjectKind } from '../types';
 import { useIslandUi } from '../uiStore';
 import { BUBBLE_Z, LABEL_Z, remainingText } from './labelText';
 
 /** HTML overlays (crisp text, any language) positioned over 3D objects (requirement.md §10.1). */
+
+const SHOWCASE_NAMES: Record<ProjectKind, string> = {
+  'ice-rink': 'Ice rink',
+  'flower-path': 'Flower path',
+  'holiday-decorations': 'Holiday decorations',
+  'snowman-garden': 'Snowman garden',
+  'lantern-street': 'Lantern street',
+  'bird-feeders': 'Bird feeders',
+};
 
 const BUILDING_NAMES: Record<BuildingKind, string> = {
   playground: 'Playground',
@@ -94,7 +103,7 @@ export function IslandLabels({ objects, houseBubbles }: Props) {
                 {detailed ? (
                   <div className="whitespace-nowrap rounded-lg bg-slate-800/75 px-2 py-0.5 text-center text-[10px] leading-tight text-white">
                     <div className="font-semibold">🔒 {BUILDING_NAMES[o.target]}</div>
-                    <div className="opacity-85">{remainingText(o.remaining)}</div>
+                    {o.remaining && <div className="opacity-85">{remainingText(o.remaining)}</div>}
                   </div>
                 ) : (
                   <span className="rounded-full bg-slate-800/70 px-1.5 py-px text-[10px] text-white">🔒</span>
@@ -107,13 +116,32 @@ export function IslandLabels({ objects, houseBubbles }: Props) {
                 <div
                   className={`${detailed ? 'w-28 px-2 py-1' : 'w-10 p-0.5'} rounded-lg bg-white/90 text-center text-[10px] font-semibold leading-tight text-slate-700 shadow-sm`}
                 >
-                  {detailed && <div className="mb-1 truncate">{o.title}</div>}
+                  {detailed && (
+                    <div className="mb-1 truncate">
+                      {o.title}
+                      {o.level > 1 && <span className="ml-1 text-amber-600">Lv {o.level}</span>}
+                    </div>
+                  )}
                   <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
-                    <div className="h-full rounded-full bg-emerald-400" style={{ width: `${Math.round(o.progress * 100)}%` }} />
+                    <div className="h-full rounded-full bg-emerald-400 transition-[width] duration-700" style={{ width: `${Math.round(o.progress * 100)}%` }} />
                   </div>
                 </div>
               </Overlay>
             );
+          case 'showcase.ice-rink':
+          case 'showcase.flower-path':
+          case 'showcase.holiday-decorations':
+          case 'showcase.snowman-garden':
+          case 'showcase.lantern-street':
+          case 'showcase.bird-feeders':
+            return detailed ? (
+              <Overlay key={o.id} x={o.x} y={1.05} z={o.z}>
+                <span className="whitespace-nowrap rounded-full bg-amber-50/90 px-1.5 py-px text-[9px] font-semibold text-amber-800 shadow-sm">
+                  ⭐ {SHOWCASE_NAMES[o.kind]}
+                  {o.level > 1 ? ` Lv ${o.level}` : ''}
+                </span>
+              </Overlay>
+            ) : null;
           case 'sign':
             return (
               <Overlay key={o.id} x={o.x} y={1.75} z={o.z + 0.32}>

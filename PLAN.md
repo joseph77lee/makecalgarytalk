@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Based on | `requirement.md` v1.17 |
-| Current module | M4 — Daily Actions (in progress; M3 ✅ Done) |
+| Current module | M4 — Daily Actions (🟨 Ready for playtest) |
 
 ---
 
@@ -42,7 +42,7 @@
 | M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | ✅ |
-| M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | 🟦 |
+| M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | 🟨 |
 | M5 | Community State | BE + FE | ⭐ Core | M4 | ⬜ |
 | M6 | Identity | FE + BE | | M4 | ⬜ |
 | M7 | Residency | FE + BE | | M6 | ⬜ |
@@ -183,19 +183,30 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** no load test (single-player concurrency only); `ensure_projects` runs on every state read (cheap check first, lock only when a project must start) — M5 snapshots will take over the read path. `completed_on` is computed per completed project on every read (fine for now; snapshot later). Data attribution must also appear in the app's legal page (M14).
   - **Environment gotchas:** `supabase db reset` wipes local data and re-runs `seed.sql`. To run a test file by hand with psql inside the DB container, first `create extension pgtap with schema extensions; set search_path = public, extensions;` (`supabase test db` does this automatically).
 
-### M4 — Daily Actions ⭐ 🟦
+### M4 — Daily Actions ⭐ 🟨
 **Goal:** Connect the island to the backend so actions really change the community.
 - **In scope**
-  - [ ] Island loads real community state from the API (replacing mock JSON)
-  - [ ] Bottom action bar: energy display, choose a project, act
-  - [ ] Avatar runs to the project's spot (via M2 `moveTo`) then the action is sent; optimistic UI with server confirmation/rollback
-  - [ ] Satisfying feedback: progress bar animation, simple sound, villager cheer placeholder
-  - [ ] Community chosen manually from a list (temporary until M7)
+  - [x] Island loads real community state from the API (replacing mock JSON)
+  - [x] Bottom action bar: energy display, choose a project, act
+  - [x] Avatar runs to the project's spot (via M2 `moveTo`) then the action is sent; optimistic UI with server confirmation/rollback
+  - [x] Satisfying feedback: progress bar animation, simple sound, villager cheer placeholder
+  - [x] Community chosen manually from a list (temporary until M7)
 - **Out of scope:** streaks, Vitality calc, news
 - **Definition of Done**
-  - [ ] two browsers acting on the same community both see progress after the day rolls over
-  - [ ] energy limit enforced by server
+  - [x] two browsers acting on the same community both see progress after the day rolls over (two dev users in separate browser contexts; the day change was simulated by moving the day's actions to the previous day in the local DB)
+  - [x] energy limit enforced by server
   - [ ] user has played a "day"
+- **Handoff**
+  - **Code:** `frontend/src/modules/daily-actions/` — `api.ts` (typed RPC + response checks), `toViewState.ts` (server → island), `actionQueue.ts` (pure optimistic queue), `store.ts` (session flow, dependencies injected), `liveStore.ts` (real wiring), UI: `ActionBar`, `CommunityPicker`, `Toast`, `SessionScreen`. App: live game by default; `?mock` shows the M1 mock island with its dev panel.
+  - **Action flow:** tap a project card → energy drops at once, one id per tap (`crypto.randomUUID`) → avatar walks to `projectSiteTile(i)` → on arrival (or after 4 s) the avatar does a "work" bow, villagers cheer, a short sound plays, and the queue is sent (batches of ≤10). Accepted/duplicate → "+N today" on the card; rejected → energy rolls back and a toast explains; `project_not_active` also refreshes the state. A network failure retries with the **same ids** (2 s, 5 s, 15 s, 30 s). Unsent actions and today's "+N" are kept in `localStorage` (try/catch) and survive a reload.
+  - **No polling:** progress only changes at Calgary midnight, so the store refreshes once at `next_day_start` + 1.5 s (from the server; no client time zone math), plus after a finished-project rejection.
+  - **Zero energy:** cards stay tappable (dimmed, `aria-disabled`) so a tap explains "New energy in …"; a real `disabled` button would silently ignore the tap.
+  - **Showcase (M4 decision, not yet in requirement.md):** completed projects stay on the island as a 1×1 miniature on a pedestal, one per kind at its highest level (gold markers from level 2), on reserved spots in the front row on both sides of the entrance road. These spots are **not blocking** (the 8×8 island's edge is a one-tile corridor). Active projects remain 2×2 construction sites.
+  - **island-view changes:** 6 project kinds + `level`; `stage` is only scaffolding/frame (complete → showcase); `showcase` field; `vitality` and lock `remaining` may be `null` (M5 provides them; null → Normal mood, no HUD chip, lock without conditions); new exports `projectSiteTile`, `celebrateIsland`, `PROJECT_KINDS`. avatar: `playWork(facing)`.
+  - **Placeholders until later modules:** island size 8, no houses (M8), 3 ambient villagers, buildings locked without conditions, Vitality hidden (M5).
+  - **Dev sign-in (temporary until M6):** dev builds sign in automatically as `dev@makecalgarytalk.local`; `?devuser=2` uses `dev2@…` (both seeded members of Mahogany, `supabase/seed.sql`). Same-browser tabs share one session; use two browsers or a private window for two players. Production builds show "Sign-in is coming soon" until M6.
+  - **Not tested / known gaps:** a real Calgary midnight (simulated only; the refresh timer is unit-tested); real phone; sound on iOS (AudioContext needs a gesture — the tap is one); offline-for-hours retry beyond 30 s intervals; the "Switch community (dev)" button exists only in dev builds.
+  - **For M5:** fill `vitality`, `buildings` (unlocked / remaining), `islandSize`, `miniVillagerCount` in `toViewState` from server data; the build map can reuse `server.projects` / `completed_projects`.
 
 ### M5 — Community State ⭐ ⬜
 **Goal:** The community feels alive and changes over days. **Core loop complete.**

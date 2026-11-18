@@ -63,7 +63,7 @@ describe('models', () => {
 
   it('the frame stage adds a frame on top of the scaffolding', () => {
     const site = (stage: 'scaffolding' | 'frame'): ObjectOf<'construction-site'> => ({
-      assetKey: 'construction-site', id: 'c', x: 0, z: 0, ring: 0, stage, progress: 0.5, title: 'T',
+      assetKey: 'construction-site', id: 'c', x: 0, z: 0, ring: 0, stage, progress: 0.5, title: 'T', level: 1,
     });
     expect(constructionSite(site('frame')).length).toBeGreaterThan(constructionSite(site('scaffolding')).length);
   });

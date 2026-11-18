@@ -130,7 +130,8 @@ const BASE_STATE = {
     'community-centre': { unlocked: false, remaining: { streakDays: 3, residents: 1 } },
     park: { unlocked: false, remaining: { streakDays: 20, residents: 0 } },
   },
-  projects: [{ id: 'p', kind: 'ice-rink', title: 'Rink', stage: 'frame', progress: 0.5 }],
+  projects: [{ id: 'p', kind: 'ice-rink', title: 'Rink', stage: 'frame', progress: 0.5, level: 1 }],
+  showcase: [{ kind: 'flower-path', level: 1 }],
   miniVillagerCount: 3,
   speechBubbles: [],
 };

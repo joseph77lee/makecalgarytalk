@@ -10,7 +10,7 @@ const MOOD_LABEL: Record<VitalityMood, { text: string; className: string }> = {
 
 /** Top bar: community name, Vitality mood and the labels toggle. M5 adds the streak bar and goals. */
 export function IslandHud({ state }: { state: CommunityViewState }) {
-  const mood = MOOD_LABEL[vitalityMood(state.vitality)];
+  const mood = state.vitality === null ? null : MOOD_LABEL[vitalityMood(state.vitality)];
   const showLabels = useIslandUi((u) => u.showLabels);
   const setShowLabels = useIslandUi((u) => u.setShowLabels);
 
@@ -19,9 +19,11 @@ export function IslandHud({ state }: { state: CommunityViewState }) {
       <span className="w-10 shrink-0" aria-hidden />
       <div className="flex min-w-0 items-center gap-2 rounded-full bg-white/85 px-4 py-1.5 shadow-sm backdrop-blur">
         <span className="truncate text-sm font-bold text-slate-800">{state.communityName}</span>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${mood.className}`}>
-          {mood.text} · {Math.round(state.vitality)}
-        </span>
+        {mood && state.vitality !== null && (
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${mood.className}`}>
+            {mood.text} · {Math.round(state.vitality)}
+          </span>
+        )}
       </div>
       <button
         type="button"
