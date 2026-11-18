@@ -1,0 +1,26 @@
+{
+  "communityName": "Mahogany",
+  "islandSize": 12,
+  "vitality": 72,
+  "houses": [
+    { "id": "r1", "nickname": "Sarah", "activeToday": true },
+    { "id": "r2", "nickname": "Minjun", "activeToday": true },
+    { "id": "r3", "nickname": "Priya", "activeToday": false },
+    { "id": "r4", "nickname": "Tom", "activeToday": true }
+  ],
+  "buildings": {
+    "playground": { "unlocked": true },
+    "community-centre": { "unlocked": false, "remaining": { "streakDays": 4, "residents": 1 } },
+    "park": { "unlocked": false, "remaining": { "streakDays": 27, "residents": 0 } }
+  },
+  "projects": [
+    { "id": "p1", "kind": "ice-rink", "title": "Build an ice rink", "stage": "frame", "progress": 0.55 },
+    { "id": "p2", "kind": "flower-path", "title": "Make a flower path", "stage": "scaffolding", "progress": 0.2 },
+    { "id": "p3", "kind": "holiday-decorations", "title": "Holiday decorations", "stage": "complete", "progress": 1 }
+  ],
+  "miniVillagerCount": 6,
+  "speechBubbles": [
+    { "anchor": { "kind": "house", "id": "r1" }, "text": "Sarah cleared the snow" },
+    { "anchor": { "kind": "villager", "index": 0 }, "text": "Minjun helped the ice rink!" }
+  ]
+}

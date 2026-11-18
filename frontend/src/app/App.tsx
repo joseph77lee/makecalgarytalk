@@ -1,19 +1,16 @@
-import { useNow } from '../modules/common';
-import { HealthStatus, useHealth } from '../modules/health';
+import { IslandDevPanel, IslandHud, IslandView, useMockCommunityStore } from '../modules/island-view';
 
-/** App shell. M0: connectivity check only; game screens arrive in later modules. */
+const showDevTools = import.meta.env.DEV || new URLSearchParams(window.location.search).has('dev');
+
+/** App shell. M1: the community island rendered from mock state. */
 export function App() {
-  const health = useHealth();
-  const now = useNow();
+  const state = useMockCommunityStore((s) => s.state);
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 py-10">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-800">MakeCalgaryTalk</h1>
-        <p className="mt-1 text-sm text-slate-500">Grow your Calgary community together.</p>
-      </header>
-      <HealthStatus state={health} now={now} />
-      <p className="text-xs text-slate-400">M0 Foundation — development build</p>
+    <main className="relative h-dvh w-full overflow-hidden">
+      <IslandView state={state} />
+      <IslandHud state={state} />
+      {showDevTools && <IslandDevPanel />}
     </main>
   );
 }

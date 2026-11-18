@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.10 |
+| Plan version | v1.11 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Based on | `requirement.md` v1.11 |
-| Current module | M1 — Island View (next; M0 ✅ Done) |
+| Current module | M1 — Island View (🟨 Ready for playtest) |
 
 ---
 
@@ -39,7 +39,7 @@
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
-| M1 | Island View | FE (R3F) | ⭐ Core | M0 | ⬜ |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🟨 |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ⬜ |
 | M3 | Game Core | BE | ⭐ Core | M0 | ⬜ |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ⬜ |
@@ -99,22 +99,34 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
   - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
-### M1 — Island View ⭐ ⬜
+### M1 — Island View ⭐ 🟨
 **Goal:** The 3D diorama island renders from a state object, using box models through asset keys.
 - **In scope**
-  - [ ] react-three-fiber `<Canvas>` with drei `OrthographicCamera`: isometric view, pastel lights, sky background, rotate/zoom limits
-  - [ ] Island of size N×N (tiers from `requirement.md` §7.8) with layered dirt
-  - [ ] **Asset registry**: asset key → box model React component (house, building, silhouette, tree, construction site, sign, mini villager)
-  - [ ] Render entirely from a **mock community state JSON** (no backend yet)
-  - [ ] 3 Vitality moods (Lively / Normal / Gloomy) change colours and props
-  - [ ] Island growth animation when N increases
-  - [ ] Labels and speech bubbles via drei `Html`
-  - [ ] Instanced rendering for tiles (drei `Instances`); animations in `useFrame` with refs (no per-frame React state); phone-size viewport check
+  - [x] react-three-fiber `<Canvas>` with drei `OrthographicCamera`: isometric view, pastel lights, sky background, rotate/zoom limits
+  - [x] Island of size N×N (tiers from `requirement.md` §7.8) with layered dirt
+  - [x] **Asset registry**: asset key → box model React component (house, building, silhouette, tree, construction site, sign, mini villager)
+  - [x] Render entirely from a **mock community state JSON** (no backend yet)
+  - [x] 3 Vitality moods (Lively / Normal / Gloomy) change colours and props
+  - [x] Island growth animation when N increases
+  - [x] Labels and speech bubbles via drei `Html`
+  - [x] Instanced rendering for tiles and repeated boxes (raw `InstancedMesh`, see Change Log v1.11); animations in `useFrame` with refs (no per-frame React state); phone-size viewport check
 - **Out of scope:** avatar, real data, detailed art
 - **Definition of Done**
-  - [ ] changing values in the mock JSON (size, buildings, Vitality, silhouettes) updates the island correctly
-  - [ ] runs smoothly at a phone-sized viewport
+  - [x] changing values in the mock JSON (size, buildings, Vitality, silhouettes) updates the island correctly
+  - [ ] runs smoothly at a phone-sized viewport (checked at 390×844 in headless Chromium with a software GPU only; needs a real phone)
   - [ ] user has looked at it
+- **Handoff**
+  - **Code:** `frontend/src/modules/island-view/`. Public API in `index.ts`: `IslandView({ state })`, `IslandHud`, `IslandDevPanel`, `useMockCommunityStore`, `parseCommunityViewState`, `buildIslandLayout`, `vitalityMood`, and the `CommunityViewState` types.
+  - **State contract (`types.ts`):** `CommunityViewState` = community name, `islandSize` (tier number, decided by the server), `vitality` 0–100, shown `houses` (archived ones already removed), `buildings` (unlocked, or locked with `remaining: { streakDays, residents }`), up to 3 `projects` (`kind`, `title`, `stage`, `progress` 0..1), `miniVillagerCount` (≤ 20, decided by the server) and `speechBubbles` (anchored to a house id or a villager index). M3/M5 snapshots should produce exactly this shape; `parseCommunityViewState` validates it and lists every error.
+  - **The client computes no game rules.** It does not derive island size from residents or villager counts from Vitality; it only maps Vitality to one of the 3 moods (`vitalityMood`, 60/30 cut-offs) for visuals.
+  - **Layout (`layout.ts`):** tile (x, z) on an island of size N covers x, z ∈ [-N/2, N/2-1]; tile centre = (x+0.5, z+0.5). Camera looks from +x/+z; entrance (road end + name arch) is the +z edge. Every slot (plaza, road, 3 unlock buildings, 3 project sites, house lots, trees) is defined once on the 32×32 grid, so **growing never moves anything** (tested). Fixed buildings and project sites all fit on 8×8. House lots fill the island from the centre outward, never touch each other, and are only accepted if, on every island size, all open tiles stay reachable from the plaza and every lot keeps a reachable door tile (tested). Trees follow the same rule. Projects take slots in the order the server lists them, so the server must keep that order stable.
+  - **For M2 (Avatar):** `layout.walkable` = tiles reachable on foot from the plaza (houses, trees, buildings and project sites block; decorations, lamps and the arch do not). Use it for A*. Mini villagers already random-walk on it.
+  - **Rendering:** every model is a list of boxes (`assets/models.ts`, pure and tested); `BoxBatch` draws them with one `InstancedMesh` per material layer (solid / glow / ghost), so draw calls stay flat with island size. Silhouettes are the real building drawn as translucent ghosts. Art Pass: swap entries in `assets/registry.ts`.
+  - **Labels:** drei `Html`, `pointer-events: none`, z-bands so speech bubbles are above name tags (and the HUD/dev panel at z-30 above both). Detail depends on zoom: below 40 px per tile (phone default) labels are compact (🔒 chip, progress bar without title); pinch in for full text. With more than 12 houses, name tags show only when zoomed in.
+  - **Growth:** new rings rise from below (1.4 s, ease-out-back), the camera zooms out to fit, objects on the new rings appear after landing, villagers cheer for 2.5 s. No share card yet (M11).
+  - **Dev tools:** a panel (dev builds, or `?dev` in production) edits the mock state live (size, Vitality, houses, lights, villagers, unlocks, project stage and progress). `mockCommunityState.json` is validated on load and throws with every error listed.
+  - **Not tested / known gaps:** no real phone run yet (only headless Chromium with a software GPU; FPS figures from it mean nothing). No automated tests of the R3F scene itself (logic, models and registry are unit-tested; the scene was checked by screenshots at 1280×800 and 390×844). Not built yet: chimney-smoke and villager polish, mood transition animation, day/night, winter launch theme (§19.1 says the launch theme is winter; M1 uses the green pastel reference and shows snow only in Gloomy, so the theme decision is open). Building/house tap info belongs to M2/M4.
+  - **Environment gotchas:** in dev, React StrictMode makes drei `Html` log "Attempted to synchronously unmount a root…" once per label; the production build does not. three r187 logs a `THREE.Clock` deprecation warning from R3F internals (harmless). Bundle: ~326 KB gzipped (three + drei).
 
 ### M2 — Avatar ⭐ ⬜
 **Goal:** The user's avatar walks around the island.
@@ -300,6 +312,15 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.11
+**Changed:** M1 item "Instanced rendering for tiles (drei `Instances`)" now reads "Instanced rendering for tiles and repeated boxes (raw `InstancedMesh`, ...)". M1 set to 🟨 with its Handoff note.
+
+**Why:** drei `<Instances>` re-uploads every instance matrix on every frame (one React child per instance). Island boxes are static, so a raw `InstancedMesh` updated only when the state changes is cheaper on phones and still follows `requirement.md` §20.3a (instanced rendering).
+
+**Previous:**
+- M1: `  - [ ] Instanced rendering for tiles (drei `Instances`); animations in `useFrame` with refs (no per-frame React state); phone-size viewport check`
+- Header: `| Plan version | v1.10 |` / `| Current module | M1 — Island View (next; M0 ✅ Done) |`
 
 ### 2026-11-18 — v1.10
 **Changed:** Added rule 10 (each module ends with a Handoff note; new sessions read `git log`, Change Logs and Handoff notes first). Added the M0 Handoff note. M0 marked ✅ and current module set to M1 (status update, recorded here for completeness).
