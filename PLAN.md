@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.12 |
+| Plan version | v1.13 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
-| Based on | `requirement.md` v1.12 |
+| Based on | `requirement.md` v1.13 |
 | Current module | M1 — Island View (🟨 Ready for playtest) |
 
 ---
@@ -276,9 +276,11 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M13 — Feature Library ⬜
 **Goal:** Each island feels like its community.
 - **In scope**
-  - [ ] name sign
+  - [ ] name sign (voxel reinterpretation of the real entrance sign from operator photos; community name only, no developer logos; default sign otherwise)
   - [ ] a few feature blocks (lake, creek, hill, park) as box models
-  - [ ] community → feature mapping (OSM suggestion + CSV override) for launch communities
+  - [ ] community → feature mapping (OSM / City hydrology suggestion + CSV override) for launch communities
+  - [ ] optional community-specific landmark for launch communities only (e.g. Mahogany)
+  - [ ] reserve feature/landmark slots in the island layout (M1 layout has none yet; house lots will be re-laid once, acceptable before launch)
 - **Definition of Done**
   - [ ] launch communities show their features
   - [ ] adding a feature = data change only
@@ -314,6 +316,15 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-18 — v1.13
+**Changed:** "Based on" → `requirement.md` v1.13. M13: name sign wording (voxel reinterpretation, no logos), mapping sources include City hydrology, added optional launch-community landmark and a layout-slot item.
+
+**Why:** Sync with requirement v1.13. User chose to keep M13 in its planned order (no layout change in M1).
+
+**Previous:**
+- `| Plan version | v1.12 |` / `| Based on | `requirement.md` v1.12 |`
+- M13: `  - [ ] name sign` / `  - [ ] community → feature mapping (OSM suggestion + CSV override) for launch communities` (landmark and layout-slot items did not exist)
 
 ### 2026-11-18 — v1.12
 **Changed:** "Based on" → `requirement.md` v1.12. M1 label item now includes the show/hide labels toggle.
