@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.19 |
+| Document version | v1.20 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Status | Initial draft for starting MVP development |
@@ -265,7 +265,7 @@ Community unlock buildings and construction projects are **one building tree**. 
 - **Positions never change.** Each community's lot plan (building lots, house lots, spare lots, Main Street lots, paths) is generated **once** and stored; later algorithm changes apply only to new communities or newly added lots.
 - Buildings opened by the tree always have land: their resident conditions match the land available at that resident count.
 - First-stage buildings sit around the plaza (a cosy village centre); later buildings get lots in the **newly grown outer land, spread in different directions**, so every growth brings new building spots.
-- **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings; if water would cut the land apart, a small bridge path keeps every part reachable.
+- **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings; if water would cut the land apart, a small bridge path keeps every part reachable. Land amounts count dry land only; where water sits next to the plaza, the first two stages get a little more dry land (up to 112 / 176 tiles) so the first buildings and Main Street fit.
 - Default camera angle per community fits its shape on a portrait phone (long side vertical).
 - UI shows the next growth goal (e.g. "2 more neighbours until the island grows").
 
@@ -770,6 +770,14 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.20
+**Changed:** 7.8: land amounts count dry land only; communities with water next to the plaza get a little more first/second-stage land.
+
+**Why:** Found while generating plans with real water (M1 rework): in 13 of 223 communities a central lake left no room for the first buildings or Main Street in the standard first-stage land.
+
+**Previous:**
+- 7.8: `if water would cut the land apart, a small bridge path keeps every part reachable.`
 
 ### 2026-11-19 — v1.19
 **Changed:** 7.6: locked buildings are no longer drawn on the island (shown in the build map); opened buildings appear as ✨ silhouettes. 7.8: first-stage buildings around the plaza, later buildings in newly grown outer land spread in different directions; real water (City Hydrology) placed at its real position with bridges if needed. 7.9: real water listed; the feature library stays symbolic for other features.

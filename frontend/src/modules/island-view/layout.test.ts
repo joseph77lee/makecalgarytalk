@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { buildIslandLayout, buildingSiteTile, tileKey, type BuildingObject, type PlacedObject } from './layout';
 import mock from './mockCommunityState.json';
 import { parseCommunityViewState } from './parseState';
-import { BUILDING_TREE } from './plan/buildingTree';
 import { decodePlan, lotTiles, type IslandPlan } from './plan/islandPlan';
 import type { BuildingView, CommunityViewState } from './types';
 
@@ -36,7 +35,8 @@ describe('land and outline (requirement.md §7.8)', () => {
     const l = buildIslandLayout(MAH, stateWith({ landStage: stage }));
     expect(l.tiles.length + l.futureTiles.length).toBe(MAH.tiles.length);
     expect(l.tiles.every((t) => t.stage <= stage)).toBe(true);
-    expect(l.tiles.length).toBe(BUILDING_TREE.landTiers[stage].tiles ?? MAH.tiles.length);
+    const dry = l.tiles.filter((t) => t.kind !== 'water' && t.kind !== 'bridge');
+    expect(dry.length).toBe(stage < 5 ? MAH.tiers[stage] : MAH.tiles.length - MAH.water.length - MAH.bridges.length);
   });
 
   it('marks the edge of the current land for the dirt underneath', () => {
@@ -63,8 +63,9 @@ describe('land and outline (requirement.md §7.8)', () => {
 describe('lots and the building tree (requirement.md §7.6)', () => {
   it('a growth chain shows its most advanced building on the shared lot', () => {
     const lot = (buildings: BuildingView[]) => at(buildIslandLayout(MAH, stateWith({ buildings })).objects, 'lot:lot-a');
-    expect(lot([])).toMatchObject({ assetKey: 'silhouette', buildingKey: 'fire-pit', ready: false });
-    expect(lot([view('fire-pit', { status: 'opened' })])).toMatchObject({ assetKey: 'silhouette', ready: true });
+    expect(lot([])).toBeUndefined(); // locked: not drawn
+    expect(lot([view('fire-pit', { status: 'locked' })])).toBeUndefined();
+    expect(lot([view('fire-pit', { status: 'opened' })])).toMatchObject({ assetKey: 'silhouette', buildingKey: 'fire-pit', ready: true });
     expect(lot([view('fire-pit', { status: 'building', progress: 0.4 })])).toMatchObject({ assetKey: 'construction-site', buildingKey: 'fire-pit', progress: 0.4 });
     expect(lot([view('fire-pit', { status: 'built' })])).toMatchObject({ assetKey: 'building.fire-pit', next: { title: 'Warming hut', status: 'locked' } });
     expect(lot([view('fire-pit', { status: 'built' }), view('warming-hut', { status: 'building', progress: 0.1 })])).toMatchObject({
@@ -76,8 +77,15 @@ describe('lots and the building tree (requirement.md §7.6)', () => {
     ).toMatchObject({ assetKey: 'building.community-hall', level: 2, next: null });
   });
 
+  it('a locked lot is plain walkable land; once shown it blocks walking', () => {
+    const walkOf = (buildings: BuildingView[]) => new Set(buildIslandLayout(MAH, stateWith({ buildings })).walkable.map(tileKey));
+    const tiles = lotTiles(MAH.lots['lot-a']);
+    expect(tiles.every((t) => walkOf([]).has(tileKey(t)))).toBe(true);
+    expect(tiles.some((t) => walkOf([view('fire-pit', { status: 'opened' })]).has(tileKey(t)))).toBe(false);
+  });
+
   it('a lot fills its stored rectangle', () => {
-    const o = at(buildIslandLayout(MAH, stateWith({})).objects, 'lot:lot-a') as BuildingObject;
+    const o = at(buildIslandLayout(MAH, stateWith({ buildings: [view('fire-pit', { status: 'built' })] })).objects, 'lot:lot-a') as BuildingObject;
     const r = MAH.lots['lot-a'];
     expect([o.x, o.z, o.w, o.d]).toEqual([r.x + r.w / 2, r.z + r.d / 2, r.w, r.d]);
   });
@@ -113,8 +121,17 @@ describe('lots and the building tree (requirement.md §7.6)', () => {
     expect(lamps('built').length).toBeGreaterThan(3);
   });
 
+  it('real water: shown as water tiles, never walkable, never decorated', () => {
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, vitality: 90 }));
+    const water = new Set(MAH.water.map(tileKey));
+    expect(MAH.water.length).toBeGreaterThan(20); // Mahogany Lake
+    expect(l.tiles.filter((t) => t.kind === 'water').length).toBe(MAH.water.length);
+    expect(l.walkable.some((t) => water.has(tileKey(t)))).toBe(false);
+    expect(l.objects.some((o) => water.has(tileKey({ x: Math.floor(o.x), z: Math.floor(o.z) })) && o.assetKey !== 'mini-villager')).toBe(false);
+  });
+
   it('the avatar\'s site for a building is next to its lot', () => {
-    const l = buildIslandLayout(MAH, stateWith({}));
+    const l = buildIslandLayout(MAH, stateWith({ buildings: [view('warming-hut', { status: 'building', progress: 0.2 })] }));
     const site = buildingSiteTile(l, 'warming-hut');
     const r = MAH.lots['lot-a'];
     expect(lotTiles(r).some((t) => t.x === site?.x && t.z === site?.z)).toBe(true);

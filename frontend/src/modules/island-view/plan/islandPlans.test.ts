@@ -36,11 +36,24 @@ describe('stored island plans', () => {
     expect(p.tiles.length).toBeGreaterThan(950);
     expect(p.tiles.length).toBeLessThan(1100);
 
-    // Cumulative land per stage follows the tiers; every stage is one connected island.
-    const tiers = BUILDING_TREE.landTiers.map((t) => t.tiles ?? p.tiles.length);
+    // Cumulative DRY land per stage follows the tiers (the first two may be slightly larger
+    // next to central water); every stage's dry land is one connected island.
+    const waterKeys = new Set(p.water.map(tileKey));
+    const standard = BUILDING_TREE.landTiers.map((t) => t.tiles);
+    expect([64, 80, 96, 112]).toContain(p.tiers[0]);
+    expect([144, 160, 176]).toContain(p.tiers[1]);
+    expect(p.tiers.slice(2, 5)).toEqual(standard.slice(2, 5));
+    for (const w of p.water) expect(stages.has(tileKey(w)), 'water on the island').toBe(true);
+    for (const b of p.bridges) {
+      expect(waterKeys.has(tileKey(b)), 'a bridge is not water').toBe(false);
+      expect(p.paths.some((t) => t.x === b.x && t.z === b.z), 'a bridge is a path').toBe(true);
+    }
+    const bridgeKeys = new Set(p.bridges.map(tileKey));
     for (const k of STAGES) {
-      const land = p.tiles.filter((t) => t.stage <= k);
-      expect(land.length).toBe(tiers[k]);
+      // Bridges count as water for land size, and as walkable land for connectivity.
+      const dry = p.tiles.filter((t) => t.stage <= k && !waterKeys.has(tileKey(t)) && !bridgeKeys.has(tileKey(t)));
+      expect(dry.length).toBe(k === STAGES.length - 1 ? p.tiles.length - p.water.length - p.bridges.length : p.tiers[k]);
+      const land = p.tiles.filter((t) => t.stage <= k && !waterKeys.has(tileKey(t)));
       const keys = new Set(land.map(tileKey));
       const seen = new Set([tileKey(land[0])]);
       const q: Tile[] = [land[0]];
@@ -64,6 +77,7 @@ describe('stored island plans', () => {
       expect(owner.get(k), `${who} overlaps ${owner.get(k)}`).toBeUndefined();
       owner.set(k, who);
     };
+    p.water.forEach((t) => claim(t, 'water'));
     PLAZA.forEach((t) => claim(t, 'plaza'));
     p.paths.forEach((t) => claim(t, 'path'));
     for (const [key, spec] of Object.entries(BUILDING_TREE.lots)) {
@@ -95,6 +109,7 @@ describe('stored island plans', () => {
       }
       houses.forEach((t) => blocked.add(tileKey(t)));
       p.trees.filter((t) => stages.get(tileKey(t))! <= k).forEach((t) => blocked.add(tileKey(t)));
+      p.water.forEach((t) => blocked.add(tileKey(t)));
       const open = p.tiles.filter((t) => t.stage <= k && !blocked.has(tileKey(t)));
       expect(walk.size, `stage ${k}: ${open.length - walk.size} open tiles unreachable`).toBe(open.length);
       for (const key of activeLots(p, k)) {
@@ -103,6 +118,20 @@ describe('stored island plans', () => {
       }
       for (const h of houses) expect(N4(h).some((n) => walk.has(tileKey(n))), `stage ${k}: house ${tileKey(h)} unreachable`).toBe(true);
     }
+  });
+});
+
+describe('lot spread (requirement.md §7.8)', () => {
+  it.each(plans.map((p) => [p.code, p]))('%s: later lots sit farther out and in different directions', (_code, p) => {
+    const centre = (k: string) => ({ x: p.lots[k].x + p.lots[k].w / 2, z: p.lots[k].z + p.lots[k].d / 2 });
+    const keys = Object.entries(BUILDING_TREE.lots);
+    const first = keys.filter(([, v]) => v.kind === 'building' && v.landStage === 0).map(([k]) => k);
+    const later = keys.filter(([, v]) => (v.kind === 'building' || v.kind === 'spare') && v.landStage > 0).map(([k]) => k);
+    const mean = (ks: string[]) => ks.reduce((a, k) => a + Math.hypot(centre(k).x, centre(k).z), 0) / ks.length;
+    expect(mean(later) / mean(first)).toBeGreaterThan(2);
+    const angles = later.map((k) => Math.atan2(centre(k).z, centre(k).x)).sort((a, b) => a - b);
+    const gaps = angles.map((a, i) => (angles[(i + 1) % angles.length] - a + 2 * Math.PI) % (2 * Math.PI));
+    expect(Math.max(...gaps), 'no direction is left without later lots for more than 150°').toBeLessThan((150 * Math.PI) / 180);
   });
 });
 

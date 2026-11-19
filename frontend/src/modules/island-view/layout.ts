@@ -75,7 +75,7 @@ export type ObjectOf<K extends PlacedObject['assetKey']> = Extract<PlacedObject,
 export type BuildingObject = Extract<PlacedObject, { assetKey: `building.${string}` }>;
 
 export interface IslandTile extends Tile {
-  kind: 'grass' | 'path';
+  kind: 'grass' | 'path' | 'water' | 'bridge';
   stage: number;
   /** On the outer edge of the current land (draw the dirt underneath). */
   edge: boolean;
@@ -129,13 +129,17 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
 
   // Terrain.
   const pathKeys = new Set([...PLAZA, ...plan.paths].map(tileKey));
+  const waterKeys = new Set(plan.water.map(tileKey));
+  const bridgeKeys = new Set(plan.bridges.map(tileKey));
   const land = plan.tiles.filter(on);
   const landKeys = new Set(land.map(tileKey));
+  const kindOf = (k: string): IslandTile['kind'] =>
+    waterKeys.has(k) ? 'water' : bridgeKeys.has(k) ? 'bridge' : pathKeys.has(k) ? 'path' : 'grass';
   const tiles: IslandTile[] = land.map((t) => ({
     x: t.x,
     z: t.z,
     stage: t.stage,
-    kind: pathKeys.has(tileKey(t)) ? 'path' : 'grass',
+    kind: kindOf(tileKey(t)),
     edge: N4.some((d) => !landKeys.has(tileKey({ x: t.x + d.x, z: t.z + d.z }))),
   }));
   const futureTiles = plan.tiles.filter((t) => !on(t)).map(({ x, z }) => ({ x, z }));
@@ -163,9 +167,12 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     }
     const chain = chainOnLot(lotKey);
     if (chain.length === 0) continue; // reserved for a later building (e.g. the Phase 3 landmark)
+    const views = chain.map((b) => byKey.get(b.key));
+    const shown = views.some((v) => v && v.status !== 'locked');
+    // Locked buildings are not drawn (requirement.md §7.6): the lot stays plain, walkable land.
+    if (!shown) continue;
     usedLots.push(lotKey);
     if (spec.kind !== 'entrance') rTiles.forEach((t) => occupied.add(tileKey(t)));
-    const views = chain.map((b) => byKey.get(b.key));
     const buildingIdx = views.findIndex((v) => v?.status === 'building');
     let builtIdx = -1;
     views.forEach((v, i) => {
@@ -261,7 +268,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
   if (mood !== 'normal') {
     for (const t of land) {
       const k = tileKey(t);
-      if (pathKeys.has(k) || occupied.has(k) || houseLotKeys.has(k) || hash01(t.x, t.z, 2) >= 0.12) continue;
+      if (pathKeys.has(k) || waterKeys.has(k) || occupied.has(k) || houseLotKeys.has(k) || hash01(t.x, t.z, 2) >= 0.12) continue;
       const decor = { id: `decor:${k}`, x: t.x + 0.5, z: t.z + 0.5, stage: t.stage, variant: Math.floor(hash01(t.x, t.z, 4) * 4) };
       objects.push(mood === 'lively' ? { ...decor, assetKey: 'flowers' } : { ...decor, assetKey: 'snow-pile' });
     }

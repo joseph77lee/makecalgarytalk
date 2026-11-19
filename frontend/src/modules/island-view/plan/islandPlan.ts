@@ -27,6 +27,12 @@ export interface IslandPlan {
   /** House lots, centre outward (residents take them in order). */
   houses: Tile[];
   trees: Tile[];
+  /** Real water (City Hydrology) inside the island: never walkable, never built on. */
+  water: Tile[];
+  /** Path tiles that cross water (also listed in `paths`). */
+  bridges: Tile[];
+  /** Cumulative DRY land per stage (the first two may be a little larger next to central water). */
+  tiers: number[];
   /** Default camera orbit angle (long side vertical on a portrait phone). */
   cameraAzimuth: number;
 }
@@ -56,10 +62,12 @@ export function decodePlan(raw: unknown): IslandPlan {
     throw new Error(`Invalid island plan: ${what}`);
   };
   if (!isObj(raw)) return fail('not an object');
-  if (raw.v !== 1) fail(`unsupported version ${String(raw.v)}`);
+  if (raw.v !== 2) fail(`unsupported version ${String(raw.v)}`);
   if (typeof raw.code !== 'string' || typeof raw.name !== 'string') fail('code/name');
   if (!isIntArray(raw.tiles, 3)) fail('tiles');
   if (!isIntArray(raw.paths, 2) || !isIntArray(raw.houses, 2) || !isIntArray(raw.trees, 2)) fail('paths/houses/trees');
+  if (!isIntArray(raw.water, 2) || !isIntArray(raw.bridges, 2)) fail('water/bridges');
+  if (!isIntArray(raw.tiers, 1) || (raw.tiers as number[]).length !== LAND_STAGE_COUNT) fail('tiers');
   if (!isObj(raw.lots)) fail('lots');
   if (typeof raw.cameraAzimuth !== 'number' || !Number.isFinite(raw.cameraAzimuth)) fail('cameraAzimuth');
   const t = raw.tiles as number[];
@@ -83,6 +91,9 @@ export function decodePlan(raw: unknown): IslandPlan {
     lots,
     houses: pairs(raw.houses as number[]),
     trees: pairs(raw.trees as number[]),
+    water: pairs(raw.water as number[]),
+    bridges: pairs(raw.bridges as number[]),
+    tiers: raw.tiers as number[],
     cameraAzimuth: raw.cameraAzimuth as number,
   };
 }
@@ -122,6 +133,7 @@ export function walkableTiles(plan: IslandPlan, landStage: number, houseCount: n
   }
   plan.houses.filter(on).slice(0, houseCount).forEach((t) => blocked.add(tileKey(t)));
   plan.trees.filter(on).forEach((t) => blocked.add(tileKey(t)));
+  plan.water.forEach((t) => blocked.add(tileKey(t)));
   const out: Tile[] = [];
   const seen = new Set(PLAZA.map(tileKey));
   const queue = [...PLAZA];

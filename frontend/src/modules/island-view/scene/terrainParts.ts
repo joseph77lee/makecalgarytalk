@@ -20,8 +20,18 @@ export function terrainParts(tiles: Pick<IslandTile, 'x' | 'z' | 'kind'>[], land
   const isLand = (x: number, z: number) => landKeys?.has(`${x},${z}`) ?? false;
   for (const t of tiles) {
     const odd = (t.x + t.z) & 1;
-    const colour = t.kind === 'path' ? palette.path[odd] : palette.grass[odd];
-    parts.push(box('solid', t.x + 0.5, -TILE_H, t.z + 0.5, 1, TILE_H, 1, colour));
+    if (t.kind === 'water' || t.kind === 'bridge') {
+      // Water sits a little lower; a bridge is wooden planks over it.
+      parts.push(box('solid', t.x + 0.5, -TILE_H, t.z + 0.5, 1, TILE_H - 0.12, 1, palette.water));
+      if (t.kind === 'bridge') {
+        parts.push(box('solid', t.x + 0.5, -0.06, t.z + 0.5, 1, 0.06, 0.8, '#b88a64'));
+        parts.push(box('solid', t.x + 0.5, 0, t.z + 0.08, 1, 0.12, 0.05, '#8a6343'));
+        parts.push(box('solid', t.x + 0.5, 0, t.z + 0.92, 1, 0.12, 0.05, '#8a6343'));
+      }
+    } else {
+      const colour = t.kind === 'path' ? palette.path[odd] : palette.grass[odd];
+      parts.push(box('solid', t.x + 0.5, -TILE_H, t.z + 0.5, 1, TILE_H, 1, colour));
+    }
     const edge = landKeys === null || !isLand(t.x + 1, t.z) || !isLand(t.x - 1, t.z) || !isLand(t.x, t.z + 1) || !isLand(t.x, t.z - 1);
     if (edge) {
       const rock = 0.7 + jag(t.x, t.z) * 1.0;

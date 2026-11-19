@@ -6,8 +6,8 @@ Island plan generator (requirement.md 7.8): one stored plan per community.
   python3 -I frontend/scripts/island_plans.py --force    # regenerate all (PRE-LAUNCH ONLY)
   python3 -I frontend/scripts/island_plans.py MAH BLN    # only these communities
 
-Inputs:  supabase/data/calgary_boundaries.json, supabase/data/calgary_communities.csv,
-         supabase/data/building_tree.json (lots)
+Inputs:  supabase/data/calgary_boundaries.json, supabase/data/calgary_water.json,
+         supabase/data/calgary_communities.csv, supabase/data/building_tree.json (lots)
 Output:  frontend/public/islands/<CODE>.json
 
 Positions must never change after launch, so existing plans are never overwritten
@@ -26,14 +26,18 @@ DATA = ROOT / "supabase" / "data"
 OUT = ROOT / "frontend" / "public" / "islands"
 
 TREE = json.loads((DATA / "building_tree.json").read_text())
-TIERS = [t["tiles"] for t in TREE["landTiers"]]  # last is None = all
+BASE_TIERS = [t["tiles"] for t in TREE["landTiers"]]  # last is None = all
+TIERS = list(BASE_TIERS)  # current tiers; the first stage may be enlarged for water (see main)
+# If the first buildings (or Main Street) do not fit next to central water, the first two
+# stages get a little more dry land, smallest change first.
+EARLY_STAGE_TRIES = [(64, 144), (80, 144), (96, 144), (112, 144), (112, 160), (112, 176)]
 TARGET_TILES = 1024
 N4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
 RING8 = ((1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1))
 MAX_HOUSES = 150
 # Houses each land stage must hold at least (most residents a stage can have, requirement 7.8).
 MIN_HOUSES = [2, 5, 10, 25, 50, 80]
-PLAN_VERSION = 1
+PLAN_VERSION = 2
 
 
 # ---------------------------------------------------------------- rasterize
@@ -46,11 +50,14 @@ def ring_area(r):
     return abs(sum(r[i][0] * r[i - 1][1] - r[i - 1][0] * r[i][1] for i in range(len(r)))) / 2
 
 
-def scanline(rings, scale):
-    """Cells (x, z) whose centre is inside the polygon. z grows to the south."""
+def origin_of(rings):
     pts = [p for r in rings for p in r]
-    minx = min(p[0] for p in pts)
-    maxy = max(p[1] for p in pts)
+    return (min(p[0] for p in pts), max(p[1] for p in pts))
+
+
+def scanline(rings, scale, origin=None):
+    """Cells (x, z) whose centre is inside the polygon. z grows to the south."""
+    minx, maxy = origin or origin_of(rings)
     rs = [[((x - minx) / scale, (maxy - y) / scale) for x, y in r] for r in rings]
     height = int(max(p[1] for r in rs for p in r)) + 2
     cells = set()
@@ -96,17 +103,22 @@ def cleanup(cells):
     return best
 
 
-def island_cells(lonlat_rings):
+def island_cells(lonlat_rings, water_rings):
+    """Island cells and the water cells inside it (same projection and scale)."""
     rings = [[project(lon, lat) for lon, lat in r] for r in lonlat_rings]
+    origin = origin_of(rings)
     scale = math.sqrt(sum(map(ring_area, rings)) / TARGET_TILES)
     cells = set()
     for _ in range(10):
-        cells = cleanup(scanline(rings, scale))
+        cells = cleanup(scanline(rings, scale, origin))
         ratio = len(cells) / TARGET_TILES
         if abs(ratio - 1) < 0.02:
             break
         scale *= math.sqrt(ratio)
-    return cells
+    water = set()
+    for wr in water_rings:
+        water |= scanline([[project(lon, lat) for lon, lat in wr]], scale, origin)
+    return cells, water & cells
 
 
 # ---------------------------------------------------------------- stages
@@ -126,7 +138,7 @@ def bfs(start_cells, allowed):
     return dist
 
 
-def stages_for(cells):
+def stages_for(cells, water):
     edge = [c for c in cells if any((c[0] + dx, c[1] + dz) not in cells for dx, dz in N4)]
     depth = bfs(edge, cells)
     cx = sum(c[0] for c in cells) / len(cells)
@@ -135,7 +147,9 @@ def stages_for(cells):
     best = None
     for (x, z) in cells:
         block = [(x, z), (x + 1, z), (x, z + 1), (x + 1, z + 1)]
-        if all(b in cells for b in block):
+        if all(b in cells and b not in water for b in block) and not any(
+            (b[0] + dx, b[1] + dz) in water for b in block for dx, dz in N4
+        ):
             score = (min(depth[b] for b in block), -math.hypot(x + 1 - cx, z + 1 - cz))
             if best is None or score > best[0]:
                 best = (score, (x, z))
@@ -158,14 +172,18 @@ def stages_for(cells):
             if n in cells and n not in seen:
                 seen.add(n)
                 heapq.heappush(heap, (key(n), n))
+    # Tiers count DRY land only: water revealed along the way does not use up a stage's land.
     stage = {}
-    for rank, c in enumerate(order):
+    dry_rank = 0
+    for c in order:
         s = len(TIERS) - 1
         for i, t in enumerate(TIERS):
-            if t is not None and rank < t:
+            if t is not None and dry_rank < t:
                 s = i
                 break
         stage[c] = s
+        if c not in water:
+            dry_rank += 1
     return (px, pz), plaza, g, stage
 
 
@@ -205,15 +223,16 @@ def road(start_cells, target, cells, blocked):
 # ---------------------------------------------------------------- reachability
 
 class Walk:
-    def __init__(self, cells, stage, plaza):
+    def __init__(self, cells, stage, plaza, water=frozenset()):
         self.cells = cells
+        self.water = water
         self.stage = stage
         self.plaza = plaza
         self.blocked = set()
         self.lots = []  # (tiles, landStage) that need a reachable neighbour
 
     def land(self, k, c):
-        return c in self.cells and self.stage[c] <= k
+        return c in self.cells and self.stage[c] <= k and c not in self.water
 
     def full_ok(self, extra, lot_tiles, lot_stage):
         """Full check: every open tile of every stage >= lot_stage reachable, every lot has a door."""
@@ -231,7 +250,7 @@ class Walk:
                     if n not in seen and self.land(k, n) and n not in blocked:
                         seen.add(n)
                         q.append(n)
-            open_count = sum(1 for c in self.cells if self.stage[c] <= k and c not in blocked)
+            open_count = sum(1 for c in self.cells if self.stage[c] <= k and c not in blocked and c not in self.water)
             if len(seen) != open_count:
                 return False
             for tiles, s in lots:
@@ -287,23 +306,63 @@ def far_target(g, stage, avoid_dir=None, centre=(0, 0)):
     return best[1] if best else None
 
 
-def make_plan(code, name, lonlat_rings):
-    cells = island_cells(lonlat_rings)
-    (px, pz), plaza, g, stage = stages_for(cells)
+def add_bridges(cells, water, stage, plaza):
+    """Where water would cut a stage's land apart, turn the shortest water crossing into a bridge."""
+    bridges = set()
+    for k in range(len(TIERS)):
+        while True:
+            land = {c for c in cells if stage[c] <= k and c not in water}
+            main = bfs(plaza, land)
+            rest = land - set(main)
+            if not rest:
+                break
+            # shortest way from the main land to any other land through this stage's water
+            allowed = {c for c in cells if stage[c] <= k}
+            prev, q, seen, hit = {}, deque(main), set(main), None
+            while q and hit is None:
+                c = q.popleft()
+                for dx, dz in N4:
+                    n = (c[0] + dx, c[1] + dz)
+                    if n in allowed and n not in seen:
+                        seen.add(n)
+                        prev[n] = c
+                        if n in rest:
+                            hit = n
+                            break
+                        q.append(n)
+            if hit is None:
+                raise RuntimeError("land cannot be connected")
+            c = prev[hit]
+            while c not in main:
+                water.discard(c)
+                bridges.add(c)
+                c = prev[c]
+    return bridges
+
+
+def make_plan(code, name, lonlat_rings, water_rings):
+    cells, water = island_cells(lonlat_rings, water_rings)
+    (px, pz), plaza, g, stage = stages_for(cells, water)
     pc = (px + 1, pz + 1)
-    walk = Walk(cells, stage, plaza)
+    bridges = add_bridges(cells, water, stage, plaza)
+    dry = cells - water
+    g = bfs(plaza, dry)  # walking distance on dry land (roads, targets)
+    walk = Walk(cells, stage, plaza, water)
 
     # Two main paths across the shape.
     t1 = far_target(g, stage)
-    path1 = road(plaza, t1, cells, set(plaza))
+    path1 = road(plaza, t1, dry, set(plaza))
     d1 = (t1[0] - pc[0], t1[1] - pc[1])
     n1 = math.hypot(*d1) or 1
     t2 = far_target(g, stage, (d1[0] / n1, d1[1] / n1), pc)
-    path2 = road(plaza, t2, cells, set(plaza) | set(path1)) if t2 else []
-    paths = [c for c in path1 + path2 if c not in plaza]
+    path2 = road(plaza, t2, dry, set(plaza) | set(path1)) if t2 else []
+    paths = [c for c in path1 + path2 if c not in plaza and c not in bridges]
+    paths += [c for c in sorted(bridges) if c not in paths]
     path_set = set(paths)
-    used = set(plaza) | path_set
+    used = set(plaza) | path_set | water
     lots = {}
+    later_angles = []
+    ring_radius = [max((math.hypot(c[0] - pc[0], c[1] - pc[1]) for c in cells if stage[c] == k), default=4) for k in range(len(TIERS))]
 
     entrance = path1[0] if path1 else None
     lots["entrance"] = [entrance[0], entrance[1], 1, 1] if entrance else None
@@ -323,10 +382,20 @@ def make_plan(code, name, lonlat_rings):
                 touch = touches_path(tiles)
                 if kind == "main-street" and not touch:
                     continue
-                dist = math.hypot(x + w / 2 - pc[0], z + d / 2 - pc[1])
+                cx, cz = x + w / 2 - pc[0], z + d / 2 - pc[1]
+                dist = math.hypot(cx, cz)
                 # Prefer the lot's own land ring, so later lots do not eat early land.
                 early = land_stage - min(stage[t] for t in tiles)
-                cands.append((dist - (3 if touch else 0) + early * 12, x, z, w, d, tiles))
+                if land_stage == 0 or kind == "main-street":
+                    score = dist - (3 if touch else 0) + early * 12
+                else:
+                    # Later lots: outer part of their newly grown land, away from other later lots.
+                    target = ring_radius[land_stage] * 0.8
+                    ang = math.atan2(cz, cx)
+                    near = min((abs(math.atan2(math.sin(ang - a), math.cos(ang - a))) for a in later_angles), default=math.pi)
+                    spread = 8 * max(0.0, 1 - near / (math.pi / 3))
+                    score = abs(dist - target) - (1.5 if touch else 0) + early * 12 + spread
+                cands.append((score, x, z, w, d, tiles))
         cands.sort(key=lambda c: (c[0], c[1], c[2]))
         for _, x, z, w, d, tiles in cands[:400]:
             if walk.full_ok(tiles, tiles, land_stage):
@@ -334,6 +403,8 @@ def make_plan(code, name, lonlat_rings):
                 walk.lots.append((tiles, land_stage))
                 used.update(tiles)
                 lots[key] = [x, z, w, d]
+                if land_stage > 0 and kind != "main-street":
+                    later_angles.append(math.atan2(z + d / 2 - pc[1], x + w / 2 - pc[0]))
                 return True
         return False
 
@@ -341,7 +412,7 @@ def make_plan(code, name, lonlat_rings):
     house_set = set()
 
     def add_houses(max_stage, limit):
-        for c in sorted(cells, key=lambda c: (stage[c], g[c], c[0], c[1])):
+        for c in sorted(cells, key=lambda c: (stage[c], g.get(c, 1 << 20), c[0], c[1])):
             if len(houses) >= limit:
                 return
             if stage[c] > max_stage or c in used:
@@ -377,11 +448,11 @@ def make_plan(code, name, lonlat_rings):
 
     # House lots: centre outward, never touching another house, door kept free.
     add_houses(len(TIERS) - 1, MAX_HOUSES)
-    houses.sort(key=lambda c: (stage[c], g[c], c[0], c[1]))
+    houses.sort(key=lambda c: (stage[c], g.get(c, 1 << 20), c[0], c[1]))
 
     # Trees: decoration on leftover tiles, off path edges and house doors, never cutting a path.
     trees = []
-    for c in sorted(cells, key=lambda c: (stage[c], g[c], c[0], c[1])):
+    for c in sorted(cells, key=lambda c: (stage[c], g.get(c, 1 << 20), c[0], c[1])):
         if c in used or hash01(c[0], c[1], 1) >= 0.28:
             continue
         near = [(c[0] + dx, c[1] + dz) for dx, dz in N4]
@@ -415,7 +486,7 @@ def make_plan(code, name, lonlat_rings):
     sh = lambda c: [c[0] - ox, c[1] - oz]
     flat = lambda cs: [v for c in cs for v in sh(c)]
     tiles_flat = []
-    for c in sorted(cells, key=lambda c: (stage[c], g[c], c[0], c[1])):
+    for c in sorted(cells, key=lambda c: (stage[c], g.get(c, 1 << 20), c[0], c[1])):
         tiles_flat += sh(c) + [stage[c]]
     return {
         "v": PLAN_VERSION,
@@ -426,7 +497,10 @@ def make_plan(code, name, lonlat_rings):
         "lots": {k: [v[0] - ox, v[1] - oz, v[2], v[3]] for k, v in lots.items() if v},
         "houses": flat(houses),
         "trees": flat(trees),
+        "water": flat(sorted(water)),
+        "bridges": flat(sorted(bridges)),
         "cameraAzimuth": round(azimuth, 4),
+        "tiers": [t if t is not None else len(cells) - len(water) for t in TIERS],
     }
 
 
@@ -434,6 +508,7 @@ def main(argv):
     force = "--force" in argv
     only = [a for a in argv if not a.startswith("--")]
     bounds = json.loads((DATA / "calgary_boundaries.json").read_text())["communities"]
+    water_all = json.loads((DATA / "calgary_water.json").read_text())["water"]
     names = {r["code"]: r["name"] for r in csv.DictReader(open(DATA / "calgary_communities.csv"))}
     OUT.mkdir(parents=True, exist_ok=True)
     written = skipped = 0
@@ -446,7 +521,22 @@ def main(argv):
             skipped += 1
             continue
         try:
-            plan = make_plan(code, names.get(code, code.title()), bounds[code])
+            ring = bounds[code][0]
+            box = (min(p[0] for p in ring), min(p[1] for p in ring), max(p[0] for p in ring), max(p[1] for p in ring))
+            water_rings = [w["ring"] for w in water_all if not (
+                max(p[0] for p in w["ring"]) < box[0] or min(p[0] for p in w["ring"]) > box[2]
+                or max(p[1] for p in w["ring"]) < box[1] or min(p[1] for p in w["ring"]) > box[3])]
+            plan, err = None, None
+            for first, second in EARLY_STAGE_TRIES:
+                TIERS[0], TIERS[1] = first, second
+                try:
+                    plan = make_plan(code, names.get(code, code.title()), bounds[code], water_rings)
+                    break
+                except RuntimeError as e:
+                    err = e
+            TIERS[0], TIERS[1] = BASE_TIERS[0], BASE_TIERS[1]
+            if plan is None:
+                raise err
         except RuntimeError as e:
             failed.append(str(e))
             continue

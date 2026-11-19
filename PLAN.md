@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.19 |
+| Plan version | v1.20 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
-| Based on | `requirement.md` v1.19 |
-| Current module | M1 🔁 Island View rework (in progress: water, lot spread, hidden locks); then M3 🔁, then M5 |
+| Based on | `requirement.md` v1.20 |
+| Current module | M1 🔁 Island View rework (🟨 Ready for playtest); then M3 🔁, then M5 |
 
 ---
 
@@ -39,7 +39,7 @@
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
-| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🔁 |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🟨 |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | 🔁 |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
@@ -101,7 +101,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
   - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
-### M1 — Island View ⭐ 🔁
+### M1 — Island View ⭐ 🟨 (rework)
 **Reopened 2026-11-19** (`requirement.md` v1.18 §7.6–7.8, §20.4; branch `fix/m1-real-shape-islands`, after M4 is merged). The original items below stay ticked; the rework:
 - **In scope (rework)**
   - [x] Island from the **real community boundary**: rasterize to ~1,024 tiles (equal max land), smooth thin spurs, keep the largest part, centre = farthest from the edge, reveal order by walking distance; land tiers 64 / 144 / 256 / 400 / 676 / all
@@ -109,9 +109,9 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] **Lot plan per community generated once and stored** (static JSON, served like other static data): tree building lots reserved at final size, house lots, spare lots, Main Street lots, paths; never regenerated for existing communities
   - [x] Box models for the tree buildings (welcome sign → gateway arch, fire pit → warming hut → community hall, frozen pond → skating rink → lit hockey rink, playground, sledding hill, dog park, pathway lights, community garden, neighbourhood park) and a **generic placeholder** for unknown building keys; remove the M4 showcase miniatures
   - [x] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land
-  - [ ] Real water from City Hydrology at its real position (not walkable, no lots; bridges if water splits the land) (`requirement.md` v1.19 §7.8)
-  - [ ] Later-stage lots in newly grown outer land, spread in different directions; first-stage lots around the plaza
-  - [ ] Locked buildings not drawn on the island; opened buildings as ✨ silhouettes (§7.6)
+  - [x] Real water from City Hydrology at its real position (not walkable, no lots; bridges if water splits the land) (`requirement.md` v1.19 §7.8)
+  - [x] Later-stage lots in newly grown outer land, spread in different directions; first-stage lots around the plaza
+  - [x] Locked buildings not drawn on the island; opened buildings as ✨ silhouettes (§7.6)
 - **Definition of Done (rework)**
   - [x] all 223 communities produce valid islands (automated checks: one connected island per stage, every lot fits and is reachable, positions identical across stages)
   - [x] phone-size check of a few unusual shapes (Beltline and Diamond Cove on a phone, Lower Mount Royal on desktop; Bowness only in the stored-plan tests; headless Chromium, not a real phone)
@@ -125,6 +125,9 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Camera:** fits the current land's on-screen frame (not a circle around the plaza) and aims at its centre; zoom out shows the whole outline. The stored angle is for portrait; on landscape screens elongated communities turn 90°. The key light rotates with the angle.
   - **Live mode until M3 🔁:** the server still sends the old project kinds; `toViewState` shows them as unknown buildings (placeholders) and uses **land stage 2** so they have lots. M3 🔁 replaces this with real tree state; M5 provides the land stage.
   - **Mock mode:** `?mock` (Mahogany) and `?mock&plan=<CODE>` for any community; the dev panel edits land stage, Vitality, houses, villagers and every building's status/level/progress.
+  - **Water (v1.20):** `supabase/data/calgary_water.json` (City Hydrology, 823 pieces, outlines simplified to 5 m, `build_water.py`) is rasterized with the island's own projection, so lakes sit at their real positions (e.g. Mahogany Lake). Water is never walkable or built on; the plaza and roads avoid it; where water would split a stage's land the generator adds the shortest bridge (53 communities). Tiers count dry land; bridges count as water for size and as land for walking. 13 communities with central water use a slightly larger first stage (plan field `tiers`; 210 use the standard 64/144). Plan format is now `v: 2` (`water`, `bridges`, `tiers`).
+  - **Lot spread:** later-stage lots aim at ~80% of their stage's radius and away from other later lots' directions; validated per plan (≥ 2× the first-stage distance, no direction gap over 150°; measured 4.1× average).
+  - **Hidden locks:** locked buildings are not drawn and their lot is walkable; an opened building shows as a ✨ silhouette and then blocks its lot.
   - **Not tested / known gaps:** real phone; the rising animation for irregular land is the old ring-rise group (works, only checked in passing); box models are first drafts; detailed labels can crowd on desktop (labels toggle helps); boundary snapshot dated 2026-11-19; `lot-b` is 3×2 (rink shape).
 
 **Original M1 (done 2026-11-18):**
@@ -395,6 +398,21 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.20
+**Changed:** "Based on" → `requirement.md` v1.20. M1 rework items for water, lot spread and hidden locks ticked; M1 back to 🟨 with Handoff additions.
+
+**Why:** Rework finished and verified.
+
+**Previous:**
+- Header: `| Based on | `requirement.md` v1.19 |`
+- M1: `- [ ] Real water from City Hydrology at its real position`
+- M1: `- [ ] Later-stage lots in newly grown outer land`
+- M1: `- [ ] Locked buildings not drawn on the island`
+- Header: `| Current module | M1 🔁 Island View rework (in progress: water, lot spread, hidden locks); then M3 🔁, then M5 |`
+- Overview: `| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🔁 |`
+- M1: `### M1 — Island View ⭐ 🔁`
+- M1: `- **Not tested / known gaps:** real phone; the rising animation`
 
 ### 2026-11-19 — v1.19
 **Changed:** "Based on" → `requirement.md` v1.19. M1 rework: added real water, lot spread and hidden locked buildings; status back to 🔁 while they are built.
