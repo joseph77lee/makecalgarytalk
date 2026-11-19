@@ -1,0 +1,355 @@
+{
+  "version": 1,
+  "about": "MVP building tree (requirement.md 7.6). Shared by the island plan generator (frontend) and the gamecore seed (M3). Starting values; tune after launch. residents = cumulative Verified Residents; streakDays = community streak.",
+  "stageMultipliers": {
+    "1": 0.3,
+    "2": 1,
+    "3": 1.5,
+    "4": 2,
+    "5": 3
+  },
+  "landTiers": [
+    {
+      "minResidents": 0,
+      "tiles": 64
+    },
+    {
+      "minResidents": 3,
+      "tiles": 144
+    },
+    {
+      "minResidents": 6,
+      "tiles": 256
+    },
+    {
+      "minResidents": 11,
+      "tiles": 400
+    },
+    {
+      "minResidents": 26,
+      "tiles": 676
+    },
+    {
+      "minResidents": 51,
+      "tiles": null
+    }
+  ],
+  "lots": {
+    "entrance": {
+      "size": [
+        1,
+        1
+      ],
+      "landStage": 0,
+      "kind": "entrance"
+    },
+    "lot-a": {
+      "size": [
+        3,
+        3
+      ],
+      "landStage": 0,
+      "kind": "building"
+    },
+    "lot-b": {
+      "size": [
+        3,
+        2
+      ],
+      "landStage": 0,
+      "kind": "building"
+    },
+    "playground": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 0,
+      "kind": "building"
+    },
+    "sledding-hill": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 0,
+      "kind": "building"
+    },
+    "dog-park": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 1,
+      "kind": "building"
+    },
+    "community-garden": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 1,
+      "kind": "building"
+    },
+    "neighbourhood-park": {
+      "size": [
+        3,
+        3
+      ],
+      "landStage": 2,
+      "kind": "building"
+    },
+    "landmark": {
+      "size": [
+        3,
+        3
+      ],
+      "landStage": 3,
+      "kind": "building"
+    },
+    "main-street-1": {
+      "size": [
+        2,
+        1
+      ],
+      "landStage": 1,
+      "kind": "main-street"
+    },
+    "main-street-2": {
+      "size": [
+        2,
+        1
+      ],
+      "landStage": 1,
+      "kind": "main-street"
+    },
+    "main-street-3": {
+      "size": [
+        2,
+        1
+      ],
+      "landStage": 1,
+      "kind": "main-street"
+    },
+    "main-street-4": {
+      "size": [
+        2,
+        1
+      ],
+      "landStage": 1,
+      "kind": "main-street"
+    },
+    "spare-1": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 2,
+      "kind": "spare"
+    },
+    "spare-2": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 2,
+      "kind": "spare"
+    },
+    "spare-3": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 3,
+      "kind": "spare"
+    },
+    "spare-4": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 3,
+      "kind": "spare"
+    },
+    "spare-5": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 4,
+      "kind": "spare"
+    },
+    "spare-6": {
+      "size": [
+        2,
+        2
+      ],
+      "landStage": 5,
+      "kind": "spare"
+    }
+  },
+  "buildings": [
+    {
+      "key": "welcome-sign",
+      "name": "Welcome sign",
+      "stage": 1,
+      "lot": "entrance",
+      "growsFrom": null,
+      "requires": [],
+      "residents": 0,
+      "streakDays": 0
+    },
+    {
+      "key": "fire-pit",
+      "name": "Fire pit",
+      "stage": 1,
+      "lot": "lot-a",
+      "growsFrom": null,
+      "requires": [],
+      "residents": 0,
+      "streakDays": 0
+    },
+    {
+      "key": "frozen-pond",
+      "name": "Frozen pond",
+      "stage": 1,
+      "lot": "lot-b",
+      "growsFrom": null,
+      "requires": [],
+      "residents": 0,
+      "streakDays": 0
+    },
+    {
+      "key": "warming-hut",
+      "name": "Warming hut",
+      "stage": 2,
+      "lot": "lot-a",
+      "growsFrom": "fire-pit",
+      "requires": [
+        "fire-pit"
+      ],
+      "residents": 0,
+      "streakDays": 3
+    },
+    {
+      "key": "playground",
+      "name": "Playground",
+      "stage": 2,
+      "lot": "playground",
+      "growsFrom": null,
+      "requires": [
+        "welcome-sign"
+      ],
+      "residents": 0,
+      "streakDays": 3
+    },
+    {
+      "key": "sledding-hill",
+      "name": "Sledding hill",
+      "stage": 2,
+      "lot": "sledding-hill",
+      "growsFrom": null,
+      "requires": [
+        "frozen-pond"
+      ],
+      "residents": 0,
+      "streakDays": 3
+    },
+    {
+      "key": "skating-rink",
+      "name": "Skating rink",
+      "stage": 3,
+      "lot": "lot-b",
+      "growsFrom": "frozen-pond",
+      "requires": [
+        "frozen-pond"
+      ],
+      "residents": 3,
+      "streakDays": 0
+    },
+    {
+      "key": "gateway-arch",
+      "name": "Gateway arch",
+      "stage": 3,
+      "lot": "entrance",
+      "growsFrom": "welcome-sign",
+      "requires": [
+        "welcome-sign"
+      ],
+      "residents": 3,
+      "streakDays": 0
+    },
+    {
+      "key": "dog-park",
+      "name": "Off-leash dog park",
+      "stage": 3,
+      "lot": "dog-park",
+      "growsFrom": null,
+      "requires": [
+        "playground"
+      ],
+      "residents": 3,
+      "streakDays": 0
+    },
+    {
+      "key": "pathway-lights",
+      "name": "Pathway lights",
+      "stage": 3,
+      "lot": null,
+      "growsFrom": null,
+      "requires": [
+        "gateway-arch"
+      ],
+      "residents": 0,
+      "streakDays": 5
+    },
+    {
+      "key": "community-hall",
+      "name": "Community hall",
+      "stage": 4,
+      "lot": "lot-a",
+      "growsFrom": "warming-hut",
+      "requires": [
+        "warming-hut"
+      ],
+      "residents": 5,
+      "streakDays": 7
+    },
+    {
+      "key": "hockey-rink",
+      "name": "Lit hockey rink",
+      "stage": 4,
+      "lot": "lot-b",
+      "growsFrom": "skating-rink",
+      "requires": [
+        "skating-rink"
+      ],
+      "residents": 6,
+      "streakDays": 7
+    },
+    {
+      "key": "community-garden",
+      "name": "Community garden",
+      "stage": 4,
+      "lot": "community-garden",
+      "growsFrom": null,
+      "requires": [
+        "warming-hut"
+      ],
+      "residents": 5,
+      "streakDays": 5
+    },
+    {
+      "key": "neighbourhood-park",
+      "name": "Neighbourhood park",
+      "stage": 5,
+      "lot": "neighbourhood-park",
+      "growsFrom": null,
+      "requires": [
+        "community-hall"
+      ],
+      "residents": 10,
+      "streakDays": 30
+    }
+  ]
+}

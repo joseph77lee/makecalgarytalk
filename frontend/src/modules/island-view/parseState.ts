@@ -1,17 +1,10 @@
+import { LAND_STAGE_COUNT } from './plan/buildingTree';
 import {
-  BUILDING_KINDS,
-  ISLAND_SIZES,
-  MAX_ACTIVE_PROJECTS,
+  BUILDING_STATUSES,
   MAX_MINI_VILLAGERS,
-  PROJECT_KINDS,
-  PROJECT_STAGES,
-  type BuildingKind,
-  type BuildingState,
+  type BuildingView,
   type CommunityViewState,
-  type IslandSize,
-  type ProjectState,
   type ResidentHouse,
-  type ShowcaseItem,
   type SpeechBubble,
 } from './types';
 
@@ -23,11 +16,9 @@ const isNonEmptyString = (v: unknown): v is string => typeof v === 'string' && v
 const isCount = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0;
 const isFiniteIn = (v: unknown, min: number, max: number): v is number =>
   typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
-const includes = <T extends string | number>(list: readonly T[], v: unknown): v is T =>
-  list.includes(v as T);
 
 /**
- * Validates a community view state (mock JSON now, server snapshot later).
+ * Validates a community view state (mock JSON now, server state later).
  * Fails loudly with every problem listed, instead of drawing a half-broken island.
  */
 export function parseCommunityViewState(input: unknown): ParseResult {
@@ -35,8 +26,8 @@ export function parseCommunityViewState(input: unknown): ParseResult {
   if (!isObj(input)) return { ok: false, errors: ['state must be an object'] };
 
   if (!isNonEmptyString(input.communityName)) errors.push('communityName must be a non-empty string');
-  if (!includes(ISLAND_SIZES, input.islandSize)) {
-    errors.push(`islandSize must be one of ${ISLAND_SIZES.join(', ')}`);
+  if (!isCount(input.landStage) || (input.landStage as number) >= LAND_STAGE_COUNT) {
+    errors.push(`landStage must be an integer from 0 to ${LAND_STAGE_COUNT - 1}`);
   }
   if (input.vitality !== null && !isFiniteIn(input.vitality, 0, 100)) {
     errors.push('vitality must be a number from 0 to 100, or null');
@@ -61,71 +52,38 @@ export function parseCommunityViewState(input: unknown): ParseResult {
     });
   }
 
-  const buildings = {} as Record<BuildingKind, BuildingState>;
-  if (!isObj(input.buildings)) {
-    errors.push('buildings must be an object');
+  const buildings: BuildingView[] = [];
+  if (!Array.isArray(input.buildings)) {
+    errors.push('buildings must be an array');
   } else {
-    const b = input.buildings;
-    for (const kind of BUILDING_KINDS) {
-      const v = b[kind];
-      if (isObj(v) && v.unlocked === true) {
-        buildings[kind] = { unlocked: true };
-      } else if (isObj(v) && v.unlocked === false && v.remaining === null) {
-        buildings[kind] = { unlocked: false, remaining: null };
-      } else if (isObj(v) && v.unlocked === false && isObj(v.remaining) && isCount(v.remaining.streakDays) && isCount(v.remaining.residents)) {
-        buildings[kind] = {
-          unlocked: false,
-          remaining: { streakDays: v.remaining.streakDays, residents: v.remaining.residents },
-        };
-      } else {
-        errors.push(`buildings.${kind} must be { unlocked: true } or { unlocked: false, remaining: { streakDays, residents } | null }`);
-      }
-    }
-    for (const key of Object.keys(b)) {
-      if (!includes(BUILDING_KINDS, key)) errors.push(`buildings.${key} is not a known building`);
-    }
-  }
-
-  const projects: ProjectState[] = [];
-  if (!Array.isArray(input.projects)) {
-    errors.push('projects must be an array');
-  } else {
-    if (input.projects.length > MAX_ACTIVE_PROJECTS) {
-      errors.push(`at most ${MAX_ACTIVE_PROJECTS} active projects`);
-    }
-    const ids = new Set<string>();
-    input.projects.forEach((p, i) => {
+    const keys = new Set<string>();
+    input.buildings.forEach((b, i) => {
+      const r = isObj(b) ? b.remaining : undefined;
+      const remainingOk =
+        r === null ||
+        (isObj(r) && isCount(r.residents) && isCount(r.streakDays) && Array.isArray(r.requires) && r.requires.every(isNonEmptyString));
       if (
-        !isObj(p) ||
-        !isNonEmptyString(p.id) ||
-        !includes(PROJECT_KINDS, p.kind) ||
-        !isNonEmptyString(p.title) ||
-        !includes(PROJECT_STAGES, p.stage) ||
-        !isFiniteIn(p.progress, 0, 1) ||
-        !(Number.isInteger(p.level) && (p.level as number) >= 1)
+        !isObj(b) ||
+        !isNonEmptyString(b.key) ||
+        !BUILDING_STATUSES.includes(b.status as BuildingView['status']) ||
+        !(Number.isInteger(b.level) && (b.level as number) >= 1) ||
+        !isFiniteIn(b.progress, 0, 1) ||
+        !isNonEmptyString(b.title) ||
+        !remainingOk
       ) {
-        errors.push(`projects[${i}] needs id, kind (${PROJECT_KINDS.join('|')}), title, stage (${PROJECT_STAGES.join('|')}), progress 0..1, level >= 1`);
+        errors.push(`buildings[${i}] needs key, status (${BUILDING_STATUSES.join('|')}), level >= 1, progress 0..1, title, remaining`);
         return;
       }
-      if (ids.has(p.id)) errors.push(`projects[${i}] duplicate id '${p.id}'`);
-      ids.add(p.id);
-      projects.push({ id: p.id, kind: p.kind, title: p.title, stage: p.stage, progress: p.progress, level: p.level as number });
-    });
-  }
-
-  const showcase: ShowcaseItem[] = [];
-  if (!Array.isArray(input.showcase)) {
-    errors.push('showcase must be an array');
-  } else {
-    const kinds = new Set<string>();
-    input.showcase.forEach((sItem, i) => {
-      if (!isObj(sItem) || !includes(PROJECT_KINDS, sItem.kind) || !(Number.isInteger(sItem.level) && (sItem.level as number) >= 1)) {
-        errors.push(`showcase[${i}] needs kind (${PROJECT_KINDS.join('|')}) and level >= 1`);
-        return;
-      }
-      if (kinds.has(sItem.kind)) errors.push(`showcase[${i}] duplicate kind '${sItem.kind}'`);
-      kinds.add(sItem.kind);
-      showcase.push({ kind: sItem.kind, level: sItem.level as number });
+      if (keys.has(b.key)) errors.push(`buildings[${i}] duplicate key '${b.key}'`);
+      keys.add(b.key);
+      buildings.push({
+        key: b.key,
+        status: b.status as BuildingView['status'],
+        level: b.level as number,
+        progress: b.progress as number,
+        title: b.title,
+        remaining: r === null ? null : { residents: (r as Obj).residents as number, streakDays: (r as Obj).streakDays as number, requires: (r as Obj).requires as string[] },
+      });
     });
   }
 
@@ -156,12 +114,10 @@ export function parseCommunityViewState(input: unknown): ParseResult {
     ok: true,
     state: {
       communityName: (input.communityName as string).trim(),
-      islandSize: input.islandSize as IslandSize,
+      landStage: input.landStage as number,
       vitality: input.vitality as number | null,
       houses,
       buildings,
-      projects,
-      showcase,
       miniVillagerCount: input.miniVillagerCount as number,
       speechBubbles,
     },

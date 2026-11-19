@@ -5,14 +5,15 @@ import type { Group, Mesh } from 'three';
 import type { Tile } from '../layout';
 import { ACCENTS } from '../mood';
 import { useIslandCtx, useSceneFx } from '../scene/islandContext';
-import type { AssetProps } from './BoxAsset';
+import type { ObjectOf } from '../layout';
+import type { ItemsProps } from './BoxAsset';
 import { villagerPersonality } from './villagerPersonality';
 import { useIslandUi } from '../uiStore';
 import { SpeechBubbleLabel } from '../scene/Labels';
 import { BUBBLE_Z } from '../scene/labelText';
 
 /** Ambient mini villagers wandering the walkable tiles (requirement.md §7.3). */
-export function MiniVillagers({ items }: AssetProps<'mini-villager'>) {
+export function MiniVillagers({ items }: ItemsProps<ObjectOf<'mini-villager'>>) {
   return (
     <>
       {items.map((v) => (

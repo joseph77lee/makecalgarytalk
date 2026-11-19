@@ -6,7 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { formatCountdown, msUntil } from '../common';
-import type { CommunityViewState, Tile } from '../island-view';
+import type { CommunityViewState, IslandPlan, Tile } from '../island-view';
 import {
   REJECT_MESSAGES,
   applyResult,
@@ -31,7 +31,10 @@ export interface DailyActionsDeps {
   moveTo: (tile: Tile) => { seq: number };
   /** Calls back once the avatar arrived for `seq`, or after `timeoutMs` (whichever first). */
   whenArrived: (seq: number, cb: () => void, timeoutMs: number) => void;
-  siteTile: (projectIndex: number) => Tile;
+  /** Loads the community's stored island plan. */
+  loadPlan: (code: string) => Promise<IslandPlan>;
+  /** Where the avatar walks to help a building (next to its lot), or null if not on the island. */
+  siteTile: (plan: IslandPlan, view: CommunityViewState, buildingKey: string) => Tile | null;
   onHelped: (site: Tile) => void;
   randomId: () => string;
   now: () => Date;
@@ -46,6 +49,7 @@ export interface DailyActionsState {
   communities: CommunityListItem[] | null;
   server: ServerCommunityState | null;
   view: CommunityViewState | null;
+  plan: IslandPlan | null;
   queue: QueueState | null;
   toast: { id: number; text: string } | null;
   init: () => Promise<void>;
@@ -132,6 +136,7 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
 
     const loadState = async (communityId: string) => {
       const server = await api.getCommunityState(client(), communityId);
+      const plan = get().plan?.code === server.community.code ? get().plan : await deps.loadPlan(server.community.code);
       const prev = get().queue;
       const energyLeft = server.me?.energy_left ?? 0;
       const energyMax = server.me?.energy_max ?? 3;
@@ -140,7 +145,7 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
         queue = { ...queue, today: loadToday(server.calgary_day) };
         for (const p of loadPending()) queue = { ...queue, pending: [...queue.pending, { ...p, sending: false }] };
       }
-      set({ server, view: toViewState(server), queue, status: 'ready', error: null });
+      set({ server, plan, view: toViewState(server), queue, status: 'ready', error: null });
       scheduleDayRefresh(server.next_day_start);
       if (queue.pending.length > 0) void get().flush();
     };
@@ -151,6 +156,7 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
       communities: null,
       server: null,
       view: null,
+      plan: null,
       queue: null,
       toast: null,
 
@@ -199,7 +205,7 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
       },
 
       act(projectIndex) {
-        const { server, queue } = get();
+        const { server, queue, plan, view } = get();
         const project = server?.projects[projectIndex];
         if (!server || !queue || !project) return;
         if (!canAct(queue)) {
@@ -208,7 +214,7 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
           return;
         }
         setQueue(enqueue(queue, deps.randomId(), project.id));
-        const site = deps.siteTile(projectIndex);
+        const site = (plan && view && deps.siteTile(plan, view, project.kind)) || { x: 0, z: 0 };
         const { seq } = deps.moveTo(site);
         deps.whenArrived(
           seq,

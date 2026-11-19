@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { houseCapacity } from '../layout';
 import { useMockCommunityStore } from '../mockStore';
 import { vitalityMood } from '../mood';
-import { BUILDING_KINDS, ISLAND_SIZES, MAX_MINI_VILLAGERS, PROJECT_STAGES, type CommunityViewState } from '../types';
+import { BUILDING_TREE, LAND_STAGE_COUNT } from '../plan/buildingTree';
+import { BUILDING_STATUSES, MAX_MINI_VILLAGERS, type BuildingStatus, type BuildingView, type CommunityViewState } from '../types';
 
 const NAMES = ['Ava', 'Noah', 'Jisoo', 'Liam', 'Mei', 'Omar', 'Chloe', 'Arjun', 'Emma', 'Lucas', 'Sofia', 'Ethan'];
+const STAGE_RESIDENTS = ['1–2', '3–5', '6–10', '11–25', '26–50', '51+'];
 
-/**
- * Dev-only panel to edit the mock community state and watch the island react
- * (M1 Definition of Done: changing size, buildings, Vitality, silhouettes updates the island).
- */
+/** Dev-only panel to edit the mock community state and watch the island react. */
 export function IslandDevPanel() {
   const [open, setOpen] = useState(false);
   const state = useMockCommunityStore((s) => s.state);
@@ -38,8 +36,24 @@ export function IslandDevPanel() {
       return { ...s, houses: [...s.houses, ...added] };
     });
 
+  const viewOf = (key: string): BuildingView => {
+    const spec = BUILDING_TREE.buildings.find((b) => b.key === key);
+    return (
+      state.buildings.find((b) => b.key === key) ?? {
+        key,
+        status: 'locked',
+        level: 1,
+        progress: 0,
+        title: spec?.name ?? key,
+        remaining: spec ? { residents: spec.residents, streakDays: spec.streakDays, requires: spec.requires } : null,
+      }
+    );
+  };
+  const setBuilding = (key: string, patch: Partial<BuildingView>) =>
+    update((s) => ({ ...s, buildings: [...s.buildings.filter((b) => b.key !== key), { ...viewOf(key), ...patch }] }));
+
   return (
-    <div className="absolute inset-x-2 bottom-2 z-30 max-h-[55dvh] overflow-y-auto rounded-2xl bg-white/95 p-3 text-xs text-slate-700 shadow-lg sm:inset-x-auto sm:left-4 sm:bottom-4 sm:w-80">
+    <div className="absolute inset-x-2 bottom-2 z-30 max-h-[60dvh] overflow-y-auto rounded-2xl bg-white/95 p-3 text-xs text-slate-700 shadow-lg sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-96">
       <div className="mb-2 flex items-center justify-between">
         <span className="font-bold">Mock community state</span>
         <div className="flex gap-1">
@@ -52,33 +66,26 @@ export function IslandDevPanel() {
         </div>
       </div>
 
-      <Row label="Island size">
+      <Row label="Land stage (cumulative residents)">
         <div className="flex flex-wrap gap-1">
-          {ISLAND_SIZES.map((size) => (
+          {Array.from({ length: LAND_STAGE_COUNT }, (_, stage) => (
             <button
-              key={size}
+              key={stage}
               type="button"
-              onClick={() => set({ islandSize: size })}
-              className={`rounded px-1.5 py-0.5 ${state.islandSize === size ? 'bg-sky-500 text-white' : 'bg-slate-100'}`}
+              onClick={() => set({ landStage: stage })}
+              className={`rounded px-1.5 py-0.5 ${state.landStage === stage ? 'bg-sky-500 text-white' : 'bg-slate-100'}`}
             >
-              {size}
+              {STAGE_RESIDENTS[stage]}
             </button>
           ))}
         </div>
       </Row>
 
       <Row label={state.vitality === null ? 'Vitality (not set)' : `Vitality ${state.vitality} (${vitalityMood(state.vitality)})`}>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={state.vitality ?? 50}
-          onChange={(e) => set({ vitality: Number(e.target.value) })}
-          className="w-full"
-        />
+        <input type="range" min={0} max={100} value={state.vitality ?? 50} onChange={(e) => set({ vitality: Number(e.target.value) })} className="w-full" />
       </Row>
 
-      <Row label={`Houses ${state.houses.length} / ${houseCapacity(state.islandSize)} lots`}>
+      <Row label={`Houses ${state.houses.length}`}>
         <div className="flex gap-1">
           <button type="button" className="rounded bg-slate-100 px-2" onClick={() => set({ houses: state.houses.slice(0, -1) })}>
             −
@@ -110,56 +117,36 @@ export function IslandDevPanel() {
         />
       </Row>
 
-      <Row label="Unlocked buildings">
-        <div className="flex flex-wrap gap-2">
-          {BUILDING_KINDS.map((kind) => (
-            <label key={kind} className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={state.buildings[kind].unlocked}
-                onChange={(e) =>
-                  set({
-                    buildings: {
-                      ...state.buildings,
-                      [kind]: e.target.checked ? { unlocked: true } : { unlocked: false, remaining: { streakDays: 2, residents: 1 } },
-                    },
-                  })
-                }
-              />
-              {kind}
-            </label>
-          ))}
+      <Row label="Buildings (tree)">
+        <div className="flex flex-col gap-1">
+          {BUILDING_TREE.buildings.map((spec) => {
+            const v = viewOf(spec.key);
+            return (
+              <div key={spec.key} className="flex items-center gap-1">
+                <span className="w-28 truncate">{spec.name}</span>
+                <select value={v.status} className="rounded bg-slate-100 px-1" onChange={(e) => setBuilding(spec.key, { status: e.target.value as BuildingStatus })}>
+                  {BUILDING_STATUSES.map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
+                <button type="button" className="rounded bg-slate-100 px-1" onClick={() => setBuilding(spec.key, { level: v.level + 1 })} title="Upgrade level">
+                  Lv {v.level}+
+                </button>
+                {v.status === 'building' && (
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(v.progress * 100)}
+                    onChange={(e) => setBuilding(spec.key, { progress: Number(e.target.value) / 100 })}
+                    className="w-16"
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       </Row>
-
-      {state.projects.map((p, i) => (
-        <Row key={p.id} label={`${p.title} — ${Math.round(p.progress * 100)}%`}>
-          <div className="flex items-center gap-1">
-            <select
-              value={p.stage}
-              className="rounded bg-slate-100 px-1"
-              onChange={(e) => {
-                const stage = e.target.value as (typeof PROJECT_STAGES)[number];
-                set({ projects: state.projects.map((q, j) => (j === i ? { ...q, stage } : q)) });
-              }}
-            >
-              {PROJECT_STAGES.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={Math.round(p.progress * 100)}
-              onChange={(e) =>
-                set({ projects: state.projects.map((q, j) => (j === i ? { ...q, progress: Number(e.target.value) / 100 } : q)) })
-              }
-              className="w-full"
-            />
-          </div>
-        </Row>
-      ))}
     </div>
   );
 }

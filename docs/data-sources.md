@@ -9,6 +9,7 @@ Contains information licensed under the **Open Government Licence – City of Ca
 | Community District Boundaries | `surr-xmvs` | Community names, codes, class (residential only), sector |
 | 2021 Federal Census Population and Dwellings by Community | `f9wk-wej9` | Population (`total_pop_household`) |
 | Historical Community Populations | `jtpc-xgsh` | Population fallback: latest civic census year (2019) |
+| Hydrology | `47bt-eefd` | Real water on the islands (lakes, ponds, wetlands, water courses): `supabase/data/calgary_water.json` via `build_water.py` |
 
 - Snapshot: `supabase/data/calgary_communities.csv` (223 residential communities, fetched 2026-11-18).
   17 brand-new communities have no census population (`null`).
@@ -17,4 +18,5 @@ Contains information licensed under the **Open Government Licence – City of Ca
   (new rows only; existing codes are skipped by `on conflict do nothing`).
 - Display names are generated from the official upper-case names (e.g. `MCKENZIE TOWNE` → `McKenzie Towne`);
   fixes go in `NAME_OVERRIDES` in the script.
-- Boundary polygons (World Map M10, residency M7) come from the same `surr-xmvs` dataset later.
+- Boundary polygons: `supabase/data/calgary_boundaries.json` (residential, outer rings; also for World Map M10 and residency M7).
+- Island plans (`frontend/public/islands/`) are generated from boundaries + water by `frontend/scripts/island_plans.py`.

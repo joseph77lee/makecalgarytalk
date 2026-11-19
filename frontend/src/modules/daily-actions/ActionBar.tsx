@@ -1,7 +1,7 @@
 import { formatCountdown, msUntil, useNow } from '../common';
 import { energyShown } from './actionQueue';
 import { useDailyActions } from './liveStore';
-import { PROJECT_ICONS } from './projectIcons';
+import { projectIcon } from './projectIcons';
 
 /** Bottom action bar: energy, the 3 active projects, tap to help (requirement.md §8, §10.2). */
 export function ActionBar() {
@@ -50,7 +50,7 @@ export function ActionBar() {
                 }`}
               >
                 <span className="flex min-w-0 items-center gap-1 text-xs font-semibold text-slate-700">
-                  <span aria-hidden>{PROJECT_ICONS[p.kind]}</span>
+                  <span aria-hidden>{projectIcon(p.kind)}</span>
                   <span className="truncate">{p.title}</span>
                   {p.level > 1 && <span className="shrink-0 text-[10px] text-amber-600">Lv {p.level}</span>}
                 </span>

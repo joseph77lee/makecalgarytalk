@@ -1,6 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it, vi } from 'vitest';
-import { parseCommunityViewState } from '../island-view';
+import { BUILDING_TREE, decodePlan, parseCommunityViewState } from '../island-view';
 import {
   MAX_BATCH,
   applyResult,
@@ -19,6 +22,7 @@ import { filterCommunities } from './filterCommunities';
 import { ARRIVAL_TIMEOUT_MS, MIDNIGHT_GRACE_MS, RETRY_DELAYS, createDailyActionsStore, type DailyActionsDeps } from './store';
 import { toViewState } from './toViewState';
 
+const PLAN = decodePlan(JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../../../public/islands/MAH.json'), 'utf8')));
 const DAY = '2026-12-01';
 const NEXT = '2026-12-02T06:00:00+00:00';
 
@@ -49,37 +53,23 @@ const result = (energyLeft: number, results: ServerSubmitResult['results'], day 
   results,
 });
 
-describe('toViewState', () => {
-  it('maps server projects to island construction sites (progress as a fraction, capped)', () => {
+describe('toViewState (until the building tree is on the server)', () => {
+  it('server projects become buildings under construction (placeholders), progress as a fraction', () => {
     const v = toViewState(serverState());
-    expect(v.projects.map((p) => [p.id, p.kind, p.stage, p.progress, p.level])).toEqual([
-      ['p1', 'snowman-garden', 'frame', 0.6, 1],
-      ['p2', 'lantern-street', 'scaffolding', 0, 1],
-      ['p3', 'ice-rink', 'frame', 1, 2],
-    ]);
+    const b = (key: string) => v.buildings.find((x) => x.key === key);
+    expect(b('snowman-garden')).toMatchObject({ status: 'building', progress: 0.6, level: 1 });
+    expect(b('ice-rink')).toMatchObject({ status: 'building', progress: 1, level: 2 }); // still building: wins over the completed level 1
+    expect(b('flower-path')).toMatchObject({ status: 'built', level: 1 });
   });
 
-  it('shows one miniature per completed kind at its highest level', () => {
-    const v = toViewState(
-      serverState({
-        completed_projects: [
-          { id: 'a', seq: 1, kind: 'ice-rink', title: 'x', level: 1, completed_on: DAY },
-          { id: 'b', seq: 7, kind: 'ice-rink', title: 'x', level: 2, completed_on: DAY },
-          { id: 'c', seq: 2, kind: 'flower-path', title: 'x', level: 1, completed_on: DAY },
-        ],
-      }),
-    );
-    expect(v.showcase).toEqual([
-      { kind: 'ice-rink', level: 2 },
-      { kind: 'flower-path', level: 1 },
-    ]);
-  });
-
-  it('uses neutral placeholders for what M5/M8 will provide (no fake numbers)', () => {
+  it('every tree building is shown locked without conditions (no fake numbers)', () => {
     const v = toViewState(serverState());
+    for (const spec of BUILDING_TREE.buildings) {
+      expect(v.buildings.find((x) => x.key === spec.key)).toMatchObject({ status: 'locked', remaining: null });
+    }
     expect(v.vitality).toBeNull();
     expect(v.houses).toEqual([]);
-    expect(Object.values(v.buildings).every((b) => !b.unlocked && b.remaining === null)).toBe(true);
+    expect(v.landStage).toBe(2);
   });
 
   it('always produces a state the island accepts', () => {
@@ -92,10 +82,12 @@ describe('assertCommunityState', () => {
   it('accepts a valid state', () => {
     expect(() => assertCommunityState(serverState())).not.toThrow();
   });
-  it('rejects unknown project kinds (frontend models missing)', () => {
-    const bad = serverState();
-    (bad.projects[0] as { kind: string }).kind = 'castle';
-    expect(() => assertCommunityState(bad)).toThrow(/unknown project kind 'castle'/);
+  it('accepts unknown project kinds (drawn as placeholders) but not empty ones', () => {
+    const odd = serverState();
+    odd.projects[0].kind = 'castle';
+    expect(() => assertCommunityState(odd)).not.toThrow();
+    odd.projects[0].kind = '';
+    expect(() => assertCommunityState(odd)).toThrow(/project kind/);
   });
   it('rejects broken numbers', () => {
     const bad = serverState();
@@ -227,7 +219,9 @@ function setup(opts: { me?: { community_id: string | null }; submit?: (actions: 
     ensureSession: async () => true,
     moveTo: vi.fn(() => ({ seq: 1 })),
     whenArrived: (_seq, cb) => arrivals.push(cb),
-    siteTile: (i) => ({ x: i, z: 0 }),
+    loadPlan: async () => PLAN,
+    // site x = the project's position in the server list (enough to check the wiring)
+    siteTile: (_plan, _view, key) => ({ x: ['snowman-garden', 'lantern-street', 'ice-rink'].indexOf(key), z: 0 }),
     onHelped: (site) => helped.push(site),
     randomId: () => `id-${++ids}`,
     now: () => new Date('2026-12-01T20:00:00Z'),
@@ -362,7 +356,7 @@ describe('daily actions store', () => {
     t.setState(next);
     t.timers.at(-1)!.fn();
     await settle();
-    expect(t.useStore.getState().view?.projects[0].progress).toBe(0.75);
+    expect(t.useStore.getState().view?.buildings.find((b) => b.key === 'snowman-garden')?.progress).toBe(0.75);
     expect(energyShown(t.useStore.getState().queue!)).toBe(3);
   });
 

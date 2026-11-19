@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { buildIslandLayout, parseCommunityViewState, tileKey, type CommunityViewState, type Tile } from '../island-view';
+import { buildIslandLayout, decodePlan, parseCommunityViewState, tileKey, type CommunityViewState, type IslandPlan, type Tile } from '../island-view';
 import { moveTo, useAvatarStore } from './avatarStore';
 import { stepCandidates, type MoveKey } from './keyboard';
 import { canStep, findPath, nearestWalkable } from './pathfinding';
@@ -117,21 +120,18 @@ describe('destination events (requirement.md §10.2)', () => {
   });
 });
 
+const ISLANDS = join(dirname(fileURLToPath(import.meta.url)), '../../../public/islands');
+const planOf = (code: string): IslandPlan => decodePlan(JSON.parse(readFileSync(join(ISLANDS, `${code}.json`), 'utf8')));
+
 const BASE_STATE = {
   communityName: 'Testville',
-  islandSize: 12,
+  landStage: 1,
   vitality: 50,
   houses: [
     { id: 'a', nickname: 'A', activeToday: true },
     { id: 'b', nickname: 'B', activeToday: false },
   ],
-  buildings: {
-    playground: { unlocked: true },
-    'community-centre': { unlocked: false, remaining: { streakDays: 3, residents: 1 } },
-    park: { unlocked: false, remaining: { streakDays: 20, residents: 0 } },
-  },
-  projects: [{ id: 'p', kind: 'ice-rink', title: 'Rink', stage: 'frame', progress: 0.5, level: 1 }],
-  showcase: [{ kind: 'flower-path', level: 1 }],
+  buildings: [{ key: 'fire-pit', status: 'built', level: 1, progress: 1, title: 'Fire pit', remaining: null }],
   miniVillagerCount: 3,
   speechBubbles: [],
 };
@@ -159,10 +159,10 @@ function walk(w: AvatarWalker, maxSeconds = 60): { visited: Tile[]; arrived: num
 }
 
 describe('AvatarWalker on real islands', () => {
-  for (const size of [8, 12, 20, 32] as const) {
-    it(`size ${size}: walking to every 7th walkable tile never enters a blocked tile`, () => {
-      const houses = Array.from({ length: size }, (_, i) => ({ id: `h${i}`, nickname: 'x', activeToday: true }));
-      const l = buildIslandLayout(layoutState({ islandSize: size, houses, speechBubbles: [] }));
+  for (const [code, stage] of [['MAH', 0], ['MAH', 2], ['DIA', 3], ['LMR', 5]] as const) {
+    it(`${code} land stage ${stage}: walking to every 7th walkable tile never enters a blocked tile`, () => {
+      const houses = Array.from({ length: 40 }, (_, i) => ({ id: `h${i}`, nickname: 'x', activeToday: true }));
+      const l = buildIslandLayout(planOf(code), layoutState({ landStage: stage, houses, speechBubbles: [] }));
       const keys = new Set(l.walkable.map(tileKey));
       const w = new AvatarWalker(t(0, 0));
       w.setWalkable(keys, l.walkable);
@@ -181,7 +181,7 @@ describe('AvatarWalker on real islands', () => {
   }
 
   it('tapping a house walks to the nearest free tile next to it', () => {
-    const l = buildIslandLayout(layoutState());
+    const l = buildIslandLayout(planOf('MAH'), layoutState());
     const keys = new Set(l.walkable.map(tileKey));
     const house = l.objects.find((o) => o.assetKey === 'house');
     if (!house) throw new Error('no house');

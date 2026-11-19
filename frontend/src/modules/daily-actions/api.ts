@@ -3,7 +3,6 @@
  * server/client mismatch fails loudly instead of drawing a half-broken island.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { PROJECT_KINDS, type ProjectKind } from '../island-view';
 
 export interface CommunityListItem {
   id: string;
@@ -16,7 +15,7 @@ export interface CommunityListItem {
 export interface ServerProject {
   id: string;
   seq: number;
-  kind: ProjectKind;
+  kind: string;
   title: string;
   level: number;
   required: number;
@@ -27,7 +26,7 @@ export interface ServerProject {
 export interface ServerCompletedProject {
   id: string;
   seq: number;
-  kind: ProjectKind;
+  kind: string;
   title: string;
   level: number;
   completed_on: string;
@@ -94,7 +93,8 @@ export function assertCommunityState(v: unknown): asserts v is ServerCommunitySt
   check(Array.isArray(v.projects) && Array.isArray(v.completed_projects), 'state.projects');
   for (const p of [...(v.projects as unknown[]), ...(v.completed_projects as unknown[])]) {
     check(isObj(p) && typeof p.id === 'string', 'project id');
-    check(PROJECT_KINDS.includes(p.kind as ProjectKind), `unknown project kind '${String(p.kind)}'`);
+    // Unknown kinds are fine: the island draws them with a placeholder model (§7.6b).
+    check(typeof p.kind === 'string' && p.kind.length > 0, 'project kind');
   }
   for (const p of v.projects as Obj[]) {
     check(Number.isInteger(p.required) && (p.required as number) > 0, 'project.required');

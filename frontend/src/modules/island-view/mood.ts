@@ -16,6 +16,8 @@ export interface MoodPalette {
   /** Two grass shades for the checkered look. */
   grass: [string, string];
   path: [string, string];
+  /** Real water (lakes, ponds, creeks). */
+  water: string;
   dirtTop: string;
   dirtBottom: string;
   leaves: [string, string];
@@ -34,6 +36,7 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
   lively: {
     grass: ['#a8dc7c', '#9bd36f'],
     path: ['#ecd9b0', '#e5cfa2'],
+    water: '#8ec5ea',
     dirtTop: '#9b7653',
     dirtBottom: '#7d5f45',
     leaves: ['#7cc46a', '#8fd27a'],
@@ -47,6 +50,7 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
   normal: {
     grass: ['#a3cf86', '#97c57a'],
     path: ['#e3d3b4', '#dccaa8'],
+    water: '#9cc7e3',
     dirtTop: '#94735a',
     dirtBottom: '#78604c',
     leaves: ['#79b46c', '#86bf78'],
@@ -61,6 +65,7 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
     // "Cute gloomy": greyish and snowy, never dark or depressing.
     grass: ['#b4bfae', '#aab6a4'],
     path: ['#d6d1c8', '#cec9bf'],
+    water: '#b7c7d3',
     dirtTop: '#8a7a6d',
     dirtBottom: '#716559',
     leaves: ['#9aa892', '#a5b09c'],
