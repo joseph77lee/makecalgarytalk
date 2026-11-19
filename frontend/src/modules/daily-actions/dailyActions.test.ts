@@ -30,15 +30,19 @@ function serverState(patch: Partial<ServerCommunityState> = {}): ServerCommunity
   return {
     calgary_day: DAY,
     next_day_start: NEXT,
-    community: { id: 'c1', code: 'MAH', name: 'Mahogany', sector: 'Southeast', population: 13860 },
-    projects: [
-      { id: 'p1', seq: 4, kind: 'snowman-garden', title: 'Build a snowman garden', level: 1, required: 20, progress: 12, stage: 'frame' },
-      { id: 'p2', seq: 5, kind: 'lantern-street', title: 'Light up a lantern street', level: 1, required: 20, progress: 0, stage: 'scaffolding' },
-      { id: 'p3', seq: 7, kind: 'ice-rink', title: 'Build an ice rink', level: 2, required: 25, progress: 30, stage: 'frame' },
+    community: { id: 'c1', code: 'MAH', name: 'Mahogany', sector: 'Southeast', population: 13860, residents: 4, land_stage: 1, settled: true },
+    buildings: [
+      { key: 'welcome-sign', name: 'Welcome sign', stage: 1, status: 'built', level: 2, progress: 1, remaining: null },
+      { key: 'fire-pit', name: 'Fire pit', stage: 1, status: 'building', level: 1, progress: 0.6, remaining: null },
+      { key: 'frozen-pond', name: 'Frozen pond', stage: 1, status: 'building', level: 1, progress: 0, remaining: null },
+      { key: 'gateway-arch', name: 'Gateway arch', stage: 2, status: 'building', level: 1, progress: 0.4, remaining: null },
+      { key: 'playground', name: 'Playground', stage: 2, status: 'locked', level: 1, progress: 0, remaining: { residents: 0, streak_days: 3, requires: [] } },
+      { key: 'warming-hut', name: 'Warming hut', stage: 2, status: 'locked', level: 1, progress: 0, remaining: { residents: 0, streak_days: 3, requires: ['fire-pit'] } },
     ],
-    completed_projects: [
-      { id: 'c-1', seq: 1, kind: 'ice-rink', title: 'Build an ice rink', level: 1, completed_on: '2026-11-20' },
-      { id: 'c-2', seq: 2, kind: 'flower-path', title: 'Make a flower path', level: 1, completed_on: '2026-11-22' },
+    projects: [
+      { id: 'p1', building_key: 'fire-pit', title: 'Fire pit', level: 1, required: 20, progress: 12, stage: 'frame' },
+      { id: 'p2', building_key: 'frozen-pond', title: 'Frozen pond', level: 1, required: 20, progress: 0, stage: 'scaffolding' },
+      { id: 'p3', building_key: 'gateway-arch', title: 'Gateway arch', level: 1, required: 25, progress: 10, stage: 'scaffolding' },
     ],
     me: { member: true, energy_max: 3, energy_left: 3 },
     ...patch,
@@ -53,23 +57,31 @@ const result = (energyLeft: number, results: ServerSubmitResult['results'], day 
   results,
 });
 
-describe('toViewState (until the building tree is on the server)', () => {
-  it('server projects become buildings under construction (placeholders), progress as a fraction', () => {
+describe('toViewState (the server owns the building tree)', () => {
+  it('copies each building\'s status, level and progress from the server', () => {
     const v = toViewState(serverState());
     const b = (key: string) => v.buildings.find((x) => x.key === key);
-    expect(b('snowman-garden')).toMatchObject({ status: 'building', progress: 0.6, level: 1 });
-    expect(b('ice-rink')).toMatchObject({ status: 'building', progress: 1, level: 2 }); // still building: wins over the completed level 1
-    expect(b('flower-path')).toMatchObject({ status: 'built', level: 1 });
+    expect(b('welcome-sign')).toMatchObject({ status: 'built', level: 2, progress: 1, title: 'Welcome sign', remaining: null });
+    expect(b('fire-pit')).toMatchObject({ status: 'building', level: 1, progress: 0.6 });
+    expect(v.buildings).toHaveLength(6); // nothing invented on the client
   });
 
-  it('every tree building is shown locked without conditions (no fake numbers)', () => {
+  it('maps what a locked building is still missing (snake_case → camelCase)', () => {
     const v = toViewState(serverState());
-    for (const spec of BUILDING_TREE.buildings) {
-      expect(v.buildings.find((x) => x.key === spec.key)).toMatchObject({ status: 'locked', remaining: null });
-    }
+    expect(v.buildings.find((x) => x.key === 'warming-hut')?.remaining).toEqual({ residents: 0, streakDays: 3, requires: ['fire-pit'] });
+  });
+
+  it('takes the land stage from the server and clamps it to the tiers this build knows', () => {
+    expect(toViewState(serverState()).landStage).toBe(1);
+    const big = serverState();
+    big.community.land_stage = 99;
+    expect(toViewState(big).landStage).toBe(BUILDING_TREE.landTiers.length - 1);
+  });
+
+  it('leaves Vitality and houses empty until their modules exist', () => {
+    const v = toViewState(serverState());
     expect(v.vitality).toBeNull();
     expect(v.houses).toEqual([]);
-    expect(v.landStage).toBe(2);
   });
 
   it('always produces a state the island accepts', () => {
@@ -82,17 +94,29 @@ describe('assertCommunityState', () => {
   it('accepts a valid state', () => {
     expect(() => assertCommunityState(serverState())).not.toThrow();
   });
-  it('accepts unknown project kinds (drawn as placeholders) but not empty ones', () => {
+  it('accepts unknown building keys (drawn as placeholders) but not empty ones', () => {
     const odd = serverState();
-    odd.projects[0].kind = 'castle';
+    odd.buildings[0].key = 'castle';
     expect(() => assertCommunityState(odd)).not.toThrow();
-    odd.projects[0].kind = '';
-    expect(() => assertCommunityState(odd)).toThrow(/project kind/);
+    odd.buildings[0].key = '';
+    expect(() => assertCommunityState(odd)).toThrow(/building key/);
   });
-  it('rejects broken numbers', () => {
-    const bad = serverState();
-    bad.projects[0].required = 0;
-    expect(() => assertCommunityState(bad)).toThrow(ApiError);
+  it('rejects broken numbers and statuses', () => {
+    const cases: ((s: ServerCommunityState) => void)[] = [
+      (s) => (s.projects[0].required = 0),
+      (s) => (s.projects[0].building_key = ''),
+      (s) => (s.buildings[1].progress = 1.5),
+      (s) => (s.buildings[1].level = 0),
+      (s) => ((s.buildings[1] as { status: string }).status = 'ruined'),
+      (s) => ((s.buildings[4].remaining as { streak_days: unknown }).streak_days = '3'),
+      (s) => (s.community.land_stage = -1),
+      (s) => delete (s as Partial<ServerCommunityState>).buildings,
+    ];
+    for (const breakIt of cases) {
+      const bad = serverState();
+      breakIt(bad);
+      expect(() => assertCommunityState(bad)).toThrow(ApiError);
+    }
   });
 });
 
@@ -221,7 +245,7 @@ function setup(opts: { me?: { community_id: string | null }; submit?: (actions: 
     whenArrived: (_seq, cb) => arrivals.push(cb),
     loadPlan: async () => PLAN,
     // site x = the project's position in the server list (enough to check the wiring)
-    siteTile: (_plan, _view, key) => ({ x: ['snowman-garden', 'lantern-street', 'ice-rink'].indexOf(key), z: 0 }),
+    siteTile: (_plan, _view, key) => ({ x: ['fire-pit', 'frozen-pond', 'gateway-arch'].indexOf(key), z: 0 }),
     onHelped: (site) => helped.push(site),
     randomId: () => `id-${++ids}`,
     now: () => new Date('2026-12-01T20:00:00Z'),
@@ -353,10 +377,11 @@ describe('daily actions store', () => {
       me: { member: true, energy_max: 3, energy_left: 3 },
     });
     next.projects[0].progress = 15;
+    next.buildings[1].progress = 0.75;
     t.setState(next);
     t.timers.at(-1)!.fn();
     await settle();
-    expect(t.useStore.getState().view?.buildings.find((b) => b.key === 'snowman-garden')?.progress).toBe(0.75);
+    expect(t.useStore.getState().view?.buildings.find((b) => b.key === 'fire-pit')?.progress).toBe(0.75);
     expect(energyShown(t.useStore.getState().queue!)).toBe(3);
   });
 

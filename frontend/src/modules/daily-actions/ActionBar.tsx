@@ -50,7 +50,7 @@ export function ActionBar() {
                 }`}
               >
                 <span className="flex min-w-0 items-center gap-1 text-xs font-semibold text-slate-700">
-                  <span aria-hidden>{projectIcon(p.kind)}</span>
+                  <span aria-hidden>{projectIcon(p.building_key)}</span>
                   <span className="truncate">{p.title}</span>
                   {p.level > 1 && <span className="shrink-0 text-[10px] text-amber-600">Lv {p.level}</span>}
                 </span>

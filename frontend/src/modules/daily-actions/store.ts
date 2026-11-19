@@ -214,7 +214,7 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
           return;
         }
         setQueue(enqueue(queue, deps.randomId(), project.id));
-        const site = (plan && view && deps.siteTile(plan, view, project.kind)) || { x: 0, z: 0 };
+        const site = (plan && view && deps.siteTile(plan, view, project.building_key)) || { x: 0, z: 0 };
         const { seq } = deps.moveTo(site);
         deps.whenArrived(
           seq,
