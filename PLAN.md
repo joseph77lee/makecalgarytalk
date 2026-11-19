@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
 | Based on | `requirement.md` v1.18 |
-| Current module | M4 — Daily Actions (🟨 Ready for playtest); next: M1 🔁 and M3 🔁 (requirement v1.18), then M5 |
+| Current module | M1 🔁 Island View rework (in progress; M4 ✅ Done); then M3 🔁, then M5 |
 
 ---
 
@@ -42,7 +42,7 @@
 | M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🔁 |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | 🔁 |
-| M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | 🟨 |
+| M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
 | M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ⬜ |
 | M6 | Identity | FE + BE | | M4 | ⬜ |
 | M7 | Residency | FE + BE | | M6 | ⬜ |
@@ -211,7 +211,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** no load test (single-player concurrency only); `ensure_projects` runs on every state read (cheap check first, lock only when a project must start) — M5 snapshots will take over the read path. `completed_on` is computed per completed project on every read (fine for now; snapshot later). Data attribution must also appear in the app's legal page (M14).
   - **Environment gotchas:** `supabase db reset` wipes local data and re-runs `seed.sql`. To run a test file by hand with psql inside the DB container, first `create extension pgtap with schema extensions; set search_path = public, extensions;` (`supabase test db` does this automatically).
 
-### M4 — Daily Actions ⭐ 🟨
+### M4 — Daily Actions ⭐ ✅
 **Goal:** Connect the island to the backend so actions really change the community.
 - **In scope**
   - [x] Island loads real community state from the API (replacing mock JSON)
@@ -223,7 +223,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done**
   - [x] two browsers acting on the same community both see progress after the day rolls over (two dev users in separate browser contexts; the day change was simulated by moving the day's actions to the previous day in the local DB)
   - [x] energy limit enforced by server
-  - [ ] user has played a "day"
+  - [x] user has played a "day" (confirmed 2026-11-19)
 - **Handoff**
   - **Code:** `frontend/src/modules/daily-actions/` — `api.ts` (typed RPC + response checks), `toViewState.ts` (server → island), `actionQueue.ts` (pure optimistic queue), `store.ts` (session flow, dependencies injected), `liveStore.ts` (real wiring), UI: `ActionBar`, `CommunityPicker`, `Toast`, `SessionScreen`. App: live game by default; `?mock` shows the M1 mock island with its dev panel.
   - **Action flow:** tap a project card → energy drops at once, one id per tap (`crypto.randomUUID`) → avatar walks to `projectSiteTile(i)` → on arrival (or after 4 s) the avatar does a "work" bow, villagers cheer, a short sound plays, and the queue is sent (batches of ≤10). Accepted/duplicate → "+N today" on the card; rejected → energy rolls back and a toast explains; `project_not_active` also refreshes the state. A network failure retries with the **same ids** (2 s, 5 s, 15 s, 30 s). Unsent actions and today's "+N" are kept in `localStorage` (try/catch) and survive a reload.
