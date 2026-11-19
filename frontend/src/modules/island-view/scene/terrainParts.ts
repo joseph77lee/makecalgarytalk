@@ -1,5 +1,5 @@
 import { box, type BoxPart } from '../assets/boxes';
-import type { IslandTile } from '../layout';
+import type { IslandTile, Tile } from '../layout';
 import type { MoodPalette } from '../mood';
 
 const TILE_H = 0.3;
@@ -11,21 +11,28 @@ const jag = (x: number, z: number) => {
 };
 
 /**
- * Top tiles (checkered grass, sand path) and the layered dirt under the island.
- * Dirt is drawn only for tiles whose ring is >= dirtFromRing: the camera never
- * sees the underside of inner tiles, so this keeps instance counts low.
+ * Top tiles (checkered grass, sand paths) and layered dirt under the edge of the land.
+ * `landKeys` decides which tiles are on the edge (a neighbour is not land); pass null to
+ * give every tile dirt (rising new land, whose neighbours are not settled yet).
  */
-export function terrainParts(tiles: IslandTile[], palette: MoodPalette, dirtFromRing: number): BoxPart[] {
+export function terrainParts(tiles: Pick<IslandTile, 'x' | 'z' | 'kind'>[], landKeys: Set<string> | null, palette: MoodPalette): BoxPart[] {
   const parts: BoxPart[] = [];
+  const isLand = (x: number, z: number) => landKeys?.has(`${x},${z}`) ?? false;
   for (const t of tiles) {
     const odd = (t.x + t.z) & 1;
     const colour = t.kind === 'path' ? palette.path[odd] : palette.grass[odd];
     parts.push(box('solid', t.x + 0.5, -TILE_H, t.z + 0.5, 1, TILE_H, 1, colour));
-    if (t.ring >= dirtFromRing) {
+    const edge = landKeys === null || !isLand(t.x + 1, t.z) || !isLand(t.x - 1, t.z) || !isLand(t.x, t.z + 1) || !isLand(t.x, t.z - 1);
+    if (edge) {
       const rock = 0.7 + jag(t.x, t.z) * 1.0;
       parts.push(box('solid', t.x + 0.5, -TILE_H - DIRT_H, t.z + 0.5, 1, DIRT_H, 1, palette.dirtTop));
       parts.push(box('solid', t.x + 0.5, -TILE_H - DIRT_H - rock, t.z + 0.5, 1, rock, 1, palette.dirtBottom));
     }
   }
   return parts;
+}
+
+/** The rest of the real outline as soft translucent "future land" (requirement.md §7.8). */
+export function futureLandParts(tiles: Tile[]): BoxPart[] {
+  return tiles.map((t) => box('mist', t.x + 0.5, -0.36, t.z + 0.5, 1, 0.06, 1, '#ffffff'));
 }

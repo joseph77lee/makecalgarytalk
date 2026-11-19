@@ -1,17 +1,15 @@
 import { useMemo, type ComponentType } from 'react';
-import type { AssetKey, ObjectOf } from '../layout';
+import type { PlacedObject } from '../layout';
 import { BoxBatch } from '../scene/BoxBatch';
 import { useIslandCtx } from '../scene/islandContext';
 import { translate, type BoxPart } from './boxes';
 import type { BuildCtx } from './models';
 
-export type AssetProps<K extends AssetKey> = { items: ObjectOf<K>[] };
+export type ItemsProps<T extends PlacedObject> = { items: T[] };
 
 /** Turns a box-model builder into an asset component that draws all its items in one batch. */
-export function boxAsset<K extends AssetKey>(
-  build: (item: ObjectOf<K>, ctx: BuildCtx) => BoxPart[],
-): ComponentType<AssetProps<K>> {
-  function BoxAsset({ items }: AssetProps<K>) {
+export function boxAsset<T extends PlacedObject>(build: (item: T, ctx: BuildCtx) => BoxPart[]): ComponentType<ItemsProps<T>> {
+  function BoxAsset({ items }: ItemsProps<T>) {
     const { palette, mood } = useIslandCtx();
     const parts = useMemo(
       () => items.flatMap((item) => translate(build(item, { palette, mood }), item.x, item.z)),

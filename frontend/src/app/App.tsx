@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
 import { ActionBar, CommunityPicker, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
-import { IslandDevPanel, IslandHud, IslandView, useMockCommunityStore, type CommunityViewState } from '../modules/island-view';
+import { IslandDevPanel, IslandHud, IslandView, useMockCommunityStore, type CommunityViewState, type IslandPlan } from '../modules/island-view';
 
 const params = new URLSearchParams(window.location.search);
 /** `?mock` shows the M1 mock island with its dev panel (no server needed). */
@@ -15,6 +15,7 @@ export function App() {
 function LiveApp() {
   const status = useDailyActions((s) => s.status);
   const view = useDailyActions((s) => s.view);
+  const plan = useDailyActions((s) => s.plan);
   const init = useDailyActions((s) => s.init);
   const openPicker = useDailyActions((s) => s.openCommunityPicker);
   useEffect(() => {
@@ -23,7 +24,7 @@ function LiveApp() {
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-gradient-to-b from-sky-100 to-indigo-50">
-      {view && <Island state={view} />}
+      {view && plan && <Island plan={plan} state={view} />}
       {view && <IslandHud state={view} />}
       {status === 'ready' && <ActionBar />}
       {status === 'pick-community' && <CommunityPicker />}
@@ -44,18 +45,24 @@ function LiveApp() {
 
 function MockApp() {
   const state = useMockCommunityStore((s) => s.state);
+  const plan = useMockCommunityStore((s) => s.plan);
+  const loadPlan = useMockCommunityStore((s) => s.loadPlan);
+  useEffect(() => {
+    // `?mock&plan=BLN` shows another community's real shape.
+    void loadPlan(params.get('plan') ?? undefined);
+  }, [loadPlan]);
   return (
     <main className="relative h-dvh w-full overflow-hidden">
-      <Island state={state} />
+      {plan && <Island plan={plan} state={state} />}
       <IslandHud state={state} />
       <IslandDevPanel />
     </main>
   );
 }
 
-function Island({ state }: { state: CommunityViewState }) {
+function Island({ plan, state }: { plan: IslandPlan; state: CommunityViewState }) {
   return (
-    <IslandView state={state} onTileTap={moveTo}>
+    <IslandView plan={plan} state={state} onTileTap={moveTo}>
       {/* Nickname comes from Identity (M6); a placeholder until then. */}
       <Avatar nickname="You" />
     </IslandView>

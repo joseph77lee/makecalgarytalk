@@ -15,7 +15,7 @@ interface Props {
  */
 export function BoxBatch({ parts, castShadow = true, receiveShadow = true }: Props) {
   const byLayer = useMemo(() => {
-    const m: Record<Layer, BoxPart[]> = { solid: [], glow: [], ghost: [] };
+    const m: Record<Layer, BoxPart[]> = { solid: [], glow: [], ghost: [], mist: [] };
     for (const p of parts) m[p.layer].push(p);
     return m;
   }, [parts]);
@@ -30,6 +30,11 @@ export function BoxBatch({ parts, castShadow = true, receiveShadow = true }: Pro
       {byLayer.glow.length > 0 && (
         <LayerMesh parts={byLayer.glow} castShadow={false} receiveShadow={false}>
           <meshBasicMaterial toneMapped={false} />
+        </LayerMesh>
+      )}
+      {byLayer.mist.length > 0 && (
+        <LayerMesh parts={byLayer.mist} castShadow={false} receiveShadow={false}>
+          <meshBasicMaterial transparent opacity={0.16} depthWrite={false} toneMapped={false} />
         </LayerMesh>
       )}
       {byLayer.ghost.length > 0 && (

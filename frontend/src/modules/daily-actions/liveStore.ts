@@ -1,7 +1,7 @@
 /** The app's daily-actions store, wired to Supabase, the avatar and the island. */
 import { getSupabaseClient, readSupabaseConfig } from '../common';
 import { moveTo, playWork, useAvatarStore } from '../avatar';
-import { celebrateIsland, projectSiteTile } from '../island-view';
+import { buildIslandLayout, buildingSiteTile, celebrateIsland, loadIslandPlan } from '../island-view';
 import { ensureDevSession } from './devSession';
 import { playHelpSound } from './sound';
 import { createDailyActionsStore } from './store';
@@ -43,7 +43,8 @@ export const useDailyActions = createDailyActionsStore({
     });
     const timer = setTimeout(finish, timeoutMs);
   },
-  siteTile: projectSiteTile,
+  loadPlan: loadIslandPlan,
+  siteTile: (plan, view, key) => buildingSiteTile(buildIslandLayout(plan, view), key),
   onHelped: (site) => {
     playWork(site);
     celebrateIsland(1200);

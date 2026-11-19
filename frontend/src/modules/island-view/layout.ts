@@ -1,94 +1,102 @@
 /**
- * Island layout: turns a CommunityViewState into tiles and placed objects.
+ * Island layout: stored island plan + community view state → tiles and placed objects.
  *
- * Coordinates: tile (x, z) is an integer index; an island of size N covers
- * x, z ∈ [-N/2, N/2 - 1], so the island is centred on the world origin and a
- * tile's centre is at world (x + 0.5, z + 0.5). The camera looks from +x/+z,
- * so the entrance (road end + name sign) is at the +z edge.
- *
- * Stability rule (requirement.md §7.8): every slot is defined once on the
- * largest grid and is independent of the current size. A smaller island
- * simply shows the slots that fit, so growing never moves existing things.
+ * Positions come only from the stored plan (requirement.md §7.8), so they never change.
+ * Land of stages up to `landStage` is shown; the rest of the real outline is drawn as
+ * "future land" clouds. Each lot shows the most advanced building of its growth chain
+ * (§7.6): a construction site while building, else the last built one, else a silhouette.
  */
 import { vitalityMood, type VitalityMood } from './mood';
+import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
 import {
-  BUILDING_KINDS,
-  ISLAND_SIZES,
-  PROJECT_KINDS,
-  MAX_ISLAND_SIZE,
-  MAX_MINI_VILLAGERS,
-  type BuildingKind,
-  type CommunityViewState,
-  type IslandSize,
-  type ProjectKind,
-} from './types';
+  PLAZA,
+  lotTiles,
+  stageMap,
+  tileKey,
+  walkableTiles,
+  type IslandPlan,
+  type LotRect,
+  type Tile,
+} from './plan/islandPlan';
+import { MAX_MINI_VILLAGERS, type BuildingView, type CommunityViewState, type Remaining } from './types';
 
-export interface Tile {
+export { tileKey, type Tile };
+
+export const FIXED_ASSET_KEYS = [
+  'house',
+  'tree',
+  'lamp',
+  'flowers',
+  'snow-pile',
+  'mini-villager',
+  'construction-site',
+  'silhouette',
+  'reserved-plot',
+] as const;
+export type FixedAssetKey = (typeof FIXED_ASSET_KEYS)[number];
+/** `building.<key>` draws a built building of the tree (or the placeholder for unknown keys). */
+export type AssetKey = FixedAssetKey | `building.${string}`;
+
+interface Base {
+  id: string;
+  /** World coordinates of the footprint centre (ground level y = 0). */
   x: number;
   z: number;
+  /** Land stage the object belongs to (revealed after that stage's land has risen). */
+  stage: number;
 }
 
-interface Rect {
-  x: number;
-  z: number;
+interface Footprint {
   w: number;
   d: number;
 }
 
-/** Ring 0 is the centre 2×2; a tile is on an island of size N when ring < N/2. */
-export const ringOf = ({ x, z }: Tile): number => Math.max(x >= 0 ? x : -x - 1, z >= 0 ? z : -z - 1);
-export const isOnIsland = (t: Tile, size: number): boolean => ringOf(t) < size / 2;
-export const tileKey = ({ x, z }: Tile): string => `${x},${z}`;
+export type PlacedObject =
+  | (Base & { assetKey: 'house'; houseId: string; nickname: string; activeToday: boolean; colorIndex: number })
+  | (Base & { assetKey: 'tree'; variant: number })
+  | (Base & { assetKey: 'lamp' })
+  | (Base & { assetKey: 'flowers'; variant: number })
+  | (Base & { assetKey: 'snow-pile'; variant: number })
+  | (Base & { assetKey: 'mini-villager'; index: number; startTile: Tile; colorIndex: number })
+  | (Base & Footprint & { assetKey: 'construction-site'; buildingKey: string; title: string; progress: number; level: number })
+  | (Base & Footprint & { assetKey: 'silhouette'; buildingKey: string; title: string; ready: boolean; remaining: Remaining | null })
+  | (Base & Footprint & { assetKey: 'reserved-plot'; lotKind: string })
+  | (Base &
+      Footprint & {
+        assetKey: `building.${string}`;
+        buildingKey: string;
+        title: string;
+        level: number;
+        /** Next building of the growth chain on this lot, if any (for the label). */
+        next: { title: string; remaining: Remaining | null; status: BuildingView['status'] } | null;
+      });
 
-const rectTiles = (r: Rect): Tile[] => {
-  const out: Tile[] = [];
-  for (let x = r.x; x < r.x + r.w; x++) for (let z = r.z; z < r.z + r.d; z++) out.push({ x, z });
-  return out;
-};
-const rectRing = (r: Rect): number => Math.max(...rectTiles(r).map(ringOf));
-const rectCentre = (r: Rect) => ({ x: r.x + r.w / 2, z: r.z + r.d / 2 });
+export type ObjectOf<K extends PlacedObject['assetKey']> = Extract<PlacedObject, { assetKey: K }>;
+export type BuildingObject = Extract<PlacedObject, { assetKey: `building.${string}` }>;
 
-// ---------------------------------------------------------------------------
-// Fixed layout template (all fit inside the smallest 8×8 island)
-// ---------------------------------------------------------------------------
-
-/** Centre plaza. */
-export const PLAZA: Rect = { x: -1, z: -1, w: 2, d: 2 };
-/** The road runs from the plaza to the entrance at the +z edge, two tiles wide. */
-const ROAD_XS = [-1, 0];
-
-export function isPathTile(t: Tile): boolean {
-  const inPlaza = t.x >= PLAZA.x && t.x < PLAZA.x + PLAZA.w && t.z >= PLAZA.z && t.z < PLAZA.z + PLAZA.d;
-  return inPlaza || (ROAD_XS.includes(t.x) && t.z >= PLAZA.z + PLAZA.d);
+export interface IslandTile extends Tile {
+  kind: 'grass' | 'path';
+  stage: number;
+  /** On the outer edge of the current land (draw the dirt underneath). */
+  edge: boolean;
 }
 
-/** Unlock buildings (2×2). */
-export const BUILDING_SLOTS: Record<BuildingKind, Rect> = {
-  playground: { x: -3, z: -3, w: 2, d: 2 },
-  'community-centre': { x: 1, z: -3, w: 2, d: 2 },
-  park: { x: -3, z: 1, w: 2, d: 2 },
-};
-
-/** Project construction sites (2×2), filled in the order the server lists projects. */
-export const PROJECT_SLOTS: Rect[] = [
-  { x: 1, z: 1, w: 2, d: 2 },
-  { x: -1, z: -3, w: 2, d: 2 },
-  { x: 1, z: -1, w: 2, d: 2 },
-];
-
-/** Tile in front of project site `index` (the avatar walks next to it to help). */
-export function projectSiteTile(index: number): Tile {
-  const r = PROJECT_SLOTS[index];
-  if (!r) throw new RangeError(`no project slot ${index}`);
-  return { x: r.x + r.w - 1, z: r.z + r.d - 1 };
+export interface IslandLayout {
+  landStage: number;
+  mood: VitalityMood;
+  tiles: IslandTile[];
+  /** The rest of the real outline (future land). */
+  futureTiles: Tile[];
+  objects: PlacedObject[];
+  walkable: Tile[];
+  /** Radius (tiles) of the current land around the plaza, for camera fitting. */
+  landRadius: number;
+  cameraAzimuth: number;
+  hiddenHouseCount: number;
 }
 
-// ---------------------------------------------------------------------------
-// Global slot tables (computed once for the largest island)
-// ---------------------------------------------------------------------------
-
-/** Deterministic hash → [0, 1). Same tile always gets the same tree/flowers. */
-function hash01(a: number, b: number, salt: number): number {
+/** Deterministic hash → [0, 1). */
+export function hash01(a: number, b: number, salt: number): number {
   let h = Math.imul(a, 374761393) ^ Math.imul(b, 668265263) ^ Math.imul(salt, 1442695041);
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   h ^= h >>> 16;
@@ -101,203 +109,132 @@ export function hashString(s: string): number {
   return h >>> 0;
 }
 
-const half = MAX_ISLAND_SIZE / 2;
-/** All tiles of the largest island, ordered from the centre outward (ring, distance, angle). */
-const ALL_TILES: Tile[] = (() => {
-  const tiles: Tile[] = [];
-  for (let x = -half; x < half; x++) for (let z = -half; z < half; z++) tiles.push({ x, z });
-  const dist = (t: Tile) => Math.hypot(t.x + 0.5, t.z + 0.5);
-  const angle = (t: Tile) => Math.atan2(t.z + 0.5, t.x + 0.5);
-  return tiles.sort((a, b) => ringOf(a) - ringOf(b) || dist(a) - dist(b) || angle(a) - angle(b));
-})();
+const centreOf = (r: LotRect) => ({ x: r.x + r.w / 2, z: r.z + r.d / 2 });
+const N4: Tile[] = [
+  { x: 1, z: 0 },
+  { x: -1, z: 0 },
+  { x: 0, z: 1 },
+  { x: 0, z: -1 },
+];
 
-const BASE_FIXED_TILES = new Set([...Object.values(BUILDING_SLOTS), ...PROJECT_SLOTS].flatMap(rectTiles).map(tileKey));
+export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): IslandLayout {
+  const landStage = state.landStage;
+  const mood: VitalityMood = state.vitality === null ? 'normal' : vitalityMood(state.vitality);
+  const stages = stageMap(plan);
+  const stageOf = (t: Tile) => stages.get(tileKey(t)) ?? 99;
+  const on = (t: Tile) => stageOf(t) <= landStage;
+  const byKey = new Map(state.buildings.map((b) => [b.key, b]));
+  const objects: PlacedObject[] = [];
+  const occupied = new Set<string>();
 
-const N4 = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-] as const;
-const N8 = [...N4, [1, 1], [1, -1], [-1, 1], [-1, -1]] as const;
-const neighbours = (t: Tile, dirs: readonly (readonly [number, number])[]): Tile[] =>
-  dirs.map(([dx, dz]) => ({ x: t.x + dx, z: t.z + dz }));
+  // Terrain.
+  const pathKeys = new Set([...PLAZA, ...plan.paths].map(tileKey));
+  const land = plan.tiles.filter(on);
+  const landKeys = new Set(land.map(tileKey));
+  const tiles: IslandTile[] = land.map((t) => ({
+    x: t.x,
+    z: t.z,
+    stage: t.stage,
+    kind: pathKeys.has(tileKey(t)) ? 'path' : 'grass',
+    edge: N4.some((d) => !landKeys.has(tileKey({ x: t.x + d.x, z: t.z + d.z }))),
+  }));
+  const futureTiles = plan.tiles.filter((t) => !on(t)).map(({ x, z }) => ({ x, z }));
 
-const isFree = (t: Tile) => !isPathTile(t) && !FIXED_TILES.has(tileKey(t));
-const PLAZA_TILES = rectTiles(PLAZA);
-
-/**
- * Reachability guard: with `blocked` tiles filled, every open tile of an island
- * of `size` must be reachable from the plaza, and every house lot must keep a
- * reachable neighbour (its door). Lots count as blocked here, so the island stays
- * walkable however many houses are built.
- */
-function staysReachable(blocked: Set<string>, lots: Tile[], size: number): boolean {
-  const seen = new Set<string>(PLAZA_TILES.map(tileKey));
-  const queue = [...PLAZA_TILES];
-  while (queue.length > 0) {
-    const t = queue.pop() as Tile;
-    for (const n of neighbours(t, N4)) {
-      const k = tileKey(n);
-      if (!seen.has(k) && isOnIsland(n, size) && !blocked.has(k)) {
-        seen.add(k);
-        queue.push(n);
-      }
+  // Lots.
+  const freeSpares: { key: string; rect: LotRect }[] = [];
+  const usedLots: string[] = [];
+  const freeMainStreet: { key: string; rect: LotRect }[] = [];
+  for (const [lotKey, spec] of Object.entries(BUILDING_TREE.lots)) {
+    const rect = plan.lots[lotKey];
+    const rTiles = lotTiles(rect);
+    const stage = Math.max(...rTiles.map(stageOf), spec.landStage);
+    const base = { ...centreOf(rect), w: rect.w, d: rect.d, stage };
+    // Lots not open yet, spare lots and lots without a building yet stay plain (walkable) land.
+    if (spec.landStage > landStage || !rTiles.every(on)) continue;
+    if (spec.kind === 'spare') {
+      freeSpares.push({ key: lotKey, rect });
+      continue;
+    }
+    if (spec.kind === 'main-street') {
+      // Faint markers only; shops arrive in Phase 4 (requirement.md §22.4). Also a fallback
+      // spot for unknown buildings when the spare lots run out.
+      freeMainStreet.push({ key: lotKey, rect });
+      continue;
+    }
+    const chain = chainOnLot(lotKey);
+    if (chain.length === 0) continue; // reserved for a later building (e.g. the Phase 3 landmark)
+    usedLots.push(lotKey);
+    if (spec.kind !== 'entrance') rTiles.forEach((t) => occupied.add(tileKey(t)));
+    const views = chain.map((b) => byKey.get(b.key));
+    const buildingIdx = views.findIndex((v) => v?.status === 'building');
+    let builtIdx = -1;
+    views.forEach((v, i) => {
+      if (v?.status === 'built') builtIdx = i;
+    });
+    if (buildingIdx >= 0) {
+      const v = views[buildingIdx] as BuildingView;
+      objects.push({ ...base, id: `lot:${lotKey}`, assetKey: 'construction-site', buildingKey: v.key, title: v.title, progress: v.progress, level: v.level });
+    } else if (builtIdx >= 0) {
+      const v = views[builtIdx] as BuildingView;
+      const nextSpec = chain[builtIdx + 1];
+      const nextView = nextSpec ? byKey.get(nextSpec.key) : undefined;
+      objects.push({
+        ...base,
+        id: `lot:${lotKey}`,
+        assetKey: `building.${v.key}`,
+        buildingKey: v.key,
+        title: v.title,
+        level: v.level,
+        next: nextSpec ? { title: nextSpec.name, remaining: nextView?.remaining ?? null, status: nextView?.status ?? 'locked' } : null,
+      });
+    } else {
+      const first = chain[0];
+      const v = views[0];
+      objects.push({
+        ...base,
+        id: `lot:${lotKey}`,
+        assetKey: 'silhouette',
+        buildingKey: first.key,
+        title: first.name,
+        ready: v?.status === 'opened',
+        remaining: v?.remaining ?? null,
+      });
     }
   }
-  const openTiles = size * size - [...blocked].filter((k) => {
-    const [x, z] = k.split(',').map(Number);
-    return isOnIsland({ x, z }, size);
-  }).length;
-  if (seen.size !== openTiles) return false;
-  return lots.every((l) => !isOnIsland(l, size) || neighbours(l, N4).some((n) => seen.has(tileKey(n))));
-}
 
-/** Island sizes on which tile t exists. */
-const sizesContaining = (t: Tile) => ISLAND_SIZES.filter((s) => isOnIsland(t, s));
-
-/**
- * Showcase: one 1×1 spot per project kind (catalog order) for the miniature of its
- * completed project, in the front row on both sides of the entrance road (8×8 edge).
- * Reserved (no houses or trees) but NOT blocking: like flowers and lamps, characters may
- * walk over them. The smallest island's edge is a one-tile corridor, so blocking spots
- * there would cut paths or cost house lots.
- */
-export const SHOWCASE_SLOTS: Record<ProjectKind, Tile> = {
-  'ice-rink': { x: -2, z: 3 },
-  'flower-path': { x: 1, z: 3 },
-  'holiday-decorations': { x: -3, z: 3 },
-  'snowman-garden': { x: 2, z: 3 },
-  'lantern-street': { x: -4, z: 3 },
-  'bird-feeders': { x: 3, z: 3 },
-};
-
-const FIXED_TILES = new Set([...BASE_FIXED_TILES, ...Object.values(SHOWCASE_SLOTS).map(tileKey)]);
-
-/** House lots: free tiles, centre outward, never touching another lot (8-neighbours). */
-const HOUSE_SLOTS: Tile[] = [];
-const BLOCKED_BY_LOTS = new Set(BASE_FIXED_TILES);
-for (const t of ALL_TILES) {
-  const k = tileKey(t);
-  if (!isFree(t) || neighbours(t, N8).some((n) => BLOCKED_BY_LOTS.has(tileKey(n)) && !BASE_FIXED_TILES.has(tileKey(n)))) {
-    continue;
+  // Buildings the tree does not know yet: placeholder on spare lots (requirement.md §7.6b).
+  const treeKeys = new Set(BUILDING_TREE.buildings.map((b) => b.key));
+  let hiddenUnknown = 0;
+  for (const b of state.buildings) {
+    if (treeKeys.has(b.key) || (b.status !== 'building' && b.status !== 'built')) continue;
+    const spare = freeSpares.shift() ?? freeMainStreet.shift();
+    if (!spare) {
+      hiddenUnknown++;
+      continue;
+    }
+    const base = { ...centreOf(spare.rect), w: spare.rect.w, d: spare.rect.d, stage: BUILDING_TREE.lots[spare.key].landStage };
+    usedLots.push(spare.key);
+    lotTiles(spare.rect).forEach((t) => occupied.add(tileKey(t)));
+    objects.push(
+      b.status === 'building'
+        ? { ...base, id: `lot:${spare.key}`, assetKey: 'construction-site', buildingKey: b.key, title: b.title, progress: b.progress, level: b.level }
+        : { ...base, id: `lot:${spare.key}`, assetKey: 'building.placeholder', buildingKey: b.key, title: b.title, level: b.level, next: null },
+    );
   }
-  BLOCKED_BY_LOTS.add(k);
-  if (sizesContaining(t).every((s) => staysReachable(BLOCKED_BY_LOTS, [...HOUSE_SLOTS, t], s))) {
-    HOUSE_SLOTS.push(t);
-  } else {
-    BLOCKED_BY_LOTS.delete(k);
+
+  for (const m of freeMainStreet) {
+    objects.push({ ...centreOf(m.rect), w: m.rect.w, d: m.rect.d, stage: BUILDING_TREE.lots[m.key].landStage, id: `lot:${m.key}`, assetKey: 'reserved-plot', lotKind: 'main-street' });
   }
-}
-const HOUSE_SLOT_KEYS = new Set(HOUSE_SLOTS.map(tileKey));
 
-/** Trees: some free tiles that are not lots, off the road edges, never cutting off a path. */
-const TREE_TILES: Tile[] = [];
-const BLOCKED_BY_TREES = new Set(BLOCKED_BY_LOTS);
-for (const t of ALL_TILES) {
-  const k = tileKey(t);
-  if (!isFree(t) || HOUSE_SLOT_KEYS.has(k) || hash01(t.x, t.z, 1) >= 0.34) continue;
-  if (neighbours(t, N4).some(isPathTile)) continue;
-  BLOCKED_BY_TREES.add(k);
-  if (sizesContaining(t).every((s) => staysReachable(BLOCKED_BY_TREES, HOUSE_SLOTS, s))) {
-    TREE_TILES.push(t);
-  } else {
-    BLOCKED_BY_TREES.delete(k);
+  // Pathway lights (a building without a lot): lamps along the shown paths once built.
+  if (byKey.get('pathway-lights')?.status === 'built') {
+    plan.paths.filter(on).forEach((t, i) => {
+      if (i % 3 === 1) objects.push({ assetKey: 'lamp', id: `lamp:${tileKey(t)}`, x: t.x + 0.5, z: t.z + 0.5, stage: stageOf(t) });
+    });
   }
-}
-const TREE_KEYS = new Set(TREE_TILES.map(tileKey));
 
-/** Mood decorations (flowers when lively, snow piles when gloomy); never block walking. */
-const DECOR_TILES: Tile[] = ALL_TILES.filter(
-  (t) => isFree(t) && !HOUSE_SLOT_KEYS.has(tileKey(t)) && !TREE_KEYS.has(tileKey(t)) && hash01(t.x, t.z, 2) < 0.22,
-);
-
-// ---------------------------------------------------------------------------
-// Layout output
-// ---------------------------------------------------------------------------
-
-export const ASSET_KEYS = [
-  'house',
-  'building.playground',
-  'building.community-centre',
-  'building.park',
-  'silhouette',
-  'construction-site',
-  ...PROJECT_KINDS.map((k) => `showcase.${k}` as const),
-  'tree',
-  'sign',
-  'lamp',
-  'flowers',
-  'snow-pile',
-  'mini-villager',
-] as const;
-export type AssetKey = (typeof ASSET_KEYS)[number];
-
-interface Base {
-  id: string;
-  /** World coordinates of the footprint centre (ground level y = 0). */
-  x: number;
-  z: number;
-  /** Outermost ring the object touches; used to reveal objects after growth. */
-  ring: number;
-}
-
-export type PlacedObject =
-  | (Base & { assetKey: 'house'; houseId: string; nickname: string; activeToday: boolean; colorIndex: number })
-  | (Base & { assetKey: `building.${BuildingKind}` })
-  | (Base & { assetKey: 'silhouette'; target: BuildingKind; remaining: { streakDays: number; residents: number } | null })
-  | (Base & { assetKey: 'construction-site'; stage: 'scaffolding' | 'frame'; progress: number; title: string; level: number })
-  | (Base & { assetKey: `showcase.${ProjectKind}`; kind: ProjectKind; level: number })
-  | (Base & { assetKey: 'tree'; variant: number })
-  | (Base & { assetKey: 'sign'; name: string })
-  | (Base & { assetKey: 'lamp' })
-  | (Base & { assetKey: 'flowers' | 'snow-pile'; variant: number })
-  | (Base & { assetKey: 'mini-villager'; index: number; startTile: Tile; colorIndex: number });
-
-/** The placed-object type for one asset key. */
-export type ObjectOf<K extends AssetKey> = PlacedObject extends infer P
-  ? P extends { assetKey: infer A }
-    ? K extends A
-      ? P & { assetKey: K }
-      : never
-    : never
-  : never;
-
-export interface IslandTile extends Tile {
-  kind: 'grass' | 'path';
-  ring: number;
-}
-
-export interface IslandLayout {
-  size: IslandSize;
-  mood: VitalityMood;
-  tiles: IslandTile[];
-  objects: PlacedObject[];
-  /** Tiles reachable on foot from the plaza (villagers now, avatar pathfinding in M2). */
-  walkable: Tile[];
-  /** Houses that did not fit (only possible on the largest island). */
-  hiddenHouseCount: number;
-}
-
-/** Number of house lots on an island of this size. */
-export const houseCapacity = (size: number): number => HOUSE_SLOTS.filter((t) => isOnIsland(t, size)).length;
-
-export function buildIslandLayout(state: CommunityViewState): IslandLayout {
-  const size = state.islandSize;
-  const mood = state.vitality === null ? 'normal' : vitalityMood(state.vitality);
-  const on = (t: Tile) => isOnIsland(t, size);
-  const objects: PlacedObject[] = [];
-  const blocked = new Set<string>();
-  const block = (tiles: Tile[]) => tiles.forEach((t) => blocked.add(tileKey(t)));
-
-  const tiles: IslandTile[] = ALL_TILES.filter(on).map((t) => ({
-    ...t,
-    kind: isPathTile(t) ? 'path' : 'grass',
-    ring: ringOf(t),
-  }));
-
-  // Houses: one per shown resident, centre outward.
-  const lots = HOUSE_SLOTS.filter(on);
+  // Houses: residents take the plan's house lots in order.
+  const lots = plan.houses.filter(on);
   state.houses.slice(0, lots.length).forEach((h, i) => {
     const t = lots[i];
     objects.push({
@@ -306,137 +243,63 @@ export function buildIslandLayout(state: CommunityViewState): IslandLayout {
       houseId: h.id,
       x: t.x + 0.5,
       z: t.z + 0.5,
-      ring: ringOf(t),
+      stage: stageOf(t),
       nickname: h.nickname,
       activeToday: h.activeToday,
       colorIndex: hashString(h.id),
     });
-    block([t]);
+    occupied.add(tileKey(t));
   });
+  const houseLotKeys = new Set(plan.houses.map(tileKey));
 
-  // Unlock buildings: real building when unlocked, faded silhouette when locked.
-  for (const kind of BUILDING_KINDS) {
-    const rect = BUILDING_SLOTS[kind];
-    const b = state.buildings[kind];
-    const base = { id: `building:${kind}`, ...rectCentre(rect), ring: rectRing(rect) };
-    objects.push(
-      b.unlocked
-        ? { ...base, assetKey: `building.${kind}` }
-        : { ...base, assetKey: 'silhouette', target: kind, remaining: b.remaining },
-    );
-    block(rectTiles(rect));
+  for (const t of plan.trees.filter(on)) {
+    objects.push({ assetKey: 'tree', id: `tree:${tileKey(t)}`, x: t.x + 0.5, z: t.z + 0.5, stage: stageOf(t), variant: Math.floor(hash01(t.x, t.z, 3) * 3) });
+    occupied.add(tileKey(t));
   }
 
-  // Active projects: construction sites in the order the server lists them.
-  state.projects.slice(0, PROJECT_SLOTS.length).forEach((p, i) => {
-    const rect = PROJECT_SLOTS[i];
-    objects.push({
-      id: `project:${p.id}`,
-      ...rectCentre(rect),
-      ring: rectRing(rect),
-      assetKey: 'construction-site',
-      stage: p.stage,
-      progress: p.progress,
-      title: p.title,
-      level: p.level,
-    });
-    block(rectTiles(rect));
-  });
-
-  // Completed projects: one miniature per kind on its showcase spot.
-  for (const item of state.showcase) {
-    const t = SHOWCASE_SLOTS[item.kind];
-    objects.push({
-      id: `showcase:${item.kind}`,
-      x: t.x + 0.5,
-      z: t.z + 0.5,
-      ring: ringOf(t),
-      assetKey: `showcase.${item.kind}`,
-      kind: item.kind,
-      level: item.level,
-    });
-    // Not blocking (see SHOWCASE_SLOTS).
-  }
-
-  for (const t of TREE_TILES.filter(on)) {
-    objects.push({
-      assetKey: 'tree',
-      id: `tree:${tileKey(t)}`,
-      x: t.x + 0.5,
-      z: t.z + 0.5,
-      ring: ringOf(t),
-      variant: Math.floor(hash01(t.x, t.z, 3) * 3),
-    });
-    block([t]);
-  }
-
+  // Mood decorations on free grass (never blocking).
   if (mood !== 'normal') {
-    for (const t of DECOR_TILES.filter(on)) {
-      objects.push({
-        assetKey: mood === 'lively' ? 'flowers' : 'snow-pile',
-        id: `decor:${tileKey(t)}`,
-        x: t.x + 0.5,
-        z: t.z + 0.5,
-        ring: ringOf(t),
-        variant: Math.floor(hash01(t.x, t.z, 4) * 4),
-      });
+    for (const t of land) {
+      const k = tileKey(t);
+      if (pathKeys.has(k) || occupied.has(k) || houseLotKeys.has(k) || hash01(t.x, t.z, 2) >= 0.12) continue;
+      const decor = { id: `decor:${k}`, x: t.x + 0.5, z: t.z + 0.5, stage: t.stage, variant: Math.floor(hash01(t.x, t.z, 4) * 4) };
+      objects.push(mood === 'lively' ? { ...decor, assetKey: 'flowers' } : { ...decor, assetKey: 'snow-pile' });
     }
   }
 
-  // Entrance arch with the community name at the road end (+z edge).
-  const lastRow = size / 2 - 1;
-  objects.push({ assetKey: 'sign', id: 'sign', x: 0, z: lastRow + 0.5, ring: lastRow, name: state.communityName });
+  const walkable = walkableTiles(plan, landStage, Math.min(state.houses.length, lots.length), usedLots);
 
-  // Lamps at the back of the plaza and along the road.
-  const lampAt = (x: number, z: number, ring: number) =>
-    objects.push({ assetKey: 'lamp', id: `lamp:${x},${z}`, x, z, ring });
-  lampAt(-0.92, -0.92, 0);
-  lampAt(0.92, -0.92, 0);
-  for (let z = 2; z < lastRow; z += 3) {
-    lampAt(-0.92, z + 0.5, ringOf({ x: 0, z }));
-    lampAt(0.92, z + 0.5, ringOf({ x: 0, z }));
-  }
-
-  // Walkable = reachable from the plaza without crossing blocked tiles.
-  const walkable: Tile[] = [];
-  const seen = new Set<string>();
-  const queue: Tile[] = rectTiles(PLAZA);
-  queue.forEach((t) => seen.add(tileKey(t)));
-  while (queue.length > 0) {
-    const t = queue.shift() as Tile;
-    walkable.push(t);
-    for (const n of neighbours(t, N4)) {
-      const k = tileKey(n);
-      if (!seen.has(k) && on(n) && !blocked.has(k)) {
-        seen.add(k);
-        queue.push(n);
-      }
-    }
-  }
-
-  // Mini villagers start on path tiles (spread deterministically).
-  const pathTiles = walkable.filter(isPathTile);
+  // Mini villagers start on the paths and plaza.
+  const walkKeys = new Set(walkable.map(tileKey));
+  const pathTiles = [...PLAZA, ...plan.paths].filter((t) => walkKeys.has(tileKey(t)));
   const villagers = Math.min(state.miniVillagerCount, MAX_MINI_VILLAGERS);
-  for (let i = 0; i < villagers; i++) {
+  for (let i = 0; i < villagers && pathTiles.length > 0; i++) {
     const t = pathTiles[Math.floor(hash01(i, villagers, 5) * pathTiles.length)];
-    objects.push({
-      assetKey: 'mini-villager',
-      id: `villager:${i}`,
-      x: t.x + 0.5,
-      z: t.z + 0.5,
-      ring: ringOf(t),
-      index: i,
-      startTile: t,
-      colorIndex: i,
-    });
+    objects.push({ assetKey: 'mini-villager', id: `villager:${i}`, x: t.x + 0.5, z: t.z + 0.5, stage: stageOf(t), index: i, startTile: t, colorIndex: i });
   }
 
+  const landRadius = Math.max(4, ...land.map((t) => Math.hypot(t.x + 0.5, t.z + 0.5)));
   return {
-    size,
+    landStage,
     mood,
     tiles,
+    futureTiles,
     objects,
     walkable,
-    hiddenHouseCount: Math.max(0, state.houses.length - lots.length),
+    landRadius,
+    cameraAzimuth: plan.cameraAzimuth,
+    hiddenHouseCount: Math.max(0, state.houses.length - lots.length) + hiddenUnknown,
   };
+}
+
+/** Tile to walk to when helping a building (the avatar stops next to its lot). */
+export function buildingSiteTile(layout: IslandLayout, buildingKey: string): Tile | null {
+  const chainLot = BUILDING_TREE.buildings.find((b) => b.key === buildingKey)?.lot;
+  const o = layout.objects.find(
+    (x) => ('buildingKey' in x && x.buildingKey === buildingKey) || (chainLot !== undefined && chainLot !== null && x.id === `lot:${chainLot}`),
+  );
+  if (!o) return null;
+  const w = 'w' in o ? o.w : 1;
+  const d = 'd' in o ? o.d : 1;
+  return { x: Math.floor(o.x - w / 2 + w - 1), z: Math.floor(o.z - d / 2 + d - 1) };
 }

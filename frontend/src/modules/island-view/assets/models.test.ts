@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ASSET_KEYS, buildIslandLayout, type ObjectOf } from '../layout';
-import mock from '../mockCommunityState.json';
+import { FIXED_ASSET_KEYS, type BuildingObject, type ObjectOf } from '../layout';
 import { MOOD_PALETTES } from '../mood';
-import { parseCommunityViewState } from '../parseState';
+import { BUILDING_TREE } from '../plan/buildingTree';
 import { fitZoom } from '../scene/camera';
 import { remainingText } from '../scene/labelText';
-import { terrainParts } from '../scene/terrainParts';
+import { futureLandParts, terrainParts } from '../scene/terrainParts';
 import { asGhost, box } from './boxes';
-import { constructionSite, house, lamp, silhouette, tree, type BuildCtx } from './models';
+import { building, constructionSite, house, reservedPlot, silhouette, tree, type BuildCtx } from './models';
 
 const ctx = (mood: 'lively' | 'normal' | 'gloomy'): BuildCtx => ({ mood, palette: MOOD_PALETTES[mood] });
 const houseItem = (activeToday: boolean): ObjectOf<'house'> => ({
@@ -16,7 +15,7 @@ const houseItem = (activeToday: boolean): ObjectOf<'house'> => ({
   houseId: 'a',
   x: 0.5,
   z: 0.5,
-  ring: 0,
+  stage: 0,
   nickname: 'A',
   activeToday,
   colorIndex: 0,
@@ -39,52 +38,82 @@ describe('models', () => {
     expect(house(houseItem(false)).filter((p) => p.layer === 'glow')).toHaveLength(0);
   });
 
-  it('silhouettes are entirely translucent ghosts of the real building', () => {
+  it('gloomy trees carry snow, others do not', () => {
+    const t: ObjectOf<'tree'> = { assetKey: 'tree', id: 't', x: 0, z: 0, stage: 0, variant: 0 };
+    const snow = (mood: 'lively' | 'gloomy') => tree(t, ctx(mood)).filter((p) => p.c === '#f6f8fb');
+    expect(snow('gloomy')).toHaveLength(1);
+    expect(snow('lively')).toHaveLength(0);
+  });
+
+  const built = (buildingKey: string, w: number, d: number, level = 1): BuildingObject => ({
+    assetKey: `building.${buildingKey}`, id: 'b', x: 0, z: 0, stage: 0, w, d, buildingKey, title: buildingKey, level, next: null,
+  });
+
+  it.each(BUILDING_TREE.buildings.filter((b) => b.lot).map((b) => [b.key, BUILDING_TREE.lots[b.lot as string].size] as const))(
+    '%s has a model that stays inside its lot',
+    (key, [w, d]) => {
+      const parts = building(built(key, w, d), ctx('normal'));
+      expect(parts.length).toBeGreaterThan(2);
+      for (const p of parts) {
+        expect(Math.abs(p.p[0]) + p.s[0] / 2, `${key} x`).toBeLessThanOrEqual(w / 2 + 0.75);
+        expect(Math.abs(p.p[2]) + p.s[2] / 2, `${key} z`).toBeLessThanOrEqual(d / 2 + 0.75);
+      }
+    },
+  );
+
+  it('upgrades add one gold marker per level (max 4)', () => {
+    const markers = (level: number) => building(built('fire-pit', 3, 3, level), ctx('normal')).filter((p) => p.c === '#f2c94c').length;
+    expect([markers(1), markers(2), markers(3), markers(9)]).toEqual([0, 1, 2, 4]);
+  });
+
+  it('unknown buildings get the placeholder model', () => {
+    expect(building(built('pickleball-court', 2, 2), ctx('normal')).length).toBeGreaterThan(0);
+  });
+
+  it('silhouettes are translucent ghosts of the real building', () => {
     const parts = silhouette(
-      { assetKey: 'silhouette', id: 's', x: 0, z: 0, ring: 0, target: 'community-centre', remaining: { streakDays: 1, residents: 0 } },
+      { assetKey: 'silhouette', id: 's', x: 0, z: 0, stage: 0, w: 3, d: 3, buildingKey: 'fire-pit', title: 'Fire pit', ready: false, remaining: null },
       ctx('normal'),
     );
     expect(parts.length).toBeGreaterThan(5);
     expect(parts.every((p) => p.layer === 'ghost')).toBe(true);
   });
 
-  it('gloomy trees carry snow, others do not', () => {
-    const t: ObjectOf<'tree'> = { assetKey: 'tree', id: 't', x: 0, z: 0, ring: 0, variant: 0 };
-    const snow = (mood: 'lively' | 'gloomy') => tree(t, ctx(mood)).filter((p) => p.c === '#f6f8fb');
-    expect(snow('gloomy')).toHaveLength(1);
-    expect(snow('lively')).toHaveLength(0);
-  });
-
-  it('lamps glow only when lively', () => {
-    const l: ObjectOf<'lamp'> = { assetKey: 'lamp', id: 'l', x: 0, z: 0, ring: 0 };
-    expect(lamp(l, ctx('lively')).some((p) => p.layer === 'glow')).toBe(true);
-    expect(lamp(l, ctx('normal')).some((p) => p.layer === 'glow')).toBe(false);
-  });
-
-  it('the frame stage adds a frame on top of the scaffolding', () => {
-    const site = (stage: 'scaffolding' | 'frame'): ObjectOf<'construction-site'> => ({
-      assetKey: 'construction-site', id: 'c', x: 0, z: 0, ring: 0, stage, progress: 0.5, title: 'T', level: 1,
+  it('construction sites fit their lot and add a frame from half progress', () => {
+    const site = (progress: number): ObjectOf<'construction-site'> => ({
+      assetKey: 'construction-site', id: 'c', x: 0, z: 0, stage: 0, w: 3, d: 2, buildingKey: 'frozen-pond', title: 'T', progress, level: 1,
     });
-    expect(constructionSite(site('frame')).length).toBeGreaterThan(constructionSite(site('scaffolding')).length);
+    expect(constructionSite(site(0.6)).length).toBeGreaterThan(constructionSite(site(0.2)).length);
+  });
+
+  it('reserved plots mark Main Street in blue and future buildings in orange', () => {
+    const plot = (lotKind: string) => reservedPlot({ assetKey: 'reserved-plot', id: 'p', x: 0, z: 0, stage: 0, w: 2, d: 1, lotKind });
+    expect(plot('main-street').some((p) => p.c === '#8ec5ea')).toBe(true);
+    expect(plot('spare').some((p) => p.c === '#f39a52')).toBe(true);
   });
 });
 
 describe('registry', () => {
-  it('has a model for every asset key the layout can emit', async () => {
-    // Imported lazily: the registry pulls in React Three Fiber components.
-    const { ASSET_REGISTRY } = await import('./registry');
-    for (const key of ASSET_KEYS) expect(ASSET_REGISTRY[key], key).toBeTypeOf('function');
+  it('has a component for every fixed asset key and one for buildings', async () => {
+    const { ASSET_REGISTRY, BuildingAsset } = await import('./registry');
+    for (const key of FIXED_ASSET_KEYS) expect(ASSET_REGISTRY[key], key).toBeTypeOf('function');
+    expect(BuildingAsset).toBeTypeOf('function');
   });
 });
 
 describe('terrain', () => {
-  it('draws one top tile per tile and dirt only from the given ring', () => {
-    const r = parseCommunityViewState(mock);
-    if (!r.ok) throw new Error('mock invalid');
-    const l = buildIslandLayout({ ...r.state, islandSize: 8 });
-    const parts = terrainParts(l.tiles, MOOD_PALETTES.normal, 3);
-    const edgeTiles = l.tiles.filter((t) => t.ring === 3).length;
-    expect(parts).toHaveLength(64 + edgeTiles * 2);
+  it('draws one top tile per tile and dirt only under edge tiles', () => {
+    const tiles = [
+      { x: 0, z: 0, kind: 'grass' as const },
+      { x: 1, z: 0, kind: 'path' as const },
+    ];
+    const parts = terrainParts(tiles, new Set(['0,0', '1,0']), MOOD_PALETTES.normal);
+    expect(parts).toHaveLength(2 + 2 * 2); // both are edge tiles
+    expect(terrainParts(tiles, null, MOOD_PALETTES.normal)).toHaveLength(6);
+  });
+
+  it('future land is a faint mist layer', () => {
+    expect(futureLandParts([{ x: 3, z: 4 }]).every((p) => p.layer === 'mist')).toBe(true);
   });
 });
 
@@ -102,10 +131,10 @@ describe('camera fit', () => {
 
 describe('remainingText (requirement.md §7.6)', () => {
   it.each([
-    [{ streakDays: 1, residents: 0 }, '1 more streak day'],
-    [{ streakDays: 4, residents: 1 }, '4 more streak days · 1 more resident'],
-    [{ streakDays: 0, residents: 2 }, '2 more residents'],
-    [{ streakDays: 0, residents: 0 }, 'Unlocks tomorrow'],
+    [{ streakDays: 1, residents: 0, requires: [] }, '1 more streak day'],
+    [{ streakDays: 4, residents: 1, requires: [] }, '1 more neighbour · 4 more streak days'],
+    [{ streakDays: 0, residents: 2, requires: ['frozen-pond'] }, 'Build the Frozen pond first · 2 more neighbours'],
+    [{ streakDays: 0, residents: 0, requires: [] }, 'Opens tomorrow'],
   ])('%o → %s', (remaining, text) => {
     expect(remainingText(remaining)).toBe(text);
   });
@@ -135,5 +164,27 @@ describe('villager personalities', () => {
 
   it('even the fastest villager walks slower than one tile per second', () => {
     expect(MOOD_PALETTES.lively.villagerSpeed * 1.25).toBeLessThan(1);
+  });
+});
+
+describe('camera frame', () => {
+  it('aims at the centre of the tiles and measures them on screen', async () => {
+    const { viewFrame, zoomForFrame } = await import('../scene/camera');
+    const tiles = Array.from({ length: 10 }, (_, i) => ({ x: i + 20, z: 0 }));
+    const f = viewFrame(tiles, 0); // camera from +z: x runs across the screen
+    expect(f.cx).toBeCloseTo(25);
+    expect(f.cz).toBeCloseTo(0.5);
+    expect(f.width).toBeCloseTo(10);
+    expect(zoomForFrame(f, 390, 844)).toBeCloseTo((390 * 0.88) / 10);
+    expect(viewFrame([], 0)).toEqual({ cx: 0, cz: 0, width: 8, height: 8 });
+  });
+});
+
+describe('screen azimuth', () => {
+  it('keeps the stored angle on portrait screens and for compact shapes; turns 90° on landscape', async () => {
+    const { screenAzimuth } = await import('../scene/camera');
+    expect(screenAzimuth(1.4, false)).toBe(1.4);
+    expect(screenAzimuth(Math.PI / 4, true)).toBe(Math.PI / 4);
+    expect(screenAzimuth(1.4, true)).toBeCloseTo(1.4 - Math.PI / 2);
   });
 });

@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
 | Based on | `requirement.md` v1.18 |
-| Current module | M1 🔁 Island View rework (in progress; M4 ✅ Done); then M3 🔁, then M5 |
+| Current module | M1 🔁 Island View rework (🟨 Ready for playtest); then M3 🔁, then M5 |
 
 ---
 
@@ -39,7 +39,7 @@
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
-| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🔁 |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🟨 |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | 🔁 |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
@@ -101,18 +101,28 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
   - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
-### M1 — Island View ⭐ 🔁
+### M1 — Island View ⭐ 🟨 (rework)
 **Reopened 2026-11-19** (`requirement.md` v1.18 §7.6–7.8, §20.4; branch `fix/m1-real-shape-islands`, after M4 is merged). The original items below stay ticked; the rework:
 - **In scope (rework)**
-  - [ ] Island from the **real community boundary**: rasterize to ~1,024 tiles (equal max land), smooth thin spurs, keep the largest part, centre = farthest from the edge, reveal order by walking distance; land tiers 64 / 144 / 256 / 400 / 676 / all
-  - [ ] **Whole outline visible from day one** (clouds / translucent future land); new land rises inside it
-  - [ ] **Lot plan per community generated once and stored** (static JSON, served like other static data): tree building lots reserved at final size, house lots, spare lots, Main Street lots, paths; never regenerated for existing communities
-  - [ ] Box models for the tree buildings (welcome sign → gateway arch, fire pit → warming hut → community hall, frozen pond → skating rink → lit hockey rink, playground, sledding hill, dog park, pathway lights, community garden, neighbourhood park) and a **generic placeholder** for unknown building keys; remove the M4 showcase miniatures
-  - [ ] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land
+  - [x] Island from the **real community boundary**: rasterize to ~1,024 tiles (equal max land), smooth thin spurs, keep the largest part, centre = farthest from the edge, reveal order by walking distance; land tiers 64 / 144 / 256 / 400 / 676 / all
+  - [x] **Whole outline visible from day one** (clouds / translucent future land); new land rises inside it
+  - [x] **Lot plan per community generated once and stored** (static JSON, served like other static data): tree building lots reserved at final size, house lots, spare lots, Main Street lots, paths; never regenerated for existing communities
+  - [x] Box models for the tree buildings (welcome sign → gateway arch, fire pit → warming hut → community hall, frozen pond → skating rink → lit hockey rink, playground, sledding hill, dog park, pathway lights, community garden, neighbourhood park) and a **generic placeholder** for unknown building keys; remove the M4 showcase miniatures
+  - [x] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land
 - **Definition of Done (rework)**
-  - [ ] all 223 communities produce valid islands (automated checks: one connected island per stage, every lot fits and is reachable, positions identical across stages)
-  - [ ] phone-size check of a few unusual shapes (Beltline, Lower Mount Royal, Diamond Cove, Bowness)
+  - [x] all 223 communities produce valid islands (automated checks: one connected island per stage, every lot fits and is reachable, positions identical across stages)
+  - [x] phone-size check of a few unusual shapes (Beltline and Diamond Cove on a phone, Lower Mount Royal on desktop; Bowness only in the stored-plan tests; headless Chromium, not a real phone)
   - [ ] user has looked at it
+
+- **Handoff (rework)**
+  - **Data:** `supabase/data/building_tree.json` is the single source of the tree (buildings, stages, conditions, lots with size and land stage); the frontend imports it directly (`vite.config.ts` allows `..`), M3 🔁 must seed the database from the same file. `supabase/data/calgary_boundaries.json` = residential boundaries snapshot (also for M7 and M10).
+  - **Plans:** `frontend/scripts/island_plans.py` (Python, standard library — Node 20 cannot run TypeScript scripts) writes `frontend/public/islands/<CODE>.json` (223 files, ~12 KB each, 2.6 MB). It **never overwrites** an existing plan; `--force` is for before launch only. Reveal order grows from the plaza taking the nearest tile next to existing land (disc-like, always connected); tiers 64 / 144 / 256 / 400 / 676 / all. Two main paths, then lots (stage-0 tree lots, minimum early houses, Main Street on the paths, other lots preferring their own land ring), then houses (150 max) and trees, all with reachability checks on every stage.
+  - **Validation:** `plan/islandPlans.test.ts` checks every stored file with the game's own `walkableTiles()`: tier sizes, one island per stage, lot sizes/land stages, no overlaps, every tile/lot/house reachable with every lot and every house lot blocked, minimum houses per stage (2, 5, 10, 25, 50, 80). The rework surfaced and fixed: diamond-shaped early land (no room for 3×3 lots), lots eating early land, and a mismatch between generator and test on when a lot blocks.
+  - **Rendering:** `IslandView({ plan, state })`. State = `landStage`, `buildings[]` (`key`, `status` locked/opened/building/built, `level`, `progress`, `title`, `remaining {residents, streakDays, requires}` or null), houses, villagers, bubbles, Vitality (null allowed). Each tree lot shows its chain's most advanced building (construction site → last built → silhouette; "ready" when opened). Unknown keys → placeholder on spare lots, then Main Street lots. Empty lots (spare, landmark, not yet open) draw nothing and are **walkable**; Main Street lots show faint blue stakes. Future land = faint mist (`mist` layer). Pathway lights = lamps along paths once built.
+  - **Camera:** fits the current land's on-screen frame (not a circle around the plaza) and aims at its centre; zoom out shows the whole outline. The stored angle is for portrait; on landscape screens elongated communities turn 90°. The key light rotates with the angle.
+  - **Live mode until M3 🔁:** the server still sends the old project kinds; `toViewState` shows them as unknown buildings (placeholders) and uses **land stage 2** so they have lots. M3 🔁 replaces this with real tree state; M5 provides the land stage.
+  - **Mock mode:** `?mock` (Mahogany) and `?mock&plan=<CODE>` for any community; the dev panel edits land stage, Vitality, houses, villagers and every building's status/level/progress.
+  - **Not tested / known gaps:** real phone; the rising animation for irregular land is the old ring-rise group (works, only checked in passing); box models are first drafts; detailed labels can crowd on desktop (labels toggle helps); boundary snapshot dated 2026-11-19; `lot-b` is 3×2 (rink shape).
 
 **Original M1 (done 2026-11-18):**
 **Goal:** The 3D diorama island renders from a state object, using box models through asset keys.

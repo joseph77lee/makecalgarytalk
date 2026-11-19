@@ -1,15 +1,16 @@
 import { useFrame } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { InstancedMesh, Matrix4, Vector3, Quaternion } from 'three';
-import type { AssetProps } from './BoxAsset';
+import type { ObjectOf } from '../layout';
+import type { ItemsProps } from './BoxAsset';
 import { boxAsset } from './BoxAsset';
 import { CHIMNEY_TOP, house } from './models';
 
-const HouseBoxes = boxAsset<'house'>(house);
+const HouseBoxes = boxAsset<ObjectOf<'house'>>(house);
 const PUFFS_PER_HOUSE = 3;
 
 /** Resident houses; active-today houses also puff chimney smoke (requirement.md §7.2). */
-export function HouseAsset({ items }: AssetProps<'house'>) {
+export function HouseAsset({ items }: ItemsProps<ObjectOf<'house'>>) {
   const chimneys = useMemo(
     () => items.filter((h) => h.activeToday).map((h) => [h.x + CHIMNEY_TOP[0], CHIMNEY_TOP[1], h.z + CHIMNEY_TOP[2]] as const),
     [items],

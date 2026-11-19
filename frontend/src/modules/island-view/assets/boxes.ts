@@ -4,8 +4,8 @@
  * draw-call count stays flat however many houses or trees an island has.
  */
 
-/** solid = lit and shadowed, glow = unlit bright (lit windows, lamps), ghost = translucent silhouette. */
-export type Layer = 'solid' | 'glow' | 'ghost';
+/** solid = lit and shadowed, glow = unlit bright (lit windows, lamps), ghost = translucent silhouette, mist = faint future land. */
+export type Layer = 'solid' | 'glow' | 'ghost' | 'mist';
 
 export interface BoxPart {
   layer: Layer;

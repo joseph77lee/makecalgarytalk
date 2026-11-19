@@ -2,41 +2,46 @@ import { OrbitControls, OrthographicCamera } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { Vector3, type Group, type OrthographicCamera as OrthoCam } from 'three';
-import type { AssetProps } from '../assets/BoxAsset';
-import { ASSET_REGISTRY } from '../assets/registry';
-import { ASSET_KEYS, buildIslandLayout, ringOf, tileKey, type IslandLayout, type PlacedObject, type Tile } from '../layout';
+import type { ItemsProps } from '../assets/BoxAsset';
+import { ASSET_REGISTRY, BuildingAsset } from '../assets/registry';
+import { FIXED_ASSET_KEYS, buildIslandLayout, tileKey, type BuildingObject, type IslandLayout, type PlacedObject, type Tile } from '../layout';
 import { MOOD_PALETTES, type MoodPalette } from '../mood';
+import { stageMap, type IslandPlan } from '../plan/islandPlan';
 import type { CommunityViewState } from '../types';
 import { BoxBatch } from './BoxBatch';
-import { CAMERA_POSITION, CAMERA_TARGET, fitZoom } from './camera';
+import { screenAzimuth, viewFrame, zoomForFrame, type ViewFrame } from './camera';
 import { cameraFocus, followStrength } from './cameraFocus';
 import { IslandContext, useSceneFx, type IslandCtx } from './islandContext';
 import { IslandLabels } from './Labels';
-import { terrainParts } from './terrainParts';
+import { futureLandParts, terrainParts } from './terrainParts';
 
 const GROWTH_SECONDS = 1.4;
 const CHEER_MS = 2500;
+/** Max pointer travel (px) for a press to count as a tap rather than a camera drag. */
+const TAP_MAX_DRAG_PX = 8;
+const CAMERA_HEIGHT = 40;
+const CAMERA_FLAT = 40 * Math.SQRT2;
 
 interface IslandViewProps {
+  /** The community's stored island plan (real shape, lots). */
+  plan: IslandPlan;
   state: CommunityViewState;
-  /** Called when the player taps/clicks a tile (not when dragging to rotate). */
+  /** Called when the player taps/clicks a tile of the current land (not when dragging). */
   onTileTap?: (tile: Tile) => void;
   /** Extra scene content (e.g. the avatar), rendered inside the island scene. */
   children?: ReactNode;
 }
 
-/** Max pointer travel (px) for a press to count as a tap rather than a camera drag. */
-const TAP_MAX_DRAG_PX = 8;
-
-/** The 3D voxel island for one community, rendered purely from `state`. */
-export function IslandView({ state, onTileTap, children }: IslandViewProps) {
-  const layout = useMemo(() => buildIslandLayout(state), [state]);
+/** The 3D voxel island for one community, rendered purely from its plan and `state`. */
+export function IslandView({ plan, state, onTileTap, children }: IslandViewProps) {
+  const layout = useMemo(() => buildIslandLayout(plan, state), [plan, state]);
   const palette = MOOD_PALETTES[layout.mood];
 
   return (
     <div className="absolute inset-0 transition-[background] duration-700" style={{ background: palette.sky }}>
       <Canvas flat shadows dpr={[1, 2]} gl={{ antialias: true, alpha: true }}>
-        <IslandScene layout={layout} palette={palette} state={state} onTileTap={onTileTap}>
+        {/* A new community (plan) starts a fresh scene: camera angle, growth state. */}
+        <IslandScene key={plan.code} plan={plan} layout={layout} palette={palette} state={state} onTileTap={onTileTap}>
           {children}
         </IslandScene>
       </Canvas>
@@ -45,37 +50,33 @@ export function IslandView({ state, onTileTap, children }: IslandViewProps) {
 }
 
 function IslandScene({
+  plan,
   layout,
   palette,
   state,
   onTileTap,
   children,
 }: {
+  plan: IslandPlan;
   layout: IslandLayout;
   palette: MoodPalette;
   state: CommunityViewState;
   onTileTap?: (tile: Tile) => void;
   children?: ReactNode;
 }) {
-  // Size whose rings are fully shown. When the island grows, the new rings rise first.
-  const [settledSize, setSettledSize] = useState<number>(layout.size);
-  if (layout.size < settledSize) setSettledSize(layout.size); // shrinking only happens in dev tools
-  const growing = layout.size > settledSize;
-  const settledHalf = settledSize / 2;
+  // Land stage whose tiles are fully shown. When the land grows, the new tiles rise first.
+  const [settled, setSettled] = useState<number>(layout.landStage);
+  if (layout.landStage < settled) setSettled(layout.landStage); // shrinking only happens in dev tools
+  const growing = layout.landStage > settled;
+  const stages = useMemo(() => stageMap(plan), [plan]);
+  const stageOf = (t: Tile) => stages.get(tileKey(t)) ?? 99;
 
   const ctx: IslandCtx = useMemo(() => {
     const villagerBubbles = new Map<number, string>();
     for (const b of state.speechBubbles) if (b.anchor.kind === 'villager') villagerBubbles.set(b.anchor.index, b.text);
-    const walkable = layout.walkable.filter((t) => ringOf(t) < settledHalf);
-    return {
-      palette,
-      mood: layout.mood,
-      walkable,
-      walkableKeys: new Set(walkable.map(tileKey)),
-      islandSize: settledHalf * 2,
-      villagerBubbles,
-    };
-  }, [palette, layout, state.speechBubbles, settledHalf]);
+    const walkable = layout.walkable.filter((t) => (stages.get(tileKey(t)) ?? 99) <= settled);
+    return { palette, mood: layout.mood, walkable, walkableKeys: new Set(walkable.map(tileKey)), landStage: settled, villagerBubbles };
+  }, [palette, layout, state.speechBubbles, settled, stages]);
 
   const houseBubbles = useMemo(() => {
     const m = new Map<string, string>();
@@ -83,36 +84,51 @@ function IslandScene({
     return m;
   }, [state.speechBubbles]);
 
-  const shown = useMemo(() => layout.objects.filter((o) => o.ring < settledHalf), [layout, settledHalf]);
-  const settledTiles = useMemo(() => layout.tiles.filter((t) => t.ring < settledHalf), [layout, settledHalf]);
-  const risingTiles = useMemo(() => layout.tiles.filter((t) => t.ring >= settledHalf), [layout, settledHalf]);
-  const settledTerrain = useMemo(
-    () => terrainParts(settledTiles, palette, settledHalf - 1),
-    [settledTiles, palette, settledHalf],
-  );
-  const risingTerrain = useMemo(() => terrainParts(risingTiles, palette, 0), [risingTiles, palette]);
+  const shown = useMemo(() => layout.objects.filter((o) => o.stage <= settled), [layout, settled]);
+  const settledTerrain = useMemo(() => {
+    const tiles = layout.tiles.filter((t) => t.stage <= settled);
+    return terrainParts(tiles, new Set(tiles.map(tileKey)), palette);
+  }, [layout, settled, palette]);
+  const risingTerrain = useMemo(() => {
+    const tiles = layout.tiles.filter((t) => t.stage > settled);
+    return terrainParts(tiles, null, palette);
+  }, [layout, settled, palette]);
+  const future = useMemo(() => futureLandParts(layout.futureTiles), [layout.futureTiles]);
+  const outlineRadius = useMemo(() => Math.max(4, ...plan.tiles.map((t) => Math.hypot(t.x + 0.5, t.z + 0.5))), [plan]);
+  // The plan's angle puts an elongated community's long side vertical (portrait phone);
+  // on a landscape screen it is turned 90° so the long side runs across.
+  const viewport = useThree((s) => s.size);
+  const az = useMemo(() => screenAzimuth(layout.cameraAzimuth, viewport.width > viewport.height), [layout.cameraAzimuth, viewport.width, viewport.height]);
+  const landFrame = useMemo(() => viewFrame(layout.tiles, az), [layout.tiles, az]);
+  const wholeFrame = useMemo(() => viewFrame(plan.tiles, az), [plan, az]);
 
   const finishGrowth = () => {
-    setSettledSize(layout.size);
+    setSettled(layout.landStage);
     useSceneFx.setState({ celebrateUntil: performance.now() + CHEER_MS });
   };
 
   return (
     <IslandContext.Provider value={ctx}>
-      <OrthographicCamera makeDefault position={CAMERA_POSITION} near={0.1} far={300} />
-      <CameraRig size={layout.size} />
-      <Lights palette={palette} size={layout.size} />
+      <OrthographicCamera
+        makeDefault
+        position={[landFrame.cx + CAMERA_FLAT * Math.sin(az), CAMERA_HEIGHT, landFrame.cz + CAMERA_FLAT * Math.cos(az)]}
+        near={0.1}
+        far={300}
+      />
+      <CameraRig frame={landFrame} whole={wholeFrame} azimuth={az} />
+      <Lights palette={palette} radius={layout.landRadius} azimuth={az} />
 
+      <BoxBatch parts={future} castShadow={false} receiveShadow={false} />
       <BoxBatch parts={settledTerrain} castShadow={false} />
       {growing && (
-        <RisingGroup key={layout.size} onDone={finishGrowth}>
+        <RisingGroup key={layout.landStage} onDone={finishGrowth}>
           <BoxBatch parts={risingTerrain} castShadow={false} />
         </RisingGroup>
       )}
 
-      {onTileTap && <TapPlane size={settledSize} onTileTap={onTileTap} />}
+      {onTileTap && <TapPlane radius={outlineRadius} isLand={(t) => stageOf(t) <= settled} onTileTap={onTileTap} />}
       <ObjectsLayer objects={shown} />
-      <IslandLabels objects={shown} houseBubbles={houseBubbles} />
+      <IslandLabels objects={shown} houseBubbles={houseBubbles} communityName={state.communityName} />
       {children}
     </IslandContext.Provider>
   );
@@ -121,23 +137,29 @@ function IslandScene({
 function ObjectsLayer({ objects }: { objects: PlacedObject[] }) {
   const groups = useMemo(() => {
     const m = new Map<string, PlacedObject[]>();
-    for (const o of objects) m.set(o.assetKey, [...(m.get(o.assetKey) ?? []), o]);
+    for (const o of objects) {
+      const k = o.assetKey.startsWith('building.') ? 'building' : o.assetKey;
+      m.set(k, [...(m.get(k) ?? []), o]);
+    }
     return m;
   }, [objects]);
+  const buildings = groups.get('building') as BuildingObject[] | undefined;
   return (
     <>
-      {ASSET_KEYS.map((key) => {
+      {FIXED_ASSET_KEYS.map((key) => {
         const items = groups.get(key);
         if (!items) return null;
-        const Asset = ASSET_REGISTRY[key] as ComponentType<AssetProps<typeof key>>;
-        return <Asset key={key} items={items as AssetProps<typeof key>['items']} />;
+        const Asset = ASSET_REGISTRY[key] as ComponentType<ItemsProps<PlacedObject>>;
+        return <Asset key={key} items={items} />;
       })}
+      {buildings && <BuildingAsset items={buildings} />}
     </>
   );
 }
 
-/** Invisible ground plane that turns taps into tile coordinates. */
-function TapPlane({ size, onTileTap }: { size: number; onTileTap: (tile: Tile) => void }) {
+/** Invisible ground plane that turns taps on the current land into tile coordinates. */
+function TapPlane({ radius, isLand, onTileTap }: { radius: number; isLand: (t: Tile) => boolean; onTileTap: (tile: Tile) => void }) {
+  const size = radius * 2 + 4;
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
@@ -145,9 +167,8 @@ function TapPlane({ size, onTileTap }: { size: number; onTileTap: (tile: Tile) =
       onClick={(e) => {
         if (e.delta > TAP_MAX_DRAG_PX) return; // it was a camera drag
         e.stopPropagation();
-        const half = size / 2;
         const tile = { x: Math.floor(e.point.x), z: Math.floor(e.point.z) };
-        if (tile.x >= -half && tile.x < half && tile.z >= -half && tile.z < half) onTileTap(tile);
+        if (isLand(tile)) onTileTap(tile);
       }}
     >
       <planeGeometry args={[size, size]} />
@@ -156,7 +177,7 @@ function TapPlane({ size, onTileTap }: { size: number; onTileTap: (tile: Tile) =
   );
 }
 
-/** New edge rings rise from below with a soft overshoot (requirement.md §7.8, §19.3). */
+/** New land rises from below with a soft overshoot (requirement.md §7.8, §19.3). */
 function RisingGroup({ onDone, children }: { onDone: () => void; children: React.ReactNode }) {
   const ref = useRef<Group>(null);
   const t = useRef(0);
@@ -189,13 +210,18 @@ interface OrbitLike {
 const desired = new Vector3();
 const step = new Vector3();
 
-/** Fits the island on screen, eases the zoom when the island or viewport changes, and follows the focus. */
-function CameraRig({ size }: { size: number }) {
+/**
+ * Fits the current land on screen (zoom out to see the whole outline), aims at its centre,
+ * eases the zoom when the land or viewport changes, and gently follows the focus (avatar).
+ */
+function CameraRig({ frame, whole, azimuth }: { frame: ViewFrame; whole: ViewFrame; azimuth: number }) {
   const get = useThree((s) => s.get);
   const viewport = useThree((s) => s.size);
-  const fit = fitZoom(size, viewport.width, viewport.height);
+  const fit = zoomForFrame(frame, viewport.width, viewport.height);
+  const wholeZoom = zoomForFrame(whole, viewport.width, viewport.height);
   const target = useRef(fit);
   const first = useRef(true);
+  const base = useMemo<[number, number, number]>(() => [frame.cx, -0.6, frame.cz], [frame.cx, frame.cz]);
 
   useEffect(() => {
     target.current = fit;
@@ -214,12 +240,11 @@ function CameraRig({ size }: { size: number }) {
       camera.zoom += diff * Math.min(1, dt * 4);
       camera.updateProjectionMatrix();
     }
-
-    // Gently follow the focus (avatar); move camera and orbit target together.
     const orbit = controls as unknown as OrbitLike | null;
     if (!orbit) return;
     const k = cameraFocus.active ? followStrength(camera.zoom, fit) : 0;
-    desired.set(CAMERA_TARGET[0] + cameraFocus.x * k, CAMERA_TARGET[1], CAMERA_TARGET[2] + cameraFocus.z * k);
+    // Aim between the land's centre and the focus (stronger when zoomed in).
+    desired.set(base[0] + (cameraFocus.x - base[0]) * k, base[1], base[2] + (cameraFocus.z - base[2]) * k);
     step.copy(desired).sub(orbit.target);
     if (step.lengthSq() < 1e-6) return;
     step.multiplyScalar(Math.min(1, dt * 3));
@@ -228,19 +253,19 @@ function CameraRig({ size }: { size: number }) {
     orbit.update();
   });
 
-  // Rotate around the island within limits; no panning; zoom between 0.7× and 3.5× of fit.
+  // Rotate within limits around the community's default angle; no panning.
   return (
     <OrbitControls
       makeDefault
-      target={CAMERA_TARGET}
+      target={base}
       enablePan={false}
       enableDamping
       dampingFactor={0.12}
       minPolarAngle={0.65}
       maxPolarAngle={1.15}
-      minAzimuthAngle={Math.PI / 4 - 1.0}
-      maxAzimuthAngle={Math.PI / 4 + 1.0}
-      minZoom={fit * 0.7}
+      minAzimuthAngle={azimuth - 1.0}
+      maxAzimuthAngle={azimuth + 1.0}
+      minZoom={Math.min(wholeZoom, fit) * 0.9}
       maxZoom={fit * 3.5}
       onStart={() => {
         target.current = get().camera.zoom; // the user takes over the zoom
@@ -253,13 +278,17 @@ function CameraRig({ size }: { size: number }) {
 }
 
 /** Soft pastel light from the viewer's top-left with modest shadows (§19.1, §20.3a). */
-function Lights({ palette, size }: { palette: MoodPalette; size: number }) {
-  const extent = size * 0.8 + 2;
+function Lights({ palette, radius, azimuth }: { palette: MoodPalette; radius: number; azimuth: number }) {
+  const extent = radius * 1.2 + 3;
+  // (-14, 26, 18) is top-left for the default view (azimuth π/4); rotate it with the camera.
+  const a = azimuth - Math.PI / 4;
+  const lx = -14 * Math.cos(a) + 18 * Math.sin(a);
+  const lz = 14 * Math.sin(a) + 18 * Math.cos(a);
   return (
     <>
       <hemisphereLight args={['#ffffff', '#d9d2ea', palette.ambientIntensity]} />
       <directionalLight
-        position={[-14, 26, 18]}
+        position={[lx, 26, lz]}
         intensity={palette.sunIntensity}
         castShadow
         shadow-mapSize={[1024, 1024]}
@@ -270,7 +299,7 @@ function Lights({ palette, size }: { palette: MoodPalette; size: number }) {
         shadow-camera-top={extent}
         shadow-camera-bottom={-extent}
         shadow-camera-near={1}
-        shadow-camera-far={90}
+        shadow-camera-far={120}
       />
     </>
   );

@@ -2,12 +2,17 @@
 export const LABEL_Z: [number, number] = [20, 0];
 export const BUBBLE_Z: [number, number] = [29, 21];
 
-const plural = (n: number, word: string) => `${n} more ${word}${n === 1 ? '' : 's'}`;
+import { buildingSpec } from '../plan/buildingTree';
 
-/** "4 more streak days · 1 more resident" (what is still missing for an unlock, §7.6). */
-export function remainingText({ streakDays, residents }: { streakDays: number; residents: number }): string {
-  const parts: string[] = [];
-  if (streakDays > 0) parts.push(plural(streakDays, 'streak day'));
-  if (residents > 0) parts.push(plural(residents, 'resident'));
-  return parts.length > 0 ? parts.join(' · ') : 'Unlocks tomorrow';
+const plural = (n: number, one: string, many: string) => `${n} more ${n === 1 ? one : many}`;
+
+/**
+ * What is still missing to open a building (§7.6), e.g.
+ * "Build the Fire pit first · 2 more neighbours · 1 more streak day".
+ */
+export function remainingText({ streakDays, residents, requires }: { streakDays: number; residents: number; requires: string[] }): string {
+  const parts: string[] = requires.map((k) => `Build the ${buildingSpec(k)?.name ?? k} first`);
+  if (residents > 0) parts.push(plural(residents, 'neighbour', 'neighbours'));
+  if (streakDays > 0) parts.push(plural(streakDays, 'streak day', 'streak days'));
+  return parts.length > 0 ? parts.join(' · ') : 'Opens tomorrow';
 }

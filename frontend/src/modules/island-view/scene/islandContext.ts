@@ -8,7 +8,8 @@ export interface IslandCtx extends BuildCtx {
   walkable: Tile[];
   /** "x,z" keys of `walkable`. */
   walkableKeys: Set<string>;
-  islandSize: number;
+  /** Land stage fully shown (rising land excluded). */
+  landStage: number;
   /** Speech bubble text per mini villager index. */
   villagerBubbles: Map<number, string>;
 }
@@ -16,9 +17,9 @@ export interface IslandCtx extends BuildCtx {
 export const IslandContext = createContext<IslandCtx | null>(null);
 
 /** Walkable tiles for characters drawn inside <IslandView> (avatar pathfinding). */
-export function useIslandWalkable(): Pick<IslandCtx, 'walkable' | 'walkableKeys' | 'islandSize'> {
-  const { walkable, walkableKeys, islandSize } = useIslandCtx();
-  return { walkable, walkableKeys, islandSize };
+export function useIslandWalkable(): Pick<IslandCtx, 'walkable' | 'walkableKeys' | 'landStage'> {
+  const { walkable, walkableKeys, landStage } = useIslandCtx();
+  return { walkable, walkableKeys, landStage };
 }
 
 export function useIslandCtx(): IslandCtx {

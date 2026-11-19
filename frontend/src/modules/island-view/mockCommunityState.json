@@ -1,103 +1,28 @@
 {
   "communityName": "Mahogany",
-  "islandSize": 12,
+  "landStage": 1,
   "vitality": 72,
   "houses": [
-    {
-      "id": "r1",
-      "nickname": "Sarah",
-      "activeToday": true
-    },
-    {
-      "id": "r2",
-      "nickname": "Minjun",
-      "activeToday": true
-    },
-    {
-      "id": "r3",
-      "nickname": "Priya",
-      "activeToday": false
-    },
-    {
-      "id": "r4",
-      "nickname": "Tom",
-      "activeToday": true
-    }
+    { "id": "r1", "nickname": "Sarah", "activeToday": true },
+    { "id": "r2", "nickname": "Minjun", "activeToday": true },
+    { "id": "r3", "nickname": "Priya", "activeToday": false },
+    { "id": "r4", "nickname": "Tom", "activeToday": true }
   ],
-  "buildings": {
-    "playground": {
-      "unlocked": true
-    },
-    "community-centre": {
-      "unlocked": false,
-      "remaining": {
-        "streakDays": 4,
-        "residents": 1
-      }
-    },
-    "park": {
-      "unlocked": false,
-      "remaining": {
-        "streakDays": 27,
-        "residents": 0
-      }
-    }
-  },
-  "projects": [
-    {
-      "id": "p1",
-      "kind": "ice-rink",
-      "title": "Build an ice rink",
-      "stage": "frame",
-      "progress": 0.55,
-      "level": 1
-    },
-    {
-      "id": "p2",
-      "kind": "flower-path",
-      "title": "Make a flower path",
-      "stage": "scaffolding",
-      "progress": 0.2,
-      "level": 1
-    },
-    {
-      "id": "p3",
-      "kind": "snowman-garden",
-      "title": "Build a snowman garden",
-      "stage": "scaffolding",
-      "progress": 0.1,
-      "level": 1
-    }
-  ],
-  "showcase": [
-    {
-      "kind": "holiday-decorations",
-      "level": 1
-    },
-    {
-      "kind": "lantern-street",
-      "level": 2
-    },
-    {
-      "kind": "bird-feeders",
-      "level": 1
-    }
+  "buildings": [
+    { "key": "welcome-sign", "status": "built", "level": 1, "progress": 1, "title": "Welcome sign", "remaining": null },
+    { "key": "fire-pit", "status": "built", "level": 1, "progress": 1, "title": "Fire pit", "remaining": null },
+    { "key": "frozen-pond", "status": "building", "level": 1, "progress": 0.6, "title": "Frozen pond", "remaining": null },
+    { "key": "warming-hut", "status": "locked", "level": 1, "progress": 0, "title": "Warming hut", "remaining": { "residents": 0, "streakDays": 2, "requires": [] } },
+    { "key": "playground", "status": "building", "level": 1, "progress": 0.2, "title": "Playground", "remaining": null },
+    { "key": "sledding-hill", "status": "locked", "level": 1, "progress": 0, "title": "Sledding hill", "remaining": { "residents": 0, "streakDays": 2, "requires": ["frozen-pond"] } },
+    { "key": "skating-rink", "status": "locked", "level": 1, "progress": 0, "title": "Skating rink", "remaining": { "residents": 0, "streakDays": 0, "requires": ["frozen-pond"] } },
+    { "key": "gateway-arch", "status": "opened", "level": 1, "progress": 0, "title": "Gateway arch", "remaining": null },
+    { "key": "dog-park", "status": "locked", "level": 1, "progress": 0, "title": "Off-leash dog park", "remaining": { "residents": 0, "streakDays": 0, "requires": ["playground"] } },
+    { "key": "community-garden", "status": "locked", "level": 1, "progress": 0, "title": "Community garden", "remaining": { "residents": 1, "streakDays": 5, "requires": ["warming-hut"] } }
   ],
   "miniVillagerCount": 6,
   "speechBubbles": [
-    {
-      "anchor": {
-        "kind": "house",
-        "id": "r1"
-      },
-      "text": "Sarah cleared the snow"
-    },
-    {
-      "anchor": {
-        "kind": "villager",
-        "index": 0
-      },
-      "text": "Minjun helped the ice rink!"
-    }
+    { "anchor": { "kind": "house", "id": "r1" }, "text": "Sarah helped the frozen pond" },
+    { "anchor": { "kind": "villager", "index": 0 }, "text": "The fire pit is so warm!" }
   ]
 }

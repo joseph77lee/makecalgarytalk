@@ -2,27 +2,10 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState, type ReactNode } from 'react';
 import type { PlacedObject } from '../layout';
-import type { BuildingKind, ProjectKind } from '../types';
 import { useIslandUi } from '../uiStore';
 import { BUBBLE_Z, LABEL_Z, remainingText } from './labelText';
 
 /** HTML overlays (crisp text, any language) positioned over 3D objects (requirement.md §10.1). */
-
-const SHOWCASE_NAMES: Record<ProjectKind, string> = {
-  'ice-rink': 'Ice rink',
-  'flower-path': 'Flower path',
-  'holiday-decorations': 'Holiday decorations',
-  'snowman-garden': 'Snowman garden',
-  'lantern-street': 'Lantern street',
-  'bird-feeders': 'Bird feeders',
-};
-
-const BUILDING_NAMES: Record<BuildingKind, string> = {
-  playground: 'Playground',
-  'community-centre': 'Community Centre',
-  park: 'Park',
-};
-
 
 function Overlay({ x, y, z, children, front = false }: { x: number; y: number; z: number; children: ReactNode; front?: boolean }) {
   return (
@@ -44,6 +27,7 @@ export function SpeechBubbleLabel({ text }: { text: string }) {
 interface Props {
   objects: PlacedObject[];
   houseBubbles: Map<string, string>;
+  communityName: string;
 }
 
 /** Camera zoom (screen px per world unit) above which labels show full text. */
@@ -68,7 +52,7 @@ function useDetailedLabels(): boolean {
   return detailed;
 }
 
-export function IslandLabels({ objects, houseBubbles }: Props) {
+export function IslandLabels({ objects, houseBubbles, communityName }: Props) {
   const detailed = useDetailedLabels();
   const showLabels = useIslandUi((u) => u.showLabels);
   // Busy villages: names appear when zoomed in, so tags never cover the whole island.
@@ -101,12 +85,14 @@ export function IslandLabels({ objects, houseBubbles }: Props) {
             return (
               <Overlay key={o.id} x={o.x} y={1.35} z={o.z}>
                 {detailed ? (
-                  <div className="whitespace-nowrap rounded-lg bg-slate-800/75 px-2 py-0.5 text-center text-[10px] leading-tight text-white">
-                    <div className="font-semibold">🔒 {BUILDING_NAMES[o.target]}</div>
-                    {o.remaining && <div className="opacity-85">{remainingText(o.remaining)}</div>}
+                  <div className={`whitespace-nowrap rounded-lg px-2 py-0.5 text-center text-[10px] leading-tight text-white ${o.ready ? 'bg-emerald-600/85' : 'bg-slate-800/75'}`}>
+                    <div className="font-semibold">
+                      {o.ready ? '✨' : '🔒'} {o.title}
+                    </div>
+                    {o.ready ? <div className="opacity-90">Ready to build</div> : o.remaining && <div className="opacity-85">{remainingText(o.remaining)}</div>}
                   </div>
                 ) : (
-                  <span className="rounded-full bg-slate-800/70 px-1.5 py-px text-[10px] text-white">🔒</span>
+                  <span className={`rounded-full px-1.5 py-px text-[10px] text-white ${o.ready ? 'bg-emerald-600/80' : 'bg-slate-800/70'}`}>{o.ready ? '✨' : '🔒'}</span>
                 )}
               </Overlay>
             );
@@ -128,29 +114,29 @@ export function IslandLabels({ objects, houseBubbles }: Props) {
                 </div>
               </Overlay>
             );
-          case 'showcase.ice-rink':
-          case 'showcase.flower-path':
-          case 'showcase.holiday-decorations':
-          case 'showcase.snowman-garden':
-          case 'showcase.lantern-street':
-          case 'showcase.bird-feeders':
-            return detailed ? (
-              <Overlay key={o.id} x={o.x} y={1.05} z={o.z}>
-                <span className="whitespace-nowrap rounded-full bg-amber-50/90 px-1.5 py-px text-[9px] font-semibold text-amber-800 shadow-sm">
-                  ⭐ {SHOWCASE_NAMES[o.kind]}
-                  {o.level > 1 ? ` Lv ${o.level}` : ''}
-                </span>
-              </Overlay>
-            ) : null;
-          case 'sign':
-            return (
-              <Overlay key={o.id} x={o.x} y={1.75} z={o.z + 0.32}>
-                <span className="whitespace-nowrap rounded-md border border-amber-800/30 bg-amber-50 px-2 py-0.5 text-xs font-bold tracking-wide text-amber-900 shadow-sm">
-                  {o.name}
-                </span>
-              </Overlay>
-            );
           default:
+            if (o.assetKey === 'building.welcome-sign' || o.assetKey === 'building.gateway-arch') {
+              return (
+                <Overlay key={o.id} x={o.x} y={o.assetKey === 'building.gateway-arch' ? 1.95 : 1.4} z={o.z + 0.3}>
+                  <span className="whitespace-nowrap rounded-md border border-amber-800/30 bg-amber-50 px-2 py-0.5 text-xs font-bold tracking-wide text-amber-900 shadow-sm">
+                    {communityName}
+                  </span>
+                </Overlay>
+              );
+            }
+            if (o.assetKey.startsWith('building.') && 'next' in o && detailed && o.next && o.next.status !== 'built') {
+              // Built building: what it grows into next (growth chain, §7.6).
+              return (
+                <Overlay key={o.id} x={o.x} y={1.6} z={o.z}>
+                  <div className="whitespace-nowrap rounded-lg bg-white/85 px-2 py-0.5 text-center text-[10px] leading-tight text-slate-600 shadow-sm">
+                    <div className="font-semibold">
+                      {o.level > 1 ? `${o.title} Lv ${o.level}` : o.title} → {o.next.title}
+                    </div>
+                    {o.next.status === 'opened' ? <div>Ready to build</div> : o.next.remaining && <div>{remainingText(o.next.remaining)}</div>}
+                  </div>
+                </Overlay>
+              );
+            }
             return null;
         }
       })}

@@ -105,15 +105,19 @@ export function activeLots(plan: IslandPlan, landStage: number): string[] {
 
 /**
  * Tiles reachable on foot from the plaza on a land stage: land of that stage minus lot tiles
- * that are on land (a lot is a reserved plot from the moment its land exists; the entrance
- * never blocks), the first `houseCount` house lots shown, and trees.
+ * on land (all lots, or only `usedLots`; the entrance never blocks), the first `houseCount`
+ * house lots shown, and trees. Plans are generated so this holds with every lot blocked,
+ * so leaving empty lots walkable can never cut a path.
  */
-export function walkableTiles(plan: IslandPlan, landStage: number, houseCount: number): Tile[] {
+export function walkableTiles(plan: IslandPlan, landStage: number, houseCount: number, usedLots?: Iterable<string>): Tile[] {
   const stages = stageMap(plan);
   const on = (t: Tile) => (stages.get(tileKey(t)) ?? 99) <= landStage;
   const blocked = new Set<string>();
+  // By default every lot on land blocks (the strictest case, used to validate plans);
+  // the game passes only lots that have something on them, so empty plots stay walkable.
+  const lotKeys = usedLots ? new Set(usedLots) : new Set(Object.keys(plan.lots));
   for (const [k, r] of Object.entries(plan.lots)) {
-    if (BUILDING_TREE.lots[k]?.kind === 'entrance') continue;
+    if (BUILDING_TREE.lots[k]?.kind === 'entrance' || !lotKeys.has(k)) continue;
     lotTiles(r).filter(on).forEach((t) => blocked.add(tileKey(t)));
   }
   plan.houses.filter(on).slice(0, houseCount).forEach((t) => blocked.add(tileKey(t)));
