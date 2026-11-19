@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
 | Based on | `requirement.md` v1.20 |
-| Current module | M1 🔁 Island View rework (🟨 Ready for playtest); then M3 🔁, then M5 |
+| Current module | M3 🔁 Game Core rework (in progress; M1 ✅ Done); then M5 |
 
 ---
 
@@ -39,7 +39,7 @@
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
-| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🟨 |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | 🔁 |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
@@ -101,7 +101,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
   - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
-### M1 — Island View ⭐ 🟨 (rework)
+### M1 — Island View ⭐ ✅
 **Reopened 2026-11-19** (`requirement.md` v1.18 §7.6–7.8, §20.4; branch `fix/m1-real-shape-islands`, after M4 is merged). The original items below stay ticked; the rework:
 - **In scope (rework)**
   - [x] Island from the **real community boundary**: rasterize to ~1,024 tiles (equal max land), smooth thin spurs, keep the largest part, centre = farthest from the edge, reveal order by walking distance; land tiers 64 / 144 / 256 / 400 / 676 / all
@@ -115,7 +115,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done (rework)**
   - [x] all 223 communities produce valid islands (automated checks: one connected island per stage, every lot fits and is reachable, positions identical across stages)
   - [x] phone-size check of a few unusual shapes (Beltline and Diamond Cove on a phone, Lower Mount Royal on desktop; Bowness only in the stored-plan tests; headless Chromium, not a real phone)
-  - [ ] user has looked at it
+  - [x] user has looked at it (confirmed 2026-11-19)
 
 - **Handoff (rework)**
   - **Data:** `supabase/data/building_tree.json` is the single source of the tree (buildings, stages, conditions, lots with size and land stage); the frontend imports it directly (`vite.config.ts` allows `..`), M3 🔁 must seed the database from the same file. `supabase/data/calgary_boundaries.json` = residential boundaries snapshot (also for M7 and M10).
