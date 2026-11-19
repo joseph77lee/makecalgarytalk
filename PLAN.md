@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.17 |
+| Plan version | v1.18 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-18 |
-| Based on | `requirement.md` v1.17 |
-| Current module | M4 — Daily Actions (🟨 Ready for playtest) |
+| Last updated | 2026-11-19 |
+| Based on | `requirement.md` v1.18 |
+| Current module | M4 — Daily Actions (🟨 Ready for playtest); next: M1 🔁 and M3 🔁 (requirement v1.18), then M5 |
 
 ---
 
@@ -39,11 +39,11 @@
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
-| M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🔁 |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
-| M3 | Game Core | BE | ⭐ Core | M0 | ✅ |
+| M3 | Game Core | BE | ⭐ Core | M0 | 🔁 |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | 🟨 |
-| M5 | Community State | BE + FE | ⭐ Core | M4 | ⬜ |
+| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ⬜ |
 | M6 | Identity | FE + BE | | M4 | ⬜ |
 | M7 | Residency | FE + BE | | M6 | ⬜ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |
@@ -58,7 +58,9 @@ No time estimates: with AI-assisted (vibe) coding, modules may finish faster or 
 
 **Layers:** FE = React app (`frontend/`). BE = Supabase (`supabase/`: SQL migrations, Postgres functions/RPC with RLS, Edge Functions, pg_cron). There is no separate backend server.
 
-**Core loop is complete after M5.** At that point the game is playable end to end with a dev user and a manually chosen community: see the island → move the avatar → take daily actions → progress next day → streak, Vitality, unlocks, island growth.
+**Core loop is complete after M5.** At that point the game is playable end to end with a dev user and a manually chosen community: see the island → move the avatar → take daily actions → progress next day → streak, Vitality, building tree, island growth.
+
+**Reopened after M4 (requirement v1.18):** M1 (real-shape islands, stored lot plans, tree building models) and M3 (building tree as data) are reworked on `fix/` branches before M5, because buildings must stay where they are built and islands take the real community shape.
 
 ```
 M0 ─┬─ M1 ── M2 ─┐
@@ -99,7 +101,20 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
   - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
-### M1 — Island View ⭐ ✅
+### M1 — Island View ⭐ 🔁
+**Reopened 2026-11-19** (`requirement.md` v1.18 §7.6–7.8, §20.4; branch `fix/m1-real-shape-islands`, after M4 is merged). The original items below stay ticked; the rework:
+- **In scope (rework)**
+  - [ ] Island from the **real community boundary**: rasterize to ~1,024 tiles (equal max land), smooth thin spurs, keep the largest part, centre = farthest from the edge, reveal order by walking distance; land tiers 64 / 144 / 256 / 400 / 676 / all
+  - [ ] **Whole outline visible from day one** (clouds / translucent future land); new land rises inside it
+  - [ ] **Lot plan per community generated once and stored** (static JSON, served like other static data): tree building lots reserved at final size, house lots, spare lots, Main Street lots, paths; never regenerated for existing communities
+  - [ ] Box models for the tree buildings (welcome sign → gateway arch, fire pit → warming hut → community hall, frozen pond → skating rink → lit hockey rink, playground, sledding hill, dog park, pathway lights, community garden, neighbourhood park) and a **generic placeholder** for unknown building keys; remove the M4 showcase miniatures
+  - [ ] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land
+- **Definition of Done (rework)**
+  - [ ] all 223 communities produce valid islands (automated checks: one connected island per stage, every lot fits and is reachable, positions identical across stages)
+  - [ ] phone-size check of a few unusual shapes (Beltline, Lower Mount Royal, Diamond Cove, Bowness)
+  - [ ] user has looked at it
+
+**Original M1 (done 2026-11-18):**
 **Goal:** The 3D diorama island renders from a state object, using box models through asset keys.
 - **In scope**
   - [x] react-three-fiber `<Canvas>` with drei `OrthographicCamera`: isometric view, pastel lights, sky background, rotate/zoom limits
@@ -155,7 +170,20 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** no real phone yet (touch only emulated); "smooth" camera follow judged from screenshots only; no automated tests of the R3F components (walker, pathfinding and keyboard logic are unit-tested). Avatar look is placeholder boxes (orange shirt, navy cap); the nickname is the placeholder "You" until M6.
   - **Environment gotchas:** the Playwright MCP browser may be locked by another session; a scratchpad Playwright script with `--use-angle=swiftshader` works for screenshots (FPS from it is meaningless). When scripting taps, compute positions in CSS pixels from the screenshot (screenshots are 2× device pixels).
 
-### M3 — Game Core ⭐ ✅
+### M3 — Game Core ⭐ 🔁
+**Reopened 2026-11-19** (`requirement.md` v1.18 §7.1, §7.6, §7.6b, §7.7; branch `fix/m3-building-tree`, after M4 is merged). The original items below stay ticked; the rework:
+- **In scope (rework)**
+  - [ ] **Building tree as data**: building types, parent buildings, conditions (cumulative residents, streak days), stage multipliers, footprints, growth chains (same lot); seeded with the MVP tree (§7.6)
+  - [ ] Building states per community computed from the action log and conditions: locked / opened / building / built / level; **at most 3 constructions** in tree order; **upgrades in place** when nothing else is opened; nothing ever re-locks
+  - [ ] Required actions = max(10, 5 × active residents) × stage multiplier (stage 1 at least 3) × 1.25 per upgrade level
+  - [ ] Settled = Welcome sign built (§7.1)
+  - [ ] Streak conditions stay locked until M5 provides the community streak
+  - [ ] RPC returns the tree state (for the island, the action bar and the build map); `docs/api.md` updated
+- **Definition of Done (rework)**
+  - [ ] database tests for every condition type, the 3-construction limit, growth chains on the same lot, upgrades in place, no re-locking, a 1-resident community finishing a first building on day one
+  - [ ] user has reviewed it
+
+**Original M3 (done 2026-11-18):**
 **Goal:** Backend domain for communities, projects and actions with server-side rules.
 - **In scope**
   - [x] SQL migrations: communities (seeded with Calgary community list + population), projects, actions, users (dev user only for now)
@@ -202,7 +230,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **No polling:** progress only changes at Calgary midnight, so the store refreshes once at `next_day_start` + 1.5 s (from the server; no client time zone math), plus after a finished-project rejection.
   - **Zero energy:** cards stay tappable (dimmed, `aria-disabled`) so a tap explains "New energy in …"; a real `disabled` button would silently ignore the tap.
   - **Showcase (M4 decision, not yet in requirement.md):** completed projects stay on the island as a 1×1 miniature on a pedestal, one per kind at its highest level (gold markers from level 2), on reserved spots in the front row on both sides of the entrance road. These spots are **not blocking** (the 8×8 island's edge is a one-tile corridor). Active projects remain 2×2 construction sites.
-  - **OPEN — decide before M5 starts (user discussion 2026-11-18/19):** the showcase is a stop-gap. The user prefers that a **finished building stays full size where it was built** (positions must never change). Ideas on the table: (1) island also grows when buildings complete (e.g. growth points: building +2, new neighbour +1, plus a "no room → grow" safety); (2) **residents open building lots** (e.g. 1–2 residents: 3 lots, 3–5: 6 lots; when every open lot is built, projects upgrade existing buildings in place), with island growth from residents only (§7.8) or also from buildings. Constraints agreed so far: buildings never move; more participating residents must grow the island; a 1-resident community must always have something to build or upgrade. No requirement change has been made yet.
+  - **RESOLVED 2026-11-19 (requirement v1.18):** buildings stay full size where built; the project catalog and showcase are replaced by the building tree (M3 🔁) and real-shape islands with stored lot plans (M1 🔁). Earlier note: **OPEN — decide before M5 starts (user discussion 2026-11-18/19):** the showcase is a stop-gap. The user prefers that a **finished building stays full size where it was built** (positions must never change). Ideas on the table: (1) island also grows when buildings complete (e.g. growth points: building +2, new neighbour +1, plus a "no room → grow" safety); (2) **residents open building lots** (e.g. 1–2 residents: 3 lots, 3–5: 6 lots; when every open lot is built, projects upgrade existing buildings in place), with island growth from residents only (§7.8) or also from buildings. Constraints agreed so far: buildings never move; more participating residents must grow the island; a 1-resident community must always have something to build or upgrade. No requirement change has been made yet.
   - **island-view changes:** 6 project kinds + `level`; `stage` is only scaffolding/frame (complete → showcase); `showcase` field; `vitality` and lock `remaining` may be `null` (M5 provides them; null → Normal mood, no HUD chip, lock without conditions); new exports `projectSiteTile`, `celebrateIsland`, `PROJECT_KINDS`. avatar: `playWork(facing)`.
   - **Placeholders until later modules:** island size 8, no houses (M8), 3 ambient villagers, buildings locked without conditions, Vitality hidden (M5).
   - **Dev sign-in (temporary until M6):** dev builds sign in automatically as `dev@makecalgarytalk.local`; `?devuser=2` uses `dev2@…` (both seeded members of Mahogany, `supabase/seed.sql`). Same-browser tabs share one session; use two browsers or a private window for two players. Production builds show "Sign-in is coming soon" until M6.
@@ -212,10 +240,10 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M5 — Community State ⭐ ⬜
 **Goal:** The community feels alive and changes over days. **Core loop complete.**
 - **In scope**
-  - [ ] Backend: community streak (≥ half, rounded up, of **Active Verified Residents** = acted within last 7 Calgary days), Vitality (7-day average; denominator = Verified Residents whose **last active day** (later of last action and verification day) is within last 30 days incl. today, rises fast/falls slow), unlocks (Playground / Community Centre / Park; resident counts cumulative), island size from cumulative residents
+  - [ ] Backend: community streak (≥ half, rounded up, of **Active Verified Residents** = acted within last 7 Calgary days), Vitality (7-day average; denominator = Verified Residents whose **last active day** (later of last action and verification day) is within last 30 days incl. today, rises fast/falls slow), streak and resident conditions for the **building tree** (§7.6; resident counts cumulative), island land tier from cumulative residents (§7.8)
   - [ ] Snapshot generation every 5–10 min (JSON) for community state via **pg_cron**
   - [ ] Frontend: streak bar ("2/6 today"), locked silhouettes with remaining conditions, "What changed since yesterday" panel, island growth goal
-  - [ ] Village build map screen (`requirement.md` §7.6a): unlock track + island size track with remaining conditions and progress, completed projects; Village tab only (Me tab is Phase 2)
+  - [ ] Village build map screen (`requirement.md` §7.6a): the building tree with done / building / opened / locked, remaining conditions and progress, island land track, community completion %, "See a finished example" button; Village tab only (Me tab is Phase 2)
 - **Out of scope:** real residents/verification (dev users simulate residents)
 - **Definition of Done**
   - [ ] with simulated users over simulated days, streak, Vitality, unlocks and growth behave as specified
@@ -228,6 +256,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] Supabase anonymous sign-in on first visit
   - [ ] optional Google linking
   - [ ] avatar shirt colour choice on first visit, changeable later (`requirement.md` §10.2)
+  - [ ] completed-neighbourhood example on the first visit only (one image or short animated scene rendered with the real engine, `requirement.md` §5.1)
   - [ ] Cloudflare Turnstile
   - [ ] sign-up rate limits
   - [ ] re-join with same Google account restores record
@@ -270,7 +299,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] auto-generated daily newspaper from game events (templates)
   - [ ] farewell line when a resident moves away (`requirement.md` §6.4, §11)
   - [ ] roadmap notices + "Coming soon" locks
-  - [ ] Village Notice Board object on the island opens it on tap (Community Centre once built); no walking required
+  - [ ] newspaper opens on tap of the Welcome sign; the Warming hut adds the community board; the Community hall takes both over (`requirement.md` §7.6, §11); no walking required
   - [ ] global operator announcements (one feed for all communities) at the top of the newspaper, managed by the operator (no per-community announcements)
 - **Definition of Done**
   - [ ] newspaper reflects yesterday's real events with nicknames
@@ -280,7 +309,7 @@ M0 ─┬─ M1 ── M2 ─┐
 **Goal:** See all of Calgary and spread to empty communities.
 - **In scope**
   - [ ] 2D map from real community boundary polygons (Canvas)
-  - [ ] **small development illustrations inside each polygon** by level (houses → playground → park → community centre), Vitality mood (ground/roof tone, lights), grey dashed + cloud for unsettled
+  - [ ] **small development illustrations inside each polygon** by level (houses + welcome sign → playground / skating rink → community hall → neighbourhood park), settled = Welcome sign built, Vitality mood (ground/roof tone, lights), grey dashed + cloud for unsettled
   - [ ] icon count scaled by polygon area
   - [ ] zoom-dependent detail
   - [ ] tap → zoom + info card → enter community island
@@ -313,10 +342,9 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M13 — Feature Library ⬜
 **Goal:** Each island feels like its community.
 - **In scope**
-  - [ ] default name sign for every community (custom signs come from Phase 3 photo petitions)
-  - [ ] a few feature blocks (lake, creek, hill, park) as box models
+  - [ ] a few feature blocks (lake, creek, hill, park) as box models — most important for communities whose real shape is close to a rectangle (e.g. Mahogany's lake)
   - [ ] community → feature mapping (OSM / City hydrology suggestion + CSV override) for launch communities
-  - [ ] reserve feature/landmark slots in the island layout (M1 layout has none yet; house lots will be re-laid once, acceptable before launch)
+  - [ ] feature/landmark lots come from the stored lot plan (M1 🔁)
 - **Definition of Done**
   - [ ] launch communities show their features
   - [ ] adding a feature = data change only
@@ -341,6 +369,8 @@ M0 ─┬─ M1 ── M2 ─┐
 ## After MVP (not planned in detail yet)
 Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moderation, Profile & Ranks, Speech Bubbles, Requests, 5 Vitality moods, feature upgrades. Plan them after MVP playtest data.
 
+Phase 4: local business shops on **Main Street lots** (open after the Community hall; operator-approved messages; `requirement.md` §22.4). The lots are already reserved in the stored lot plans (M1 🔁).
+
 ---
 
 ## Change Log
@@ -352,6 +382,33 @@ Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moder
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.18
+**Changed:** "Based on" → `requirement.md` v1.18. M1 and M3 reopened (🔁) with rework checklists: real-shape islands with stored lot plans and tree building models (M1); building tree as data with conditions, 3-construction limit and upgrades in place (M3). Order: M4 playtest/merge → M1 🔁, M3 🔁 → M5. M4 open decision marked resolved. M5: tree conditions and tree build map. M6: first-visit completed example. M9: newspaper/board by tree buildings. M10: development levels by tree buildings. M13: default sign item removed (Welcome sign is a tree building), features matter most for rectangular communities, lots from the stored plan. After MVP: Phase 4 Main Street note.
+
+**Why:** Sync with requirement v1.18 (building tree, real-shape islands, growth strategy). Reworking M1/M3 before launch keeps the rule that positions never change after launch.
+
+**Previous:**
+- Header: `| Plan version | v1.17 |`
+- Header: `| Last updated | 2026-11-18 |`
+- Header: `| Based on | `requirement.md` v1.17 |`
+- Header: `| Current module | M4 — Daily Actions (🟨 Ready for playtest) |`
+- Overview: `| M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |`
+- Overview: `| M3 | Game Core | BE | ⭐ Core | M0 | ✅ |`
+- Overview: `| M5 | Community State | BE + FE | ⭐ Core | M4 | ⬜ |`
+- Overview: `**Core loop is complete after M5.** At that point the game is playable end to end with a dev user and a manually chosen community: see the island → move the avatar → take daily actions → progress next day → streak, Vitality, unlocks, island growth.`
+- M1: `### M1 — Island View ⭐ ✅`
+- M3: `### M3 — Game Core ⭐ ✅`
+- M4: `- **OPEN — decide before M5 starts (user discussion 2026-11-18/19):**`
+- M5: `unlocks (Playground / Community Centre / Park; resident counts cumulative), island size from cumulative residents`
+- M5: `- [ ] Village build map screen (`requirement.md` §7.6a): unlock track + island size track with remaining conditions and progress, completed projects; Village tab only (Me tab is Phase 2)`
+- M6: `- [ ] avatar shirt colour choice on first visit, changeable later (`requirement.md` §10.2)`
+- M9: `- [ ] Village Notice Board object on the island opens it on tap (Community Centre once built); no walking required`
+- M10: `by level (houses → playground → park → community centre), Vitality mood`
+- M13: `- [ ] default name sign for every community (custom signs come from Phase 3 photo petitions)`
+- M13: `- [ ] a few feature blocks (lake, creek, hill, park) as box models`
+- M13: `- [ ] reserve feature/landmark slots in the island layout (M1 layout has none yet; house lots will be re-laid once, acceptable before launch)`
+- After MVP: `Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moderation, Profile & Ranks, Speech Bubbles, Requests, 5 Vitality moods, feature upgrades. Plan them after MVP playtest data.`
 
 ### 2026-11-18 — v1.17
 **Changed:** "Based on" → `requirement.md` v1.17. M3 set to 🟨 with Handoff; added a DoD item "user has reviewed it" (M3 is backend only, there is nothing to play).
