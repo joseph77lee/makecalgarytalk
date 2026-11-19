@@ -14,6 +14,7 @@ import { vitalityMood, type VitalityMood } from './mood';
 import {
   BUILDING_KINDS,
   ISLAND_SIZES,
+  PROJECT_KINDS,
   MAX_ISLAND_SIZE,
   MAX_MINI_VILLAGERS,
   type BuildingKind,
@@ -75,6 +76,13 @@ export const PROJECT_SLOTS: Rect[] = [
   { x: 1, z: -1, w: 2, d: 2 },
 ];
 
+/** Tile in front of project site `index` (the avatar walks next to it to help). */
+export function projectSiteTile(index: number): Tile {
+  const r = PROJECT_SLOTS[index];
+  if (!r) throw new RangeError(`no project slot ${index}`);
+  return { x: r.x + r.w - 1, z: r.z + r.d - 1 };
+}
+
 // ---------------------------------------------------------------------------
 // Global slot tables (computed once for the largest island)
 // ---------------------------------------------------------------------------
@@ -103,8 +111,7 @@ const ALL_TILES: Tile[] = (() => {
   return tiles.sort((a, b) => ringOf(a) - ringOf(b) || dist(a) - dist(b) || angle(a) - angle(b));
 })();
 
-const FIXED_RECTS: Rect[] = [...Object.values(BUILDING_SLOTS), ...PROJECT_SLOTS];
-const FIXED_TILES = new Set(FIXED_RECTS.flatMap(rectTiles).map(tileKey));
+const BASE_FIXED_TILES = new Set([...Object.values(BUILDING_SLOTS), ...PROJECT_SLOTS].flatMap(rectTiles).map(tileKey));
 
 const N4 = [
   [1, 0],
@@ -149,12 +156,30 @@ function staysReachable(blocked: Set<string>, lots: Tile[], size: number): boole
 /** Island sizes on which tile t exists. */
 const sizesContaining = (t: Tile) => ISLAND_SIZES.filter((s) => isOnIsland(t, s));
 
+/**
+ * Showcase: one 1×1 spot per project kind (catalog order) for the miniature of its
+ * completed project, in the front row on both sides of the entrance road (8×8 edge).
+ * Reserved (no houses or trees) but NOT blocking: like flowers and lamps, characters may
+ * walk over them. The smallest island's edge is a one-tile corridor, so blocking spots
+ * there would cut paths or cost house lots.
+ */
+export const SHOWCASE_SLOTS: Record<ProjectKind, Tile> = {
+  'ice-rink': { x: -2, z: 3 },
+  'flower-path': { x: 1, z: 3 },
+  'holiday-decorations': { x: -3, z: 3 },
+  'snowman-garden': { x: 2, z: 3 },
+  'lantern-street': { x: -4, z: 3 },
+  'bird-feeders': { x: 3, z: 3 },
+};
+
+const FIXED_TILES = new Set([...BASE_FIXED_TILES, ...Object.values(SHOWCASE_SLOTS).map(tileKey)]);
+
 /** House lots: free tiles, centre outward, never touching another lot (8-neighbours). */
 const HOUSE_SLOTS: Tile[] = [];
-const BLOCKED_BY_LOTS = new Set(FIXED_TILES);
+const BLOCKED_BY_LOTS = new Set(BASE_FIXED_TILES);
 for (const t of ALL_TILES) {
   const k = tileKey(t);
-  if (!isFree(t) || neighbours(t, N8).some((n) => BLOCKED_BY_LOTS.has(tileKey(n)) && !FIXED_TILES.has(tileKey(n)))) {
+  if (!isFree(t) || neighbours(t, N8).some((n) => BLOCKED_BY_LOTS.has(tileKey(n)) && !BASE_FIXED_TILES.has(tileKey(n)))) {
     continue;
   }
   BLOCKED_BY_LOTS.add(k);
@@ -198,9 +223,7 @@ export const ASSET_KEYS = [
   'building.park',
   'silhouette',
   'construction-site',
-  'project.ice-rink',
-  'project.flower-path',
-  'project.holiday-decorations',
+  ...PROJECT_KINDS.map((k) => `showcase.${k}` as const),
   'tree',
   'sign',
   'lamp',
@@ -222,9 +245,9 @@ interface Base {
 export type PlacedObject =
   | (Base & { assetKey: 'house'; houseId: string; nickname: string; activeToday: boolean; colorIndex: number })
   | (Base & { assetKey: `building.${BuildingKind}` })
-  | (Base & { assetKey: 'silhouette'; target: BuildingKind; remaining: { streakDays: number; residents: number } })
-  | (Base & { assetKey: 'construction-site'; stage: 'scaffolding' | 'frame'; progress: number; title: string })
-  | (Base & { assetKey: `project.${ProjectKind}`; title: string })
+  | (Base & { assetKey: 'silhouette'; target: BuildingKind; remaining: { streakDays: number; residents: number } | null })
+  | (Base & { assetKey: 'construction-site'; stage: 'scaffolding' | 'frame'; progress: number; title: string; level: number })
+  | (Base & { assetKey: `showcase.${ProjectKind}`; kind: ProjectKind; level: number })
   | (Base & { assetKey: 'tree'; variant: number })
   | (Base & { assetKey: 'sign'; name: string })
   | (Base & { assetKey: 'lamp' })
@@ -261,7 +284,7 @@ export const houseCapacity = (size: number): number => HOUSE_SLOTS.filter((t) =>
 
 export function buildIslandLayout(state: CommunityViewState): IslandLayout {
   const size = state.islandSize;
-  const mood = vitalityMood(state.vitality);
+  const mood = state.vitality === null ? 'normal' : vitalityMood(state.vitality);
   const on = (t: Tile) => isOnIsland(t, size);
   const objects: PlacedObject[] = [];
   const blocked = new Set<string>();
@@ -304,17 +327,36 @@ export function buildIslandLayout(state: CommunityViewState): IslandLayout {
     block(rectTiles(rect));
   }
 
-  // Projects: construction site until complete, then the finished model.
+  // Active projects: construction sites in the order the server lists them.
   state.projects.slice(0, PROJECT_SLOTS.length).forEach((p, i) => {
     const rect = PROJECT_SLOTS[i];
-    const base = { id: `project:${p.id}`, ...rectCentre(rect), ring: rectRing(rect) };
-    objects.push(
-      p.stage === 'complete'
-        ? { ...base, assetKey: `project.${p.kind}`, title: p.title }
-        : { ...base, assetKey: 'construction-site', stage: p.stage, progress: p.progress, title: p.title },
-    );
+    objects.push({
+      id: `project:${p.id}`,
+      ...rectCentre(rect),
+      ring: rectRing(rect),
+      assetKey: 'construction-site',
+      stage: p.stage,
+      progress: p.progress,
+      title: p.title,
+      level: p.level,
+    });
     block(rectTiles(rect));
   });
+
+  // Completed projects: one miniature per kind on its showcase spot.
+  for (const item of state.showcase) {
+    const t = SHOWCASE_SLOTS[item.kind];
+    objects.push({
+      id: `showcase:${item.kind}`,
+      x: t.x + 0.5,
+      z: t.z + 0.5,
+      ring: ringOf(t),
+      assetKey: `showcase.${item.kind}`,
+      kind: item.kind,
+      level: item.level,
+    });
+    // Not blocking (see SHOWCASE_SLOTS).
+  }
 
   for (const t of TREE_TILES.filter(on)) {
     objects.push({

@@ -85,7 +85,7 @@ describe('parseCommunityViewState', () => {
   });
 
   it('allows at most 3 projects with progress 0..1 and a known kind', () => {
-    const p = { id: 'x', kind: 'ice-rink', title: 'T', stage: 'frame', progress: 0.5 };
+    const p = { id: 'x', kind: 'ice-rink', title: 'T', stage: 'frame', progress: 0.5, level: 1 };
     expect(errorsOf({ ...valid(), projects: [p, { ...p, id: 'y' }, { ...p, id: 'z' }] })).toEqual([]);
     expect(errorsOf({ ...valid(), projects: [p, { ...p, id: 'y' }, { ...p, id: 'z' }, { ...p, id: 'w' }] }).join()).toMatch(/at most 3/);
     expect(errorsOf({ ...valid(), projects: [{ ...p, progress: 1.2 }] }).join()).toMatch(/projects\[0\]/);

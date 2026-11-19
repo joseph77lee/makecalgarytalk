@@ -23,6 +23,9 @@ interface AvatarStore {
   arrival: { seq: number; tile: Tile } | null;
   /** Called by the avatar renderer; not part of the movement API. */
   reportArrival: (seq: number, tile: Tile) => void;
+  /** Work animation (helping a project): until this performance.now() time, facing `workFacing`. */
+  workUntil: number;
+  workFacing: Tile | null;
   /** Ask the avatar to walk to a tile (blocked tiles resolve to the nearest reachable one). */
   moveTo: (to: Tile) => DestinationEvent;
 }
@@ -32,6 +35,8 @@ export const useAvatarStore = create<AvatarStore>((set, get) => ({
   avatarId: 'local',
   lastEvent: null,
   arrival: null,
+  workUntil: 0,
+  workFacing: null,
   reportArrival: (seq, tile) => set({ arrival: { seq, tile } }),
   moveTo: (to) => {
     const event: DestinationEvent = {
@@ -47,3 +52,8 @@ export const useAvatarStore = create<AvatarStore>((set, get) => ({
 
 /** Public movement API: `moveTo({ x, z })`. Usable from anywhere (M4 actions use it). */
 export const moveTo = (to: Tile): DestinationEvent => useAvatarStore.getState().moveTo(to);
+
+/** Play the "helping" animation for `ms`, turned towards `facing` (e.g. the construction site). */
+export function playWork(facing: Tile | null, ms = 1200): void {
+  useAvatarStore.setState({ workUntil: performance.now() + ms, workFacing: facing });
+}

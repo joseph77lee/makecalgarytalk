@@ -202,49 +202,95 @@ export function constructionSite(item: ObjectOf<'construction-site'>): BoxPart[]
   return parts;
 }
 
-export function iceRink(): BoxPart[] {
-  const parts: BoxPart[] = [box('solid', 0, 0, 0, 1.7, 0.05, 1.7, '#d4ecf7')];
-  for (const [x, z, w, d] of [[0, -0.87, 1.8, 0.06], [0, 0.87, 1.8, 0.06], [-0.87, 0, 0.06, 1.8], [0.87, 0, 0.06, 1.8]]) {
-    parts.push(box('solid', x, 0, z, w, 0.14, d, '#ffffff'));
-  }
-  parts.push(box('solid', -0.3, 0.05, 0.1, 0.5, 0.01, 0.04, '#b3d8ec'));
-  parts.push(box('solid', 0.2, 0.05, -0.25, 0.04, 0.01, 0.5, '#b3d8ec'));
-  for (const [x, z] of [[-0.87, -0.87], [0.87, -0.87]]) {
-    parts.push(box('solid', x, 0.14, z, 0.05, 0.6, 0.05, '#5d6470'));
-    parts.push(box('glow', x, 0.74, z, 0.12, 0.1, 0.12, '#ffe7a3'));
+// --- Showcase miniatures (completed projects, 1×1 tile) -------------------------
+
+const GOLD = '#f2c94c';
+
+/** Small stone pedestal; level 2+ adds one gold marker per extra level (max 4). */
+function pedestal(level: number): BoxPart[] {
+  const parts: BoxPart[] = [box('solid', 0, 0, 0, 0.86, 0.06, 0.86, '#e9e3d6')];
+  const extra = Math.min(Math.max(level - 1, 0), 4);
+  for (let i = 0; i < extra; i++) {
+    parts.push(box('glow', -0.3 + i * 0.13, 0.06, 0.4, 0.08, 0.08, 0.04, GOLD));
   }
   return parts;
 }
 
-export function flowerPath(_item: unknown, { palette }: BuildCtx): BoxPart[] {
-  const parts: BoxPart[] = [
-    box('solid', 0, 0, 0, 0.5, 0.03, 1.8, palette.path[0]),
-    box('solid', 0, 0, 0, 1.8, 0.03, 0.5, palette.path[0]),
+type Showcase = { level: number };
+
+export function showcaseIceRink(item: Showcase): BoxPart[] {
+  return [
+    ...pedestal(item.level),
+    box('solid', 0, 0.06, -0.02, 0.7, 0.04, 0.6, '#d4ecf7'),
+    box('solid', 0, 0.06, -0.33, 0.74, 0.08, 0.04, '#ffffff'),
+    box('solid', 0, 0.06, 0.29, 0.74, 0.08, 0.04, '#ffffff'),
+    box('solid', -0.36, 0.06, -0.02, 0.04, 0.08, 0.6, '#ffffff'),
+    box('solid', 0.36, 0.06, -0.02, 0.04, 0.08, 0.6, '#ffffff'),
+    box('solid', 0.1, 0.1, -0.05, 0.1, 0.16, 0.08, ACCENTS[0]),
+    box('solid', 0.1, 0.26, -0.05, 0.08, 0.08, 0.08, '#f5d3b5'),
   ];
-  let i = 0;
-  for (const x of [-0.65, -0.4, 0.4, 0.65]) {
-    for (const z of [-0.65, -0.4, 0.4, 0.65]) {
-      parts.push(box('solid', x, 0, z, 0.14, 0.16, 0.14, ACCENTS[i++ % ACCENTS.length]));
-    }
-  }
+}
+
+export function showcaseFlowerPath(item: Showcase, { palette }: BuildCtx): BoxPart[] {
+  const parts: BoxPart[] = [...pedestal(item.level), box('solid', 0, 0.06, 0, 0.24, 0.03, 0.8, palette.path[0])];
+  [-0.3, -0.1, 0.1, 0.3].forEach((z, i) => {
+    parts.push(box('solid', -0.25, 0.06, z, 0.12, 0.14, 0.12, ACCENTS[i % ACCENTS.length]));
+    parts.push(box('solid', 0.25, 0.06, z, 0.12, 0.14, 0.12, ACCENTS[(i + 3) % ACCENTS.length]));
+  });
   return parts;
 }
 
-export function holidayDecorations(): BoxPart[] {
+export function showcaseHolidayDecorations(item: Showcase): BoxPart[] {
   const pine = '#5fae7a';
-  const parts: BoxPart[] = [
-    box('solid', 0, 0, 0, 0.18, 0.3, 0.18, '#8a6343'),
-    box('solid', 0, 0.3, 0, 1.0, 0.4, 1.0, pine),
-    box('solid', 0, 0.7, 0, 0.72, 0.38, 0.72, pine),
-    box('solid', 0, 1.08, 0, 0.44, 0.34, 0.44, pine),
-    box('glow', 0, 1.42, 0, 0.16, 0.16, 0.16, '#ffe27a'),
+  return [
+    ...pedestal(item.level),
+    box('solid', 0, 0.06, 0, 0.1, 0.14, 0.1, '#8a6343'),
+    box('solid', 0, 0.2, 0, 0.56, 0.24, 0.56, pine),
+    box('solid', 0, 0.44, 0, 0.4, 0.22, 0.4, pine),
+    box('solid', 0, 0.66, 0, 0.24, 0.2, 0.24, pine),
+    box('glow', 0, 0.86, 0, 0.1, 0.1, 0.1, '#ffe27a'),
+    box('glow', 0.28, 0.3, 0.1, 0.06, 0.06, 0.06, '#ff8b8b'),
+    box('glow', -0.1, 0.52, 0.2, 0.06, 0.06, 0.06, '#8ec5ea'),
+    box('glow', 0.12, 0.7, -0.12, 0.06, 0.06, 0.06, '#b8a9e8'),
+    box('solid', 0.3, 0.06, 0.3, 0.14, 0.12, 0.14, ACCENTS[0]),
   ];
-  const lights = ['#ff8b8b', '#ffe27a', '#8ec5ea', '#b8a9e8'];
-  [[0.51, 0.45, 0.2], [0.2, 0.55, 0.51], [-0.3, 0.85, 0.37], [0.37, 0.95, -0.1], [0.1, 1.2, 0.23], [0.23, 0.6, -0.4]].forEach(
-    ([x, y, z], i) => parts.push(box('glow', x, y, z, 0.08, 0.08, 0.08, lights[i % lights.length])),
-  );
-  parts.push(box('solid', 0.6, 0, 0.55, 0.26, 0.2, 0.26, ACCENTS[0]));
-  parts.push(box('solid', -0.6, 0, 0.6, 0.2, 0.16, 0.2, ACCENTS[2]));
-  parts.push(box('solid', 0.62, 0, -0.5, 0.22, 0.24, 0.22, ACCENTS[4]));
+}
+
+export function showcaseSnowmanGarden(item: Showcase): BoxPart[] {
+  return [
+    ...pedestal(item.level),
+    box('solid', -0.15, 0.06, 0, 0.34, 0.3, 0.34, SNOW),
+    box('solid', -0.15, 0.36, 0, 0.24, 0.22, 0.24, SNOW),
+    box('solid', -0.15, 0.4, 0.125, 0.05, 0.05, 0.08, '#f39a52'),
+    box('solid', -0.15, 0.58, 0, 0.2, 0.06, 0.2, '#3f4a5c'),
+    box('solid', -0.15, 0.32, 0, 0.27, 0.05, 0.27, ACCENTS[0]),
+    box('solid', 0.22, 0.06, 0.15, 0.2, 0.18, 0.2, SNOW),
+    box('solid', 0.22, 0.24, 0.15, 0.14, 0.13, 0.14, SNOW),
+    box('solid', 0.22, 0.37, 0.15, 0.12, 0.04, 0.12, ACCENTS[2]),
+  ];
+}
+
+export function showcaseLanternStreet(item: Showcase): BoxPart[] {
+  const parts: BoxPart[] = [...pedestal(item.level)];
+  for (const [x, z] of [[-0.25, -0.25], [0.25, 0.25]] as const) {
+    parts.push(box('solid', x, 0.06, z, 0.06, 0.55, 0.06, '#5d6470'));
+    parts.push(box('glow', x, 0.6, z, 0.16, 0.16, 0.16, '#ffd98a'));
+    parts.push(box('solid', x, 0.76, z, 0.2, 0.04, 0.2, '#5d6470'));
+  }
+  parts.push(box('solid', 0, 0.62, 0, 0.62, 0.02, 0.02, '#8a8f99', [0, Math.PI / 4, 0]));
+  [-0.12, 0, 0.12].forEach((d, i) => parts.push(box('glow', d, 0.56, d, 0.05, 0.05, 0.05, ACCENTS[i])));
   return parts;
+}
+
+export function showcaseBirdFeeders(item: Showcase, { palette }: BuildCtx): BoxPart[] {
+  return [
+    ...pedestal(item.level),
+    box('solid', 0, 0.06, 0, 0.08, 0.5, 0.08, palette.trunk),
+    box('solid', 0, 0.56, 0, 0.3, 0.18, 0.24, '#d9a066'),
+    box('solid', 0, 0.74, 0, 0.38, 0.06, 0.32, ACCENTS[0]),
+    box('solid', 0, 0.62, 0.125, 0.08, 0.08, 0.02, '#3f4a5c'),
+    box('solid', 0.18, 0.5, 0.05, 0.12, 0.03, 0.04, '#b88a64'),
+    box('solid', 0.22, 0.53, 0.05, 0.07, 0.07, 0.07, ACCENTS[2]),
+    box('solid', -0.24, 0.06, 0.25, 0.08, 0.08, 0.08, ACCENTS[4]),
+  ];
 }

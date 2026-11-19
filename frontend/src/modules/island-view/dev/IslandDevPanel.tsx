@@ -67,12 +67,12 @@ export function IslandDevPanel() {
         </div>
       </Row>
 
-      <Row label={`Vitality ${state.vitality} (${vitalityMood(state.vitality)})`}>
+      <Row label={state.vitality === null ? 'Vitality (not set)' : `Vitality ${state.vitality} (${vitalityMood(state.vitality)})`}>
         <input
           type="range"
           min={0}
           max={100}
-          value={state.vitality}
+          value={state.vitality ?? 50}
           onChange={(e) => set({ vitality: Number(e.target.value) })}
           className="w-full"
         />

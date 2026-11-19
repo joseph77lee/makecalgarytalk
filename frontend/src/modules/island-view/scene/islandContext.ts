@@ -32,3 +32,8 @@ export function useIslandCtx(): IslandCtx {
  * celebrateUntil: performance.now() timestamp until which villagers cheer.
  */
 export const useSceneFx = create<{ celebrateUntil: number }>(() => ({ celebrateUntil: 0 }));
+
+/** Make the mini villagers cheer for `ms` (e.g. after an action). */
+export function celebrateIsland(ms = 1500): void {
+  useSceneFx.setState({ celebrateUntil: performance.now() + ms });
+}

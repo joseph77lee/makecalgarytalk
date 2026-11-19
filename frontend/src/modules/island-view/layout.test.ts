@@ -3,6 +3,8 @@ import {
   ASSET_KEYS,
   BUILDING_SLOTS,
   PROJECT_SLOTS,
+  SHOWCASE_SLOTS,
+  projectSiteTile,
   buildIslandLayout,
   houseCapacity,
   isOnIsland,
@@ -17,7 +19,7 @@ import {
 } from './layout';
 import mock from './mockCommunityState.json';
 import { parseCommunityViewState } from './parseState';
-import { ISLAND_SIZES, type CommunityViewState, type IslandSize } from './types';
+import { ISLAND_SIZES, PROJECT_KINDS, type CommunityViewState, type IslandSize } from './types';
 
 function baseState(): CommunityViewState {
   const r = parseCommunityViewState(mock);
@@ -37,7 +39,7 @@ const of = <K extends AssetKey>(l: IslandLayout, k: K) =>
 
 /** Tiles an object physically occupies (blocks walking). */
 function footprint(o: PlacedObject): Tile[] {
-  if (o.assetKey.startsWith('building.') || o.assetKey === 'silhouette' || o.assetKey === 'construction-site' || o.assetKey.startsWith('project.')) {
+  if (o.assetKey.startsWith('building.') || o.assetKey === 'silhouette' || o.assetKey === 'construction-site') {
     return [
       { x: o.x - 1, z: o.z - 1 },
       { x: o.x, z: o.z - 1 },
@@ -215,13 +217,63 @@ describe('state → objects', () => {
     expect(of(l, 'building.park')).toHaveLength(1);
   });
 
-  it('projects show a construction site until complete', () => {
+  it('active projects are construction sites; completed ones are showcase miniatures', () => {
     const l = buildIslandLayout(baseState());
-    expect(of(l, 'construction-site').map((c) => [c.stage, c.progress])).toEqual([
-      ['frame', 0.55],
-      ['scaffolding', 0.2],
+    expect(of(l, 'construction-site').map((c) => [c.stage, c.progress, c.level])).toEqual([
+      ['frame', 0.55, 1],
+      ['scaffolding', 0.2, 1],
+      ['scaffolding', 0.1, 1],
     ]);
-    expect(of(l, 'project.holiday-decorations')).toHaveLength(1);
+    expect(of(l, 'showcase.holiday-decorations')).toHaveLength(1);
+    expect(of(l, 'showcase.lantern-street')[0]).toMatchObject({ level: 2 });
+    expect(of(l, 'showcase.ice-rink')).toEqual([]);
+  });
+
+  it('every showcase spot fits on the smallest island, off the road, one per kind', () => {
+    const tiles = Object.values(SHOWCASE_SLOTS);
+    expect(new Set(tiles.map(tileKey)).size).toBe(PROJECT_KINDS.length);
+    for (const t of tiles) {
+      expect(isOnIsland(t, 8)).toBe(true);
+      expect(isPathTile(t)).toBe(false);
+    }
+  });
+
+  it.each(ISLAND_SIZES)('size %s: no house, tree, building or site ever sits on a showcase spot', (size) => {
+    const l = buildIslandLayout(stateWith({ islandSize: size, houses: residents(houseCapacity(size)) }));
+    const spots = new Set(Object.values(SHOWCASE_SLOTS).map(tileKey));
+    const clash = l.objects.flatMap(footprint).filter((t) => spots.has(tileKey(t)));
+    expect(clash).toEqual([]);
+    // showcase spots are walkable (not blocking)
+    const walk = new Set(l.walkable.map(tileKey));
+    for (const k of spots) expect(walk.has(k)).toBe(true);
+  });
+
+  it.each(ISLAND_SIZES)('size %s: a full showcase and full houses stay reachable', (size) => {
+    const showcase = PROJECT_KINDS.map((kind) => ({ kind, level: 1 }));
+    const l = buildIslandLayout(stateWith({ islandSize: size, showcase, houses: residents(houseCapacity(size)) }));
+    const walk = new Set(l.walkable.map(tileKey));
+    for (const o of l.objects.filter((x) => x.assetKey.startsWith('showcase.') || x.assetKey === 'house')) {
+      const t = { x: o.x - 0.5, z: o.z - 0.5 };
+      const reachable = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => walk.has(tileKey({ x: t.x + dx, z: t.z + dz })));
+      expect(reachable, `${o.id} is not reachable`).toBe(true);
+    }
+  });
+
+  it('projectSiteTile is a corner tile of each project site', () => {
+    PROJECT_SLOTS.forEach((r, i) => {
+      const t = projectSiteTile(i);
+      expect(t.x).toBe(r.x + r.w - 1);
+      expect(t.z).toBe(r.z + r.d - 1);
+    });
+    expect(() => projectSiteTile(3)).toThrow(RangeError);
+  });
+
+  it('missing Vitality draws the Normal mood; unknown unlock conditions stay null', () => {
+    const l = buildIslandLayout(
+      stateWith({ vitality: null, buildings: { ...baseState().buildings, park: { unlocked: false, remaining: null } } }),
+    );
+    expect(l.mood).toBe('normal');
+    expect(of(l, 'silhouette').find((x) => x.target === 'park')?.remaining).toBeNull();
   });
 
   it('mood decorations follow Vitality', () => {
