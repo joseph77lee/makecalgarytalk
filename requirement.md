@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.18 |
+| Document version | v1.19 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-18 |
 | Status | Initial draft for starting MVP development |
@@ -226,7 +226,7 @@ Community unlock buildings and construction projects are **one building tree**. 
 - When every opened building is built, projects **upgrade built buildings in place** (Lv 2, 3, …; ×1.25 per level), so there is always something to do
 - Construction progress is **applied the next day**; visuals: scaffolding → frame → complete
 - Each stage adds one new kind of condition: actions → streak → residents → residents + streak → long-term
-- Locked buildings appear as **faded silhouettes** on their lots with what is missing (e.g. "2 more neighbours", "1 more streak day", "Build the Frozen pond first")
+- **Locked buildings are not drawn on the island** (their lot is plain, walkable land, so the island stays tidy and new buildings are a surprise); the build map (7.6a) shows them with what is missing (e.g. "2 more neighbours", "1 more streak day", "Build the Frozen pond first"). A building whose conditions are met appears on its lot as a faded silhouette marked ✨ "Ready to build"
 - Names are generic (no trademarks)
 - Community level is permanent (separate from the weekly ranking)
 
@@ -264,6 +264,8 @@ Community unlock buildings and construction projects are **one building tree**. 
 - **The island never shrinks.** Inactivity is shown through Vitality (mood/scenery), not size.
 - **Positions never change.** Each community's lot plan (building lots, house lots, spare lots, Main Street lots, paths) is generated **once** and stored; later algorithm changes apply only to new communities or newly added lots.
 - Buildings opened by the tree always have land: their resident conditions match the land available at that resident count.
+- First-stage buildings sit around the plaza (a cosy village centre); later buildings get lots in the **newly grown outer land, spread in different directions**, so every growth brings new building spots.
+- **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings; if water would cut the land apart, a small bridge path keeps every part reachable.
 - Default camera angle per community fits its shape on a portrait phone (long side vertical).
 - UI shows the next growth goal (e.g. "2 more neighbours until the island grows").
 
@@ -272,7 +274,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Name sign** at the island entrance
   - The **Welcome sign** is the first building of the tree (7.6) and grows into a Gateway arch; every community uses the same voxel models with its own name
   - A **custom sign** comes only from a resident photo petition (16.2, Phase 3): the real entrance sign's shape, colours and materials **reinterpreted in voxel style**, showing only the community name — **no developer logos or branding**
-- **Signature features** from a reusable **feature library** (not real size/position — symbolic). They matter most for communities whose real shape is close to a rectangle (e.g. Mahogany, whose lake is not part of the boundary):
+- **Real water** at its real position (7.8)
+- **Signature features** from a reusable **feature library** (not real size/position — symbolic; e.g. hills, CTrain station, mall, school, large parks), placed on spare lots:
   - Example blocks: lake/pond, creek/river, hill, ravine, large park, off-leash dog park, ice rink, CTrain station, mall, school
   - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator
 - **Community landmarks** (Phase 3): a community-specific landmark model (e.g. a lakeside clubhouse), made only from a resident photo petition (16.2); until then communities use shared library blocks only
@@ -767,6 +770,16 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.19
+**Changed:** 7.6: locked buildings are no longer drawn on the island (shown in the build map); opened buildings appear as ✨ silhouettes. 7.8: first-stage buildings around the plaza, later buildings in newly grown outer land spread in different directions; real water (City Hydrology) placed at its real position with bridges if needed. 7.9: real water listed; the feature library stays symbolic for other features.
+
+**Why:** User decisions during the M1 rework (2026-11-19): showing every future building as a lock clutters the island; lots were all crowded in the middle; communities should keep their real terrain character from the start (water data is available and precise; hills have no city elevation data, so they stay symbolic for now).
+
+**Previous:**
+- 7.6: `- Locked buildings appear as **faded silhouettes** on their lots with what is missing (e.g. "2 more neighbours", "1 more streak day", "Build the Frozen pond first")`
+- 7.8: `- Buildings opened by the tree always have land: their resident conditions match the land available at that resident count.`
+- 7.9: `- **Signature features** from a reusable **feature library** (not real size/position — symbolic). They matter most for communities whose real shape is close to a rectangle (e.g. Mahogany, whose lake is not part of the boundary):`
 
 ### 2026-11-19 — v1.18
 **Changed:** Added 1.4 Growth strategy (finished example → daily action → local information → business placements). 5.1: completed-neighbourhood example on the first visit; next goal from the tree. 7.1: Settled when the Welcome sign is built. 7.6 / 7.6a / 7.7: unlocks and the project catalog replaced by one **building tree** (three seeds that grow in place, branches, stage multipliers, upgrades in place); build map shows the tree and completion %; new 7.6b extensible buildings (tree as data, placeholder models, spare and Main Street lots). 7.8: islands take the **real community shape** with equal maximum land, outline visible from day one, land grows with residents, lot plan generated once and stored. 7.9, 10.1, 11, 20.4, 22.1, 22.3, 22.4 (Main Street opens after the Community hall; operator-approved shop messages), 22.8, 23 updated to match. Old building names elsewhere (5.2, 9 development levels, 10.2, 14, 16.2, 19.4, 22.1) renamed to the tree's buildings.

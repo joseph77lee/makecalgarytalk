@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.18 |
+| Plan version | v1.19 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
-| Based on | `requirement.md` v1.18 |
-| Current module | M1 🔁 Island View rework (🟨 Ready for playtest); then M3 🔁, then M5 |
+| Based on | `requirement.md` v1.19 |
+| Current module | M1 🔁 Island View rework (in progress: water, lot spread, hidden locks); then M3 🔁, then M5 |
 
 ---
 
@@ -39,7 +39,7 @@
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
-| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🟨 |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🔁 |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | 🔁 |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
@@ -101,7 +101,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
   - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
-### M1 — Island View ⭐ 🟨 (rework)
+### M1 — Island View ⭐ 🔁
 **Reopened 2026-11-19** (`requirement.md` v1.18 §7.6–7.8, §20.4; branch `fix/m1-real-shape-islands`, after M4 is merged). The original items below stay ticked; the rework:
 - **In scope (rework)**
   - [x] Island from the **real community boundary**: rasterize to ~1,024 tiles (equal max land), smooth thin spurs, keep the largest part, centre = farthest from the edge, reveal order by walking distance; land tiers 64 / 144 / 256 / 400 / 676 / all
@@ -109,6 +109,9 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] **Lot plan per community generated once and stored** (static JSON, served like other static data): tree building lots reserved at final size, house lots, spare lots, Main Street lots, paths; never regenerated for existing communities
   - [x] Box models for the tree buildings (welcome sign → gateway arch, fire pit → warming hut → community hall, frozen pond → skating rink → lit hockey rink, playground, sledding hill, dog park, pathway lights, community garden, neighbourhood park) and a **generic placeholder** for unknown building keys; remove the M4 showcase miniatures
   - [x] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land
+  - [ ] Real water from City Hydrology at its real position (not walkable, no lots; bridges if water splits the land) (`requirement.md` v1.19 §7.8)
+  - [ ] Later-stage lots in newly grown outer land, spread in different directions; first-stage lots around the plaza
+  - [ ] Locked buildings not drawn on the island; opened buildings as ✨ silhouettes (§7.6)
 - **Definition of Done (rework)**
   - [x] all 223 communities produce valid islands (automated checks: one connected island per stage, every lot fits and is reachable, positions identical across stages)
   - [x] phone-size check of a few unusual shapes (Beltline and Diamond Cove on a phone, Lower Mount Royal on desktop; Bowness only in the stored-plan tests; headless Chromium, not a real phone)
@@ -392,6 +395,18 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.19
+**Changed:** "Based on" → `requirement.md` v1.19. M1 rework: added real water, lot spread and hidden locked buildings; status back to 🔁 while they are built.
+
+**Why:** Sync with requirement v1.19 (user feedback on the first rework playtest).
+
+**Previous:**
+- M1: `- [x] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land`
+- Header: `| Current module | M1 🔁 Island View rework (🟨 Ready for playtest); then M3 🔁, then M5 |`
+- Overview: `| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🟨 |`
+- M1: `### M1 — Island View ⭐ 🟨 (rework)`
+- Header: `| Based on | `requirement.md` v1.18 |`
 
 ### 2026-11-19 — v1.18
 **Changed:** "Based on" → `requirement.md` v1.18. M1 and M3 reopened (🔁) with rework checklists: real-shape islands with stored lot plans and tree building models (M1); building tree as data with conditions, 3-construction limit and upgrades in place (M3). Order: M4 playtest/merge → M1 🔁, M3 🔁 → M5. M4 open decision marked resolved. M5: tree conditions and tree build map. M6: first-visit completed example. M9: newspaper/board by tree buildings. M10: development levels by tree buildings. M13: default sign item removed (Welcome sign is a tree building), features matter most for rectangular communities, lots from the stored plan. After MVP: Phase 4 Main Street note.
