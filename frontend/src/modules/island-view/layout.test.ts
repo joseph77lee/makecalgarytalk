@@ -77,6 +77,36 @@ describe('lots and the building tree (requirement.md §7.6)', () => {
     ).toMatchObject({ assetKey: 'building.community-hall', level: 2, next: null });
   });
 
+  it('an upgrade keeps the built building on its lot with a progress label (§7.6 upgrades in place)', () => {
+    const lot = (buildings: BuildingView[]) => at(buildIslandLayout(MAH, stateWith({ buildings })).objects, 'lot:lot-a');
+    expect(lot([view('fire-pit', { status: 'building', level: 2, progress: 0.25 })])).toMatchObject({
+      assetKey: 'building.fire-pit',
+      level: 1,
+      upgrade: { level: 2, progress: 0.25 },
+      next: { title: 'Warming hut' },
+    });
+    expect(lot([view('fire-pit', { status: 'built', level: 3 })])).toMatchObject({ assetKey: 'building.fire-pit', level: 3, upgrade: null });
+    // a new building growing on the lot is still a construction site
+    expect(lot([view('fire-pit', { status: 'built' }), view('warming-hut', { status: 'building', progress: 0.1 })])).toMatchObject({ assetKey: 'construction-site' });
+    // an upgrade of the chain's newest building draws that building
+    expect(lot([view('fire-pit', { status: 'built' }), view('warming-hut', { status: 'building', level: 2, progress: 0.5 })])).toMatchObject({
+      assetKey: 'building.warming-hut',
+      level: 1,
+      upgrade: { level: 2, progress: 0.5 },
+    });
+  });
+
+  it('the Welcome sign stays up while it is upgraded, and the avatar still finds it', () => {
+    const l = buildIslandLayout(MAH, stateWith({ buildings: [view('welcome-sign', { status: 'building', level: 2, progress: 0 })] }));
+    expect(l.objects.find((o) => 'buildingKey' in o && o.buildingKey === 'welcome-sign')).toMatchObject({ assetKey: 'building.welcome-sign', upgrade: { level: 2 } });
+    expect(buildingSiteTile(l, 'welcome-sign')).not.toBeNull();
+  });
+
+  it('upgraded unknown buildings keep the placeholder model, not a construction site', () => {
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, buildings: [view('future-x', { status: 'building', level: 2, progress: 0.3 })] }));
+    expect(l.objects.find((o) => 'buildingKey' in o && o.buildingKey === 'future-x')).toMatchObject({ assetKey: 'building.placeholder', level: 1, upgrade: { level: 2, progress: 0.3 } });
+  });
+
   it('a locked lot is plain walkable land; once shown it blocks walking', () => {
     const walkOf = (buildings: BuildingView[]) => new Set(buildIslandLayout(MAH, stateWith({ buildings })).walkable.map(tileKey));
     const tiles = lotTiles(MAH.lots['lot-a']);

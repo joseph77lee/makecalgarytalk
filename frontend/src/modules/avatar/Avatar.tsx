@@ -2,7 +2,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import type { Group } from 'three';
-import { clearCameraFocus, setCameraFocus, useIslandWalkable, useShowIslandLabels, type Tile } from '../island-view';
+import { clearCameraFocus, setCameraFocus, useHtmlPortal, useIslandWalkable, useShowIslandLabels, type Tile } from '../island-view';
 import { useAvatarStore } from './avatarStore';
 import { stepCandidates } from './keyboard';
 import { usePressedKeys } from './usePressedKeys';
@@ -20,6 +20,7 @@ interface Props {
 export function Avatar({ nickname }: Props) {
   const { walkable, walkableKeys } = useIslandWalkable();
   const showLabels = useShowIslandLabels();
+  const portal = useHtmlPortal();
   const walker = useRef<AvatarWalker | null>(null);
   walker.current ??= new AvatarWalker(SPAWN);
   const group = useRef<Group>(null);
@@ -133,7 +134,7 @@ export function Avatar({ nickname }: Props) {
           </mesh>
         </group>
         {showLabels && (
-          <Html position={[0, 1.05, 0]} center zIndexRange={[28, 21]} style={{ pointerEvents: 'none' }}>
+          <Html portal={portal} position={[0, 1.05, 0]} center zIndexRange={[28, 21]} style={{ pointerEvents: 'none' }}>
             <span className="whitespace-nowrap rounded-full bg-orange-500 px-2 py-px text-[10px] font-bold text-white shadow-sm">
               {nickname}
             </span>

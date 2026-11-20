@@ -11,6 +11,7 @@ import { villagerPersonality } from './villagerPersonality';
 import { useIslandUi } from '../uiStore';
 import { SpeechBubbleLabel } from '../scene/Labels';
 import { BUBBLE_Z } from '../scene/labelText';
+import { useHtmlPortal } from '../scene/htmlPortal';
 
 /** Ambient mini villagers wandering the walkable tiles (requirement.md §7.3). */
 export function MiniVillagers({ items }: ItemsProps<ObjectOf<'mini-villager'>>) {
@@ -50,6 +51,7 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
   const sim = useRef({ from: startTile, to: startTile, t: 1, pause: 0, rng: mulberry32(index * 7919 + 17) });
   const me = useRef(villagerPersonality(index)).current;
   const showLabels = useIslandUi((u) => u.showLabels);
+  const portal = useHtmlPortal();
   const bubble = showLabels ? villagerBubbles.get(index) : undefined;
 
   useFrame(({ clock }, rawDt) => {
@@ -116,7 +118,7 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
         </mesh>
       </group>
       {bubble && (
-        <Html position={[0, 0.85, 0]} center zIndexRange={BUBBLE_Z} style={{ pointerEvents: 'none' }}>
+        <Html portal={portal} position={[0, 0.85, 0]} center zIndexRange={BUBBLE_Z} style={{ pointerEvents: 'none' }}>
           <SpeechBubbleLabel text={bubble} />
         </Html>
       )}

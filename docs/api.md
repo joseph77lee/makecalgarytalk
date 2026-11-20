@@ -28,28 +28,43 @@ Residential Calgary communities (City of Calgary Open Data, see `docs/data-sourc
 `population` is `null` for brand-new communities without census data.
 
 ## `gamecore_get_community_state(p_community_id uuid)`
-State on the current Calgary day. Reading it also starts the community's next projects if
-fewer than 3 are active (project rows are written once, when they start).
+State on the current Calgary day. Reading it also updates the community's building tree:
+newly unlocked buildings are recorded as opened, and new constructions start while fewer
+than 3 are active. These rows are written once, when the change happens.
 
 ```json
 {
   "calgary_day": "2026-12-02",
   "next_day_start": "2026-12-03T06:00:00+00:00",
-  "community": { "id": "uuid", "code": "MAH", "name": "Mahogany", "sector": "Southeast", "population": 13860 },
-  "projects": [
-    { "id": "uuid", "seq": 2, "kind": "flower-path", "title": "Make a flower path", "level": 1,
-      "required": 10, "progress": 4, "stage": "scaffolding" }
+  "community": { "id": "uuid", "code": "MAH", "name": "Mahogany", "sector": "Southeast", "population": 13860,
+                 "residents": 4, "land_stage": 1, "settled": true },
+  "buildings": [
+    { "key": "welcome-sign", "name": "Welcome sign", "stage": 1, "status": "building", "level": 2, "progress": 0.25, "remaining": null },
+    { "key": "frozen-pond", "name": "Frozen pond", "stage": 1, "status": "built", "level": 1, "progress": 1, "remaining": null },
+    { "key": "warming-hut", "name": "Warming hut", "stage": 2, "status": "locked", "level": 1, "progress": 0,
+      "remaining": { "residents": 0, "streak_days": 3, "requires": ["fire-pit"] } }
   ],
-  "completed_projects": [
-    { "id": "uuid", "seq": 1, "kind": "ice-rink", "title": "Build an ice rink", "level": 1, "completed_on": "2026-12-02" }
+  "projects": [
+    { "id": "uuid", "building_key": "welcome-sign", "title": "Welcome sign", "level": 2,
+      "required": 4, "progress": 1, "stage": "scaffolding" }
   ],
   "me": { "member": true, "energy_max": 3, "energy_left": 2 }
 }
 ```
-- `projects`: the 3 active projects in order. `progress` counts actions from **before today**
-  (today's actions show tomorrow), capped at `required`. `stage`: `scaffolding` below half,
-  `frame` from half. Completed projects move to `completed_projects`.
-- `completed_on`: the day the completion became visible (the day after the goal was reached).
+- `community.residents`: cumulative residents (**temporary:** players currently in the
+  community until M7 brings Verified Residents). `land_stage`: 0–5 from the land tiers.
+  `settled`: the first building has been built.
+- `buildings`: every building of the tree, in tree order.
+  - `status`: `locked` (conditions not met), `opened` (unlocked, waiting for a free
+    construction slot), `building` (a construction or upgrade is active), `built`.
+  - `level`: the level under construction, or the highest built level.
+  - `progress`: 0–1 while building, 1 when built.
+  - `remaining`: only for `locked`; what is still missing (`residents` and `streak_days` are
+    the shortfall, `requires` the buildings that are not yet built).
+- `projects`: the active constructions (at most 3); the ids to send to
+  `gamecore_submit_actions`. `progress` counts actions from **before today** (today's
+  actions show tomorrow), capped at `required`. `stage`: `scaffolding` below half, `frame`
+  from half. A building is `built` the day after its goal was reached.
 - `me`: `null` for visitors (not signed in).
 - Errors: unknown community → `P0002`.
 
@@ -77,8 +92,8 @@ At most 10 entries per call. Each entry is processed in order and gets a result:
 | `duplicate` | This id was already accepted for you (safe retry; no energy spent, even after midnight) |
 | `rejected` · `no_energy` | 3 actions already today (Calgary day) |
 | `rejected` · `not_member` | You have not joined a community |
-| `rejected` · `other_community` | The project belongs to another community |
-| `rejected` · `project_not_active` | The project is completed (or not started) |
+| `rejected` · `other_community` | The project (building) belongs to another community |
+| `rejected` · `project_not_active` | The construction is finished (goal reached) |
 | `rejected` · `project_not_found` | Unknown project id |
 | `rejected` · `id_conflict` | Another player already used this id |
 | `rejected` · `invalid` | Missing or malformed `id` / `project_id` |
@@ -103,12 +118,20 @@ the moving rules (§6.4).
 
 ## Rules (starting values, `requirement.md` §7.7, §8, §22.8)
 - 3 energy per player per Calgary day; enforced by a database constraint (energy slots 1–3).
-- 3 active projects per community. Catalog (in order): ice rink, flower path, holiday
-  decorations, snowman garden, lantern street, bird feeders; then the catalog repeats at
-  level 2, 3, …
-- Required actions, frozen when a project starts: `ceil(max(10, 5 × active residents) × 1.25^(level−1))`.
+- Building tree (`supabase/data/building_tree.json`, seeded into `gamecore.building_types`,
+  `requirement.md` §7.6b). A building **opens** when its required buildings are built and
+  the community has enough cumulative residents and streak days. Openings are recorded once,
+  so a building never locks again when residents leave.
+- At most 3 constructions at a time. Opened buildings start in tree order; when none is
+  waiting, the newest building of each growth chain is upgraded (lowest level first).
+- Required actions, frozen when a construction starts:
+  `ceil(max(10, 5 × active residents) × stage multiplier × 1.25^(level−1))`, at least 3 for
+  stage-1 buildings. Stage multipliers: 1: 0.3, 2: 1, 3: 1.5, 4: 2, 5: 3.
   Active residents = members whose last active day (later of joining and last action) is
   within the last 30 Calgary days.
+- Land tiers (cumulative residents → land stage): 0, 3, 6, 11, 26, 51 → 0–5.
+- **Temporary:** community streak = 0 until M5, so buildings with a streak condition stay
+  locked.
 - Actions are append-only; progress and completion are computed from the action log.
 
 ## Local development

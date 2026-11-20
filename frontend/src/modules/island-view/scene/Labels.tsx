@@ -3,13 +3,15 @@ import { useFrame } from '@react-three/fiber';
 import { useRef, useState, type ReactNode } from 'react';
 import type { PlacedObject } from '../layout';
 import { useIslandUi } from '../uiStore';
+import { useHtmlPortal } from './htmlPortal';
 import { BUBBLE_Z, LABEL_Z, remainingText } from './labelText';
 
 /** HTML overlays (crisp text, any language) positioned over 3D objects (requirement.md §10.1). */
 
 function Overlay({ x, y, z, children, front = false }: { x: number; y: number; z: number; children: ReactNode; front?: boolean }) {
+  const portal = useHtmlPortal();
   return (
-    <Html position={[x, y, z]} center zIndexRange={front ? BUBBLE_Z : LABEL_Z} style={{ pointerEvents: 'none' }}>
+    <Html portal={portal} position={[x, y, z]} center zIndexRange={front ? BUBBLE_Z : LABEL_Z} style={{ pointerEvents: 'none' }}>
       {children}
     </Html>
   );
@@ -99,32 +101,41 @@ export function IslandLabels({ objects, houseBubbles, communityName }: Props) {
           case 'construction-site':
             return (
               <Overlay key={o.id} x={o.x} y={1.55} z={o.z}>
-                <div
-                  className={`${detailed ? 'w-28 px-2 py-1' : 'w-10 p-0.5'} rounded-lg bg-white/90 text-center text-[10px] font-semibold leading-tight text-slate-700 shadow-sm`}
-                >
-                  {detailed && (
-                    <div className="mb-1 truncate">
-                      {o.title}
-                      {o.level > 1 && <span className="ml-1 text-amber-600">Lv {o.level}</span>}
-                    </div>
-                  )}
-                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
-                    <div className="h-full rounded-full bg-emerald-400 transition-[width] duration-700" style={{ width: `${Math.round(o.progress * 100)}%` }} />
-                  </div>
-                </div>
+                <ProgressLabel detailed={detailed} title={o.title} level={o.level} progress={o.progress} />
               </Overlay>
             );
-          default:
-            if (o.assetKey === 'building.welcome-sign' || o.assetKey === 'building.gateway-arch') {
-              return (
-                <Overlay key={o.id} x={o.x} y={o.assetKey === 'building.gateway-arch' ? 1.95 : 1.4} z={o.z + 0.3}>
-                  <span className="whitespace-nowrap rounded-md border border-amber-800/30 bg-amber-50 px-2 py-0.5 text-xs font-bold tracking-wide text-amber-900 shadow-sm">
-                    {communityName}
-                  </span>
+          default: {
+            if (!o.assetKey.startsWith('building.') || !('next' in o)) return null;
+            const isSign = o.assetKey === 'building.welcome-sign' || o.assetKey === 'building.gateway-arch';
+            const signY = o.assetKey === 'building.gateway-arch' ? 1.95 : 1.4;
+            const nameTag = (
+              <span className="whitespace-nowrap rounded-md border border-amber-800/30 bg-amber-50 px-2 py-0.5 text-xs font-bold tracking-wide text-amber-900 shadow-sm">
+                {communityName}
+              </span>
+            );
+            if (o.upgrade) {
+              // Upgrade in place (§7.6): the built building stays; the label shows the next level's progress.
+              const progress = <ProgressLabel detailed={detailed} title={o.title} level={o.upgrade.level} progress={o.upgrade.progress} />;
+              return isSign ? (
+                <Overlay key={o.id} x={o.x} y={signY + 0.3} z={o.z + 0.3}>
+                  <div className="flex flex-col items-center gap-1">
+                    {progress}
+                    {nameTag}
+                  </div>
+                </Overlay>
+              ) : (
+                <Overlay key={o.id} x={o.x} y={1.6} z={o.z}>
+                  {progress}
                 </Overlay>
               );
             }
-            if (o.assetKey.startsWith('building.') && 'next' in o && detailed && o.next && o.next.status !== 'built') {
+            const sign = isSign && (
+              <Overlay key={o.id} x={o.x} y={signY} z={o.z + 0.3}>
+                {nameTag}
+              </Overlay>
+            );
+            if (isSign) return sign;
+            if (detailed && o.next && o.next.status !== 'built') {
               // Built building: what it grows into next (growth chain, §7.6).
               return (
                 <Overlay key={o.id} x={o.x} y={1.6} z={o.z}>
@@ -138,8 +149,26 @@ export function IslandLabels({ objects, houseBubbles, communityName }: Props) {
               );
             }
             return null;
+          }
         }
       })}
     </>
+  );
+}
+
+/** Name, level and a progress bar for a construction or an upgrade (compact when zoomed out). */
+function ProgressLabel({ detailed, title, level, progress }: { detailed: boolean; title: string; level: number; progress: number }) {
+  return (
+    <div className={`${detailed ? 'w-28 px-2 py-1' : 'w-10 p-0.5'} rounded-lg bg-white/90 text-center text-[10px] font-semibold leading-tight text-slate-700 shadow-sm`}>
+      {detailed && (
+        <div className="mb-1 truncate">
+          {title}
+          {level > 1 && <span className="ml-1 text-amber-600">Lv {level}</span>}
+        </div>
+      )}
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+        <div className="h-full rounded-full bg-emerald-400 transition-[width] duration-700" style={{ width: `${Math.round(progress * 100)}%` }} />
+      </div>
+    </div>
   );
 }

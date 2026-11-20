@@ -14,13 +14,6 @@ const ICONS: Record<string, string> = {
   'pathway-lights': '🏮',
   'community-garden': '🥕',
   'neighbourhood-park': '🌳',
-  // project kinds the server still sends until the building tree (M3 rework)
-  'ice-rink': '⛸️',
-  'flower-path': '🌷',
-  'holiday-decorations': '🎄',
-  'snowman-garden': '⛄',
-  'lantern-street': '🏮',
-  'bird-feeders': '🐦',
 };
 
 export const projectIcon = (key: string): string => ICONS[key] ?? '🏗️';

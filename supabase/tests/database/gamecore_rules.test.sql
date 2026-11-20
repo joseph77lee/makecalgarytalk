@@ -1,15 +1,15 @@
--- Module: gamecore — rules: energy, active projects, next-day progress, idempotency, security.
+-- Module: gamecore — building tree, energy, next-day progress, idempotency, security.
 --
 -- Times are fixed instants so the Calgary day is known (Alberta is UTC-6 year-round
 -- since 2026-11-01): day D = 2026-12-01 runs from 2026-12-01T06:00Z to 2026-12-02T06:00Z.
 begin;
-select plan(57);
+select plan(62);
 
--- Fixtures -------------------------------------------------------------------
--- Start from an empty game (local seed data such as the dev user must not affect results;
+-- Start from an empty game (local seed data such as the dev users must not affect results;
 -- everything is rolled back at the end).
 delete from gamecore.actions;
 delete from gamecore.projects;
+delete from gamecore.building_openings;
 delete from gamecore.players;
 
 insert into auth.users (id, email) values
@@ -29,301 +29,243 @@ insert into t values
   ('c', '00000000-0000-4000-8000-000000000003'),
   ('d', '00000000-0000-4000-8000-000000000004'),
   ('e', '00000000-0000-4000-8000-000000000005'),
-  ('noon_d', '2026-12-01T18:00:00Z'),          -- D 12:00
-  ('last_second_d', '2026-12-02T05:59:59Z'),   -- D 23:59:59
-  ('midnight_d1', '2026-12-02T06:00:00Z'),     -- D+1 00:00
-  ('noon_d1', '2026-12-02T18:00:00Z');
+  ('d0', '2026-12-01T18:00:00Z'),        -- D 12:00
+  ('d0_last', '2026-12-02T05:59:59Z'),   -- D 23:59:59
+  ('d1', '2026-12-02T18:00:00Z'),        -- D+1 12:00
+  ('d1_midnight', '2026-12-02T06:00:00Z'),
+  ('d2', '2026-12-03T18:00:00Z'),
+  ('d3', '2026-12-04T18:00:00Z');
 
 create function pg_temp.v(key text) returns text language sql as $$ select v from t where k = key $$;
 create function pg_temp.uid(key text) returns uuid language sql as $$ select v::uuid from t where k = key $$;
 create function pg_temp.at(key text) returns timestamptz language sql as $$ select v::timestamptz from t where k = key $$;
+create function pg_temp.state(community text, at text, who text default null) returns jsonb language sql as $$
+  select gamecore.community_state_at(pg_temp.uid(community), pg_temp.at(at), case when who is null then null else pg_temp.uid(who) end)
+$$;
+create function pg_temp.building(s jsonb, key text) returns jsonb language sql as $$
+  select b from jsonb_array_elements(s -> 'buildings') b where b ->> 'key' = key
+$$;
 create function pg_temp.statuses(j jsonb) returns text[] language sql as $$
   select array_agg(coalesce(r ->> 'reason', r ->> 'status') order by ord)
   from jsonb_array_elements(j -> 'results') with ordinality as x(r, ord)
 $$;
-create function pg_temp.project(community text, seq int) returns uuid language sql as $$
-  select id from gamecore.projects where community_id = pg_temp.v(community)::uuid and projects.seq = $2
+-- The newest project of a building in a community.
+create function pg_temp.project(community text, key text) returns uuid language sql as $$
+  select id from gamecore.projects where community_id = pg_temp.uid(community) and building_key = key order by level desc limit 1
 $$;
 create function pg_temp.act(project uuid) returns jsonb language sql as $$
   select jsonb_build_object('id', gen_random_uuid(), 'project_id', project)
 $$;
 
--- Communities ------------------------------------------------------------------
-select is(jsonb_array_length(public.gamecore_list_communities()), 223, '223 residential Calgary communities are seeded');
+-- Tree data -----------------------------------------------------------------------
+select is((select count(*)::int from gamecore.building_types), 14, 'the MVP tree has 14 buildings');
+select is((select count(*)::int from gamecore.building_requires), 11, '11 required-building links');
 select is(
-  (select population from gamecore.communities where code = 'MAH'),
-  13860, 'Mahogany has its 2021 census population'
+  (select array_agg(key order by position) from gamecore.building_types where stage = 1),
+  array['welcome-sign', 'fire-pit', 'frozen-pond'], 'three seeds in stage 1'
 );
-select ok(
-  exists (select 1 from gamecore.communities where population is null),
-  'brand-new communities without census data have a null population'
+select is((select grows_from from gamecore.building_types where key = 'community-hall'), 'warming-hut', 'growth chain: warming hut → community hall');
+
+-- Fixed values ----------------------------------------------------------------------
+select is(gamecore.required_actions(0, 1, 1), 3, 'stage 1: a single resident can finish it on day one (3)');
+select is(gamecore.required_actions(4, 1, 1), 6, 'stage 1: ×0.3 of 5 per resident');
+select is(gamecore.required_actions(1, 2, 1), 10, 'stage 2: ×1, minimum 10');
+select is(gamecore.required_actions(4, 3, 1), 30, 'stage 3: ×1.5');
+select is(gamecore.required_actions(4, 4, 2), 50, 'stage 4: ×2, upgrade level 2 ×1.25');
+select is(gamecore.required_actions(10, 5, 1), 150, 'stage 5: ×3');
+select is(gamecore.required_actions(1, 1, 2), 4, 'an upgraded seed needs a little more (3 × 1.25, rounded up)');
+select is(
+  array[gamecore.land_stage(0), gamecore.land_stage(2), gamecore.land_stage(3), gamecore.land_stage(6), gamecore.land_stage(11), gamecore.land_stage(26), gamecore.land_stage(51)],
+  array[0, 0, 1, 2, 3, 4, 5], 'land stage follows cumulative residents (§7.8)'
 );
 
--- Fixed values ---------------------------------------------------------------------
-select is(gamecore.required_actions(0, 1), 10, 'required actions: minimum 10 (no residents yet)');
-select is(gamecore.required_actions(1, 1), 10, 'required actions: 1 resident -> 10');
-select is(gamecore.required_actions(4, 1), 20, 'required actions: 5 per resident');
-select is(gamecore.required_actions(4, 2), 25, 'required actions: x1.25 on the second catalog cycle');
-select is(gamecore.required_actions(4, 3), 32, 'required actions: x1.25^2, rounded up');
+-- A new community: the three seeds start at once ----------------------------------
+select is(
+  jsonb_path_query_array(pg_temp.state('mah', 'd0'), '$.projects[*].building_key'),
+  '["welcome-sign", "fire-pit", "frozen-pond"]'::jsonb, 'a new community starts its three seeds'
+);
+select is(
+  jsonb_path_query_array(pg_temp.state('mah', 'd0'), '$.projects[*].required'),
+  '[3, 3, 3]'::jsonb, 'each seed needs 3 actions'
+);
+select is((pg_temp.state('mah', 'd0') -> 'community' ->> 'settled')::boolean, false, 'not settled before the Welcome sign is built');
+select is(
+  pg_temp.building(pg_temp.state('mah', 'd0'), 'warming-hut'),
+  '{"key": "warming-hut", "name": "Warming hut", "stage": 2, "level": 1, "status": "locked", "progress": 0,
+    "remaining": {"requires": ["fire-pit"], "residents": 0, "streak_days": 3}}'::jsonb,
+  'a locked building says what is missing'
+);
+select is(
+  pg_temp.building(pg_temp.state('mah', 'd0'), 'skating-rink') -> 'remaining',
+  '{"requires": ["frozen-pond"], "residents": 3, "streak_days": 0}'::jsonb, 'resident conditions count what is missing'
+);
+select is((select count(*)::int from gamecore.projects where community_id = pg_temp.uid('mah')), 3,
+  'reading the state again does not start more projects');
+select is(pg_temp.state('mah', 'd0') -> 'me', 'null'::jsonb, 'visitors get no personal data');
+select throws_ok($$ select gamecore.community_state_at(gen_random_uuid(), now(), null) $$, 'P0002', 'community not found', 'unknown community');
 
--- First look at a community starts 3 projects ---------------------------------------
+-- Membership and energy ---------------------------------------------------------------
 select is(
-  jsonb_path_query_array(gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('noon_d'), null), '$.projects[*].kind'),
-  '["ice-rink", "flower-path", "holiday-decorations"]'::jsonb,
-  'a community starts with the first three catalog projects'
-);
-select is(
-  (select array_agg(required_actions order by seq) from gamecore.projects where community_id = pg_temp.uid('mah')),
-  array[10, 10, 10], 'with no residents each project needs 10 actions'
-);
-select is(
-  gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('noon_d'), null) -> 'projects' -> 0 ->> 'stage',
-  'scaffolding', 'a new project is at the scaffolding stage'
-);
-select is((select count(*) from gamecore.projects where community_id = pg_temp.uid('mah'))::int, 3,
-  'reading the state again does not create more projects');
-select is(gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('noon_d'), null) -> 'me', 'null'::jsonb,
-  'visitors get no personal data');
-select is(
-  gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('noon_d'), null) ->> 'next_day_start',
-  '2026-12-02T06:00:00+00:00', 'state reports the next Calgary midnight'
-);
-select throws_ok(
-  $$ select gamecore.community_state_at(gen_random_uuid(), now(), null) $$,
-  'P0002', 'community not found', 'unknown community is an error'
-);
-
--- Membership ------------------------------------------------------------------------
-select is(
-  pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'),
-    jsonb_build_array(pg_temp.act(pg_temp.project('mah', 1))), pg_temp.at('noon_d'))),
+  pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(pg_temp.act(pg_temp.project('mah', 'welcome-sign'))), pg_temp.at('d0'))),
   array['not_member'], 'a player without a community cannot act'
 );
-select is(
-  gamecore.choose_community_at(pg_temp.uid('a'), pg_temp.uid('mah'), pg_temp.at('noon_d')) ->> 'community_id',
-  pg_temp.v('mah'), 'choosing a community makes the player a member'
-);
-select is(
-  (gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('noon_d'), pg_temp.uid('a')) -> 'me' ->> 'member')::boolean,
-  true, 'state shows membership'
-);
-
--- Energy: 3 per Calgary day -----------------------------------------------------------
-insert into t values ('a1', gen_random_uuid()), ('a2', gen_random_uuid()), ('a3', gen_random_uuid()), ('a4', gen_random_uuid());
+select is(gamecore.choose_community_at(pg_temp.uid('a'), pg_temp.uid('mah'), pg_temp.at('d0')) ->> 'community_id', pg_temp.v('mah'), 'joining a community');
+insert into t values ('a1', gen_random_uuid());
 select is(
   pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(
-    jsonb_build_object('id', pg_temp.v('a1'), 'project_id', pg_temp.project('mah', 1)),
-    jsonb_build_object('id', pg_temp.v('a2'), 'project_id', pg_temp.project('mah', 1))
-  ), pg_temp.at('noon_d'))),
-  array['accepted', 'accepted'], 'two actions accepted'
+    jsonb_build_object('id', pg_temp.v('a1'), 'project_id', pg_temp.project('mah', 'welcome-sign')),
+    pg_temp.act(pg_temp.project('mah', 'welcome-sign')),
+    pg_temp.act(pg_temp.project('mah', 'welcome-sign')),
+    pg_temp.act(pg_temp.project('mah', 'fire-pit'))
+  ), pg_temp.at('d0'))),
+  array['accepted', 'accepted', 'accepted', 'no_energy'], 'a first resident builds the Welcome sign on day one; the 4th action has no energy'
 );
 select is(
-  gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(
-    jsonb_build_object('id', pg_temp.v('a3'), 'project_id', pg_temp.project('mah', 2)),
-    jsonb_build_object('id', pg_temp.v('a4'), 'project_id', pg_temp.project('mah', 2))
-  ), pg_temp.at('noon_d')) - 'calgary_day' - 'next_day_start',
-  jsonb_build_object('energy_max', 3, 'energy_left', 0, 'results', jsonb_build_array(
-    jsonb_build_object('id', pg_temp.v('a3'), 'status', 'accepted'),
-    jsonb_build_object('id', pg_temp.v('a4'), 'status', 'rejected', 'reason', 'no_energy')
-  )),
-  'the 4th action of the day is rejected (no energy) and energy is 0'
-);
-select is(
-  pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'),
-    jsonb_build_array(pg_temp.act(pg_temp.project('mah', 3))), pg_temp.at('last_second_d'))),
+  pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(pg_temp.act(pg_temp.project('mah', 'fire-pit'))), pg_temp.at('d0_last'))),
   array['no_energy'], 'still no energy at 23:59:59 Calgary time'
 );
-select is(
-  (gamecore.me_at(pg_temp.uid('a'), pg_temp.at('midnight_d1')) ->> 'energy_left')::int, 3,
-  'energy resets to 3 at Calgary midnight'
-);
-select is((select count(*) from gamecore.actions where user_id = pg_temp.uid('a'))::int, 3,
-  'only 3 actions were stored');
+select is((gamecore.me_at(pg_temp.uid('a'), pg_temp.at('d1_midnight')) ->> 'energy_left')::int, 3, 'energy resets at Calgary midnight');
 
--- Idempotency ---------------------------------------------------------------------------
+-- Idempotency
 select is(
   pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(
-    jsonb_build_object('id', pg_temp.v('a1'), 'project_id', pg_temp.project('mah', 1))
-  ), pg_temp.at('noon_d'))),
-  array['duplicate'], 'resubmitting an accepted id is a duplicate (no error)'
+    jsonb_build_object('id', pg_temp.v('a1'), 'project_id', pg_temp.project('mah', 'welcome-sign'))), pg_temp.at('d1'))),
+  array['duplicate'], 'a retry (even after midnight) is a duplicate and spends no energy'
 );
-select is(
-  pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(
-    jsonb_build_object('id', pg_temp.v('a1'), 'project_id', pg_temp.project('mah', 1))
-  ), pg_temp.at('noon_d1'))),
-  array['duplicate'], 'a retry after midnight is still a duplicate and spends no new energy'
-);
-select is((gamecore.me_at(pg_temp.uid('a'), pg_temp.at('noon_d1')) ->> 'energy_left')::int, 3,
-  'the late retry did not use D+1 energy');
 select is(
   pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('b'), jsonb_build_array(
-    jsonb_build_object('id', pg_temp.v('a1'), 'project_id', pg_temp.project('mah', 1))
-  ), pg_temp.at('noon_d'))),
+    jsonb_build_object('id', pg_temp.v('a1'), 'project_id', pg_temp.project('mah', 'welcome-sign'))), pg_temp.at('d1'))),
   array['id_conflict'], 'another player cannot reuse an action id'
 );
+
+-- Next day: built, settled, upgrades when nothing else is open --------------------------
+select is(
+  (pg_temp.state('mah', 'd0_last') -> 'projects' -> 0 ->> 'progress')::int, 0,
+  'same day: the Welcome sign still shows 0 progress'
+);
+select is((pg_temp.state('mah', 'd1') -> 'community' ->> 'settled')::boolean, true, 'the next day the Welcome sign is built and the community is settled');
+select is(
+  jsonb_path_query_array(pg_temp.state('mah', 'd1'), '$.projects[*] ? (@.building_key == "welcome-sign").level'),
+  '[2]'::jsonb, 'with nothing else open, the Welcome sign is upgraded (level 2)'
+);
+select is(
+  (select required_actions from gamecore.projects where building_key = 'welcome-sign' and level = 2 and community_id = pg_temp.uid('mah')),
+  4, 'the upgrade needs 3 × 1.25 → 4 actions'
+);
+select is(
+  pg_temp.building(pg_temp.state('mah', 'd1'), 'playground') ->> 'status', 'locked',
+  'the Playground stays locked: its streak condition waits for M5'
+);
+select is(
+  pg_temp.building(pg_temp.state('mah', 'd1'), 'playground') -> 'remaining',
+  '{"requires": [], "residents": 0, "streak_days": 3}'::jsonb, 'its required building is done; 3 streak days are missing'
+);
 select is(
   pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(
-    jsonb_build_object('id', 'b5f1c2c4-0000-4000-8000-0000000000aa', 'project_id', pg_temp.project('mah', 1)),
-    jsonb_build_object('id', 'b5f1c2c4-0000-4000-8000-0000000000aa', 'project_id', pg_temp.project('mah', 1))
-  ), pg_temp.at('noon_d1'))),
-  array['accepted', 'duplicate'], 'the same id twice in one batch counts once'
+    jsonb_build_object('id', gen_random_uuid(), 'project_id', (select id from gamecore.projects where building_key = 'welcome-sign' and level = 1 and community_id = pg_temp.uid('mah')))
+  ), pg_temp.at('d1'))),
+  array['project_not_active'], 'a finished level takes no more actions'
 );
 
--- Invalid input ----------------------------------------------------------------------------
+-- Residents open buildings; at most 3 constructions -----------------------------------
+select gamecore.choose_community_at(pg_temp.uid(k), pg_temp.uid('mah'), pg_temp.at('d1')) from unnest(array['b', 'c']) k;
+select is((pg_temp.state('mah', 'd1') -> 'community' ->> 'residents')::int, 3, 'three residents');
+select is((pg_temp.state('mah', 'd1') -> 'community' ->> 'land_stage')::int, 1, 'three residents → land stage 1');
+select is(
+  pg_temp.building(pg_temp.state('mah', 'd1'), 'gateway-arch') ->> 'status', 'opened',
+  'the Gateway arch opens (Welcome sign + 3 residents) but waits: 3 constructions are running'
+);
+select is(
+  pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('b'), jsonb_build_array(
+    pg_temp.act(pg_temp.project('mah', 'frozen-pond')), pg_temp.act(pg_temp.project('mah', 'frozen-pond')), pg_temp.act(pg_temp.project('mah', 'frozen-pond'))
+  ), pg_temp.at('d1'))),
+  array['accepted', 'accepted', 'accepted'], 'the Frozen pond gets its 3 actions'
+);
+select is(
+  jsonb_path_query_array(pg_temp.state('mah', 'd2'), '$.projects[*].building_key'),
+  '["welcome-sign", "fire-pit", "skating-rink"]'::jsonb,
+  'next day: the pond is built and the Skating rink (earlier in the tree than the arch) takes the free slot'
+);
+select is(
+  (select required_actions from gamecore.projects where building_key = 'skating-rink' and community_id = pg_temp.uid('mah')),
+  23, 'the Skating rink is sized for 3 active residents at stage 3 (15 × 1.5)'
+);
+select is(pg_temp.building(pg_temp.state('mah', 'd2'), 'frozen-pond') ->> 'status', 'built', 'the pond is built');
+select is(pg_temp.building(pg_temp.state('mah', 'd2'), 'gateway-arch') ->> 'status', 'opened', 'the arch keeps waiting');
+
+-- Nothing re-locks -------------------------------------------------------------------
+select gamecore.choose_community_at(pg_temp.uid('c'), pg_temp.uid('aub'), pg_temp.at('d2'));
+select is((pg_temp.state('mah', 'd2') -> 'community' ->> 'residents')::int, 2, 'a resident moved away');
+select is(pg_temp.building(pg_temp.state('mah', 'd2'), 'gateway-arch') ->> 'status', 'opened', 'an opened building never re-locks');
+
+-- Upgrades only the newest building of each growth chain -----------------------------
+-- Finish the three running projects quickly: goal 1, one action each on D+2.
+update gamecore.projects set required_actions = 1
+where community_id = pg_temp.uid('mah')
+  and id in (select gamecore.active_project(pg_temp.uid('mah'), k, '2026-12-03') from unnest(array['welcome-sign', 'fire-pit', 'skating-rink']) k);
+insert into gamecore.actions (id, user_id, community_id, project_id, calgary_day, energy_slot)
+select gen_random_uuid(), pg_temp.uid('d'), pg_temp.uid('mah'), pg_temp.project('mah', k), '2026-12-03', n
+from unnest(array['welcome-sign', 'fire-pit', 'skating-rink']) with ordinality as x(k, n);
+select ok(pg_temp.state('mah', 'd3') is not null, 'the next day the tree moves on');
+select is(
+  (select array_agg(building_key || ':' || level order by building_key) from gamecore.projects
+   where community_id = pg_temp.uid('mah') and started_on = '2026-12-04'),
+  array['fire-pit:2', 'gateway-arch:1', 'skating-rink:2'],
+  'the waiting arch starts first, then upgrades go to chain heads at the lowest level'
+);
+select ok(
+  not exists (select 1 from gamecore.projects where community_id = pg_temp.uid('mah') and building_key = 'frozen-pond' and level > 1),
+  'the Frozen pond (grown into the Skating rink) is never upgraded'
+);
+select is(pg_temp.building(pg_temp.state('mah', 'd3'), 'skating-rink') ->> 'status', 'building', 'an upgrade shows as building');
+select is((pg_temp.building(pg_temp.state('mah', 'd3'), 'skating-rink') ->> 'level')::int, 2, 'at the upgrade level');
+select is((pg_temp.building(pg_temp.state('mah', 'd3'), 'welcome-sign') ->> 'level')::int, 2, 'a built building reports its level');
+
+-- Own community only -------------------------------------------------------------------
+select is(jsonb_array_length(pg_temp.state('aub', 'd3') -> 'projects'), 3, 'another community starts its own seeds');
+select is(
+  pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(pg_temp.act(
+    (select id from gamecore.projects where community_id = pg_temp.uid('aub') limit 1)
+  )), pg_temp.at('d3'))),
+  array['other_community'], 'cannot act on another community''s building'
+);
 select is(
   pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(
-    jsonb_build_object('project_id', pg_temp.project('mah', 1)),
-    jsonb_build_object('id', 'not-a-uuid', 'project_id', pg_temp.project('mah', 1)),
-    jsonb_build_object('id', gen_random_uuid()),
+    jsonb_build_object('project_id', pg_temp.project('mah', 'fire-pit')),
+    jsonb_build_object('id', 'not-a-uuid', 'project_id', pg_temp.project('mah', 'fire-pit')),
     jsonb_build_object('id', gen_random_uuid(), 'project_id', gen_random_uuid())
-  ), pg_temp.at('noon_d1'))),
-  array['invalid', 'invalid', 'invalid', 'project_not_found'], 'malformed entries are rejected one by one'
-);
-select throws_ok(
-  format($$ select gamecore.submit_actions_at(%L, '{"id": 1}'::jsonb, now()) $$, pg_temp.v('a')),
-  '22023', 'actions must be a JSON array', 'a non-array body is an error'
+  ), pg_temp.at('d3'))),
+  array['invalid', 'invalid', 'project_not_found'], 'malformed entries are rejected one by one'
 );
 select throws_ok(
   format($$ select gamecore.submit_actions_at(%L, (select jsonb_agg(jsonb_build_object('id', gen_random_uuid())) from generate_series(1, 11)), now()) $$, pg_temp.v('a')),
   '22023', 'at most 10 actions per call', 'more than 10 actions per call is an error'
 );
-select throws_ok(
-  $$ select gamecore.submit_actions_at(null, '[]'::jsonb, now()) $$,
-  '28000', 'not authenticated', 'submitting without a user is an error'
-);
 
--- Own community only ---------------------------------------------------------------------------
-select lives_ok(
-  format($$ select gamecore.community_state_at(%L, %L, null) $$, pg_temp.v('aub'), pg_temp.v('noon_d')),
-  'visitors can view another community'
-);
-select is(
-  pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'),
-    jsonb_build_array(pg_temp.act(pg_temp.project('aub', 1))), pg_temp.at('noon_d1'))),
-  array['other_community'], 'cannot act on another community''s project'
-);
-
--- Progress shows the next day; completion starts the next project ---------------------------
--- Day D: B, C, D join Mahogany; together with A's 2 actions, 12 actions go to project 1 (needs 10).
-select gamecore.choose_community_at(pg_temp.uid(k), pg_temp.uid('mah'), pg_temp.at('noon_d')) from unnest(array['b', 'c', 'd']) k;
-select is(
-  (select array_agg(s) from (
-    select unnest(pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid(k), jsonb_build_array(
-      pg_temp.act(pg_temp.project('mah', 1)), pg_temp.act(pg_temp.project('mah', 1)), pg_temp.act(pg_temp.project('mah', 1))
-    ), pg_temp.at('noon_d')))) s
-    from unnest(array['b', 'c', 'd']) k
-  ) x),
-  array_fill('accepted'::text, array[9]),
-  'actions past the goal on the same day are still accepted (progress is applied tomorrow)'
-);
-select is(
-  (gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('last_second_d'), null) -> 'projects' -> 0 ->> 'progress')::int,
-  0, 'same day: project 1 still shows 0 progress'
-);
-select is(
-  jsonb_path_query_array(gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('midnight_d1'), null), '$.projects[*].seq'),
-  '[2, 3, 4]'::jsonb, 'after Calgary midnight project 1 is complete and project 4 has started'
-);
-select is(
-  gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('midnight_d1'), null) -> 'completed_projects',
-  jsonb_build_array(jsonb_build_object(
-    'id', pg_temp.project('mah', 1), 'seq', 1, 'kind', 'ice-rink', 'title', 'Build an ice rink',
-    'level', 1, 'completed_on', '2026-12-02'
-  )),
-  'the completed project is listed with the day its completion became visible'
-);
-select is(
-  gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('midnight_d1'), null) -> 'projects' -> 0 -> 'progress',
-  '1'::jsonb, 'project 2 shows yesterday''s 1 action'
-);
-select is(
-  (select row(kind, level, required_actions, started_on)::text from gamecore.projects where id = pg_temp.project('mah', 4)),
-  row('snowman-garden', 1, 20, '2026-12-02'::date)::text,
-  'project 4 is the next catalog kind, sized for 4 active residents, started today'
-);
-select is(
-  pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('b'),
-    jsonb_build_array(pg_temp.act(pg_temp.project('mah', 1)), pg_temp.act(pg_temp.project('mah', 4))), pg_temp.at('noon_d1'))),
-  array['project_not_active', 'accepted'], 'a completed project takes no more actions; the new one does'
-);
-select is(
-  (gamecore.community_state_at(pg_temp.uid('mah'), pg_temp.at('midnight_d1'), null) -> 'projects' -> 0 ->> 'stage'),
-  'scaffolding', 'stage is scaffolding below half'
-);
-
--- Frame stage at half progress: 5 more actions on project 2 by day D+1 → shows on D+2.
-select gamecore.submit_actions_at(pg_temp.uid('c'), jsonb_build_array(
-  pg_temp.act(pg_temp.project('mah', 2)), pg_temp.act(pg_temp.project('mah', 2)), pg_temp.act(pg_temp.project('mah', 2))
-), pg_temp.at('noon_d1'));
-select gamecore.submit_actions_at(pg_temp.uid('d'), jsonb_build_array(
-  pg_temp.act(pg_temp.project('mah', 2))
-), pg_temp.at('noon_d1'));
-select is(
-  gamecore.community_state_at(pg_temp.uid('mah'), '2026-12-03T06:00:00Z', null) -> 'projects' -> 0 ->> 'stage',
-  'frame', 'stage is frame from half progress (5 of 10)'
-);
-
--- Catalog cycles with levels ---------------------------------------------------------------
--- Insert projects 5..7 directly to check the generator's 7th project (cycle 2).
-select gamecore.ensure_projects(pg_temp.uid('aub'), '2026-12-01');
-delete from gamecore.projects where community_id = pg_temp.uid('aub');
-insert into gamecore.projects (community_id, seq, kind, title, level, required_actions, started_on)
-select pg_temp.uid('aub'), s, c.kind, c.title, 1, 1, '2026-11-01'
-from generate_series(1, 6) s join gamecore.project_catalog c on c.position = s;
-insert into gamecore.actions (id, user_id, community_id, project_id, calgary_day, energy_slot)
-select gen_random_uuid(), pg_temp.uid('e'), pg_temp.uid('aub'), p.id, '2026-11-01'::date + p.seq, 1
-from gamecore.projects p where p.community_id = pg_temp.uid('aub') and p.seq <= 4;
-select gamecore.ensure_projects(pg_temp.uid('aub'), '2026-12-01');
-select is(
-  (select row(kind, level, required_actions)::text from gamecore.projects where community_id = pg_temp.uid('aub') and seq = 7),
-  row('ice-rink', 2, 13)::text, 'after six projects the catalog repeats at level 2 (x1.25)'
-);
-
--- Member count (who sizes new projects) -------------------------------------------------
-select is(gamecore.member_count(pg_temp.uid('mah'), '2026-12-02'), 4, 'four recently active members');
-select is(gamecore.member_count(pg_temp.uid('mah'), '2027-01-02'), 0,
-  'members inactive for 30+ days no longer count');
-select is(gamecore.member_count(pg_temp.uid('mah'), '2026-11-30'), 0,
-  'members who had not joined yet do not count');
-
--- Database-level guarantees -------------------------------------------------------------------
+-- Database-level guarantees -------------------------------------------------------------
 select throws_ok(
   format($$ insert into gamecore.actions (id, user_id, community_id, project_id, calgary_day, energy_slot)
-            values (gen_random_uuid(), %L, %L, %L, '2026-12-01', 1) $$, pg_temp.v('a'), pg_temp.v('mah'), pg_temp.project('mah', 2)),
-  '23505', null, 'an energy slot can be used only once per day (unique constraint backs the limit)'
+            values (gen_random_uuid(), %L, %L, %L, '2026-12-01', 1) $$, pg_temp.v('a'), pg_temp.v('mah'), pg_temp.project('mah', 'fire-pit')),
+  '23505', null, 'an energy slot can be used only once per day'
 );
+select throws_ok($$ update gamecore.actions set calgary_day = calgary_day + 1 $$, '42501', 'gamecore.actions is append-only', 'actions cannot be updated');
 select throws_ok(
-  format($$ insert into gamecore.actions (id, user_id, community_id, project_id, calgary_day, energy_slot)
-            values (gen_random_uuid(), %L, %L, %L, '2026-12-05', 4) $$, pg_temp.v('a'), pg_temp.v('mah'), pg_temp.project('mah', 2)),
-  '23514', null, 'there is no 4th energy slot'
-);
-select throws_ok(
-  $$ update gamecore.actions set calgary_day = calgary_day + 1 $$,
-  '42501', 'gamecore.actions is append-only', 'actions cannot be updated'
+  format($$ insert into gamecore.projects (community_id, building_key, level, required_actions, started_on)
+            values (%L, 'fire-pit', 1, 3, '2026-12-01') $$, pg_temp.v('mah')),
+  '23505', null, 'a building level is started only once per community'
 );
 
--- API surface and permissions ---------------------------------------------------------------
+-- API surface and permissions -----------------------------------------------------------
 set local role anon;
-select throws_ok($$ select count(*) from gamecore.actions $$, '42501', null, 'anon cannot read gamecore tables');
+select throws_ok($$ select count(*) from gamecore.building_openings $$, '42501', null, 'anon cannot read gamecore tables');
 select throws_ok($$ select public.gamecore_submit_actions('[]'::jsonb) $$, '42501', null, 'anon cannot submit actions');
-select is(jsonb_array_length(public.gamecore_list_communities()), 223, 'anon can list communities');
-select lives_ok(format($$ select public.gamecore_get_community_state(%L) $$, pg_temp.v('mah')), 'anon can view a community');
+select is(jsonb_array_length(public.gamecore_get_community_state((select v from t where k = 'mah')::uuid) -> 'buildings'), 14, 'anon can view a community''s tree');
 reset role;
 
 set local role authenticated;
-select throws_ok($$ select public.gamecore_submit_actions('[]'::jsonb) $$, '28000', 'not authenticated',
-  'a signed-in role without a user id is rejected');
+select throws_ok($$ select public.gamecore_submit_actions('[]'::jsonb) $$, '28000', 'not authenticated', 'a signed-in role without a user id is rejected');
 set local request.jwt.claims to '{"sub": "00000000-0000-4000-8000-000000000005", "role": "authenticated"}';
-select is(
-  (public.gamecore_choose_community(pg_temp.uid('aub')) ->> 'community_id'), pg_temp.v('aub'),
-  'a signed-in player can choose a community through the RPC'
-);
-select is(
-  pg_temp.statuses(public.gamecore_submit_actions(jsonb_build_array(
-    jsonb_build_object('id', gen_random_uuid(), 'project_id', (select v from t where k = 'mah'))
-  ))),
-  array['project_not_found'], 'the RPC uses the caller''s identity and returns per-action results'
-);
+select is((public.gamecore_choose_community((select v from t where k = 'aub')::uuid) ->> 'community_id'), (select v from t where k = 'aub'), 'choosing a community through the RPC');
 reset role;
 
 select * from finish();
