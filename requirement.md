@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.23 |
+| Document version | v1.24 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Status | Initial draft for starting MVP development |
@@ -60,7 +60,7 @@ The service grows in this order; features are judged by how they serve it. The *
 - Each real Calgary community (e.g. Mahogany, Bridgeland, Tuscany) is a **pastel voxel village on a floating diorama island** that grows as more residents join.
 - Visual reference: `docs/references/` (VibeBase "Voxel Village" screenshots — floating voxel island, isometric view, pastel colours, small characters with speech bubbles).
 - Residents take short daily actions **together** to **grow the community itself** (this is not a game about growing your own personal plot).
-- When a community develops, its mini villagers are happy and the scenery becomes beautiful; when neglected, they look gloomy and the scenery turns bleak.
+- When a community develops, its mini villagers are happy and the scenery becomes beautiful; when neglected, they get sleepy and the scenery turns snowy and quiet.
 - Communities compete on development/participation.
 - Long-term, it expands into a **neighbourhood platform** (community news, local business coupons).
 
@@ -179,17 +179,18 @@ Goal: moving never punishes the person who moves or the residents who stay.
   - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, i.e. residents whose houses are shown, excluding residents with a move in progress, 6.4); the ratio therefore never exceeds 1; 0 if the denominator is 0
   - This intentionally differs from the streak denominator (7.5, 7-day Active Verified Residents): the streak rewards regular players and must not be blocked by dormant residents, while Vitality honestly reflects the whole community — many dark houses make the community look gloomier, which motivates waking up neighbours
 - Tuned to **fall slowly and rise quickly**: Vitality = 100 × **max(average ratio of the last 3 days, average ratio of the last 7 days)**, rounded. A burst of activity lifts the 3-day average fast; when activity stops, the 7-day average holds it up and it falls by about 1/7 per day
-  - Days counted are **finished Calgary days** (yesterday and before), so Vitality changes once a day, like construction progress. Only days since the community's first resident are averaged; before the first finished day Vitality is not shown (normal mood), so a new community never starts gloomy
+  - Days counted are **finished Calgary days** (yesterday and before), so Vitality changes once a day, like construction progress. Only days since the community's first resident are averaged; before the first finished day Vitality is not shown (normal mood), so a new community never starts sleepy
 - MVP has 3 mood levels
 
 | Vitality | Mood | Scenery |
 |---|---|---|
 | 60–100 | Lively | Flowers, lights, clean streets, many mini villagers |
 | 30–59 | Normal | Ordinary look |
-| 0–29 | Gloomy | Piled snow, wilted trees, greyish tint, few mini villagers |
+| 0–29 | Sleepy | A quiet snowy winter evening: fresh snow on the ground and trees, icy water, a soft lavender-pink dusk sky, villagers mostly resting. Pastel, never grey or dark |
 
-- Don't make it too depressing ("cute gloomy")
-- Gloomy → recovered triggers a **"Community Revival" effect** (cheering, flowers bloom) + a share card
+- Don't make it too depressing ("cute sleepy"): a newcomer's first look must still be inviting
+- While Sleepy, the streak bar says "<Community> is sleepy. Help today to wake it up!", so a quiet community becomes a reason to help
+- Sleepy → recovered triggers a **"Community Revival" effect** (cheering, flowers bloom) + a share card
 
 ### 7.5 Community Streak
 - **Active Verified Resident (7-day)** = a Verified Resident who took at least one action within the **last 7 Calgary days, including today**. Residents inactive longer (including those whose houses are archived after 30 days) are **not** counted, so dormant residents cannot make the streak impossible.
@@ -319,7 +320,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 4 | Dense houses + community hall + neighbourhood park |
 
   - Level is derived from cumulative Verified Residents and unlocked buildings (same data as the island; 7.6, 7.8)
-  - **Vitality is shown through mood**: lively = green ground, window lights, flowers; normal = plain; gloomy = greyish ground, roofs and trees
+  - **Vitality is shown through mood**: lively = green ground, window lights, flowers; normal = plain; sleepy = snowy ground and trees under a dusk sky
   - Crown on this week's #1 community
   - Illustrations use the **same designs as the island buildings** so the map and islands feel like one world
 - **Layout rules**
@@ -777,6 +778,20 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.24
+**Changed:** 7.4: the lowest mood is renamed **Gloomy → Sleepy** and looks like a quiet snowy winter evening (pastel, never grey); while Sleepy the streak bar invites players to wake the community up. Wording in 5 (overview), 7.4, 10 and 19 updated to "sleepy".
+
+**Why:** On the phone test a newcomer's first look at a quiet community was too dull and grey (user decision 2026-11-20).
+
+**Previous:**
+- 5: `when neglected, they look gloomy and the scenery turns bleak.`
+- 7.4: `so a new community never starts gloomy`
+- 7.4: `| 0–29 | Gloomy | Piled snow, wilted trees, greyish tint, few mini villagers |`
+- 7.4: `- Don't make it too depressing ("cute gloomy")`
+- 7.4: `- Gloomy → recovered triggers a **"Community Revival" effect** (cheering, flowers bloom) + a share card`
+- 10: `normal = plain; gloomy = greyish ground, roofs and trees`
+- 19: `- A few mini villager types × actions (walk 2–4 frames, idle, cheer, gloomy, work)`
 
 ### 2026-11-20 — v1.23
 **Changed:** 6.2: checks with accuracy worse than 1 km are not counted; at most 20 checks per account per day; only residential communities count. 6.3: candidate community while verifying (most check-in days in the last 7, tie → most recent); pending contributions apply from the verification day to the projects they were given to (past days unchanged; finished projects and other communities not carried over).
@@ -1273,7 +1288,7 @@ Because every island has the same shape, each community gets its identity from:
 - Ground, road, snow, tree, flower tiles
 - Resident house (base; roof/wall colour variants via code)
 - Project buildings: playground, community centre, park, ice rink, etc. + construction stages (scaffolding/frame/complete) + silhouettes
-- A few mini villager types × actions (walk 2–4 frames, idle, cheer, gloomy, work)
+- A few mini villager types × actions (walk 2–4 frames, idle, cheer, sleepy, work)
 - World Map: rivers, Rocky Mountains, landmarks like Calgary Tower, community miniatures (fog + 3 tiers), crown/flag
 - Surprise characters such as a moose
 ```

@@ -9,6 +9,7 @@ import {
   IslandHud,
   IslandView,
   finishedExampleState,
+  vitalityMood,
   useMockCommunityStore,
   type CommunityViewState,
   type IslandPlan,
@@ -79,14 +80,16 @@ function LiveApp() {
               }
             />
           )}
-          {view && (
-            <div className="pointer-events-none absolute inset-x-0 top-[7.25rem] z-30 flex justify-center">
-              <ResidencyChip />
-            </div>
-          )}
           {status === 'ready' && server && (
             <>
-              <StreakBar streak={server.streak} nextLandResidents={server.community.next_land_residents} onOpenMap={() => setMapOpen(true)} />
+              <StreakBar
+                streak={server.streak}
+                nextLandResidents={server.community.next_land_residents}
+                onOpenMap={() => setMapOpen(true)}
+                sleepyName={server.community.vitality !== null && vitalityMood(server.community.vitality) === 'sleepy' ? server.community.name : null}
+              >
+                <ResidencyChip />
+              </StreakBar>
               <ActionBar />
               <ChangesPanel changes={server.changes} vitality={server.community.vitality} seen={changesSeen} onSeen={markChangesSeen} />
             </>

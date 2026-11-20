@@ -21,3 +21,8 @@ export function landGoalText(nextLandResidents: number | null): string | null {
   if (nextLandResidents === null) return null;
   return `${more(nextLandResidents, 'neighbour', 'neighbours')} until the island grows`;
 }
+
+/** Shown while the community is Sleepy (Vitality 0–29, §7.4): help is what wakes it up. */
+export function sleepyText(communityName: string): string {
+  return `😴 ${communityName} is sleepy. Help today to wake it up!`;
+}

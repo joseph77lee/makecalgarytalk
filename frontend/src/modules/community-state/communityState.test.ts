@@ -3,7 +3,7 @@ import type { ServerChanges, ServerStreak } from '../daily-actions';
 import { BUILDING_TREE, buildIslandLayout, decodePlan, finishedExampleState, type BuildingView } from '../island-view';
 import { completionPercent, groupByStage, isBuilt } from './buildMapModel';
 import { changeItems } from './changesText';
-import { landGoalText, streakText } from './streakText';
+import { landGoalText, sleepyText, streakText } from './streakText';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -98,5 +98,11 @@ describe('finished example', () => {
     expect(houses.length).toBeGreaterThan(0);
     expect(houses.every((h) => h.assetKey === 'house' && h.nickname === '')).toBe(true);
     expect(l.hiddenHouseCount).toBe(0);
+  });
+});
+
+describe('sleepy line', () => {
+  it('invites everyone to wake the community up', () => {
+    expect(sleepyText('Mahogany')).toBe('😴 Mahogany is sleepy. Help today to wake it up!');
   });
 });
