@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.29 |
+| Plan version | v1.30 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
-| Based on | `requirement.md` v1.22 |
-| Current module | M7 Residency (next; M6 ✅ Done) |
+| Based on | `requirement.md` v1.23 |
+| Current module | M7 Residency (in progress; M6 ✅ Done) |
 
 ---
 
@@ -45,7 +45,7 @@
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
 | M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ✅ |
 | M6 | Identity | FE + BE | | M4 | ✅ |
-| M7 | Residency | FE + BE | | M6 | ⬜ |
+| M7 | Residency | FE + BE | | M6 | 🟦 |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |
 | M9 | Village News | BE + FE | | M8 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
@@ -310,7 +310,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Dev:** `?devuser=1|2` signs in as the seeded users (now with profiles, so they skip the first visit); without it, dev uses the real anonymous flow. A private window = a new anonymous player.
   - **Not tested / known gaps:** real Google linking and re-join (no OAuth client yet); real Turnstile keys and challenge UI; a real phone; Cloudflare-level rate limiting (deploy); account deletion with hashed identifier (§6.1) is not in M6.
 
-### M7 — Residency ⬜
+### M7 — Residency 🟦
 **Goal:** Users belong to the community they live in.
 - **In scope**
   - [ ] browser geolocation → server-side point-in-polygon (PostGIS, via Postgres function or Edge Function) → **coordinates discarded**, only community ID stored
@@ -320,6 +320,9 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] moving (`requirement.md` §6.4): user-started "I moved", stays in old community until re-verified, excluded from old community's streak/Vitality denominators during the move, auto-cancel after 7 days, 90-day cooldown from last completed move, one free correction within 14 days of first verification
   - [ ] cumulative Verified Residents counted as distinct people per community (movers stay counted, returners not counted twice)
   - [ ] "verify on your phone" hint
+  - [ ] candidate community while verifying; accuracy and per-day check limits (`requirement.md` v1.23 §6.2–6.3)
+  - [ ] replace the temporary manual community choice (M4); resident records move from `gamecore` to the `residency` schema, gamecore reads them through residency functions
+  - [ ] local phone testing over HTTPS on the same Wi-Fi (dev only)
 - **Definition of Done**
   - [ ] tests prove coordinates are never persisted or logged
   - [ ] verification edge cases tested (other community visit same day, day boundary)
@@ -428,6 +431,19 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.30
+**Changed:** "Based on" → `requirement.md` v1.23. M7 🟦 in progress; scope items for the candidate community and check limits, replacing the manual choice (resident records move to `residency`), and local phone testing over HTTPS.
+
+**Why:** M7 started; user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.29 |`
+- Header: `| Based on | `requirement.md` v1.22 |`
+- Header: `| Current module | M7 Residency (next; M6 ✅ Done) |`
+- Overview: `| M7 | Residency | FE + BE | | M6 | ⬜ |`
+- M7: `### M7 — Residency ⬜`
+- M7: (no items for candidate community, replacing the manual choice, or phone testing)
 
 ### 2026-11-20 — v1.29
 **Changed:** M6 ✅ Done (user confirmed). Real verification of Google linking / re-join and the DoD "linking Google keeps progress" moved to M14 (code stays in M6). Header → M7 next.
