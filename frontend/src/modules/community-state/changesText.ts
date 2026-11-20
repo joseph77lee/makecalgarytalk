@@ -10,7 +10,7 @@ export function changeItems(c: ServerChanges, vitality: number | null): ChangeIt
   const items: ChangeItem[] = [];
   for (const b of c.built) items.push({ icon: '🎉', text: b.level > 1 ? `${b.title} upgraded to Lv ${b.level}` : `${b.title} was built` });
   for (const b of c.opened) items.push({ icon: '✨', text: `${b.title} unlocked` });
-  if (c.land_grew) items.push({ icon: '🏝', text: 'The island grew' });
+  if (c.land_grew) items.push({ icon: '🏝', text: 'Your community grew!' });
   if (c.new_residents > 0) items.push({ icon: '👋', text: c.new_residents === 1 ? 'A new neighbour joined' : `${c.new_residents} new neighbours joined` });
   if (c.actions > 0) {
     const parts = c.progress.map((p) => `${p.title}${p.level > 1 ? ` Lv ${p.level}` : ''} +${p.added}`);

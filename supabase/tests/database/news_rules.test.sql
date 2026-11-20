@@ -1,7 +1,7 @@
 -- Module: news — newspaper lines from yesterday's real records, stored edition, locks,
 -- announcements, roadmap, permissions (requirement.md v1.27 §11). Day N = 2026-12-01 + N.
 begin;
-select plan(24);
+select plan(23);
 
 delete from news.editions;
 delete from news.announcements;
@@ -65,33 +65,36 @@ select is((select count(*)::int from news.editions), 0, 'no edition is written w
 select pg_temp.act(1, 1); select pg_temp.act(2, 1); select pg_temp.act(1, 1);
 select is(pg_temp.paper(1) ->> 'locked', 'welcome_sign', 'help shows the next day: still locked on day 1');
 select is(pg_temp.paper(2) ->> 'locked', null, 'day 2: the Welcome sign is built, the newspaper opens');
-select ok(pg_temp.text(2) ~ '2 neighbours helped yesterday: Neighbour 1 and Neighbour 2\.', 'who helped yesterday, by nickname');
-select ok(pg_temp.text(2) ~ 'The Welcome sign was completed!', 'completed buildings');
-select is((select array_agg(distinct k order by k) from jsonb_array_elements(pg_temp.paper(2) -> 'lines') l, jsonb_object_keys(l) k),
-  array['icon', 'text'], 'lines are icon + text only');
-select ok(pg_temp.text(2) !~ '[0-9]{1,2}:[0-9]{2}', 'no clock times in the news');
+select is(pg_temp.text(2), null, 'no people news on day 2 (game events are not in the newspaper)');
+select ok(pg_temp.paper(2) -> 'lines' = '[]'::jsonb, 'buildings and helpers stay in the Since yesterday panel');
 
 -- Stored once per day
 select pg_temp.act(3, 2);
 select pg_temp.verify(3, 'MAH', 1);
 select is((select count(*)::int from news.editions where calgary_day = pg_temp.d(2)), 1, 'the edition is stored');
-select ok(pg_temp.text(2) !~ 'Neighbour 3', 'it does not change during the day');
+select ok(coalesce(pg_temp.text(2), '') !~ 'Neighbour 3', 'it does not change during the day (Neighbour 3 joined on day 1, after it was written)');
 select is(pg_temp.paper(2) -> 'announcements' -> 0 ->> 'title', 'Maintenance Sunday', 'announcements are live, not stored with the edition');
 
 -- Day 3: many helpers, a new neighbour, a streak
 select pg_temp.verify(n, 'MAH', 2) from generate_series(4, 9) n;
 select pg_temp.act(n, 2, 'fire-pit') from generate_series(4, 9) n;
-select ok(pg_temp.text(3) ~ '7 neighbours helped yesterday: Neighbour 3, Neighbour 4, Neighbour 5, Neighbour 6, Neighbour 7, Neighbour 8 and 1 more\.',
-  'long helper lists are shortened');
-select ok(pg_temp.text(3) ~ 'Welcome to our new neighbours: Neighbour 4, Neighbour 5, Neighbour 6, Neighbour 7, Neighbour 8 and Neighbour 9!', 'new neighbours are welcomed');
-select ok(pg_temp.text(3) !~ 'Welcome.*Neighbour 3', 'yesterday''s arrivals only (Neighbour 3 arrived the day before)');
-select ok(pg_temp.text(3) ~ 'Mahogany is on a 2-day streak!', 'the community streak');
+select is(pg_temp.text(3), '6 new neighbours joined yesterday: Neighbour 4, Neighbour 5, Neighbour 6, Neighbour 7, Neighbour 8 and Neighbour 9. Welcome!',
+  'how many new neighbours joined yesterday, with their names');
+select ok(pg_temp.text(3) !~ 'Neighbour 3', 'yesterday''s arrivals only (Neighbour 3 arrived the day before)');
+select ok(pg_temp.text(3) !~ 'streak|helped|completed', 'no game news');
+select pg_temp.verify(10, 'MAH', 3);
+select pg_temp.verify(11, 'MAH', 3);
+select pg_temp.verify(12, 'MAH', 3);
+select ok(pg_temp.text(4) ~ '^3 new neighbours joined yesterday: Neighbour 10, Neighbour 11 and Neighbour 12\. Welcome!', 'three new neighbours');
+
+select is((select array_agg(distinct k order by k) from jsonb_array_elements(pg_temp.paper(3) -> 'lines') l, jsonb_object_keys(l) k),
+  array['icon', 'text'], 'lines are icon + text only');
+select ok(coalesce(pg_temp.text(3), '') !~ '[0-9]{1,2}:[0-9]{2}', 'no clock times in the news');
 
 -- Day 5: a farewell
 select pg_temp.verify(9, 'AUB', 4);
 select ok(pg_temp.text(5) ~ 'Neighbour 9 moved to Auburn Bay — thanks for everything, neighbour!', 'farewell line with the new community');
-select ok(pg_temp.text(5) ~ 'Nobody helped yesterday\. Today is a fresh start!', 'a quiet day says so');
-select ok(pg_temp.text(5) !~ 'streak', 'no streak line once it is broken');
+select is(jsonb_array_length(pg_temp.paper(5) -> 'lines'), 1, 'only the farewell that day');
 
 -- Board: opens with the Warming hut
 select is(pg_temp.paper(5) -> 'board', '{"open": false, "roadmap": []}'::jsonb, 'the board is locked before the Warming hut');

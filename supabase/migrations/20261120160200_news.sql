@@ -5,8 +5,10 @@
 --     yesterday's real records, then served as stored. Day-level only: no clock times anywhere.
 --   * Locked until the community's Welcome sign is built; the board section (events, roadmap)
 --     opens with the Warming hut; announcements are always at the top.
---   * Reads other modules only through functions: gamecore.community_state_at / helpers_on /
---     streak_before, residency.arrivals_on / departures_on, identity.nickname.
+--   * Lines are about real people: new neighbours (with names) and farewells. Game events
+--     (buildings, island growth, helpers, streak) are shown in the "Since yesterday" panel.
+--   * Reads other modules only through functions: gamecore.community_state_at /
+--     community_name, residency.arrivals_on / departures_on, identity.nickname.
 
 create schema news;
 revoke all on schema news from public, anon, authenticated;
@@ -70,62 +72,32 @@ as $$
   end
 $$;
 
--- Lines for the edition of p_day (about yesterday). [{icon, text}]
+-- Lines for the edition of p_day (about yesterday): real people news only — new neighbours and
+-- farewells (game events stay in the "Since yesterday" panel). [{icon, text}]
 create function news.lines_at(p_community_id uuid, p_now timestamptz)
 returns jsonb
 language plpgsql set search_path = ''
 as $$
 declare
   v_day date := common.calgary_day(p_now);
-  v_state jsonb := gamecore.community_state_at(p_community_id, p_now, null);
-  v_name text := v_state -> 'community' ->> 'name';
-  v_changes jsonb := v_state -> 'changes';
   v_lines jsonb := '[]'::jsonb;
-  v_helpers uuid[];
   v_arrivals uuid[];
-  v_item jsonb;
   v_dep record;
-  v_streak integer;
-  v_before integer := (v_changes ->> 'vitality_before')::integer;
-  v_now integer := (v_state -> 'community' ->> 'vitality')::integer;
 begin
-  v_helpers := array(select gamecore.helpers_on(p_community_id, v_day - 1));
-  v_lines := v_lines || jsonb_build_array(jsonb_build_object('icon', '🙌', 'text',
-    case when cardinality(v_helpers) = 0 then 'Nobody helped yesterday. Today is a fresh start!'
-         when cardinality(v_helpers) = 1 then news.names(v_helpers, 6) || ' helped the community yesterday.'
-         else cardinality(v_helpers) || ' neighbours helped yesterday: ' || news.names(v_helpers, 6) || '.' end));
-
-  for v_item in select * from jsonb_array_elements(v_changes -> 'built') loop
-    v_lines := v_lines || jsonb_build_array(jsonb_build_object('icon', '🏗️', 'text',
-      case when (v_item ->> 'level')::integer > 1 then 'The ' || (v_item ->> 'title') || ' reached level ' || (v_item ->> 'level') || '!'
-           else 'The ' || (v_item ->> 'title') || ' was completed!' end));
-  end loop;
-  for v_item in select * from jsonb_array_elements(v_changes -> 'opened') loop
-    v_lines := v_lines || jsonb_build_array(jsonb_build_object('icon', '🔓', 'text', 'The ' || (v_item ->> 'title') || ' can now be built.'));
-  end loop;
-  if (v_changes ->> 'land_grew')::boolean then
-    v_lines := v_lines || jsonb_build_array(jsonb_build_object('icon', '🏝️', 'text', 'The island grew bigger!'));
+  if not exists (select 1 from gamecore.communities c where c.id = p_community_id) then
+    raise exception 'community not found' using errcode = 'P0002';
   end if;
-  if v_before is not null and v_now is not null and v_before < 30 and v_now >= 30 then
-    v_lines := v_lines || jsonb_build_array(jsonb_build_object('icon', '🌸', 'text', v_name || ' woke up! Thanks to everyone who helped.'));
-  end if;
-
   v_arrivals := array(select residency.arrivals_on(p_community_id, v_day - 1));
   if cardinality(v_arrivals) > 0 then
     v_lines := v_lines || jsonb_build_array(jsonb_build_object('icon', '👋', 'text',
-      case when cardinality(v_arrivals) = 1 then 'Welcome, ' || news.names(v_arrivals, 6) || '!'
-           else 'Welcome to our new neighbours: ' || news.names(v_arrivals, 6) || '!' end));
+      case when cardinality(v_arrivals) = 1 then '1 new neighbour joined yesterday: ' || news.names(v_arrivals, 6) || '. Welcome!'
+           else cardinality(v_arrivals) || ' new neighbours joined yesterday: ' || news.names(v_arrivals, 6) || '. Welcome!' end));
   end if;
   for v_dep in select * from residency.departures_on(p_community_id, v_day - 1) loop
     v_lines := v_lines || jsonb_build_array(jsonb_build_object('icon', '💐', 'text',
       coalesce(identity.nickname(v_dep.user_id), 'A neighbour') || ' moved to ' || coalesce(gamecore.community_name(v_dep.to_community_id), 'another community')
       || ' — thanks for everything, neighbour!'));
   end loop;
-
-  v_streak := gamecore.streak_before(p_community_id, v_day);
-  if v_streak >= 2 then
-    v_lines := v_lines || jsonb_build_array(jsonb_build_object('icon', '🔥', 'text', v_name || ' is on a ' || v_streak || '-day streak!'));
-  end if;
   return v_lines;
 end;
 $$;

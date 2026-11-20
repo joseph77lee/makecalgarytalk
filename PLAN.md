@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.44 |
+| Plan version | v1.45 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.27 |
@@ -48,13 +48,14 @@
 | M7 | Residency | FE + BE | | M6 | ✅ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
 | M9 | Community News | BE + FE | | M8 | 🟨 |
+| M15 | Community Posts | FE + BE | | M9 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
 | M14 | Launch Readiness | All | | All above | ⬜ |
 
-**Order after M7 (user decision 2026-11-20):** M1 🔁 Sleepy mood fix → **M12 Invites** (before M8: bringing neighbours in is the core of the game) → M8 → M9 → M10 → M11 → M13 → M14.
+**Order after M7 (user decision 2026-11-20):** M1 🔁 Sleepy mood fix → **M12 Invites** (before M8: bringing neighbours in is the core of the game) → M8 → M9 → **M15 Community Posts** (resident-written local news, right after M9) → M10 → M11 → M13 → M14.
 
 No time estimates: with AI-assisted (vibe) coding, modules may finish faster or slower than expected. This plan tracks **order, completeness and progress**, not schedule.
 
@@ -365,23 +366,33 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M9 — Community News 🟨
 **Goal:** A daily reason to check in.
 - **In scope**
-  - [x] auto-generated daily newspaper from game events (templates)
+  - [x] daily newspaper about real community life: new neighbours (count + nicknames) and farewells; game events stay in the "Since yesterday" panel; a "Local news" slot announces resident posts (next module)
   - [x] farewell line when a resident moves away (`requirement.md` §6.4, §11)
   - [x] roadmap notices + "Coming soon" locks
   - [x] newspaper opens on tap of the Welcome sign; the Warming hut adds the community board; the Community hall takes both over (`requirement.md` §7.6, §11); no walking required
   - [x] global operator announcements (one feed for all communities) at the top of the newspaper, managed by the operator (no per-community announcements)
   - [x] newspaper written once per community per Calgary day and stored; locked until the Welcome sign is built; board section locked until the Warming hut (`requirement.md` v1.27 §11)
 - **Definition of Done**
-  - [x] newspaper reflects yesterday's real events with nicknames
+  - [x] newspaper reflects yesterday's real new neighbours and farewells with nicknames
   - [x] no activity times exposed
 - **Handoff**
-  - **Code:** migrations `20261120160000_residency_news_interface.sql` (`arrivals_on`, `departures_on`), `20261120160100_gamecore_news_interface.sql` (`helpers_on`), `20261120160200_news.sql` (schema `news`: `editions`, `announcements`, `roadmap`; `lines_at`, `newspaper_at`; RPC `news_get_newspaper`). Tests `supabase/tests/database/news_rules.test.sql` (24). Frontend `frontend/src/modules/news/` (`NewspaperPanel`, store, `newsBuildingKeys`); island-view got `onBuildingTap` (ray vs building footprints) and a "📰 News" chip (`newsBuildingKeys`).
+  - **Code:** migrations `20261120160000_residency_news_interface.sql` (`arrivals_on`, `departures_on`), `20261120160200_news.sql` (schema `news`: `editions`, `announcements`, `roadmap`; `lines_at`, `newspaper_at`; RPC `news_get_newspaper`). Tests `supabase/tests/database/news_rules.test.sql` (24). Frontend `frontend/src/modules/news/` (`NewspaperPanel`, store, `newsBuildingKeys`); island-view got `onBuildingTap` (ray vs building footprints) and a "📰 News" chip (`newsBuildingKeys`).
   - **Newspaper host:** the Welcome sign's lot — the sign grows into the Gateway arch on the same lot, and right after the sign is built the arch construction stands there — so the host keys are `welcome-sign` + `gateway-arch` until the Community hall is built. The chip shows only once the sign is built; tapping the unbuilt sign's site shows the locked paper.
-  - **Edition:** built from `gamecore.community_state_at(…).changes` + helpers/arrivals/departures/streak on the first read of the day, stored in `news.editions`; announcements and the board are live. Personal streak lines are left out (decision).
+  - **Edition:** arrivals and departures of yesterday, built on the first read of the day and stored in `news.editions`; announcements and the board are live.
   - **Operator content:** announcements and roadmap via SQL (see docs/api.md); no admin UI yet.
+  - **People news, not game news:** the edition has only new neighbours and farewells (user decision 2026-11-20); `gamecore.helpers_on` was dropped again. "Since yesterday" keeps the game events; "Your community grew!" and "N more neighbours to grow" replace island wording.
   - **Wording:** "community", not "village", in the UI (Calgary calls each neighbourhood a community): "Community News", the "Community" button, "Community complete"; "mini villagers" keep their name.
   - **Not tested / known gaps:** a real phone; announcements are not rate-limited or moderated beyond the operator; the board has no events yet (roadmap only).
 
+
+### M15 — Community Posts ⬜
+**Goal:** Neighbours write the community's local news.
+- **In scope** (details planned when the module starts; `requirement.md` §14)
+  - [ ] Verified Residents post short local news (events, deals, lost & found) shown in Community News
+  - [ ] spam guards: posting limits, filters (blocked words, phone/address patterns), reports with auto-hide, expiry, operator removal
+  - [ ] participation: posts credited by nickname, thanks, a badge
+- **Definition of Done**
+  - [ ] only Verified Residents can post; abuse is limited and tested
 
 ### M10 — World Map ⬜
 **Goal:** See all of Calgary and spread to empty communities.
@@ -475,6 +486,18 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.45
+**Changed:** M9 newspaper covers real community life (new neighbours, farewells, a Local news slot); game events stay in "Since yesterday". New module **M15 Community Posts** (resident-written local news, Verified Residents only) right after M9.
+
+**Why:** User decision 2026-11-20: Community News should report real community life; writing every community's news by hand does not scale, so residents write it.
+
+**Previous:**
+- Header: `| Plan version | v1.44 |`
+- M9: `  - [x] auto-generated daily newspaper from game events (templates)`
+- M9: `  - [x] newspaper reflects yesterday's real events with nicknames`
+- Overview: (no M15 row)
+- Order note: `**Order after M7 (user decision 2026-11-20):** M1 🔁 Sleepy mood fix → **M12 Invites** (before M8: bringing neighbours in is the core of the game) → M8 → M9 → M10 → M11 → M13 → M14.`
 
 ### 2026-11-20 — v1.44
 **Changed:** M9 renamed "Village News" → "Community News"; UI wording uses "community" instead of "village".

@@ -381,7 +381,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - Opens when the player taps the building; the avatar does not need to walk there
 - **Auto-generated community newspaper** (no operator effort)
   - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed."
-  - Lines (all from real records, day-level, no times): who helped yesterday (nicknames), buildings completed or unlocked, the island growing, new neighbours (welcome), farewells, the community streak, a community revival (Sleepy → recovered). No personal streak lines
+  - The newspaper is about **real community life, not game events**: how many new neighbours joined yesterday (with nicknames), farewells, and **local news written by Verified Residents** (events, deals, lost & found; see 14, built right after this section's first version). Game events (buildings, island growth, who helped, streak) stay in the "What changed since yesterday" panel. No personal streak lines; day-level only, no times
   - Written **once per community per Calgary day** (the first time someone opens it) and then served as stored (no extra cost per reader)
   - Before the Welcome sign is built, tapping its spot says "Build the Welcome sign to open the community newspaper"
   - Shows nicknames of active residents (recognition)
@@ -445,7 +445,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ---
 
-## 14. Resident board (Phase 2, communities with a Community hall)
+## 14. Resident board (MVP, next module after Community news; details decided when it starts)
 
 | Rule | Newcomer | Verified Resident |
 |---|---|---|
@@ -794,12 +794,13 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### 2026-11-20 — v1.27
 **Changed:** 11: newspaper lines listed (no personal streak lines; the example no longer mentions one); written once per community per day; locked until the Welcome sign is built; announcements always at the top, the community board section (events, roadmap) opens with the Warming hut; MVP announcements via SQL.
 
-Section renamed "Village news" → "Community news" (Calgary calls each neighbourhood a community); the newspaper is titled "Community News".
+Section renamed "Village news" → "Community news" (Calgary calls each neighbourhood a community); the newspaper is titled "Community News". The newspaper covers real community life (new neighbours, farewells, resident-written local news) instead of game events; resident posts (14) move from Phase 2 into the MVP as the next module, Verified Residents only.
 
 **Why:** M9 needs exact rules; announcements were listed both at the top of the newspaper and on the Warming hut board (user decisions 2026-11-20).
 
 **Previous:**
 - 11: `## 11. Village news (community newspaper)`
+- 14: `## 14. Resident board (Phase 2, communities with a Community hall)`
 - 11: `  - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed. Sarah hit a 7-day streak!"`
 - 11: (no line list, generation rule, lock text, board/announcement split or announcement tooling)
 

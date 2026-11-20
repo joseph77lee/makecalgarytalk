@@ -277,14 +277,14 @@ none yet), or `null` for an unknown code. Works before sign-in (invite landing b
   "locked": null,
   "announcements": [{ "title": "Maintenance Sunday", "body": "Short break at night." }],
   "lines": [
-    { "icon": "🙌", "text": "4 neighbours helped yesterday: Maple Fox, Snowy Moose, Chinook Jay and Bow River." },
-    { "icon": "🏗️", "text": "The Welcome sign was completed!" }
+    { "icon": "👋", "text": "2 new neighbours joined yesterday: Maple Fox and Snowy Moose. Welcome!" },
+    { "icon": "💐", "text": "Sarah moved to Bridgeland — thanks for everything, neighbour!" }
   ],
   "board": { "open": false, "roadmap": [] }
 }
 ```
-- `lines`: yesterday's real records (helpers by nickname, completed/unlocked buildings, island
-  growth, revival, new neighbours, farewells with the new community, community streak). Written
+- `lines`: real people news about yesterday: how many new neighbours joined (with nicknames) and
+  farewells (with the new community). Game events stay in the community state's `changes`. Written
   **once per community per Calgary day** on the first read, then served from `news.editions`.
   No clock times.
 - `locked: "welcome_sign"` until the Welcome sign is built (`lines` empty).

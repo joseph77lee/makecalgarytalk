@@ -52,15 +52,24 @@ export function NewspaperPanel() {
                 </div>
               ) : (
                 <>
-                  <h3 className="mb-2 font-serif text-lg font-bold text-slate-900">Yesterday ({yesterdayLabel(paper.calgary_day)})</h3>
-                  <ul className="space-y-2">
-                    {paper.lines.map((l, i) => (
-                      <li key={i} className="flex gap-2 text-sm leading-snug text-slate-800">
-                        <span aria-hidden>{l.icon}</span>
-                        <span>{l.text}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <h3 className="mb-2 font-serif text-lg font-bold text-slate-900">Neighbours ({yesterdayLabel(paper.calgary_day)})</h3>
+                  {paper.lines.length > 0 ? (
+                    <ul className="space-y-2">
+                      {paper.lines.map((l, i) => (
+                        <li key={i} className="flex gap-2 text-sm leading-snug text-slate-800">
+                          <span aria-hidden>{l.icon}</span>
+                          <span>{l.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-slate-500">No new neighbours yesterday. Invite someone nearby!</p>
+                  )}
+
+                  <h3 className="mb-2 mt-5 font-serif text-lg font-bold text-slate-900">Local news</h3>
+                  <p className="rounded-2xl bg-white px-3 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
+                    🗞️ Soon, Verified Residents can post local news here: events, deals, lost &amp; found.
+                  </p>
                 </>
               )}
 
