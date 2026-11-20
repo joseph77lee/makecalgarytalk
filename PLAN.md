@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.46 |
+| Plan version | v1.47 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
-| Based on | `requirement.md` v1.27 |
-| Current module | M15 Community Posts (next; M9 ✅ Done) |
+| Based on | `requirement.md` v1.28 |
+| Current module | M15 Community Posts (in progress; M9 ✅ Done) |
 
 ---
 
@@ -48,7 +48,7 @@
 | M7 | Residency | FE + BE | | M6 | ✅ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
 | M9 | Community News | BE + FE | | M8 | ✅ |
-| M15 | Community Posts | FE + BE | | M9 | ⬜ |
+| M15 | Community Posts | FE + BE | | M9 | 🟦 |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
@@ -385,14 +385,18 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; announcements are not rate-limited or moderated beyond the operator; the board has no events yet (roadmap only).
 
 
-### M15 — Community Posts ⬜
+### M15 — Community Posts 🟦
 **Goal:** Neighbours write the community's local news.
-- **In scope** (details planned when the module starts; `requirement.md` §14)
-  - [ ] Verified Residents post short local news (events, deals, lost & found) shown in Community News
-  - [ ] spam guards: posting limits, filters (blocked words, phone/address patterns), reports with auto-hide, expiry, operator removal
-  - [ ] participation: posts credited by nickname, thanks, a badge
+- **In scope** (`requirement.md` v1.28 §14)
+  - [ ] Verified Residents post in their own community once the Welcome sign is built: kind + up to 300 characters, 1 per Calgary day, no links/photos
+  - [ ] shown in Community News → Local news with nickname and "today / yesterday / 2 days ago"; visible 3 Calgary days; author can delete
+  - [ ] blocked words, phone numbers and street addresses refused
+  - [ ] reports (Verified 2 points, others 1; 3 points hide), operator report-block and hide (SQL)
+  - [ ] thanks (once per player per post) and the Community Reporter badge (10 thanks)
+  - [ ] posts come with the newspaper response (no extra request when opening)
 - **Definition of Done**
   - [ ] only Verified Residents can post; abuse is limited and tested
+  - [ ] no times exposed
 
 ### M10 — World Map ⬜
 **Goal:** See all of Calgary and spread to empty communities.
@@ -486,6 +490,26 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.47
+**Changed:** "Based on" → `requirement.md` v1.28. M15 🟦 in progress with its detailed scope.
+
+**Why:** M15 started; user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.46 |`
+- Header: `| Based on | `requirement.md` v1.27 |`
+- Header: `| Current module | M15 Community Posts (next; M9 ✅ Done) |`
+- Overview: `| M15 | Community Posts | FE + BE | | M9 | ⬜ |`
+- M15 section:
+    ### M15 — Community Posts ⬜
+    **Goal:** Neighbours write the community's local news.
+    - **In scope** (details planned when the module starts; `requirement.md` §14)
+      - [ ] Verified Residents post short local news (events, deals, lost & found) shown in Community News
+      - [ ] spam guards: posting limits, filters (blocked words, phone/address patterns), reports with auto-hide, expiry, operator removal
+      - [ ] participation: posts credited by nickname, thanks, a badge
+    - **Definition of Done**
+      - [ ] only Verified Residents can post; abuse is limited and tested
 
 ### 2026-11-20 — v1.46
 **Changed:** M9 ✅ Done (user confirmed). Header → M15 next.
