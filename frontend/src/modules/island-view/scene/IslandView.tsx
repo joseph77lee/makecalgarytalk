@@ -32,12 +32,16 @@ interface IslandViewProps {
   state: CommunityViewState;
   /** Called when the player taps/clicks a tile of the current land (not when dragging). */
   onTileTap?: (tile: Tile) => void;
+  /** Called when the player taps a building (built, under construction or locked), by key. */
+  onBuildingTap?: (buildingKey: string) => void;
+  /** Buildings that hold the newspaper; the first one shown gets a "📰 News" chip that opens it. */
+  newsBuildingKeys?: string[];
   /** Extra scene content (e.g. the avatar), rendered inside the island scene. */
   children?: ReactNode;
 }
 
 /** The 3D voxel island for one community, rendered purely from its plan and `state`. */
-export function IslandView({ plan, state, onTileTap, children }: IslandViewProps) {
+export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuildingKeys = [], children }: IslandViewProps) {
   const layout = useMemo(() => buildIslandLayout(plan, state), [plan, state]);
   const palette = MOOD_PALETTES[layout.mood];
 
@@ -45,7 +49,16 @@ export function IslandView({ plan, state, onTileTap, children }: IslandViewProps
     <div className="absolute inset-0 transition-[background] duration-700" style={{ background: palette.sky }}>
       <Canvas flat shadows dpr={[1, 2]} gl={{ antialias: true, alpha: true }}>
         {/* A new community (plan) starts a fresh scene: camera angle, growth state. */}
-        <IslandScene key={plan.code} plan={plan} layout={layout} palette={palette} state={state} onTileTap={onTileTap}>
+        <IslandScene
+          key={plan.code}
+          plan={plan}
+          layout={layout}
+          palette={palette}
+          state={state}
+          onTileTap={onTileTap}
+          onBuildingTap={onBuildingTap}
+          newsBuildingKeys={newsBuildingKeys}
+        >
           {children}
         </IslandScene>
       </Canvas>
@@ -59,6 +72,8 @@ function IslandScene({
   palette,
   state,
   onTileTap,
+  onBuildingTap,
+  newsBuildingKeys,
   children,
 }: {
   plan: IslandPlan;
@@ -66,6 +81,8 @@ function IslandScene({
   palette: MoodPalette;
   state: CommunityViewState;
   onTileTap?: (tile: Tile) => void;
+  onBuildingTap?: (buildingKey: string) => void;
+  newsBuildingKeys: string[];
   children?: ReactNode;
 }) {
   // Land stage whose tiles are fully shown. When the land grows, the new tiles rise first.
@@ -112,17 +129,20 @@ function IslandScene({
   const shown = useMemo(() => layout.objects.filter((o) => o.stage <= settled), [layout, settled]);
   // Houses are tapped on their body, not on the ground behind them: test the tap ray against
   // each house's box and take the nearest hit.
+  // Buildings (by footprint) can be tapped the same way.
   const houseBoxes = useMemo(
     () =>
-      shown.flatMap((o) =>
-        o.assetKey === 'house' && o.nickname
-          ? [{ id: o.houseId, box: new Box3(new Vector3(o.x - 0.45, 0, o.z - 0.45), new Vector3(o.x + 0.45, 0.95, o.z + 0.45)) }]
-          : [],
-      ),
-    [shown],
+      shown.flatMap((o): { kind: 'house' | 'building'; id: string; box: Box3 }[] => {
+        if (o.assetKey === 'house' && o.nickname)
+          return [{ kind: 'house', id: o.houseId, box: new Box3(new Vector3(o.x - 0.45, 0, o.z - 0.45), new Vector3(o.x + 0.45, 0.95, o.z + 0.45)) }];
+        if (onBuildingTap && 'buildingKey' in o && 'w' in o)
+          return [{ kind: 'building', id: o.buildingKey, box: new Box3(new Vector3(o.x - o.w / 2, 0, o.z - o.d / 2), new Vector3(o.x + o.w / 2, 1.6, o.z + o.d / 2)) }];
+        return [];
+      }),
+    [shown, onBuildingTap],
   );
   const tap = (tile: Tile, ray: Ray, onLand: boolean) => {
-    let house: string | null = null;
+    let target: (typeof houseBoxes)[number] | null = null;
     let best = Infinity;
     const hit = new Vector3();
     for (const h of houseBoxes) {
@@ -130,12 +150,14 @@ function IslandScene({
         const d = hit.distanceTo(ray.origin);
         if (d < best) {
           best = d;
-          house = h.id;
+          target = h;
         }
       }
     }
+    const house = target?.kind === 'house' ? target.id : null;
     setSelectedHouse(house && house !== selectedHouse ? house : null);
-    if (!house && onLand) onTileTap?.(tile);
+    if (target?.kind === 'building') onBuildingTap?.(target.id);
+    else if (!house && onLand) onTileTap?.(tile);
   };
   const settledTerrain = useMemo(() => {
     const tiles = layout.tiles.filter((t) => t.stage <= settled);
@@ -180,7 +202,14 @@ function IslandScene({
 
       {(onTileTap || houseBoxes.length > 0) && <TapPlane radius={outlineRadius} isLand={(t) => stageOf(t) <= settled} onTileTap={tap} />}
       <ObjectsLayer objects={shown} />
-      <IslandLabels objects={shown} houseBubbles={houseBubbles} communityName={state.communityName} selectedHouseId={selectedHouse} />
+      <IslandLabels
+        objects={shown}
+        houseBubbles={houseBubbles}
+        communityName={state.communityName}
+        selectedHouseId={selectedHouse}
+        newsBuildingKeys={newsBuildingKeys}
+        onNewsTap={onBuildingTap && newsBuildingKeys.length > 0 ? () => onBuildingTap(newsBuildingKeys[0]) : undefined}
+      />
       {children}
     </IslandContext.Provider>
   );

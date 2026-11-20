@@ -32,6 +32,9 @@ interface Props {
   communityName: string;
   /** Tapped house: show whose it is (requirement.md v1.26 §7.2). */
   selectedHouseId?: string | null;
+  /** Buildings holding the newspaper: the first one shown gets a tappable "📰 News" chip (§11). */
+  newsBuildingKeys?: string[];
+  onNewsTap?: () => void;
 }
 
 /** Camera zoom (screen px per world unit) above which labels show full text. */
@@ -54,11 +57,38 @@ function useDetailedLabels(): boolean {
   return detailed;
 }
 
-/** My house's marker and a tapped house's info show even with labels off. */
-function HouseMarks({ objects, selectedHouseId }: { objects: PlacedObject[]; selectedHouseId?: string | null }) {
+/** My house's marker, a tapped house's info and the news chip show even with labels off. */
+function HouseMarks({
+  objects,
+  selectedHouseId,
+  newsBuildingKeys = [],
+  onNewsTap,
+}: {
+  objects: PlacedObject[];
+  selectedHouseId?: string | null;
+  newsBuildingKeys?: string[];
+  onNewsTap?: () => void;
+}) {
+  const newsHost = onNewsTap
+    ? objects.find((o) => (o.assetKey.startsWith('building.') || o.assetKey === 'construction-site') && 'buildingKey' in o && newsBuildingKeys.includes(o.buildingKey))
+    : undefined;
   return (
     <>
       {objects.map((o) => {
+        if (o === newsHost) {
+          return (
+            <Overlay key={`${o.id}:news`} x={o.x} y={o.assetKey === 'building.welcome-sign' ? 2.05 : 2.4} z={o.z} front>
+              <button
+                type="button"
+                onClick={onNewsTap}
+                style={{ pointerEvents: 'auto' }}
+                className="whitespace-nowrap rounded-full bg-sky-600 px-2 py-0.5 text-[11px] font-bold text-white shadow active:scale-95"
+              >
+                📰 News
+              </button>
+            </Overlay>
+          );
+        }
         if (o.assetKey !== 'house') return null;
         const selected = o.houseId === selectedHouseId && o.nickname;
         return [
@@ -91,15 +121,16 @@ function HouseInfo({ nickname, activeToday, founding, mine }: { nickname: string
   );
 }
 
-export function IslandLabels({ objects, houseBubbles, communityName, selectedHouseId }: Props) {
+export function IslandLabels({ objects, houseBubbles, communityName, selectedHouseId, newsBuildingKeys, onNewsTap }: Props) {
   const detailed = useDetailedLabels();
   const showLabels = useIslandUi((u) => u.showLabels);
   // House names float only when labels are on and the player zoomed in (no clutter, §7.2).
   const showNames = detailed;
-  if (!showLabels) return <HouseMarks objects={objects} selectedHouseId={selectedHouseId} />;
+  const marks = <HouseMarks objects={objects} selectedHouseId={selectedHouseId} newsBuildingKeys={newsBuildingKeys} onNewsTap={onNewsTap} />;
+  if (!showLabels) return marks;
   return (
     <>
-      <HouseMarks objects={objects} selectedHouseId={selectedHouseId} />
+      {marks}
       {objects.map((o) => {
         switch (o.assetKey) {
           case 'house': {

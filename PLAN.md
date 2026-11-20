@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.42 |
+| Plan version | v1.43 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.27 |
-| Current module | M9 Village News (in progress; M8 ✅ Done) |
+| Current module | M9 Village News (🟨 Ready for playtest) |
 
 ---
 
@@ -47,7 +47,7 @@
 | M6 | Identity | FE + BE | | M4 | ✅ |
 | M7 | Residency | FE + BE | | M6 | ✅ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
-| M9 | Village News | BE + FE | | M8 | 🟦 |
+| M9 | Village News | BE + FE | | M8 | 🟨 |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
@@ -362,18 +362,25 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; villagers do not walk to the site during the replay (bubble only); badges other than Founding Resident are not in the bubble (decision); interiors are a Phase 3 idea (requirement §22.3).
 
 
-### M9 — Village News 🟦
+### M9 — Village News 🟨
 **Goal:** A daily reason to check in.
 - **In scope**
-  - [ ] auto-generated daily newspaper from game events (templates)
-  - [ ] farewell line when a resident moves away (`requirement.md` §6.4, §11)
-  - [ ] roadmap notices + "Coming soon" locks
-  - [ ] newspaper opens on tap of the Welcome sign; the Warming hut adds the community board; the Community hall takes both over (`requirement.md` §7.6, §11); no walking required
-  - [ ] global operator announcements (one feed for all communities) at the top of the newspaper, managed by the operator (no per-community announcements)
-  - [ ] newspaper written once per community per Calgary day and stored; locked until the Welcome sign is built; board section locked until the Warming hut (`requirement.md` v1.27 §11)
+  - [x] auto-generated daily newspaper from game events (templates)
+  - [x] farewell line when a resident moves away (`requirement.md` §6.4, §11)
+  - [x] roadmap notices + "Coming soon" locks
+  - [x] newspaper opens on tap of the Welcome sign; the Warming hut adds the community board; the Community hall takes both over (`requirement.md` §7.6, §11); no walking required
+  - [x] global operator announcements (one feed for all communities) at the top of the newspaper, managed by the operator (no per-community announcements)
+  - [x] newspaper written once per community per Calgary day and stored; locked until the Welcome sign is built; board section locked until the Warming hut (`requirement.md` v1.27 §11)
 - **Definition of Done**
-  - [ ] newspaper reflects yesterday's real events with nicknames
-  - [ ] no activity times exposed
+  - [x] newspaper reflects yesterday's real events with nicknames
+  - [x] no activity times exposed
+- **Handoff**
+  - **Code:** migrations `20261120160000_residency_news_interface.sql` (`arrivals_on`, `departures_on`), `20261120160100_gamecore_news_interface.sql` (`helpers_on`), `20261120160200_news.sql` (schema `news`: `editions`, `announcements`, `roadmap`; `lines_at`, `newspaper_at`; RPC `news_get_newspaper`). Tests `supabase/tests/database/news_rules.test.sql` (24). Frontend `frontend/src/modules/news/` (`NewspaperPanel`, store, `newsBuildingKeys`); island-view got `onBuildingTap` (ray vs building footprints) and a "📰 News" chip (`newsBuildingKeys`).
+  - **Newspaper host:** the Welcome sign's lot — the sign grows into the Gateway arch on the same lot, and right after the sign is built the arch construction stands there — so the host keys are `welcome-sign` + `gateway-arch` until the Community hall is built. The chip shows only once the sign is built; tapping the unbuilt sign's site shows the locked paper.
+  - **Edition:** built from `gamecore.community_state_at(…).changes` + helpers/arrivals/departures/streak on the first read of the day, stored in `news.editions`; announcements and the board are live. Personal streak lines are left out (decision).
+  - **Operator content:** announcements and roadmap via SQL (see docs/api.md); no admin UI yet.
+  - **Not tested / known gaps:** a real phone; announcements are not rate-limited or moderated beyond the operator; the board has no events yet (roadmap only).
+
 
 ### M10 — World Map ⬜
 **Goal:** See all of Calgary and spread to empty communities.
@@ -467,6 +474,18 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.43
+**Changed:** M9 items ticked; status 🟨 with Handoff.
+
+**Why:** M9 implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.42 |`
+- Header: `| Current module | M9 Village News (in progress; M8 ✅ Done) |`
+- Overview: `| M9 | Village News | BE + FE | | M8 | 🟦 |`
+- M9: `### M9 — Village News 🟦`
+- M9: all checklist items were `- [ ]`; no Handoff
 
 ### 2026-11-20 — v1.42
 **Changed:** "Based on" → `requirement.md` v1.27. M9 🟦 in progress; scope item for the daily stored edition and the locks.
