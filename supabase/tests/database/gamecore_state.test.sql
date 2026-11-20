@@ -4,7 +4,7 @@
 -- Days are simulated: actions are inserted directly on chosen Calgary days (one per player per
 -- day is enough for these rules). Day N = date '2026-12-01' + N; its noon is 18:00Z (UTC-6).
 begin;
-select plan(47);
+select plan(48);
 
 delete from gamecore.actions;
 delete from gamecore.projects;
@@ -167,6 +167,8 @@ select is((select calgary_day from gamecore.community_snapshots where community_
 select is(pg_temp.building(pg_temp.state('GLA', 12), 'playground') ->> 'status', 'opened', 'a new day rebuilds the snapshot: the third streak day opened the Playground');
 select is((select opened_on from gamecore.building_openings where community_id = pg_temp.c('GLA') and building_key = 'playground'),
           pg_temp.d(12), 'opened on the day the streak reached 3');
+select is(pg_temp.state('GLA', 13) -> 'changes' -> 'opened', '[{"title": "Playground", "building_key": "playground"}]'::jsonb,
+          'the next day lists it as unlocked, even once its construction started');
 select is(gamecore.refresh_snapshots(pg_temp.noon(12)), 8, 'the 5-minute job rebuilds every community with residents');
 select pg_temp.join_(2, 'GLA', 12);
 select ok(not exists (select 1 from gamecore.community_snapshots where community_id in (pg_temp.c('GLA'), pg_temp.c('MAH'))), 'moving drops both communities'' snapshots');

@@ -30,7 +30,7 @@ function serverState(patch: Partial<ServerCommunityState> = {}): ServerCommunity
   return {
     calgary_day: DAY,
     next_day_start: NEXT,
-    community: { id: 'c1', code: 'MAH', name: 'Mahogany', sector: 'Southeast', population: 13860, residents: 4, land_stage: 1, settled: true },
+    community: { id: 'c1', code: 'MAH', name: 'Mahogany', sector: 'Southeast', population: 13860, residents: 4, land_stage: 1, settled: true, vitality: 64, mini_villagers: 5, next_land_residents: 2 },
     buildings: [
       { key: 'welcome-sign', name: 'Welcome sign', stage: 1, status: 'built', level: 2, progress: 1, remaining: null },
       { key: 'fire-pit', name: 'Fire pit', stage: 1, status: 'building', level: 1, progress: 0.6, remaining: null },
@@ -44,6 +44,8 @@ function serverState(patch: Partial<ServerCommunityState> = {}): ServerCommunity
       { id: 'p2', building_key: 'frozen-pond', title: 'Frozen pond', level: 1, required: 20, progress: 0, stage: 'scaffolding' },
       { id: 'p3', building_key: 'gateway-arch', title: 'Gateway arch', level: 1, required: 25, progress: 10, stage: 'scaffolding' },
     ],
+    streak: { days: 2, today: { acted: 1, active_residents: 4, needed: 2, attended: false } },
+    changes: { actions: 0, progress: [], built: [], opened: [], new_residents: 0, land_grew: false, vitality_before: null },
     me: { member: true, energy_max: 3, energy_left: 3 },
     ...patch,
   };
@@ -78,10 +80,14 @@ describe('toViewState (the server owns the building tree)', () => {
     expect(toViewState(big).landStage).toBe(BUILDING_TREE.landTiers.length - 1);
   });
 
-  it('leaves Vitality and houses empty until their modules exist', () => {
+  it('takes Vitality and the villager count from the server; houses stay empty until M8', () => {
     const v = toViewState(serverState());
-    expect(v.vitality).toBeNull();
+    expect(v.vitality).toBe(64);
+    expect(v.miniVillagerCount).toBe(5);
     expect(v.houses).toEqual([]);
+    const fresh = serverState();
+    fresh.community.vitality = null;
+    expect(toViewState(fresh).vitality).toBeNull(); // before the first finished day: normal mood
   });
 
   it('always produces a state the island accepts', () => {
@@ -110,6 +116,11 @@ describe('assertCommunityState', () => {
       (s) => ((s.buildings[1] as { status: string }).status = 'ruined'),
       (s) => ((s.buildings[4].remaining as { streak_days: unknown }).streak_days = '3'),
       (s) => (s.community.land_stage = -1),
+      (s) => (s.community.vitality = 101),
+      (s) => (s.community.mini_villagers = -1),
+      (s) => ((s.streak.today as { attended: unknown }).attended = 'yes'),
+      (s) => delete (s as Partial<ServerCommunityState>).changes,
+      (s) => ((s.changes as { built: unknown }).built = null),
       (s) => delete (s as Partial<ServerCommunityState>).buildings,
     ];
     for (const breakIt of cases) {
@@ -394,6 +405,23 @@ describe('daily actions store', () => {
     await settle();
     await settle();
     expect(t.rpc.mock.calls.filter((c) => c[0] === 'gamecore_get_community_state').length).toBe(before + 1);
+  });
+
+  it('the first accepted help of the day refreshes once, so the streak bar counts it', async () => {
+    const t = setup({ submit: async (a) => result(2, (a as { id: string }[]).map((x) => ({ id: x.id, status: 'accepted' as const }))) });
+    await t.useStore.getState().init();
+    const reads = () => t.rpc.mock.calls.filter((c) => c[0] === 'gamecore_get_community_state').length;
+    const before = reads();
+    t.useStore.getState().act(0);
+    t.arrivals[0]();
+    await settle();
+    await settle();
+    expect(reads()).toBe(before + 1);
+    t.useStore.getState().act(1);
+    t.arrivals[1]();
+    await settle();
+    await settle();
+    expect(reads()).toBe(before + 1); // not again the same day
   });
 
   it('exposes the arrival timeout used when the avatar never arrives', () => {

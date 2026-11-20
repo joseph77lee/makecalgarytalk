@@ -311,8 +311,10 @@ begin
       select jsonb_agg(jsonb_build_object('building_key', b.key, 'title', b.name) order by b.position)
       from gamecore.building_openings o join gamecore.building_types b on b.key = o.building_key
       where o.community_id = p_community_id and o.opened_on >= v_day - 1
-        and gamecore.active_project(p_community_id, b.key, v_day) is null
-        and gamecore.built_level(p_community_id, b.key, v_day) = 0), '[]'::jsonb),
+        and gamecore.built_level(p_community_id, b.key, v_day) = 0
+        -- the seeds are open from the start: not news
+        and (b.residents > 0 or b.streak_days > 0
+             or exists (select 1 from gamecore.building_requires r where r.building_key = b.key))), '[]'::jsonb),
     'new_residents', gamecore.cumulative_residents_on(p_community_id, v_day - 1) - gamecore.cumulative_residents_on(p_community_id, v_day - 2),
     'land_grew', gamecore.land_stage(gamecore.cumulative_residents_on(p_community_id, v_day - 1))
                  > gamecore.land_stage(gamecore.cumulative_residents_on(p_community_id, v_day - 2)),

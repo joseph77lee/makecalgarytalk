@@ -46,6 +46,29 @@ export interface ServerCommunity extends CommunityListItem {
   land_stage: number;
   /** True once the first building is built. */
   settled: boolean;
+  /** 0–100 from finished days; null before the first finished day (§7.4). */
+  vitality: number | null;
+  /** Ambient villagers to show (3–20, §7.3). */
+  mini_villagers: number;
+  /** Residents still needed for the next land stage; null at the largest island. */
+  next_land_residents: number | null;
+}
+
+/** Community streak (§7.5): days include today once today is an attendance day. */
+export interface ServerStreak {
+  days: number;
+  today: { acted: number; active_residents: number; needed: number; attended: boolean };
+}
+
+/** What changed since yesterday: yesterday's help, shown today. */
+export interface ServerChanges {
+  actions: number;
+  progress: { building_key: string; title: string; level: number; added: number }[];
+  built: { building_key: string; title: string; level: number }[];
+  opened: { building_key: string; title: string }[];
+  new_residents: number;
+  land_grew: boolean;
+  vitality_before: number | null;
 }
 
 export interface ServerCommunityState {
@@ -54,6 +77,8 @@ export interface ServerCommunityState {
   community: ServerCommunity;
   buildings: ServerBuilding[];
   projects: ServerProject[];
+  streak: ServerStreak;
+  changes: ServerChanges;
   me: { member: boolean; energy_max: number; energy_left: number } | null;
 }
 
@@ -98,6 +123,7 @@ export class ApiError extends Error {
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v);
+const isCount = (v: unknown): boolean => Number.isInteger(v) && (v as number) >= 0;
 function check(cond: boolean, what: string): asserts cond {
   if (!cond) throw new ApiError(`Unexpected server response: ${what}`);
 }
@@ -108,6 +134,18 @@ export function assertCommunityState(v: unknown): asserts v is ServerCommunitySt
   check(isObj(v.community) && typeof v.community.id === 'string', 'state.community');
   check(Number.isInteger(v.community.land_stage) && (v.community.land_stage as number) >= 0, 'community.land_stage');
   check(Number.isInteger(v.community.residents) && (v.community.residents as number) >= 0, 'community.residents');
+  const vit = v.community.vitality;
+  check(vit === null || (Number.isInteger(vit) && (vit as number) >= 0 && (vit as number) <= 100), 'community.vitality');
+  check(isCount(v.community.mini_villagers), 'community.mini_villagers');
+  check(v.community.next_land_residents === null || isCount(v.community.next_land_residents), 'community.next_land_residents');
+  check(isObj(v.streak) && isCount(v.streak.days) && isObj(v.streak.today), 'state.streak');
+  const t = v.streak.today as Obj;
+  check(isCount(t.acted) && isCount(t.active_residents) && isCount(t.needed) && typeof t.attended === 'boolean', 'streak.today');
+  check(isObj(v.changes), 'state.changes');
+  const ch = v.changes;
+  check(isCount(ch.actions) && isCount(ch.new_residents) && typeof ch.land_grew === 'boolean', 'changes counts');
+  check(Array.isArray(ch.progress) && Array.isArray(ch.built) && Array.isArray(ch.opened), 'changes lists');
+  check(ch.vitality_before === null || Number.isInteger(ch.vitality_before), 'changes.vitality_before');
   check(Array.isArray(v.buildings), 'state.buildings');
   for (const b of v.buildings as unknown[]) {
     // Unknown keys are fine: the island draws them with a placeholder model (§7.6b).
