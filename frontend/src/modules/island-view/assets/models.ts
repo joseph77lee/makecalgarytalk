@@ -57,8 +57,6 @@ export function house(item: ObjectOf<'house'>): BoxPart[] {
   ];
 }
 
-/** Chimney top in local coordinates (smoke starts here). */
-export const CHIMNEY_TOP: [number, number, number] = [0.2, 0.94, -0.18];
 
 export function tree(item: ObjectOf<'tree'>, { palette, mood }: BuildCtx): BoxPart[] {
   const leaves = palette.leaves[item.variant % 2];

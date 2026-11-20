@@ -8,11 +8,23 @@
 export const MAX_MINI_VILLAGERS = 20;
 
 export interface ResidentHouse {
-  /** Stable resident id (never a real address). */
+  /** Stable house id (never a real address or user id). */
   id: string;
   nickname: string;
-  /** Lights on + chimney smoke when the resident acted today (requirement.md §7.2). */
+  /** Window lights when the resident acted today (requirement.md v1.26 §7.2). */
   activeToday: boolean;
+  /** Fixed house lot from the server (slot order: `houseLotOrder`); mock/example data fills in order. */
+  slot?: number;
+  /** The community's first Verified Resident. */
+  founding?: boolean;
+  /** My own house (always marked). */
+  mine?: boolean;
+}
+
+/** One of today's real actions, replayed by a mini villager (requirement.md §7.3). */
+export interface ReplayAction {
+  nickname: string;
+  title: string;
 }
 
 export const BUILDING_STATUSES = ['locked', 'opened', 'building', 'built'] as const;
@@ -59,4 +71,8 @@ export interface CommunityViewState {
   /** Mini villager count decided by the server (resident count + Vitality), max 20. */
   miniVillagerCount: number;
   speechBubbles: SpeechBubble[];
+  /** Today's real actions, newest first (the villagers replay them one by one). */
+  replay?: ReplayAction[];
+  /** Residents whose houses cannot be drawn (all lots taken by active residents). */
+  extraResidents?: number;
 }

@@ -12,10 +12,12 @@ interface Props {
   onShowExample: () => void;
   /** Opens the invite where more neighbours are needed. */
   onInvite?: () => void;
+  /** Active residents whose houses cannot be drawn (all lots taken, §7.2). */
+  extraResidents?: number;
 }
 
 /** Village build map (requirement.md §7.6a): read-only view of the server's tree state. */
-export function BuildMap({ community, streakDays, buildings, onClose, onShowExample, onInvite }: Props) {
+export function BuildMap({ community, streakDays, buildings, onClose, onShowExample, onInvite, extraResidents = 0 }: Props) {
   const percent = completionPercent(buildings);
   const tiers = BUILDING_TREE.landTiers;
   const goal = landGoalText(community.next_land_residents);
@@ -31,6 +33,7 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
             <h2 className="truncate text-lg font-bold text-slate-800">{community.name} village</h2>
             <p className="text-xs text-slate-500">
               {community.residents} {community.residents === 1 ? 'resident' : 'residents'} · 🔥 {streakDays}-day streak
+              {extraResidents > 0 && ` · +${extraResidents} more residents than houses fit`}
             </p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">

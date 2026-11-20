@@ -154,7 +154,8 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
         queue = { ...queue, today: loadToday(server.calgary_day) };
         for (const p of loadPending()) queue = { ...queue, pending: [...queue.pending, { ...p, sending: false }] };
       }
-      set({ server, plan, view: toViewState(server), queue, status: 'ready', error: null });
+      const actedToday = Object.values(queue.today).some((n) => n > 0);
+      set({ server, plan, view: toViewState(server, actedToday), queue, status: 'ready', error: null });
       scheduleDayRefresh(server.next_day_start);
       if (queue.pending.length > 0) void get().flush();
     };

@@ -19,6 +19,8 @@ const houseItem = (activeToday: boolean): ObjectOf<'house'> => ({
   nickname: 'A',
   activeToday,
   colorIndex: 0,
+  founding: false,
+  mine: false,
 });
 
 describe('box helpers', () => {

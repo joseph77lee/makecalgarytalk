@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { buildIslandLayout, buildingSiteTile, tileKey, type BuildingObject, type PlacedObject } from './layout';
 import mock from './mockCommunityState.json';
 import { parseCommunityViewState } from './parseState';
-import { decodePlan, lotTiles, type IslandPlan } from './plan/islandPlan';
+import { decodePlan, houseLotOrder, lotTiles, type IslandPlan } from './plan/islandPlan';
 import type { BuildingView, CommunityViewState } from './types';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../public/islands');
@@ -177,6 +177,37 @@ describe('houses, villagers, mood', () => {
     expect(houses.length).toBe(Math.min(4, stage0.length));
     expect(l.hiddenHouseCount).toBe(4 - houses.length);
     expect(houses[0]).toMatchObject({ x: stage0[0].x + 0.5, z: stage0[0].z + 0.5 });
+  });
+
+  it('a house stands on its fixed lot (slot) and never moves when the island grows (v1.26 §7.2)', () => {
+    const order = houseLotOrder(MAH);
+    const house = (stage: number) =>
+      buildIslandLayout(MAH, stateWith({ landStage: stage, houses: [{ id: 'slot-3', slot: 3, nickname: 'Maple', activeToday: true, mine: true }] })).objects.find(
+        (o) => o.assetKey === 'house',
+      );
+    expect(house(1)).toMatchObject({ x: order[3].x + 0.5, z: order[3].z + 0.5, mine: true, founding: false });
+    for (const stage of [2, 3, 4, 5]) expect(house(stage)).toMatchObject({ x: order[3].x + 0.5, z: order[3].z + 0.5 });
+  });
+
+  it('slot order: lower land stages first, so the first slots are on the first land', () => {
+    const order = houseLotOrder(MAH);
+    const stageOfLot = (t: { x: number; z: number }) => MAH.tiles.find((x) => x.x === t.x && x.z === t.z)!.stage;
+    for (let i = 1; i < order.length; i++) expect(stageOfLot(order[i])).toBeGreaterThanOrEqual(stageOfLot(order[i - 1]));
+    expect(order).toHaveLength(150);
+  });
+
+  it('a slot not on the current land, and residents beyond the lots, are counted as hidden', () => {
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 0, houses: [{ id: 'slot-149', slot: 149, nickname: 'Far', activeToday: false }], extraResidents: 2 }));
+    expect(l.objects.filter((o) => o.assetKey === 'house')).toHaveLength(0);
+    expect(l.hiddenHouseCount).toBe(3);
+  });
+
+  it('taken house lots block walking; free lots stay walkable', () => {
+    const order = houseLotOrder(MAH);
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, houses: [{ id: 'slot-0', slot: 0, nickname: 'A', activeToday: false }] }));
+    const walk = new Set(l.walkable.map(tileKey));
+    expect(walk.has(tileKey(order[0]))).toBe(false);
+    expect(walk.has(tileKey(order[1]))).toBe(true);
   });
 
   it('mini villagers start on walkable path tiles, capped at 20', () => {
