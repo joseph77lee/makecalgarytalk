@@ -11,6 +11,7 @@ import { vitalityMood, type VitalityMood } from './mood';
 import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
 import {
   PLAZA,
+  houseLotOrder,
   lotTiles,
   stageMap,
   tileKey,
@@ -53,7 +54,7 @@ interface Footprint {
 }
 
 export type PlacedObject =
-  | (Base & { assetKey: 'house'; houseId: string; nickname: string; activeToday: boolean; colorIndex: number })
+  | (Base & { assetKey: 'house'; houseId: string; nickname: string; activeToday: boolean; colorIndex: number; founding: boolean; mine: boolean })
   | (Base & { assetKey: 'tree'; variant: number })
   | (Base & { assetKey: 'lamp' })
   | (Base & { assetKey: 'flowers'; variant: number })
@@ -244,10 +245,17 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     });
   }
 
-  // Houses: residents take the plan's house lots in order.
-  const lots = plan.houses.filter(on);
-  state.houses.slice(0, lots.length).forEach((h, i) => {
-    const t = lots[i];
+  // Houses: each resident's fixed lot (slot); data without slots fills the lots in slot order.
+  const lotOrder = houseLotOrder(plan);
+  const houseTiles: string[] = [];
+  let offLand = 0;
+  state.houses.forEach((h, i) => {
+    const t = lotOrder[h.slot ?? i];
+    if (!t || !on(t)) {
+      offLand += 1;
+      return;
+    }
+    houseTiles.push(tileKey(t));
     objects.push({
       assetKey: 'house',
       id: `house:${h.id}`,
@@ -258,6 +266,8 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
       nickname: h.nickname,
       activeToday: h.activeToday,
       colorIndex: hashString(h.id),
+      founding: h.founding === true,
+      mine: h.mine === true,
     });
     occupied.add(tileKey(t));
   });
@@ -278,7 +288,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     }
   }
 
-  const walkable = walkableTiles(plan, landStage, Math.min(state.houses.length, lots.length), usedLots);
+  const walkable = walkableTiles(plan, landStage, houseTiles, usedLots);
 
   // Mini villagers start on the paths and plaza.
   const walkKeys = new Set(walkable.map(tileKey));
@@ -299,7 +309,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     walkable,
     landRadius,
     cameraAzimuth: plan.cameraAzimuth,
-    hiddenHouseCount: Math.max(0, state.houses.length - lots.length) + hiddenUnknown,
+    hiddenHouseCount: offLand + (state.extraResidents ?? 0) + hiddenUnknown,
   };
 }
 

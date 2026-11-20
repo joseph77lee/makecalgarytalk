@@ -160,6 +160,7 @@ function LiveApp() {
               buildings={view.buildings}
               onClose={() => setMapOpen(false)}
               onInvite={server.me?.member ? invite : undefined}
+              extraResidents={server.hidden_houses}
               onShowExample={() => {
                 setMapOpen(false);
                 setExample(true);

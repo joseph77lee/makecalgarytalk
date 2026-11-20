@@ -45,7 +45,10 @@ function serverState(patch: Partial<ServerCommunityState> = {}): ServerCommunity
     ],
     streak: { days: 2, today: { acted: 1, active_residents: 4, needed: 2, attended: false } },
     changes: { actions: 0, progress: [], built: [], opened: [], new_residents: 0, land_grew: false, vitality_before: null },
-    me: { member: true, pending: false, energy_max: 3, energy_left: 3 },
+    houses: [],
+    hidden_houses: 0,
+    today_actions: [],
+    me: { member: true, pending: false, energy_max: 3, energy_left: 3, house_slot: null },
     ...patch,
   };
 }
@@ -79,7 +82,30 @@ describe('toViewState (the server owns the building tree)', () => {
     expect(toViewState(big).landStage).toBe(BUILDING_TREE.landTiers.length - 1);
   });
 
-  it('takes Vitality and the villager count from the server; houses stay empty until M8', () => {
+  it('takes houses on their fixed lots, my house, the replay and overflow from the server', () => {
+    const v = toViewState(
+      serverState({
+        houses: [
+          { slot: 0, nickname: 'Dev One', active_today: false, founding: true },
+          { slot: 3, nickname: 'Maple Fox', active_today: true, founding: false },
+        ],
+        hidden_houses: 2,
+        today_actions: [{ nickname: 'Maple Fox', building_key: 'fire-pit', title: 'Fire pit' }],
+        me: { member: true, pending: false, energy_max: 3, energy_left: 3, house_slot: 0 },
+      }),
+    );
+    expect(v.houses).toEqual([
+      { id: 'slot-0', slot: 0, nickname: 'Dev One', activeToday: false, founding: true, mine: true },
+      { id: 'slot-3', slot: 3, nickname: 'Maple Fox', activeToday: true, founding: false, mine: false },
+    ]);
+    expect(v.extraResidents).toBe(2);
+    expect(v.replay).toEqual([{ nickname: 'Maple Fox', title: 'Fire pit' }]);
+    // I helped today: my window lights up before the next snapshot says so
+    const lit = toViewState(serverState({ houses: [{ slot: 0, nickname: 'Dev One', active_today: false, founding: true }], me: { member: true, pending: false, energy_max: 3, energy_left: 2, house_slot: 0 } }), true);
+    expect(lit.houses[0].activeToday).toBe(true);
+  });
+
+  it('takes Vitality and the villager count from the server', () => {
     const v = toViewState(serverState());
     expect(v.vitality).toBe(64);
     expect(v.miniVillagerCount).toBe(5);
@@ -221,7 +247,7 @@ function setup(opts: { me?: { community_id: string | null }; submit?: (actions: 
   const rpc = vi.fn(async (fn: string, args: Record<string, unknown>) => {
     switch (fn) {
       case 'gamecore_get_me':
-        return { data: { calgary_day: DAY, next_day_start: NEXT, community_id: meCommunity, pending: false, energy_max: 3, energy_left: 3 }, error: null };
+        return { data: { calgary_day: DAY, next_day_start: NEXT, community_id: meCommunity, pending: false, energy_max: 3, energy_left: 3, house_slot: null }, error: null };
       case 'gamecore_list_communities':
         return { data: [{ id: 'c1', code: 'MAH', name: 'Mahogany', sector: 'Southeast', population: 1 }], error: null };
       case 'gamecore_get_community_state':
@@ -278,7 +304,7 @@ describe('daily actions store', () => {
     expect(t.useStore.getState().status).toBe('no-community');
     await t.useStore.getState().openLookAround();
     expect(t.useStore.getState().pickerOpen).toBe(true);
-    t.setState({ ...serverState(), me: { member: false, pending: false, energy_max: 3, energy_left: 3 } });
+    t.setState({ ...serverState(), me: { member: false, pending: false, energy_max: 3, energy_left: 3, house_slot: null } });
     await t.useStore.getState().viewCommunity('c1');
     expect(t.useStore.getState().status).toBe('ready');
     expect(t.useStore.getState().pickerOpen).toBe(false);
@@ -383,7 +409,7 @@ describe('daily actions store', () => {
   });
 
   it('without energy a tap only explains when energy returns', async () => {
-    const t = setup({ state: serverState({ me: { member: true, pending: false, energy_max: 3, energy_left: 0 } }) });
+    const t = setup({ state: serverState({ me: { member: true, pending: false, energy_max: 3, energy_left: 0, house_slot: null } }) });
     await t.useStore.getState().init();
     t.useStore.getState().act(0);
     expect(t.deps.moveTo).not.toHaveBeenCalled();
@@ -391,12 +417,12 @@ describe('daily actions store', () => {
   });
 
   it('the midnight refresh shows yesterday\'s help as progress and restores energy', async () => {
-    const t = setup({ state: serverState({ me: { member: true, pending: false, energy_max: 3, energy_left: 0 } }) });
+    const t = setup({ state: serverState({ me: { member: true, pending: false, energy_max: 3, energy_left: 0, house_slot: null } }) });
     await t.useStore.getState().init();
     const next = serverState({
       calgary_day: '2026-12-02',
       next_day_start: '2026-12-03T06:00:00+00:00',
-      me: { member: true, pending: false, energy_max: 3, energy_left: 3 },
+      me: { member: true, pending: false, energy_max: 3, energy_left: 3, house_slot: null },
     });
     next.projects[0].progress = 15;
     next.buildings[1].progress = 0.75;

@@ -6,9 +6,11 @@ const MAX_LAND_STAGE = BUILDING_TREE.landTiers.length - 1;
 /**
  * Server community state → what the island draws. The server owns the building tree:
  * every status, level, progress and land stage comes from it unchanged (the client never
- * decides what is unlocked). Resident houses arrive with M8.
+ * decides what is unlocked). `actedToday`: I helped today (my window lights up at once, before
+ * the next snapshot).
  */
-export function toViewState(s: ServerCommunityState): CommunityViewState {
+export function toViewState(s: ServerCommunityState, actedToday = false): CommunityViewState {
+  const mySlot = s.me?.house_slot ?? null;
   const buildings: BuildingView[] = s.buildings.map((b) => ({
     key: b.key,
     status: b.status,
@@ -22,7 +24,16 @@ export function toViewState(s: ServerCommunityState): CommunityViewState {
     // Clamped so a server with more tiers than this build's plan files still draws.
     landStage: Math.min(s.community.land_stage, MAX_LAND_STAGE),
     vitality: s.community.vitality,
-    houses: [], // M8
+    houses: s.houses.map((h) => ({
+      id: `slot-${h.slot}`,
+      slot: h.slot,
+      nickname: h.nickname,
+      activeToday: h.active_today || (h.slot === mySlot && actedToday),
+      founding: h.founding,
+      mine: h.slot === mySlot,
+    })),
+    extraResidents: s.hidden_houses,
+    replay: s.today_actions.map((a) => ({ nickname: a.nickname, title: a.title })),
     buildings,
     miniVillagerCount: Math.min(MAX_MINI_VILLAGERS, s.community.mini_villagers),
     speechBubbles: [],

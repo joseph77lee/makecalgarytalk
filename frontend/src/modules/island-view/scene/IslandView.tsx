@@ -1,7 +1,7 @@
 import { OrbitControls, OrthographicCamera } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
-import { Vector3, type Group, type OrthographicCamera as OrthoCam } from 'three';
+import { Box3, Vector3, type Group, type OrthographicCamera as OrthoCam, type Ray } from 'three';
 import type { ItemsProps } from '../assets/BoxAsset';
 import { ASSET_REGISTRY, BuildingAsset } from '../assets/registry';
 import { FIXED_ASSET_KEYS, buildIslandLayout, tileKey, type BuildingObject, type IslandLayout, type PlacedObject, type Tile } from '../layout';
@@ -16,6 +16,10 @@ import { IslandLabels } from './Labels';
 import { futureLandParts, terrainParts } from './terrainParts';
 
 const GROWTH_SECONDS = 1.4;
+/** A tapped house's bubble closes by itself after this. */
+const HOUSE_INFO_MS = 5000;
+/** Each of today's actions is replayed by a villager for this long (requirement.md §7.3). */
+const REPLAY_MS = 6000;
 const CHEER_MS = 2500;
 /** Max pointer travel (px) for a press to count as a tap rather than a camera drag. */
 const TAP_MAX_DRAG_PX = 8;
@@ -71,12 +75,33 @@ function IslandScene({
   const stages = useMemo(() => stageMap(plan), [plan]);
   const stageOf = (t: Tile) => stages.get(tileKey(t)) ?? 99;
 
+  // Action replay: today's real actions, one at a time, over the villagers (§7.3).
+  const replay = state.replay ?? [];
+  const villagerCount = layout.objects.filter((o) => o.assetKey === 'mini-villager').length;
+  const [replayTick, setReplayTick] = useState(0);
+  useEffect(() => {
+    if (replay.length === 0 || villagerCount === 0) return;
+    const t = setInterval(() => setReplayTick((n) => n + 1), REPLAY_MS);
+    return () => clearInterval(t);
+  }, [replay.length, villagerCount]);
+  const replayIndex = replay.length > 0 && villagerCount > 0 ? replayTick % villagerCount : -1;
+  const replayText = replayIndex >= 0 ? `${replay[replayTick % replay.length].nickname} helped the ${replay[replayTick % replay.length].title}` : '';
+
+  // Tapping a house shows whose it is (§7.2).
+  const [selectedHouse, setSelectedHouse] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selectedHouse) return;
+    const t = setTimeout(() => setSelectedHouse(null), HOUSE_INFO_MS);
+    return () => clearTimeout(t);
+  }, [selectedHouse]);
+
   const ctx: IslandCtx = useMemo(() => {
     const villagerBubbles = new Map<number, string>();
     for (const b of state.speechBubbles) if (b.anchor.kind === 'villager') villagerBubbles.set(b.anchor.index, b.text);
+    if (replayIndex >= 0 && !villagerBubbles.has(replayIndex)) villagerBubbles.set(replayIndex, replayText);
     const walkable = layout.walkable.filter((t) => (stages.get(tileKey(t)) ?? 99) <= settled);
     return { palette, mood: layout.mood, walkable, walkableKeys: new Set(walkable.map(tileKey)), landStage: settled, villagerBubbles };
-  }, [palette, layout, state.speechBubbles, settled, stages]);
+  }, [palette, layout, state.speechBubbles, settled, stages, replayIndex, replayText]);
 
   const houseBubbles = useMemo(() => {
     const m = new Map<string, string>();
@@ -85,6 +110,33 @@ function IslandScene({
   }, [state.speechBubbles]);
 
   const shown = useMemo(() => layout.objects.filter((o) => o.stage <= settled), [layout, settled]);
+  // Houses are tapped on their body, not on the ground behind them: test the tap ray against
+  // each house's box and take the nearest hit.
+  const houseBoxes = useMemo(
+    () =>
+      shown.flatMap((o) =>
+        o.assetKey === 'house' && o.nickname
+          ? [{ id: o.houseId, box: new Box3(new Vector3(o.x - 0.45, 0, o.z - 0.45), new Vector3(o.x + 0.45, 0.95, o.z + 0.45)) }]
+          : [],
+      ),
+    [shown],
+  );
+  const tap = (tile: Tile, ray: Ray, onLand: boolean) => {
+    let house: string | null = null;
+    let best = Infinity;
+    const hit = new Vector3();
+    for (const h of houseBoxes) {
+      if (ray.intersectBox(h.box, hit)) {
+        const d = hit.distanceTo(ray.origin);
+        if (d < best) {
+          best = d;
+          house = h.id;
+        }
+      }
+    }
+    setSelectedHouse(house && house !== selectedHouse ? house : null);
+    if (!house && onLand) onTileTap?.(tile);
+  };
   const settledTerrain = useMemo(() => {
     const tiles = layout.tiles.filter((t) => t.stage <= settled);
     return terrainParts(tiles, new Set(tiles.map(tileKey)), palette);
@@ -126,9 +178,9 @@ function IslandScene({
         </RisingGroup>
       )}
 
-      {onTileTap && <TapPlane radius={outlineRadius} isLand={(t) => stageOf(t) <= settled} onTileTap={onTileTap} />}
+      {(onTileTap || houseBoxes.length > 0) && <TapPlane radius={outlineRadius} isLand={(t) => stageOf(t) <= settled} onTileTap={tap} />}
       <ObjectsLayer objects={shown} />
-      <IslandLabels objects={shown} houseBubbles={houseBubbles} communityName={state.communityName} />
+      <IslandLabels objects={shown} houseBubbles={houseBubbles} communityName={state.communityName} selectedHouseId={selectedHouse} />
       {children}
     </IslandContext.Provider>
   );
@@ -158,7 +210,7 @@ function ObjectsLayer({ objects }: { objects: PlacedObject[] }) {
 }
 
 /** Invisible ground plane that turns taps on the current land into tile coordinates. */
-function TapPlane({ radius, isLand, onTileTap }: { radius: number; isLand: (t: Tile) => boolean; onTileTap: (tile: Tile) => void }) {
+function TapPlane({ radius, isLand, onTileTap }: { radius: number; isLand: (t: Tile) => boolean; onTileTap: (tile: Tile, ray: Ray, onLand: boolean) => void }) {
   const size = radius * 2 + 4;
   return (
     <mesh
@@ -168,7 +220,7 @@ function TapPlane({ radius, isLand, onTileTap }: { radius: number; isLand: (t: T
         if (e.delta > TAP_MAX_DRAG_PX) return; // it was a camera drag
         e.stopPropagation();
         const tile = { x: Math.floor(e.point.x), z: Math.floor(e.point.z) };
-        if (isLand(tile)) onTileTap(tile);
+        onTileTap(tile, e.ray, isLand(tile));
       }}
     >
       <planeGeometry args={[size, size]} />

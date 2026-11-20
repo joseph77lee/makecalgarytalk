@@ -120,7 +120,20 @@ export function activeLots(plan: IslandPlan, landStage: number): string[] {
  * house lots shown, and trees. Plans are generated so this holds with every lot blocked,
  * so leaving empty lots walkable can never cut a path.
  */
-export function walkableTiles(plan: IslandPlan, landStage: number, houseCount: number, usedLots?: Iterable<string>): Tile[] {
+/**
+ * House lots in slot order (requirement.md v1.26 §7.2): by land stage, then plan order. The server
+ * gives each resident a slot; slot i is always this tile, so growing the island never moves a house.
+ */
+export function houseLotOrder(plan: IslandPlan): Tile[] {
+  const stages = stageMap(plan);
+  return plan.houses
+    .map((t, i) => ({ t, i, s: stages.get(tileKey(t)) ?? 99 }))
+    .sort((a, b) => a.s - b.s || a.i - b.i)
+    .map((x) => x.t);
+}
+
+/** `houses`: how many lots are taken in slot order (plan checks), or the exact taken tiles (game). */
+export function walkableTiles(plan: IslandPlan, landStage: number, houses: number | Iterable<string>, usedLots?: Iterable<string>): Tile[] {
   const stages = stageMap(plan);
   const on = (t: Tile) => (stages.get(tileKey(t)) ?? 99) <= landStage;
   const blocked = new Set<string>();
@@ -131,7 +144,8 @@ export function walkableTiles(plan: IslandPlan, landStage: number, houseCount: n
     if (BUILDING_TREE.lots[k]?.kind === 'entrance' || !lotKeys.has(k)) continue;
     lotTiles(r).filter(on).forEach((t) => blocked.add(tileKey(t)));
   }
-  plan.houses.filter(on).slice(0, houseCount).forEach((t) => blocked.add(tileKey(t)));
+  if (typeof houses === 'number') plan.houses.filter(on).slice(0, houses).forEach((t) => blocked.add(tileKey(t)));
+  else for (const k of houses) blocked.add(k);
   plan.trees.filter(on).forEach((t) => blocked.add(tileKey(t)));
   plan.water.forEach((t) => blocked.add(tileKey(t)));
   const out: Tile[] = [];

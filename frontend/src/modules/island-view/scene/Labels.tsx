@@ -30,12 +30,12 @@ interface Props {
   objects: PlacedObject[];
   houseBubbles: Map<string, string>;
   communityName: string;
+  /** Tapped house: show whose it is (requirement.md v1.26 §7.2). */
+  selectedHouseId?: string | null;
 }
 
 /** Camera zoom (screen px per world unit) above which labels show full text. */
 const DETAIL_ZOOM = 40;
-/** Above this many houses, name tags show only when zoomed in. */
-const MAX_NAMES_ZOOMED_OUT = 12;
 
 /**
  * True when zoomed in enough for detailed labels. Re-renders only when the
@@ -54,26 +54,64 @@ function useDetailedLabels(): boolean {
   return detailed;
 }
 
-export function IslandLabels({ objects, houseBubbles, communityName }: Props) {
-  const detailed = useDetailedLabels();
-  const showLabels = useIslandUi((u) => u.showLabels);
-  // Busy villages: names appear when zoomed in, so tags never cover the whole island.
-  const houseCount = objects.filter((o) => o.assetKey === 'house').length;
-  const showNames = detailed || houseCount <= MAX_NAMES_ZOOMED_OUT;
-  if (!showLabels) return null;
+/** My house's marker and a tapped house's info show even with labels off. */
+function HouseMarks({ objects, selectedHouseId }: { objects: PlacedObject[]; selectedHouseId?: string | null }) {
   return (
     <>
+      {objects.map((o) => {
+        if (o.assetKey !== 'house') return null;
+        const selected = o.houseId === selectedHouseId && o.nickname;
+        return [
+          o.mine && !selected && (
+            <Overlay key={`${o.id}:mine`} x={o.x} y={1.2} z={o.z}>
+              <span className="whitespace-nowrap rounded-full bg-orange-500 px-1.5 py-px text-[10px] font-bold text-white shadow" title="My house">
+                🏠 Me
+              </span>
+            </Overlay>
+          ),
+          selected && (
+            <Overlay key={`${o.id}:info`} x={o.x} y={1.3} z={o.z} front>
+              <HouseInfo nickname={o.nickname} activeToday={o.activeToday} founding={o.founding} mine={o.mine} />
+            </Overlay>
+          ),
+        ];
+      })}
+    </>
+  );
+}
+
+function HouseInfo({ nickname, activeToday, founding, mine }: { nickname: string; activeToday: boolean; founding: boolean; mine: boolean }) {
+  return (
+    <div className="relative w-max max-w-48 rounded-2xl bg-white px-3 py-1.5 text-left shadow-lg">
+      <div className="text-xs font-bold text-slate-800">{mine ? 'My house' : `${nickname}'s house`}</div>
+      <div className="text-[10px] text-slate-500">{activeToday ? '✨ Active today' : 'Not active today'}</div>
+      {founding && <div className="text-[10px] font-semibold text-amber-700">🏅 Founding Resident</div>}
+      <span className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-white" />
+    </div>
+  );
+}
+
+export function IslandLabels({ objects, houseBubbles, communityName, selectedHouseId }: Props) {
+  const detailed = useDetailedLabels();
+  const showLabels = useIslandUi((u) => u.showLabels);
+  // House names float only when labels are on and the player zoomed in (no clutter, §7.2).
+  const showNames = detailed;
+  if (!showLabels) return <HouseMarks objects={objects} selectedHouseId={selectedHouseId} />;
+  return (
+    <>
+      <HouseMarks objects={objects} selectedHouseId={selectedHouseId} />
       {objects.map((o) => {
         switch (o.assetKey) {
           case 'house': {
             const bubble = houseBubbles.get(o.houseId);
+            if (o.houseId === selectedHouseId) return null;
             return [
               bubble && (
                 <Overlay key={`${o.id}:bubble`} x={o.x} y={1.75} z={o.z} front>
                   <SpeechBubbleLabel text={bubble} />
                 </Overlay>
               ),
-              showNames && o.nickname && (
+              showNames && o.nickname && !o.mine && (
               <Overlay key={o.id} x={o.x} y={1.15} z={o.z}>
                 <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-white/85 px-1.5 py-px text-[10px] font-semibold text-slate-700 shadow-sm">
                     <span className={`h-1.5 w-1.5 rounded-full ${o.activeToday ? 'bg-amber-400' : 'bg-slate-300'}`} />

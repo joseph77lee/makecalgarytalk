@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.39 |
+| Plan version | v1.40 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.26 |
-| Current module | M8 Residents & Villagers (in progress; M12 ✅ Done) |
+| Current module | M8 Residents & Villagers (🟨 Ready for playtest) |
 
 ---
 
@@ -46,7 +46,7 @@
 | M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ✅ |
 | M6 | Identity | FE + BE | | M4 | ✅ |
 | M7 | Residency | FE + BE | | M6 | ✅ |
-| M8 | Residents & Villagers | FE + BE | | M5, M7 | 🟦 |
+| M8 | Residents & Villagers | FE + BE | | M5, M7 | 🟨 |
 | M9 | Village News | BE + FE | | M8 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
@@ -342,19 +342,25 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone (DoD item, waiting for the user); the browser permission prompt in automation (see gotcha); Postgres/API gateway logs were not inspected — tests prove coordinates are not stored, not returned and not raised as notices, and PostgREST passes RPC arguments as bound parameters; location spoofing is accepted for the MVP; Founding Resident badge, farewell line and houses moving are later modules (M8, M9); real 7-day runs (all day logic verified with time travel).
 
 
-### M8 — Residents & Villagers 🟦
+### M8 — Residents & Villagers 🟨
 **Goal:** Show who lives here and what they did.
 - **In scope**
-  - [ ] one house per Verified Resident, window lights if active today (no smoke), archived after 30 days (`requirement.md` v1.26 §7.2)
-  - [ ] tap a house → "<nickname>'s house", active today, Founding Resident; my house marked; labels toggle shows all names
-  - [ ] fixed house lot per resident (assigned while building the snapshot; archived lots reused only when full; "+N more residents" overflow)
-  - [ ] mini villagers (count by residents + Vitality, max 20)
-  - [ ] **action replay** with system speech bubbles from today's real actions
-  - [ ] other residents shown asynchronously (no real-time)
+  - [x] one house per Verified Resident, window lights if active today (no smoke), archived after 30 days (`requirement.md` v1.26 §7.2)
+  - [x] tap a house → "<nickname>'s house", active today, Founding Resident; my house marked; all names with labels on when zoomed in
+  - [x] fixed house lot per resident (assigned while building the snapshot; archived lots reused only when full; "+N more residents" overflow)
+  - [x] mini villagers (count by residents + Vitality, max 20)
+  - [x] **action replay** with system speech bubbles from today's real actions
+  - [x] other residents shown asynchronously (no real-time)
 - **Definition of Done**
-  - [ ] replay only shows real actions
-  - [ ] inactive houses dark
-  - [ ] performance OK on phone
+  - [x] replay only shows real actions
+  - [x] inactive houses dark
+  - [ ] performance OK on phone — waiting for the user's phone check
+- **Handoff**
+  - **Code:** migrations `20261120150000_residency_houses_interface.sql` (`residency.residents_on` incl. movers, `founder_of`), `20261120150100_gamecore_houses.sql` (`gamecore.house_lots`, `shown_houses`, `houses_at`, `today_actions`; snapshot gets `houses` / `hidden_houses`, state gets `today_actions` and `me.house_slot`). Tests `supabase/tests/database/gamecore_houses.test.sql` (30, incl. 150 full lots). Frontend: `houseLotOrder` + slot placement in `layout.ts`, `walkableTiles` takes the taken house tiles, `HouseAsset` without smoke, house tap (ray vs house boxes in `IslandView`), `HouseMarks` (my house "🏠 Me", tapped house info) in `Labels.tsx`, replay bubbles cycling over villagers every 6 s, `toViewState(server, actedToday)`.
+  - **Slots:** slot i = i-th house lot by (land stage, plan order). Lowest-free assignment keeps used slots below the cumulative residents, which each stage can hold (plan test `HOUSES_NEEDED`), so a house is on land; the client still hides an off-land slot and counts it. 150 lots per plan (tested); the server constant `gamecore.house_slots()` must match.
+  - **Names:** floating names only with labels on and zoomed in; my house always marked; tapping shows "<nickname>'s house" / "My house", active today, Founding Resident (5 s). My own window lights up at once after my first help (`actedToday`), before the next snapshot.
+  - **Not tested / known gaps:** a real phone; villagers do not walk to the site during the replay (bubble only); badges other than Founding Resident are not in the bubble (decision); interiors are a Phase 3 idea (requirement §22.3).
+
 
 ### M9 — Village News ⬜
 **Goal:** A daily reason to check in.
@@ -460,6 +466,18 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.40
+**Changed:** M8 items ticked except the DoD "performance OK on phone" (needs a real phone); status 🟨 with Handoff.
+
+**Why:** M8 implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.39 |`
+- Header: `| Current module | M8 Residents & Villagers (in progress; M12 ✅ Done) |`
+- Overview: `| M8 | Residents & Villagers | FE + BE | | M5, M7 | 🟦 |`
+- M8: `### M8 — Residents & Villagers 🟦`
+- M8: all checklist items were `- [ ]`; no Handoff
 
 ### 2026-11-20 — v1.39
 **Changed:** "Based on" → `requirement.md` v1.26. M8 🟦 in progress; house items follow the new §7.2 (tap to see whose house, window lights only, fixed lots).
