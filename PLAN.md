@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.34 |
+| Plan version | v1.35 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
-| Based on | `requirement.md` v1.24 |
-| Current module | M12 Invites (next, moved before M8; M1 🔁 Sleepy fix ✅ Done) |
+| Based on | `requirement.md` v1.25 |
+| Current module | M12 Invites (in progress, moved before M8) |
 
 ---
 
@@ -50,7 +50,7 @@
 | M9 | Village News | BE + FE | | M8 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
-| M12 | Invites | FE + BE | | M6, M7 | ⬜ |
+| M12 | Invites | FE + BE | | M6, M7 | 🟦 |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
 | M14 | Launch Readiness | All | | All above | ⬜ |
 
@@ -390,13 +390,17 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] ranking math tested
   - [ ] share card renders correctly on phones and social previews
 
-### M12 — Invites ⬜
+### M12 — Invites 🟦
 **Goal:** Built-in acquisition.
 - **In scope**
   - [ ] personal invite links
   - [ ] reward when invitee becomes Verified Resident of the same community
   - [ ] Pioneer Sponsor badge for first resident of an empty community
-  - [ ] Founding Resident badge
+  - [ ] Founding Resident badge (the community's first Verified Resident)
+  - [ ] MVP reward = "Good Neighbour" badge for both, ×N; badges and invite counts in the profile sheet
+  - [ ] invite link landing: "<nickname> invited you to build <community> together"
+  - [ ] welcome card after the first counted check-in with Invite neighbours; "N more neighbours" goals (streak bar, build map) open the invite; share via the phone's share sheet (copy link fallback)
+  - [ ] first-visit copy: "You can't finish it alone"
 - **Definition of Done**
   - [ ] rewards cannot be farmed with self-invites (tests)
 
@@ -444,6 +448,19 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.35
+**Changed:** "Based on" → `requirement.md` v1.25. M12 🟦 in progress; scope items for the badge reward, invite landing, welcome card and invite entry points, first-visit copy.
+
+**Why:** M12 started (moved before M8); user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.34 |`
+- Header: `| Based on | `requirement.md` v1.24 |`
+- Header: `| Current module | M12 Invites (next, moved before M8; M1 🔁 Sleepy fix ✅ Done) |`
+- Overview: `| M12 | Invites | FE + BE | | M6, M7 | ⬜ |`
+- M12: `### M12 — Invites ⬜`
+- M12: `  - [ ] Founding Resident badge`
 
 ### 2026-11-20 — v1.34
 **Changed:** M1 🔁 Sleepy fix ✅ Done (user confirmed on the phone). Header → M12 next.

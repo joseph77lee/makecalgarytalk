@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.24 |
+| Document version | v1.25 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Status | Initial draft for starting MVP development |
@@ -91,6 +91,8 @@ The service grows in this order; features are judged by how they serve it. The *
    - Empty community: fog clears, "You are the Founding Resident!"
    - Existing community: construction progress bar rises, mini villagers cheer
 5. The next goal from the building tree, e.g. "2 more neighbours and the frozen pond becomes a skating rink" + **Invite button**
+   - Shown as a **welcome card** right after the first counted check-in ("Welcome to <community>! N more neighbours and the island grows") with Invite neighbours / Look around first; "N more neighbours" goals elsewhere (streak bar, build map) also open the invite
+   - The first-visit example says that a community can only be finished together ("You can't finish it alone")
 
 ### 5.2 Daily routine
 1. **World Map**: see how developed all of Calgary is. Tap an empty community to invite a friend who lives there
@@ -154,7 +156,7 @@ Goal: moving never punishes the person who moves or the residents who stay.
 
 ### 7.1 Community states
 - **Unsettled**: 0 residents. Covered by fog/clouds on the World Map
-- **Settled**: the community's **Welcome sign** (first building of the tree, 7.6) is built → fog clears on the World Map; the first resident gets the "Founding Resident" badge. A first resident can build it on their first day
+- **Settled**: the community's **Welcome sign** (first building of the tree, 7.6) is built → fog clears on the World Map; the first resident (the community's **first Verified Resident**) gets the "Founding Resident" badge. A first resident can build it on their first day
 
 ### 7.2 Resident houses
 - One house per Verified Resident, with a **name tag (nickname)**
@@ -402,6 +404,9 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### 12.3 Invites
 - Personal invite link
 - If the invitee becomes a **Verified Resident of the same community**, both get a reward (rare decoration/badge)
+  - MVP reward: the **"Good Neighbour" badge** for both (counted ×N for several invitees); decorations come in Phase 2. "Same community" = the invitee's first verification is in the community the inviter is a Verified Resident of on that day
+  - An invite is accepted once per account, only from someone else, and only before the invitee's first verification
+  - The invite link shows who invited: "<nickname> invited you to build <community> together" (nickname and community only)
 - If my invite brings the **first resident to an empty community**, I get the "Pioneer Sponsor" badge
 - Rewards already granted are kept when either person moves (6.4); an invitee moving to another community never triggers a new reward
 
@@ -778,6 +783,16 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.25
+**Changed:** 12.3: MVP invite reward = "Good Neighbour" badge for both (decorations in Phase 2); what "same community" means; accept rules; the invite link shows the inviter's nickname and community. 7.1: Founding Resident = the community's first Verified Resident. 5.1: welcome card with the invite after the first check-in; "N more neighbours" goals open the invite; first-visit copy stresses building together.
+
+**Why:** M12 needs exact rules; bringing neighbours in must be clear from the first visit (user decisions 2026-11-20).
+
+**Previous:**
+- 12.3: (no MVP reward, matching or accept rules; no invite landing text)
+- 7.1: `- **Settled**: the community's **Welcome sign** (first building of the tree, 7.6) is built → fog clears on the World Map; the first resident gets the "Founding Resident" badge.`
+- 5.1: (no welcome card or invite entry points beyond the Invite button)
 
 ### 2026-11-20 — v1.24
 **Changed:** 7.4: the lowest mood is renamed **Gloomy → Sleepy** and looks like a quiet snowy winter evening (pastel, never grey); while Sleepy the streak bar invites players to wake the community up. Wording in 5 (overview), 7.4, 10 and 19 updated to "sleepy".
