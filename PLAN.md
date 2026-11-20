@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.26 |
+| Plan version | v1.27 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
-| Based on | `requirement.md` v1.21 |
+| Based on | `requirement.md` v1.22 |
 | Current module | M6 Identity (in progress; M5 ✅ Done) |
 
 ---
@@ -291,6 +291,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] Supabase anonymous sign-in on first visit
   - [ ] optional Google linking
   - [ ] avatar shirt colour choice on first visit, changeable later (`requirement.md` §10.2)
+  - [ ] nickname on first visit with a suggested default, validated on the server, changeable later (`requirement.md` §6.1)
   - [ ] completed-neighbourhood example on the first visit only (one image or short animated scene rendered with the real engine, `requirement.md` §5.1)
   - [ ] Cloudflare Turnstile
   - [ ] sign-up rate limits
@@ -418,6 +419,16 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.27
+**Changed:** "Based on" → `requirement.md` v1.22. M6: nickname on the first visit added to scope.
+
+**Why:** Sync with requirement v1.22 (user decision 2026-11-19). Google linking: code in M6, real verification once the user creates a Google OAuth client (the M6 DoD item stays open until then).
+
+**Previous:**
+- Header: `| Plan version | v1.26 |`
+- Header: `| Based on | `requirement.md` v1.21 |`
+- M6: (no nickname item)
 
 ### 2026-11-19 — v1.26
 **Changed:** M5 → ✅ (user confirmed); M6 → 🟦 In progress.
