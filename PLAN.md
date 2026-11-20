@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.22 |
+| Plan version | v1.23 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
-| Based on | `requirement.md` v1.20 |
+| Based on | `requirement.md` v1.21 |
 | Current module | M5 Community State (in progress; M3 ✅ Done) |
 
 ---
@@ -43,7 +43,7 @@
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | ✅ |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
-| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ⬜ |
+| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | 🟦 |
 | M6 | Identity | FE + BE | | M4 | ⬜ |
 | M7 | Residency | FE + BE | | M6 | ⬜ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |
@@ -262,7 +262,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real Calgary midnight (simulated only; the refresh timer is unit-tested); real phone; sound on iOS (AudioContext needs a gesture — the tap is one); offline-for-hours retry beyond 30 s intervals; the "Switch community (dev)" button exists only in dev builds.
   - **For M5:** fill `vitality`, `buildings` (unlocked / remaining), `islandSize`, `miniVillagerCount` in `toViewState` from server data; the build map can reuse `server.projects` / `completed_projects`.
 
-### M5 — Community State ⭐ ⬜
+### M5 — Community State ⭐ 🟦
 **Goal:** The community feels alive and changes over days. **Core loop complete.**
 - **In scope**
   - [ ] Backend: community streak (≥ half, rounded up, of **Active Verified Residents** = acted within last 7 Calgary days), Vitality (7-day average; denominator = Verified Residents whose **last active day** (later of last action and verification day) is within last 30 days incl. today, rises fast/falls slow), streak and resident conditions for the **building tree** (§7.6; resident counts cumulative), island land tier from cumulative residents (§7.8)
@@ -407,6 +407,17 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.23
+**Changed:** "Based on" → `requirement.md` v1.21 (Vitality formula, streak counting today). M5 → 🟦 In progress.
+
+**Why:** M5 started; sync with the requirement update.
+
+**Previous:**
+- Header: `| Plan version | v1.22 |`
+- Header: `| Based on | `requirement.md` v1.20 |`
+- Overview: `| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ⬜ |`
+- M5: `### M5 — Community State ⭐ ⬜`
 
 ### 2026-11-19 — v1.22
 **Changed:** M3 rework confirmed by the user → ✅; current module → M5.

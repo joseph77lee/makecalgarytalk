@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.20 |
+| Document version | v1.21 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-18 |
+| Last updated | 2026-11-19 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -173,7 +173,8 @@ Goal: moving never punishes the person who moves or the residents who stay.
 - Definition: 7-day average of the "daily active resident ratio" × 100
   - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, i.e. residents whose houses are shown, excluding residents with a move in progress, 6.4); the ratio therefore never exceeds 1; 0 if the denominator is 0
   - This intentionally differs from the streak denominator (7.5, 7-day Active Verified Residents): the streak rewards regular players and must not be blocked by dormant residents, while Vitality honestly reflects the whole community — many dark houses make the community look gloomier, which motivates waking up neighbours
-- Tuned to **fall slowly and rise quickly**
+- Tuned to **fall slowly and rise quickly**: Vitality = 100 × **max(average ratio of the last 3 days, average ratio of the last 7 days)**, rounded. A burst of activity lifts the 3-day average fast; when activity stops, the 7-day average holds it up and it falls by about 1/7 per day
+  - Days counted are **finished Calgary days** (yesterday and before), so Vitality changes once a day, like construction progress. Days before the community's first resident count as 0
 - MVP has 3 mood levels
 
 | Vitality | Mood | Scenery |
@@ -192,6 +193,7 @@ Goal: moving never punishes the person who moves or the residents who stay.
 - **Community attendance day** = a day when **at least half of the Active Verified Residents** take an action
   - Half is rounded up (e.g. 6 active → 3 needed; 5 active → 3 needed); with 1 Active Verified Resident, that 1 person is enough
   - If there are 0 Active Verified Residents, the day does not count (streak breaks)
+- **Streak length** = consecutive attendance days up to yesterday, **+1 as soon as today becomes an attendance day** (today never breaks it before midnight); the UI shows today's progress live
 - Day boundary: Calgary time (America/Edmonton) midnight
   - Alberta's Official Time Act (2026) ended daylight saving time: no fall-back on 2026-11-01, UTC-6 year-round from then on. Always use the IANA zone `America/Edmonton` from up-to-date tzdata (2026c+); never hardcode UTC offsets
   - The boundary is computed **only on the server**; clients receive the current Calgary day and the next midnight instant from the server (browser tzdata may be outdated)
@@ -770,6 +772,15 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.21
+**Changed:** 7.4: Vitality formula (max of 3-day and 7-day averages of finished days). 7.5: streak length counts up to yesterday plus today once today is an attendance day.
+
+**Why:** M5 needs exact rules; "fall slowly, rise quickly" had no formula (user chose these options, 2026-11-19).
+
+**Previous:**
+- 7.4: `- Tuned to **fall slowly and rise quickly**`
+- 7.5: (no rule for streak length or for counting today)
 
 ### 2026-11-19 — v1.20
 **Changed:** 7.8: land amounts count dry land only; communities with water next to the plaza get a little more first/second-stage land.
