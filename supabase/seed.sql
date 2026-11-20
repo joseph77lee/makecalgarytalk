@@ -19,7 +19,7 @@ values (
 ) on conflict do nothing;
 
 -- Joins through the game rule so the membership event is recorded too.
-select gamecore.choose_community_at('d0000000-0000-4000-8000-00000000de01', c.id, now())
+select residency.add_verified_resident_at('d0000000-0000-4000-8000-00000000de01', c.id, now())
 from gamecore.communities c where c.city = 'calgary' and c.code = 'MAH';
 
 insert into auth.users (
@@ -39,7 +39,7 @@ values (
 ) on conflict do nothing;
 
 -- Joins through the game rule so the membership event is recorded too.
-select gamecore.choose_community_at('d0000000-0000-4000-8000-00000000de02', c.id, now())
+select residency.add_verified_resident_at('d0000000-0000-4000-8000-00000000de02', c.id, now())
 from gamecore.communities c where c.city = 'calgary' and c.code = 'MAH';
 
 -- Dev users skip the first visit (profile already set); the anonymous flow shows it.

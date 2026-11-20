@@ -138,13 +138,14 @@ Goal: moving never punishes the person who moves or the residents who stay.
   - From the moment the move starts, they are **excluded from the old community's streak and Vitality denominators** (7.4, 7.5), so they cannot break its streak or drag its mood down
   - Their actions are stored as pending contributions for the new community (6.3)
   - If re-verification is not completed within **7 days** of starting, the move is **cancelled automatically**: nothing is lost, they count normally in the old community again, the cooldown is not used, and they can start again at any time
+  - The user can also **cancel the move themselves** at any time before it completes, with the same result as the automatic cancel
 - **When the move completes**:
   - Their house moves to the new community and pending contributions are applied there
   - The old community **keeps** its cumulative Verified Resident count, completed buildings and unlocks (7.6, 7.8)
   - The old community's newspaper shows a **farewell line** (11)
   - **Personal records follow the person**: badges (including Founding Resident), total active days and, from Phase 2, profile and rank
   - Invite rewards already granted stay; moving never creates a new invite reward (12.3)
-- **Cooldown**: 90 days from the last **completed** move (cancelled moves do not count)
+- **Cooldown**: 90 days from the last **completed** move or, before any move, from the **first verification** (cancelled moves do not count)
 - **One free correction**: within **14 days of the first verification**, a user may move once without waiting for the cooldown (e.g. verified at their workplace by mistake). Once per account.
 
 ---
@@ -780,9 +781,13 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### 2026-11-20 — v1.23
 **Changed:** 6.2: checks with accuracy worse than 1 km are not counted; at most 20 checks per account per day; only residential communities count. 6.3: candidate community while verifying (most check-in days in the last 7, tie → most recent); pending contributions apply from the verification day to the projects they were given to (past days unchanged; finished projects and other communities not carried over).
 
-**Why:** M7 needs exact rules (user decisions 2026-11-20).
+6.4: the cooldown also starts at the first verification (so the free correction is the only way to move within 90 days of it); the user can cancel a move themselves.
+
+**Why:** M7 needs exact rules (user decisions 2026-11-20). Read literally, the first move had no cooldown, which made the free correction meaningless.
 
 **Previous:**
+- 6.4: `- **Cooldown**: 90 days from the last **completed** move (cancelled moves do not count)`
+- 6.4: (no user cancel)
 - 6.2: (no accuracy, rate-limit or residential-only rule)
 - 6.3: (no candidate-community rule)
 - 6.3: `  - Pending contributions are applied to the community`
