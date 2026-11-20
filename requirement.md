@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.25 |
+| Document version | v1.26 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Status | Initial draft for starting MVP development |
@@ -160,9 +160,10 @@ Goal: moving never punishes the person who moves or the residents who stay.
 - **Settled**: the community's **Welcome sign** (first building of the tree, 7.6) is built → fog clears on the World Map; the first resident (the community's **first Verified Resident**) gets the "Founding Resident" badge. A first resident can build it on their first day
 
 ### 7.2 Resident houses
-- One house per Verified Resident, with a **name tag (nickname)**
-- Residents active today: lights on + chimney smoke
+- One house per Verified Resident. **Tapping a house** shows whose it is: "<nickname>'s house", active today or not, and the Founding Resident badge if they have it. No name tags floating over houses; **my own house always has a small marker**, and the labels toggle can show every house's name at once
+- Residents active today: **warm window lights** (no chimney smoke: with many houses it would look like factories)
 - Residents not active today: lights off
+- **Each resident keeps a fixed house lot** in their community: given once, the first free lot in the stored lot plan (lots ordered by land stage, then plan order, so growing the island never moves a house). It stays theirs while their house is archived, unless all lots are taken: then the lots of archived residents go to new residents, and a returning resident gets a free lot. If even active residents exceed the lots, extra houses are not drawn and the village shows "+N more residents". Moving gives a lot in the new community. Lots are assigned while building the shared state (no extra request)
 - **Last active day** = the later of the resident's last action day and their verification day (so a newly verified resident who has not acted yet still has a house)
 - **No activity for 30+ days** (last active day is not within the last 30 Calgary days, including today): house is temporarily removed from the village (archived); it reappears when they return
 - Houses are not something individuals grow; they show "I live in this community"
@@ -688,6 +689,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Real-time presence**: other online residents' avatars visible and moving in the same island (broadcast destination events per community channel, e.g. Supabase Realtime; cap ~30 visible avatars per island; distinct label colour for online residents; simple emoji greetings)
 - Community petitions (16.2)
 - Advanced share/update celebration events
+- **Enter buildings and decorate my own house** (idea, not planned yet): tap a building or my house to go inside a small interior scene; residents decorate their own house. The fixed house lot (7.2) is what makes "my house" stable for this
 
 ### 22.4 Phase 4 (monetization)
 - **Local business buildings as ads** (e.g. a sushi restaurant in Mahogany shows its shop and "50% off sushi this month" on the Mahogany island)
@@ -784,6 +786,17 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.26
+**Changed:** 7.2: houses show whose they are when tapped (no floating name tags; my house marked; labels toggle shows all); active houses get window lights only (no chimney smoke); each resident keeps a fixed house lot (assignment, reuse of archived residents' lots when full, "+N more residents" overflow). 22.3: idea of entering buildings and decorating my own house.
+
+**Why:** User decisions for M8 (2026-11-20): smoke on every house would look like factories; floating names clutter the island; a stable "my house" prepares interiors later. Lot assignment adds no server requests.
+
+**Previous:**
+- 7.2: `- One house per Verified Resident, with a **name tag (nickname)**`
+- 7.2: `- Residents active today: lights on + chimney smoke`
+- 7.2: (no house lot rule)
+- 22.3: (no interiors idea)
 
 ### 2026-11-20 — v1.25
 **Changed:** 12.3: MVP invite reward = "Good Neighbour" badge for both (decorations in Phase 2); what "same community" means; accept rules; the invite link shows the inviter's nickname and community. 7.1: Founding Resident = the community's first Verified Resident. 5.1: welcome card with the invite after the first check-in; "N more neighbours" goals open the invite; an always-visible floating Invite button (hide for the day) with a once-a-day nudge at good moments; first-visit copy stresses building together.

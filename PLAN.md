@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.38 |
+| Plan version | v1.39 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
-| Based on | `requirement.md` v1.25 |
-| Current module | M8 Residents & Villagers (next; M12 ✅ Done) |
+| Based on | `requirement.md` v1.26 |
+| Current module | M8 Residents & Villagers (in progress; M12 ✅ Done) |
 
 ---
 
@@ -46,7 +46,7 @@
 | M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ✅ |
 | M6 | Identity | FE + BE | | M4 | ✅ |
 | M7 | Residency | FE + BE | | M6 | ✅ |
-| M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |
+| M8 | Residents & Villagers | FE + BE | | M5, M7 | 🟦 |
 | M9 | Village News | BE + FE | | M8 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
@@ -342,10 +342,12 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone (DoD item, waiting for the user); the browser permission prompt in automation (see gotcha); Postgres/API gateway logs were not inspected — tests prove coordinates are not stored, not returned and not raised as notices, and PostgREST passes RPC arguments as bound parameters; location spoofing is accepted for the MVP; Founding Resident badge, farewell line and houses moving are later modules (M8, M9); real 7-day runs (all day logic verified with time travel).
 
 
-### M8 — Residents & Villagers ⬜
+### M8 — Residents & Villagers 🟦
 **Goal:** Show who lives here and what they did.
 - **In scope**
-  - [ ] one house per Verified Resident with name tag, lights on if active today, archived after 30 days
+  - [ ] one house per Verified Resident, window lights if active today (no smoke), archived after 30 days (`requirement.md` v1.26 §7.2)
+  - [ ] tap a house → "<nickname>'s house", active today, Founding Resident; my house marked; labels toggle shows all names
+  - [ ] fixed house lot per resident (assigned while building the snapshot; archived lots reused only when full; "+N more residents" overflow)
   - [ ] mini villagers (count by residents + Vitality, max 20)
   - [ ] **action replay** with system speech bubbles from today's real actions
   - [ ] other residents shown asynchronously (no real-time)
@@ -458,6 +460,19 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.39
+**Changed:** "Based on" → `requirement.md` v1.26. M8 🟦 in progress; house items follow the new §7.2 (tap to see whose house, window lights only, fixed lots).
+
+**Why:** M8 started; user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.38 |`
+- Header: `| Based on | `requirement.md` v1.25 |`
+- Header: `| Current module | M8 Residents & Villagers (next; M12 ✅ Done) |`
+- Overview: `| M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |`
+- M8: `### M8 — Residents & Villagers ⬜`
+- M8: `  - [ ] one house per Verified Resident with name tag, lights on if active today, archived after 30 days`
 
 ### 2026-11-20 — v1.38
 **Changed:** M12 ✅ Done (user confirmed). Header → M8 next.
