@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.40 |
+| Plan version | v1.41 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.26 |
-| Current module | M8 Residents & Villagers (🟨 Ready for playtest) |
+| Current module | M9 Village News (next; M8 ✅ Done) |
 
 ---
 
@@ -46,7 +46,7 @@
 | M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ✅ |
 | M6 | Identity | FE + BE | | M4 | ✅ |
 | M7 | Residency | FE + BE | | M6 | ✅ |
-| M8 | Residents & Villagers | FE + BE | | M5, M7 | 🟨 |
+| M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
 | M9 | Village News | BE + FE | | M8 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
@@ -342,7 +342,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone (DoD item, waiting for the user); the browser permission prompt in automation (see gotcha); Postgres/API gateway logs were not inspected — tests prove coordinates are not stored, not returned and not raised as notices, and PostgREST passes RPC arguments as bound parameters; location spoofing is accepted for the MVP; Founding Resident badge, farewell line and houses moving are later modules (M8, M9); real 7-day runs (all day logic verified with time travel).
 
 
-### M8 — Residents & Villagers 🟨
+### M8 — Residents & Villagers ✅
 **Goal:** Show who lives here and what they did.
 - **In scope**
   - [x] one house per Verified Resident, window lights if active today (no smoke), archived after 30 days (`requirement.md` v1.26 §7.2)
@@ -354,7 +354,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done**
   - [x] replay only shows real actions
   - [x] inactive houses dark
-  - [ ] performance OK on phone — waiting for the user's phone check
+  - [x] performance OK on phone — user checked on their phone (local HTTPS)
 - **Handoff**
   - **Code:** migrations `20261120150000_residency_houses_interface.sql` (`residency.residents_on` incl. movers, `founder_of`), `20261120150100_gamecore_houses.sql` (`gamecore.house_lots`, `shown_houses`, `houses_at`, `today_actions`; snapshot gets `houses` / `hidden_houses`, state gets `today_actions` and `me.house_slot`). Tests `supabase/tests/database/gamecore_houses.test.sql` (30, incl. 150 full lots). Frontend: `houseLotOrder` + slot placement in `layout.ts`, `walkableTiles` takes the taken house tiles, `HouseAsset` without smoke, house tap (ray vs house boxes in `IslandView`), `HouseMarks` (my house "🏠 Me", tapped house info) in `Labels.tsx`, replay bubbles cycling over villagers every 6 s, `toViewState(server, actedToday)`.
   - **Slots:** slot i = i-th house lot by (land stage, plan order). Lowest-free assignment keeps used slots below the cumulative residents, which each stage can hold (plan test `HOUSES_NEEDED`), so a house is on land; the client still hides an off-land slot and counts it. 150 lots per plan (tested); the server constant `gamecore.house_slots()` must match.
@@ -466,6 +466,18 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.41
+**Changed:** M8 ✅ Done (user checked it on their phone). Header → M9 next.
+
+**Why:** User confirmed M8 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.40 |`
+- Header: `| Current module | M8 Residents & Villagers (🟨 Ready for playtest) |`
+- Overview: `| M8 | Residents & Villagers | FE + BE | | M5, M7 | 🟨 |`
+- M8: `### M8 — Residents & Villagers 🟨`
+- M8: `  - [ ] performance OK on phone — waiting for the user's phone check`
 
 ### 2026-11-20 — v1.40
 **Changed:** M8 items ticked except the DoD "performance OK on phone" (needs a real phone); status 🟨 with Handoff.
