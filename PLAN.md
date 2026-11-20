@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.37 |
+| Plan version | v1.38 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.25 |
-| Current module | M12 Invites (🟨 Ready for playtest) |
+| Current module | M8 Residents & Villagers (next; M12 ✅ Done) |
 
 ---
 
@@ -50,7 +50,7 @@
 | M9 | Village News | BE + FE | | M8 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
-| M12 | Invites | FE + BE | | M6, M7 | 🟨 |
+| M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
 | M14 | Launch Readiness | All | | All above | ⬜ |
 
@@ -390,7 +390,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] ranking math tested
   - [ ] share card renders correctly on phones and social previews
 
-### M12 — Invites 🟨
+### M12 — Invites ✅
 **Goal:** Built-in acquisition.
 - **In scope**
   - [x] personal invite links
@@ -458,6 +458,17 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.38
+**Changed:** M12 ✅ Done (user confirmed). Header → M8 next.
+
+**Why:** User confirmed M12 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.37 |`
+- Header: `| Current module | M12 Invites (🟨 Ready for playtest) |`
+- Overview: `| M12 | Invites | FE + BE | | M6, M7 | 🟨 |`
+- M12: `### M12 — Invites 🟨`
 
 ### 2026-11-20 — v1.37
 **Changed:** M12: floating Invite button with hide-for-the-day and a once-a-day nudge; invite chips are green buttons.
