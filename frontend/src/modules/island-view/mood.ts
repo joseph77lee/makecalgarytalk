@@ -3,13 +3,13 @@
  * The palette is a placeholder until the Art Pass; only this file needs to change.
  */
 
-export type VitalityMood = 'lively' | 'normal' | 'gloomy';
+export type VitalityMood = 'lively' | 'normal' | 'sleepy';
 
-/** 60–100 Lively, 30–59 Normal, 0–29 Gloomy. Fractional scores use the same cut-offs. */
+/** 60–100 Lively, 30–59 Normal, 0–29 Sleepy (was "Gloomy" before requirement v1.24). Fractional scores use the same cut-offs. */
 export function vitalityMood(vitality: number): VitalityMood {
   if (vitality >= 60) return 'lively';
   if (vitality >= 30) return 'normal';
-  return 'gloomy';
+  return 'sleepy';
 }
 
 export interface MoodPalette {
@@ -61,18 +61,19 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
     villagerSpeed: 0.55,
     lampsLit: false,
   },
-  gloomy: {
-    // "Cute gloomy": greyish and snowy, never dark or depressing.
-    grass: ['#b4bfae', '#aab6a4'],
-    path: ['#d6d1c8', '#cec9bf'],
-    water: '#b7c7d3',
-    dirtTop: '#8a7a6d',
-    dirtBottom: '#716559',
-    leaves: ['#9aa892', '#a5b09c'],
-    trunk: '#7d6a5c',
-    sky: 'linear-gradient(to bottom, #c3c9d6 0%, #d9dde5 60%, #e3e1e8 100%)',
-    sunIntensity: 1.3,
-    ambientIntensity: 1.2,
+  sleepy: {
+    // "Cute sleepy" (requirement §7.4): a quiet snowy winter evening, pastel and soft, never
+    // grey or dark. Fresh snow on the ground and trees, icy water, a lavender-pink dusk sky.
+    grass: ['#eef3f9', '#e4ebf4'],
+    path: ['#e8dcc8', '#e0d2bb'],
+    water: '#a6d2ef',
+    dirtTop: '#9a7a62',
+    dirtBottom: '#7f6550',
+    leaves: ['#6fae8f', '#7cbb9b'],
+    trunk: '#86634a',
+    sky: 'linear-gradient(to bottom, #b8c4ee 0%, #d8d4f2 55%, #f7e1e8 100%)',
+    sunIntensity: 1.8,
+    ambientIntensity: 1.3,
     villagerSpeed: 0.3,
     lampsLit: false,
   },

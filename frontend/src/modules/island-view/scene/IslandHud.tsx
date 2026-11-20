@@ -6,7 +6,7 @@ import { useIslandUi } from '../uiStore';
 const MOOD_LABEL: Record<VitalityMood, { text: string; className: string }> = {
   lively: { text: 'Lively', className: 'bg-emerald-100 text-emerald-700' },
   normal: { text: 'Normal', className: 'bg-sky-100 text-sky-700' },
-  gloomy: { text: 'Gloomy', className: 'bg-slate-200 text-slate-600' },
+  sleepy: { text: 'Sleepy', className: 'bg-indigo-100 text-indigo-600' },
 };
 
 /** Top bar: optional left slot (e.g. my profile), community name with Vitality mood, labels toggle. */

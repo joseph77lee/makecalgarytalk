@@ -5,8 +5,8 @@ import { parseCommunityViewState } from './parseState';
 
 describe('vitalityMood (requirement.md §7.4)', () => {
   it.each([
-    [0, 'gloomy'],
-    [29.99, 'gloomy'],
+    [0, 'sleepy'],
+    [29.99, 'sleepy'],
     [30, 'normal'],
     [59.99, 'normal'],
     [60, 'lively'],

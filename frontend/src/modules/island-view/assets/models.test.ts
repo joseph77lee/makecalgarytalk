@@ -8,7 +8,7 @@ import { futureLandParts, terrainParts } from '../scene/terrainParts';
 import { asGhost, box } from './boxes';
 import { building, constructionSite, house, reservedPlot, silhouette, tree, type BuildCtx } from './models';
 
-const ctx = (mood: 'lively' | 'normal' | 'gloomy'): BuildCtx => ({ mood, palette: MOOD_PALETTES[mood] });
+const ctx = (mood: 'lively' | 'normal' | 'sleepy'): BuildCtx => ({ mood, palette: MOOD_PALETTES[mood] });
 const houseItem = (activeToday: boolean): ObjectOf<'house'> => ({
   assetKey: 'house',
   id: 'house:a',
@@ -38,10 +38,10 @@ describe('models', () => {
     expect(house(houseItem(false)).filter((p) => p.layer === 'glow')).toHaveLength(0);
   });
 
-  it('gloomy trees carry snow, others do not', () => {
+  it('sleepy trees carry snow, others do not', () => {
     const t: ObjectOf<'tree'> = { assetKey: 'tree', id: 't', x: 0, z: 0, stage: 0, variant: 0 };
-    const snow = (mood: 'lively' | 'gloomy') => tree(t, ctx(mood)).filter((p) => p.c === '#f6f8fb');
-    expect(snow('gloomy')).toHaveLength(1);
+    const snow = (mood: 'lively' | 'sleepy') => tree(t, ctx(mood)).filter((p) => p.c === '#f6f8fb');
+    expect(snow('sleepy')).toHaveLength(1);
     expect(snow('lively')).toHaveLength(0);
   });
 

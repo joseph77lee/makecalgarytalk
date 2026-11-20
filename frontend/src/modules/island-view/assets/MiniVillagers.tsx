@@ -81,9 +81,9 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
           s.to = pool[Math.floor(s.rng() * pool.length)];
           s.t = 0;
         }
-        // Villagers stroll and often stop to look around; gloomy ones mostly sit.
-        const restChance = (mood === 'gloomy' ? 0.5 : mood === 'normal' ? 0.3 : 0.22) * me.restFactor;
-        if (s.rng() < restChance) s.pause = (1.2 + s.rng() * (mood === 'gloomy' ? 5 : 3)) * me.restFactor;
+        // Villagers stroll and often stop to look around; sleepy ones mostly sit.
+        const restChance = (mood === 'sleepy' ? 0.5 : mood === 'normal' ? 0.3 : 0.22) * me.restFactor;
+        if (s.rng() < restChance) s.pause = (1.2 + s.rng() * (mood === 'sleepy' ? 5 : 3)) * me.restFactor;
       }
     } else {
       s.t = Math.min(1, s.t + dt * palette.villagerSpeed * me.speedFactor);
@@ -99,9 +99,9 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
     g.position.set(x, y, z);
     if (moving) g.rotation.y = Math.atan2(s.to.x - s.from.x, s.to.z - s.from.z);
 
-    // Gloomy: heads down, sits when resting. Lively: looks up.
-    const sitting = mood === 'gloomy' && !moving && !cheering;
-    if (head.current) head.current.rotation.x = mood === 'gloomy' && !cheering ? 0.45 : mood === 'lively' ? -0.12 : 0;
+    // Sleepy: heads down, sits when resting. Lively: looks up.
+    const sitting = mood === 'sleepy' && !moving && !cheering;
+    if (head.current) head.current.rotation.x = mood === 'sleepy' && !cheering ? 0.45 : mood === 'lively' ? -0.12 : 0;
     if (body.current) body.current.position.y = sitting ? -0.08 : 0;
   });
 

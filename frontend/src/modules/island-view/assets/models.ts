@@ -62,7 +62,7 @@ export const CHIMNEY_TOP: [number, number, number] = [0.2, 0.94, -0.18];
 
 export function tree(item: ObjectOf<'tree'>, { palette, mood }: BuildCtx): BoxPart[] {
   const leaves = palette.leaves[item.variant % 2];
-  const k = mood === 'gloomy' ? 0.85 : 1;
+  const k = mood === 'sleepy' ? 0.85 : 1;
   const parts: BoxPart[] = [box('solid', 0, 0, 0, 0.14, 0.32, 0.14, palette.trunk)];
   let top: number;
   if (item.variant === 0) {
@@ -77,7 +77,7 @@ export function tree(item: ObjectOf<'tree'>, { palette, mood }: BuildCtx): BoxPa
     parts.push(box('solid', 0, 0.3, 0, 0.7 * k, 0.55 * k, 0.7 * k, leaves));
     top = 0.3 + 0.55 * k;
   }
-  if (mood === 'gloomy') parts.push(box('solid', 0, top, 0, 0.34, 0.07, 0.34, SNOW));
+  if (mood === 'sleepy') parts.push(box('solid', 0, top, 0, 0.34, 0.07, 0.34, SNOW));
   return parts;
 }
 
