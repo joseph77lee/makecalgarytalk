@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.35 |
+| Plan version | v1.36 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.25 |
-| Current module | M12 Invites (in progress, moved before M8) |
+| Current module | M12 Invites (🟨 Ready for playtest) |
 
 ---
 
@@ -50,7 +50,7 @@
 | M9 | Village News | BE + FE | | M8 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
-| M12 | Invites | FE + BE | | M6, M7 | 🟦 |
+| M12 | Invites | FE + BE | | M6, M7 | 🟨 |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
 | M14 | Launch Readiness | All | | All above | ⬜ |
 
@@ -390,19 +390,27 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] ranking math tested
   - [ ] share card renders correctly on phones and social previews
 
-### M12 — Invites 🟦
+### M12 — Invites 🟨
 **Goal:** Built-in acquisition.
 - **In scope**
-  - [ ] personal invite links
-  - [ ] reward when invitee becomes Verified Resident of the same community
-  - [ ] Pioneer Sponsor badge for first resident of an empty community
-  - [ ] Founding Resident badge (the community's first Verified Resident)
-  - [ ] MVP reward = "Good Neighbour" badge for both, ×N; badges and invite counts in the profile sheet
-  - [ ] invite link landing: "<nickname> invited you to build <community> together"
-  - [ ] welcome card after the first counted check-in with Invite neighbours; "N more neighbours" goals (streak bar, build map) open the invite; share via the phone's share sheet (copy link fallback)
-  - [ ] first-visit copy: "You can't finish it alone"
+  - [x] personal invite links
+  - [x] reward when invitee becomes Verified Resident of the same community
+  - [x] Pioneer Sponsor badge for first resident of an empty community
+  - [x] Founding Resident badge (the community's first Verified Resident)
+  - [x] MVP reward = "Good Neighbour" badge for both, ×N; badges and invite counts in the profile sheet
+  - [x] invite link landing: "<nickname> invited you to build <community> together"
+  - [x] welcome card after the first counted check-in with Invite neighbours; "N more neighbours" goals (streak bar, build map) open the invite; share via the phone's share sheet (copy link fallback)
+  - [x] first-visit copy: "You can't finish it alone"
 - **Definition of Done**
-  - [ ] rewards cannot be farmed with self-invites (tests)
+  - [x] rewards cannot be farmed with self-invites (tests)
+- **Handoff**
+  - **Code:** migrations `20261120140000_residency_invite_interface.sql` (`residency.first_verification`, `community_on`, `founded_communities`), `20261120140100_identity_nickname_lookup.sql` (`identity.nickname`), `20261120140200_invites.sql` (schema `invites`: `codes`, append-only `acceptances`; RPC `invites_get_mine`, `invites_accept`, `invites_lookup`). Tests `supabase/tests/database/invites_rules.test.sql` (40). Frontend `frontend/src/modules/invites/` (store with injected deps, `InviteLandingBanner` in the first visit via `FirstVisit banner`, `WelcomeCard`, `InviteSection` in the profile sheet); `StreakBar` and `BuildMap` got `onInvite`.
+  - **Rewards are computed on read** from acceptances + residency verifications (no reward rows): Good Neighbour = the invitee's first verification is in the community the inviter lives in that day; Pioneer Sponsor = that first verification founded the community; Founding Resident = earliest verification of a community (same day → lower id). So moves never remove or create rewards.
+  - **Farming guards:** no self-invite; one acceptance per account (append-only); only before the invitee's first verification; rewards need the 3-of-7-day verification. Codes are public identifiers (not secrets); `invites_lookup` is open to anon and only returns nickname + community.
+  - **Link flow:** `?invite=CODE` is read at app load, saved in localStorage and removed from the address bar; accepted right after sign-in (kept on a network failure, forgotten once the server answered). Share uses `navigator.share`, else copies "message + link" to the clipboard (toast). The share text always names the community.
+  - **Welcome card:** shown when the player plays pending in a community (verifying or moving) and has not seen it for that community on this device; it takes the place of the changes panel that time.
+  - **Not tested / known gaps:** the real share sheet on a phone (headless Chromium has no `navigator.share`; the copy fallback was checked); M8 (houses) will show badges on name tags later; decorations are Phase 2; no per-IP limit on `invites_lookup` (low value: nickname + community only).
+
 
 ### M13 — Feature Library ⬜
 **Goal:** Each island feels like its community.
@@ -448,6 +456,18 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.36
+**Changed:** M12 items ticked; status 🟨 with Handoff.
+
+**Why:** M12 implemented and verified locally (tests, two-browser screen check with simulated days).
+
+**Previous:**
+- Header: `| Plan version | v1.35 |`
+- Header: `| Current module | M12 Invites (in progress, moved before M8) |`
+- Overview: `| M12 | Invites | FE + BE | | M6, M7 | 🟦 |`
+- M12: `### M12 — Invites 🟦`
+- M12: all checklist items were `- [ ]`; no Handoff
 
 ### 2026-11-20 — v1.35
 **Changed:** "Based on" → `requirement.md` v1.25. M12 🟦 in progress; scope items for the badge reward, invite landing, welcome card and invite entry points, first-visit copy.

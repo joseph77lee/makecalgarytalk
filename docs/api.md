@@ -22,6 +22,9 @@ client never computes time zones; it only counts down to `next_day_start`.
 | `residency_check_location(p_lat, p_lon, p_accuracy)` | authenticated | Location check-in (coordinates never stored) |
 | `residency_start_move()` | authenticated | "I moved" |
 | `residency_cancel_move()` | authenticated | Cancel my move |
+| `invites_get_mine()` | authenticated | My invite code, counts, who invited me, badges |
+| `invites_accept(p_code)` | authenticated | Accept an invite (once) |
+| `invites_lookup(p_code)` | anon, authenticated | Who sent an invite link (nickname, community) |
 
 **Accounts (Identity, M6):** every visitor gets a Supabase Auth account on the first visit
 with `signInAnonymously` (no form). Sign-ups need a Cloudflare **Turnstile** token
@@ -223,6 +226,36 @@ Errors: not signed in → `28000`; latitude/longitude out of range, NaN or a neg
 Return the status plus `ok`. Not allowed → `{ ok: false, problem }` with
 `not_verified | moving | cooldown` (start) or `not_moving` (cancel). A cancelled move (by the
 player or after 7 days) loses nothing and does not start the cooldown.
+
+## `invites_get_mine()`
+```json
+{
+  "code": "K7QM2XPA",
+  "invited": 3, "joined": 2,
+  "invited_by": "Snowy Moose",
+  "badges": [
+    { "key": "founding_resident", "community": "Mahogany" },
+    { "key": "good_neighbour", "count": 2 },
+    { "key": "pioneer_sponsor", "count": 1 }
+  ]
+}
+```
+- `code`: my personal code (created on first call; 8 characters, no I/O/0/1). Link:
+  `<app>/?invite=<code>`.
+- `invited`: accounts that accepted my invite; `joined`: those whose first verification was in
+  the community I lived in that day.
+- Badges (computed from history, never lost when anyone moves; a move never creates one):
+  **Good Neighbour** (both people, ×N), **Pioneer Sponsor** (my invitee became the first Verified
+  Resident of a community), **Founding Resident** (I was the first Verified Resident there).
+
+## `invites_accept(p_code text)`
+`{ ok: true }` or `{ ok: false, problem }`: `unknown` code, `self`, `already` accepted someone
+else's invite, `too_late` (already verified somewhere). Accepting the same invite again is `ok`.
+The app remembers the link's code on the first visit and accepts it right after sign-in.
+
+## `invites_lookup(p_code text)`
+`{ "nickname": "Snowy Moose", "community": "Mahogany" }` (community `null` if the inviter has
+none yet), or `null` for an unknown code. Works before sign-in (invite landing banner).
 
 ---
 

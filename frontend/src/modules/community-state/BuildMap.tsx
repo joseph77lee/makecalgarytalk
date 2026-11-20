@@ -9,10 +9,12 @@ interface Props {
   buildings: BuildingView[];
   onClose: () => void;
   onShowExample: () => void;
+  /** Opens the invite where more neighbours are needed. */
+  onInvite?: () => void;
 }
 
 /** Village build map (requirement.md §7.6a): read-only view of the server's tree state. */
-export function BuildMap({ community, streakDays, buildings, onClose, onShowExample }: Props) {
+export function BuildMap({ community, streakDays, buildings, onClose, onShowExample, onInvite }: Props) {
   const percent = completionPercent(buildings);
   const tiers = BUILDING_TREE.landTiers;
   const goal = landGoalText(community.next_land_residents);
@@ -53,7 +55,16 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
                 </div>
               ))}
             </div>
-            {goal && <p className="mt-1 text-xs text-sky-800">🏝 {goal}</p>}
+            {goal && (
+              <p className="mt-1 text-xs text-sky-800">
+                🏝 {goal}
+                {onInvite && (
+                  <button type="button" onClick={onInvite} className="ml-1 font-semibold underline">
+                    Invite
+                  </button>
+                )}
+              </p>
+            )}
             <button
               type="button"
               onClick={onShowExample}
@@ -68,7 +79,7 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
               <h3 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">{g.name}</h3>
               <ul className="space-y-1.5">
                 {g.buildings.map((b) => (
-                  <BuildingRow key={b.key} b={b} />
+                  <BuildingRow key={b.key} b={b} onInvite={onInvite} />
                 ))}
               </ul>
             </div>
@@ -79,7 +90,7 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
   );
 }
 
-function BuildingRow({ b }: { b: BuildingView }) {
+function BuildingRow({ b, onInvite }: { b: BuildingView; onInvite?: () => void }) {
   const built = isBuilt(b);
   const upgrading = b.status === 'building' && b.level > 1;
   const builtLevel = upgrading ? b.level - 1 : b.level;
@@ -106,7 +117,16 @@ function BuildingRow({ b }: { b: BuildingView }) {
         </div>
       )}
       {b.status === 'opened' && <p className="mt-1 text-[11px] text-emerald-700">Starts when one of the 3 constructions finishes</p>}
-      {b.status === 'locked' && b.remaining && <p className="mt-1 text-[11px]">{remainingText(b.remaining)}</p>}
+      {b.status === 'locked' && b.remaining && (
+        <p className="mt-1 text-[11px]">
+          {remainingText(b.remaining)}
+          {onInvite && b.remaining.residents > 0 && (
+            <button type="button" onClick={onInvite} className="ml-1 font-semibold text-sky-700 underline">
+              Invite
+            </button>
+          )}
+        </p>
+      )}
     </li>
   );
 }
