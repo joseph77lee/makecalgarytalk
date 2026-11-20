@@ -4,3 +4,5 @@ export { CommunityPicker } from './CommunityPicker';
 export { SessionScreen } from './SessionScreen';
 export { Toast } from './Toast';
 export { useDailyActions } from './liveStore';
+export { projectIcon } from './projectIcons';
+export type { ServerChanges, ServerCommunityState, ServerStreak } from './api';

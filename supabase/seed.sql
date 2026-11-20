@@ -18,10 +18,9 @@ values (
   '{"sub": "d0000000-0000-4000-8000-00000000de01", "email": "dev@makecalgarytalk.local"}', 'email', now(), now(), now()
 ) on conflict do nothing;
 
-insert into gamecore.players (user_id, community_id, joined_on)
-select 'd0000000-0000-4000-8000-00000000de01', c.id, common.calgary_day(now())
-from gamecore.communities c where c.city = 'calgary' and c.code = 'MAH'
-on conflict (user_id) do nothing;
+-- Joins through the game rule so the membership event is recorded too.
+select gamecore.choose_community_at('d0000000-0000-4000-8000-00000000de01', c.id, now())
+from gamecore.communities c where c.city = 'calgary' and c.code = 'MAH';
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -39,7 +38,6 @@ values (
   '{"sub": "d0000000-0000-4000-8000-00000000de02", "email": "dev2@makecalgarytalk.local"}', 'email', now(), now(), now()
 ) on conflict do nothing;
 
-insert into gamecore.players (user_id, community_id, joined_on)
-select 'd0000000-0000-4000-8000-00000000de02', c.id, common.calgary_day(now())
-from gamecore.communities c where c.city = 'calgary' and c.code = 'MAH'
-on conflict (user_id) do nothing;
+-- Joins through the game rule so the membership event is recorded too.
+select gamecore.choose_community_at('d0000000-0000-4000-8000-00000000de02', c.id, now())
+from gamecore.communities c where c.city = 'calgary' and c.code = 'MAH';

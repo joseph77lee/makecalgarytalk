@@ -73,7 +73,7 @@ export function IslandLabels({ objects, houseBubbles, communityName }: Props) {
                   <SpeechBubbleLabel text={bubble} />
                 </Overlay>
               ),
-              showNames && (
+              showNames && o.nickname && (
               <Overlay key={o.id} x={o.x} y={1.15} z={o.z}>
                 <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-white/85 px-1.5 py-px text-[10px] font-semibold text-slate-700 shadow-sm">
                     <span className={`h-1.5 w-1.5 rounded-full ${o.activeToday ? 'bg-amber-400' : 'bg-slate-300'}`} />

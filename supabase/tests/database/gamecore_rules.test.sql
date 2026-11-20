@@ -11,6 +11,9 @@ delete from gamecore.actions;
 delete from gamecore.projects;
 delete from gamecore.building_openings;
 delete from gamecore.players;
+delete from gamecore.membership_events;
+delete from gamecore.community_days;
+delete from gamecore.community_snapshots;
 
 insert into auth.users (id, email) values
   ('00000000-0000-4000-8000-000000000001', 'a@test.local'),
@@ -154,11 +157,11 @@ select is(
 );
 select is(
   pg_temp.building(pg_temp.state('mah', 'd1'), 'playground') ->> 'status', 'locked',
-  'the Playground stays locked: its streak condition waits for M5'
+  'the Playground stays locked: it needs a 3-day streak'
 );
 select is(
   pg_temp.building(pg_temp.state('mah', 'd1'), 'playground') -> 'remaining',
-  '{"requires": [], "residents": 0, "streak_days": 3}'::jsonb, 'its required building is done; 3 streak days are missing'
+  '{"requires": [], "residents": 0, "streak_days": 2}'::jsonb, 'its required building is done; yesterday counted, 2 streak days are missing'
 );
 select is(
   pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(
@@ -195,7 +198,7 @@ select is(pg_temp.building(pg_temp.state('mah', 'd2'), 'gateway-arch') ->> 'stat
 
 -- Nothing re-locks -------------------------------------------------------------------
 select gamecore.choose_community_at(pg_temp.uid('c'), pg_temp.uid('aub'), pg_temp.at('d2'));
-select is((pg_temp.state('mah', 'd2') -> 'community' ->> 'residents')::int, 2, 'a resident moved away');
+select is((pg_temp.state('mah', 'd2') -> 'community' ->> 'residents')::int, 3, 'cumulative residents do not shrink when a resident moves away');
 select is(pg_temp.building(pg_temp.state('mah', 'd2'), 'gateway-arch') ->> 'status', 'opened', 'an opened building never re-locks');
 
 -- Upgrades only the newest building of each growth chain -----------------------------

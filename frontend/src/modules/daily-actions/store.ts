@@ -76,6 +76,8 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
   let retryTimer: unknown = null;
   let dayTimer: unknown = null;
   let toastId = 0;
+  /** Calgary day on which the state was refreshed after the first accepted action. */
+  let refreshedAfterHelpDay: string | null = null;
 
   const client = (): SupabaseClient => {
     const c = deps.getClient();
@@ -242,7 +244,14 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
               setQueue(next);
               retryIndex = 0;
               for (const r of feedback.rejected) get().showToast(REJECT_MESSAGES[r.reason]);
-              if (feedback.rejected.some((r) => r.reason === 'project_not_active')) void get().refresh();
+              const helped = result.results.some((r) => r.status === 'accepted');
+              if (feedback.rejected.some((r) => r.reason === 'project_not_active')) {
+                void get().refresh();
+              } else if (helped && refreshedAfterHelpDay !== result.calgary_day) {
+                // Once a day: the streak bar ("2/6 today") should count my first help at once.
+                refreshedAfterHelpDay = result.calgary_day;
+                void get().refresh();
+              }
             } catch {
               setQueue(batchFailed(get().queue as QueueState, batch));
               const delay = RETRY_DELAYS[Math.min(retryIndex, RETRY_DELAYS.length - 1)];

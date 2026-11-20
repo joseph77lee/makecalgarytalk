@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.22 |
+| Plan version | v1.26 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
-| Based on | `requirement.md` v1.20 |
-| Current module | M5 Community State (in progress; M3 ✅ Done) |
+| Based on | `requirement.md` v1.21 |
+| Current module | M6 Identity (in progress; M5 ✅ Done) |
 
 ---
 
@@ -43,8 +43,8 @@
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | ✅ |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
-| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ⬜ |
-| M6 | Identity | FE + BE | | M4 | ⬜ |
+| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ✅ |
+| M6 | Identity | FE + BE | | M4 | 🟦 |
 | M7 | Residency | FE + BE | | M6 | ⬜ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |
 | M9 | Village News | BE + FE | | M8 | ⬜ |
@@ -262,20 +262,30 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real Calgary midnight (simulated only; the refresh timer is unit-tested); real phone; sound on iOS (AudioContext needs a gesture — the tap is one); offline-for-hours retry beyond 30 s intervals; the "Switch community (dev)" button exists only in dev builds.
   - **For M5:** fill `vitality`, `buildings` (unlocked / remaining), `islandSize`, `miniVillagerCount` in `toViewState` from server data; the build map can reuse `server.projects` / `completed_projects`.
 
-### M5 — Community State ⭐ ⬜
+### M5 — Community State ⭐ ✅
 **Goal:** The community feels alive and changes over days. **Core loop complete.**
 - **In scope**
-  - [ ] Backend: community streak (≥ half, rounded up, of **Active Verified Residents** = acted within last 7 Calgary days), Vitality (7-day average; denominator = Verified Residents whose **last active day** (later of last action and verification day) is within last 30 days incl. today, rises fast/falls slow), streak and resident conditions for the **building tree** (§7.6; resident counts cumulative), island land tier from cumulative residents (§7.8)
-  - [ ] Snapshot generation every 5–10 min (JSON) for community state via **pg_cron**
-  - [ ] Frontend: streak bar ("2/6 today"), locked silhouettes with remaining conditions, "What changed since yesterday" panel, island growth goal
-  - [ ] Village build map screen (`requirement.md` §7.6a): the building tree with done / building / opened / locked, remaining conditions and progress, island land track, community completion %, "See a finished example" button; Village tab only (Me tab is Phase 2)
+  - [x] Backend: community streak (≥ half, rounded up, of **Active Verified Residents** = acted within last 7 Calgary days), Vitality (7-day average; denominator = Verified Residents whose **last active day** (later of last action and verification day) is within last 30 days incl. today, rises fast/falls slow), streak and resident conditions for the **building tree** (§7.6; resident counts cumulative), island land tier from cumulative residents (§7.8)
+  - [x] Snapshot generation every 5–10 min (JSON) for community state via **pg_cron**
+  - [x] Frontend: streak bar ("2/6 today"), locked silhouettes with remaining conditions, "What changed since yesterday" panel, island growth goal
+  - [x] Village build map screen (`requirement.md` §7.6a): the building tree with done / building / opened / locked, remaining conditions and progress, island land track, community completion %, "See a finished example" button; Village tab only (Me tab is Phase 2)
 - **Out of scope:** real residents/verification (dev users simulate residents)
 - **Definition of Done**
-  - [ ] with simulated users over simulated days, streak, Vitality, unlocks and growth behave as specified
-  - [ ] a 1-resident community works
-  - [ ] user has played across at least 3 real days
+  - [x] with simulated users over simulated days, streak, Vitality, unlocks and growth behave as specified
+  - [x] a 1-resident community works
+  - [x] user has played across at least 3 real days — user confirmed and approved the merge on 2026-11-19 after simulated days; a run across real Calgary midnights is still open
+- **Handoff**
+  - **Code:** migration `supabase/migrations/20261119130000_gamecore_community_state.sql`; tests `supabase/tests/database/gamecore_state.test.sql` (48 checks; 152 in all DB files). Frontend module `frontend/src/modules/community-state/` (`StreakBar`, `ChangesPanel`, `BuildMap` + pure text/model helpers with tests); `daily-actions` maps `vitality` / `mini_villagers` and exports `projectIcon` and the server types; `island-view` exports `finishedExampleState` and `remainingText`. API reference `docs/api.md`.
+  - **Members (temporary until M7):** `gamecore.membership_events` (append-only, one row per join into a different community) gives members per day (`members_on`) and cumulative residents (never shrink). `gamecore.players` stays the "current community" row. `seed.sql` now joins the dev users through `choose_community_at` so their event exists (migrations run before the seed, so a backfill in a migration does not see seeded players).
+  - **Days:** `gamecore.community_days` stores each finished Calgary day once (filled lazily by `ensure_days` under a per-community lock). Streak = consecutive attended days up to yesterday + today if attended. Vitality = 100 × max(3-day, 7-day average ratio) of finished days since the first resident (requirement v1.21); `null` before the first finished day so new communities start with the normal mood.
+  - **Snapshots:** `gamecore.community_snapshots` (one row per community) rebuilt by pg_cron every 5 min (`gamecore-snapshots` → `refresh_snapshots()`, communities with residents only), lazily on the first read of a new Calgary day, and dropped when someone joins or leaves. Reads add live `streak` (today's count) and `me`. The client refreshes once after the first accepted action of the day so the streak bar counts it. CDN publishing of snapshots (R2) is for M14.
+  - **Openings timing:** `submit_actions` checks the tree before inserting the actions, so a streak reached by today's action opens buildings at the next snapshot (≤ 5 min) or new-day read, still dated today.
+  - **What changed since yesterday:** built in the snapshot from yesterday's actions, levels built today, buildings unlocked since yesterday (not the three seeds), new residents, land growth and yesterday's Vitality; the panel shows once per Calgary day (localStorage, try/catch) and stays closed when nothing happened.
+  - **Finished example:** the community's own stored plan with every tree building built, full land, unnamed houses and Vitality 85, labelled "Example"; the M6 first-visit example can reuse `finishedExampleState`.
+  - **Not tested / known gaps:** a real Calgary midnight (days simulated by shifting data); a real phone; load (one job rebuilds all communities with residents — fine at MVP size, measure before launch); Community Revival effect and share card (M11); houses still empty (M8).
+  - **Dev tip:** to simulate "the next day" locally, move all gamecore dates back one day with `session_replication_role = replica` (actions in two steps because of the energy-slot unique key) and clear `community_days` and `community_snapshots`.
 
-### M6 — Identity ⬜
+### M6 — Identity 🟦
 **Goal:** Real users without friction.
 - **In scope**
   - [ ] Supabase anonymous sign-in on first visit
@@ -285,6 +295,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] Cloudflare Turnstile
   - [ ] sign-up rate limits
   - [ ] re-join with same Google account restores record
+  - [ ] "What changed since yesterday" seen once per **account** per Calgary day (server-side record instead of the M5 per-browser localStorage flag)
 - **Definition of Done**
   - [ ] new visitor plays instantly without a form
   - [ ] linking Google keeps progress
@@ -407,6 +418,52 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.26
+**Changed:** M5 → ✅ (user confirmed); M6 → 🟦 In progress.
+
+**Why:** User reviewed M5 and approved the merge (without the 3-real-days run, noted in the DoD).
+
+**Previous:**
+- Header: `| Plan version | v1.25 |`
+- Header: `| Current module | M5 Community State (🟨 Ready for playtest) |`
+- Overview: `| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | 🟨 |`
+- Overview: `| M6 | Identity | FE + BE | | M4 | ⬜ |`
+- M5: `### M5 — Community State ⭐ 🟨`
+- M6: `### M6 — Identity ⬜`
+- M5: `  - [ ] user has played across at least 3 real days`
+
+### 2026-11-19 — v1.25
+**Changed:** M6 in scope: "What changed since yesterday" seen once per account per Calgary day (server-side), replacing M5's per-browser flag.
+
+**Why:** User decision (2026-11-19): with real accounts the panel should follow the person, not the browser (today two accounts in one browser share the flag; one person on two devices sees it twice).
+
+**Previous:**
+- Header: `| Plan version | v1.24 |`
+- M6: (no item about the changes panel)
+
+### 2026-11-19 — v1.24
+**Changed:** M5 items ticked (except the 3-real-days playtest), status 🟨 with Handoff.
+
+**Why:** M5 implemented and verified with simulated days.
+
+**Previous:**
+- Header: `| Plan version | v1.23 |`
+- Header: `| Current module | M5 Community State (in progress; M3 ✅ Done) |`
+- Overview: `| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | 🟦 |`
+- M5: `### M5 — Community State ⭐ 🟦`
+- M5: six checklist items were `- [ ]`
+
+### 2026-11-19 — v1.23
+**Changed:** "Based on" → `requirement.md` v1.21 (Vitality formula, streak counting today). M5 → 🟦 In progress.
+
+**Why:** M5 started; sync with the requirement update.
+
+**Previous:**
+- Header: `| Plan version | v1.22 |`
+- Header: `| Based on | `requirement.md` v1.20 |`
+- Overview: `| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ⬜ |`
+- M5: `### M5 — Community State ⭐ ⬜`
 
 ### 2026-11-19 — v1.22
 **Changed:** M3 rework confirmed by the user → ✅; current module → M5.

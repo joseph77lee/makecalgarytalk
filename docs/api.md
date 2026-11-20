@@ -28,16 +28,28 @@ Residential Calgary communities (City of Calgary Open Data, see `docs/data-sourc
 `population` is `null` for brand-new communities without census data.
 
 ## `gamecore_get_community_state(p_community_id uuid)`
-State on the current Calgary day. Reading it also updates the community's building tree:
-newly unlocked buildings are recorded as opened, and new constructions start while fewer
-than 3 are active. These rows are written once, when the change happens.
+State on the current Calgary day. The shared part comes from a **snapshot** per community,
+rebuilt every 5 minutes by pg_cron (`gamecore.refresh_snapshots()`), on the first read of a
+new Calgary day, and right after someone joins or leaves the community. Building the snapshot
+also updates the building tree (newly unlocked buildings are recorded as opened, new
+constructions start while fewer than 3 are active; these rows are written once). `streak` and
+`me` are computed live on every read.
 
 ```json
 {
   "calgary_day": "2026-12-02",
   "next_day_start": "2026-12-03T06:00:00+00:00",
   "community": { "id": "uuid", "code": "MAH", "name": "Mahogany", "sector": "Southeast", "population": 13860,
-                 "residents": 4, "land_stage": 1, "settled": true },
+                 "residents": 4, "land_stage": 1, "next_land_residents": 2, "settled": true,
+                 "vitality": 64, "mini_villagers": 5 },
+  "streak": { "days": 5, "today": { "acted": 2, "active_residents": 6, "needed": 3, "attended": false } },
+  "changes": {
+    "actions": 4,
+    "progress": [{ "building_key": "fire-pit", "title": "Fire pit", "level": 1, "added": 4 }],
+    "built": [{ "building_key": "frozen-pond", "title": "Frozen pond", "level": 1 }],
+    "opened": [{ "building_key": "playground", "title": "Playground" }],
+    "new_residents": 1, "land_grew": false, "vitality_before": 58
+  },
   "buildings": [
     { "key": "welcome-sign", "name": "Welcome sign", "stage": 1, "status": "building", "level": 2, "progress": 0.25, "remaining": null },
     { "key": "frozen-pond", "name": "Frozen pond", "stage": 1, "status": "built", "level": 1, "progress": 1, "remaining": null },
@@ -51,9 +63,19 @@ than 3 are active. These rows are written once, when the change happens.
   "me": { "member": true, "energy_max": 3, "energy_left": 2 }
 }
 ```
-- `community.residents`: cumulative residents (**temporary:** players currently in the
-  community until M7 brings Verified Residents). `land_stage`: 0–5 from the land tiers.
-  `settled`: the first building has been built.
+- `community.residents`: cumulative residents = distinct people who have ever joined
+  (**temporary:** joining stands in for verification until M7). `land_stage`: 0–5 from the
+  land tiers; `next_land_residents`: residents still needed to grow, `null` at the largest
+  island. `settled`: the first building has been built.
+- `community.vitality`: 0–100 (§7.4), changes once a day; `null` before the first finished
+  day (draw the normal mood). `mini_villagers`: ambient villagers to draw (3–20).
+- `streak.days`: consecutive attendance days up to yesterday, +1 once today is an attendance
+  day. `streak.today`: members who acted today, 7-day active residents, how many are needed
+  (half, rounded up, at least 1), and whether today already counts.
+- `changes`: what changed since yesterday — yesterday's actions (total and per building
+  level), buildings that became built or reached a new level today, buildings unlocked since
+  yesterday (not the three seeds), new residents yesterday, whether the land grew, and
+  yesterday's Vitality.
 - `buildings`: every building of the tree, in tree order.
   - `status`: `locked` (conditions not met), `opened` (unlocked, waiting for a free
     construction slot), `building` (a construction or upgrade is active), `built`.
@@ -130,8 +152,16 @@ the moving rules (§6.4).
   Active residents = members whose last active day (later of joining and last action) is
   within the last 30 Calgary days.
 - Land tiers (cumulative residents → land stage): 0, 3, 6, 11, 26, 51 → 0–5.
-- **Temporary:** community streak = 0 until M5, so buildings with a streak condition stay
-  locked.
+- **Members** come from membership events (one row per join into a different community,
+  append-only). Members on a day = players whose latest join on or before that day was into
+  the community. **Temporary** until M7 (Verified Residents, moves in progress).
+- **Community streak** (§7.5): an attendance day = at least half (rounded up) of the members
+  who acted within the last 7 Calgary days acted that day; 0 active → not an attendance day.
+- **Vitality** (§7.4): daily ratio = members who acted ÷ members whose last active day (later
+  of joining and last action) is within the last 30 days; Vitality = 100 × max(average of the
+  last 3 finished days, average of the last 7), only days since the first resident.
+- Finished days are stored once in `gamecore.community_days` (they never change).
+- Mini villagers = clamp(3, 20, ⌈shown residents × (0.5 + Vitality/100)⌉), Vitality 50 if unknown.
 - Actions are append-only; progress and completion are computed from the action log.
 
 ## Local development
