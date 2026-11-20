@@ -92,7 +92,7 @@ begin
   v_helpers := array(select gamecore.helpers_on(p_community_id, v_day - 1));
   v_lines := v_lines || jsonb_build_array(jsonb_build_object('icon', '🙌', 'text',
     case when cardinality(v_helpers) = 0 then 'Nobody helped yesterday. Today is a fresh start!'
-         when cardinality(v_helpers) = 1 then news.names(v_helpers, 6) || ' helped the village yesterday.'
+         when cardinality(v_helpers) = 1 then news.names(v_helpers, 6) || ' helped the community yesterday.'
          else cardinality(v_helpers) || ' neighbours helped yesterday: ' || news.names(v_helpers, 6) || '.' end));
 
   for v_item in select * from jsonb_array_elements(v_changes -> 'built') loop

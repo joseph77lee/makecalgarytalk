@@ -49,7 +49,7 @@ export function StreakBar({ streak, nextLandResidents, onOpenMap, onInvite, slee
           <span className="text-base leading-none" aria-hidden>
             🗺️
           </span>
-          Village
+          Community
         </button>
       </div>
       {children}

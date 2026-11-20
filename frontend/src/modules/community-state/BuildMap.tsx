@@ -24,13 +24,13 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
   return (
     <div className="absolute inset-0 z-40 flex justify-center bg-slate-900/25" onClick={onClose}>
       <section
-        aria-label="Village build map"
+        aria-label="Community build map"
         className="flex h-full w-full max-w-xl flex-col bg-white shadow-xl sm:my-4 sm:h-auto sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-start justify-between gap-2 border-b border-slate-100 p-4 pt-[max(1rem,env(safe-area-inset-top))]">
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-bold text-slate-800">{community.name} village</h2>
+            <h2 className="truncate text-lg font-bold text-slate-800">{community.name}</h2>
             <p className="text-xs text-slate-500">
               {community.residents} {community.residents === 1 ? 'resident' : 'residents'} · 🔥 {streakDays}-day streak
               {extraResidents > 0 && ` · +${extraResidents} more residents than houses fit`}
@@ -44,7 +44,7 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
         <div className="flex-1 overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="mb-4 rounded-2xl bg-indigo-50 p-3">
             <div className="mb-1 flex items-baseline justify-between">
-              <span className="text-sm font-semibold text-indigo-900">Village complete</span>
+              <span className="text-sm font-semibold text-indigo-900">Community complete</span>
               <span className="text-xl font-bold text-indigo-700">{percent}%</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-white">

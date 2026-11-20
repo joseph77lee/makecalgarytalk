@@ -375,7 +375,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ---
 
-## 11. Village news (community newspaper)
+## 11. Community news (community newspaper)
 
 - **Available from the MVP**: the newspaper opens from the **Welcome sign**; the **Warming hut** adds the community board (operator announcements, events); the **Community hall** takes both over and expands them (7.6)
   - Opens when the player taps the building; the avatar does not need to walk there
@@ -794,9 +794,12 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### 2026-11-20 — v1.27
 **Changed:** 11: newspaper lines listed (no personal streak lines; the example no longer mentions one); written once per community per day; locked until the Welcome sign is built; announcements always at the top, the community board section (events, roadmap) opens with the Warming hut; MVP announcements via SQL.
 
+Section renamed "Village news" → "Community news" (Calgary calls each neighbourhood a community); the newspaper is titled "Community News".
+
 **Why:** M9 needs exact rules; announcements were listed both at the top of the newspaper and on the Warming hut board (user decisions 2026-11-20).
 
 **Previous:**
+- 11: `## 11. Village news (community newspaper)`
 - 11: `  - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed. Sarah hit a 7-day streak!"`
 - 11: (no line list, generation rule, lock text, board/announcement split or announcement tooling)
 

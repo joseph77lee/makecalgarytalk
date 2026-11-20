@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.43 |
+| Plan version | v1.44 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.27 |
-| Current module | M9 Village News (🟨 Ready for playtest) |
+| Current module | M9 Community News (🟨 Ready for playtest) |
 
 ---
 
@@ -47,7 +47,7 @@
 | M6 | Identity | FE + BE | | M4 | ✅ |
 | M7 | Residency | FE + BE | | M6 | ✅ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
-| M9 | Village News | BE + FE | | M8 | 🟨 |
+| M9 | Community News | BE + FE | | M8 | 🟨 |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
@@ -362,7 +362,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; villagers do not walk to the site during the replay (bubble only); badges other than Founding Resident are not in the bubble (decision); interiors are a Phase 3 idea (requirement §22.3).
 
 
-### M9 — Village News 🟨
+### M9 — Community News 🟨
 **Goal:** A daily reason to check in.
 - **In scope**
   - [x] auto-generated daily newspaper from game events (templates)
@@ -379,6 +379,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Newspaper host:** the Welcome sign's lot — the sign grows into the Gateway arch on the same lot, and right after the sign is built the arch construction stands there — so the host keys are `welcome-sign` + `gateway-arch` until the Community hall is built. The chip shows only once the sign is built; tapping the unbuilt sign's site shows the locked paper.
   - **Edition:** built from `gamecore.community_state_at(…).changes` + helpers/arrivals/departures/streak on the first read of the day, stored in `news.editions`; announcements and the board are live. Personal streak lines are left out (decision).
   - **Operator content:** announcements and roadmap via SQL (see docs/api.md); no admin UI yet.
+  - **Wording:** "community", not "village", in the UI (Calgary calls each neighbourhood a community): "Community News", the "Community" button, "Community complete"; "mini villagers" keep their name.
   - **Not tested / known gaps:** a real phone; announcements are not rate-limited or moderated beyond the operator; the board has no events yet (roadmap only).
 
 
@@ -474,6 +475,17 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.44
+**Changed:** M9 renamed "Village News" → "Community News"; UI wording uses "community" instead of "village".
+
+**Why:** User feedback 2026-11-20: Calgary calls each neighbourhood a community.
+
+**Previous:**
+- Header: `| Plan version | v1.43 |`
+- Header: `| Current module | M9 Village News (🟨 Ready for playtest) |`
+- Overview: `| M9 | Village News | BE + FE | | M8 | 🟨 |`
+- M9: `### M9 — Village News 🟨`
 
 ### 2026-11-20 — v1.43
 **Changed:** M9 items ticked; status 🟨 with Handoff.

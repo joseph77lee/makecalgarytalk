@@ -108,7 +108,7 @@ export function createIdentityStore(deps: IdentityDeps) {
         const { error } = await client().auth.linkIdentity({ provider: 'google', options: { redirectTo: deps.redirectTo() } });
         if (!error) return null;
         return /already|exists/i.test(error.message)
-          ? 'This Google account already has a village record. Use "Sign in with Google" to continue with it.'
+          ? 'This Google account already has a MakeCalgaryTalk record. Use "Sign in with Google" to continue with it.'
           : error.message;
       },
 

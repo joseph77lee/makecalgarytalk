@@ -19,7 +19,7 @@ export function NewspaperPanel() {
       >
         <header className="flex items-start justify-between gap-2 border-b-2 border-slate-800/80 p-4 pt-[max(1rem,env(safe-area-inset-top))]">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">The Village News</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Community News</p>
             <h2 className="truncate font-serif text-2xl font-bold text-slate-900">{paper?.community ?? '…'}</h2>
           </div>
           <button type="button" onClick={close} aria-label="Close" className="rounded-full bg-slate-200/70 px-3 py-1 text-sm text-slate-700">
