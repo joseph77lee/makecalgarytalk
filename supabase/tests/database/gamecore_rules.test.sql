@@ -3,15 +3,17 @@
 -- Times are fixed instants so the Calgary day is known (Alberta is UTC-6 year-round
 -- since 2026-11-01): day D = 2026-12-01 runs from 2026-12-01T06:00Z to 2026-12-02T06:00Z.
 begin;
-select plan(62);
+select plan(63);
 
 -- Start from an empty game (local seed data such as the dev users must not affect results;
 -- everything is rolled back at the end).
 delete from gamecore.actions;
 delete from gamecore.projects;
 delete from gamecore.building_openings;
-delete from gamecore.players;
-delete from gamecore.membership_events;
+delete from residency.verifications;
+delete from residency.moves;
+delete from residency.check_ins;
+delete from residency.check_days;
 delete from gamecore.community_days;
 delete from gamecore.community_snapshots;
 
@@ -112,7 +114,8 @@ select is(
   pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(pg_temp.act(pg_temp.project('mah', 'welcome-sign'))), pg_temp.at('d0'))),
   array['not_member'], 'a player without a community cannot act'
 );
-select is(gamecore.choose_community_at(pg_temp.uid('a'), pg_temp.uid('mah'), pg_temp.at('d0')) ->> 'community_id', pg_temp.v('mah'), 'joining a community');
+select residency.add_verified_resident_at(pg_temp.uid('a'), pg_temp.uid('mah'), pg_temp.at('d0'));
+select is(gamecore.me_at(pg_temp.uid('a'), pg_temp.at('d0')) ->> 'community_id', pg_temp.v('mah'), 'a Verified Resident plays in their community');
 insert into t values ('a1', gen_random_uuid());
 select is(
   pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('a'), jsonb_build_array(
@@ -171,7 +174,7 @@ select is(
 );
 
 -- Residents open buildings; at most 3 constructions -----------------------------------
-select gamecore.choose_community_at(pg_temp.uid(k), pg_temp.uid('mah'), pg_temp.at('d1')) from unnest(array['b', 'c']) k;
+select residency.add_verified_resident_at(pg_temp.uid(k), pg_temp.uid('mah'), pg_temp.at('d1')) from unnest(array['b', 'c']) k;
 select is((pg_temp.state('mah', 'd1') -> 'community' ->> 'residents')::int, 3, 'three residents');
 select is((pg_temp.state('mah', 'd1') -> 'community' ->> 'land_stage')::int, 1, 'three residents → land stage 1');
 select is(
@@ -197,7 +200,7 @@ select is(pg_temp.building(pg_temp.state('mah', 'd2'), 'frozen-pond') ->> 'statu
 select is(pg_temp.building(pg_temp.state('mah', 'd2'), 'gateway-arch') ->> 'status', 'opened', 'the arch keeps waiting');
 
 -- Nothing re-locks -------------------------------------------------------------------
-select gamecore.choose_community_at(pg_temp.uid('c'), pg_temp.uid('aub'), pg_temp.at('d2'));
+select residency.add_verified_resident_at(pg_temp.uid('c'), pg_temp.uid('aub'), pg_temp.at('d2'));
 select is((pg_temp.state('mah', 'd2') -> 'community' ->> 'residents')::int, 3, 'cumulative residents do not shrink when a resident moves away');
 select is(pg_temp.building(pg_temp.state('mah', 'd2'), 'gateway-arch') ->> 'status', 'opened', 'an opened building never re-locks');
 
@@ -268,7 +271,8 @@ reset role;
 set local role authenticated;
 select throws_ok($$ select public.gamecore_submit_actions('[]'::jsonb) $$, '28000', 'not authenticated', 'a signed-in role without a user id is rejected');
 set local request.jwt.claims to '{"sub": "00000000-0000-4000-8000-000000000005", "role": "authenticated"}';
-select is((public.gamecore_choose_community((select v from t where k = 'aub')::uuid) ->> 'community_id'), (select v from t where k = 'aub'), 'choosing a community through the RPC');
+select is(public.gamecore_get_me() ->> 'community_id', null, 'a signed-in player with no residency plays nowhere yet');
+select throws_ok($$ select public.gamecore_choose_community(gen_random_uuid()) $$, '42883', null, 'the temporary manual community choice is gone');
 reset role;
 
 select * from finish();

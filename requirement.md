@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.22 |
+| Document version | v1.23 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-19 |
+| Last updated | 2026-11-20 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -115,15 +115,18 @@ The service grows in this order; features are judged by how they serve it. The *
 - **Never store exact coordinates.** The server checks inside/outside the community boundary, discards the coordinates immediately, and stores only the result (community ID)
 - Never collect home addresses
 - Show "Please verify residency on your phone" (PCs use Wi-Fi-based location and are inaccurate)
+- A check whose reported accuracy is worse than **1 km** is not counted (the player is asked to try on their phone). At most **20 checks per account per Calgary day**
+- Only residential communities count; a check outside every residential boundary (or outside Calgary) finds no community
 
 ### 6.3 Resident verification
 - Open the site from inside the same community on **3 different days within 7 days** → **Verified Resident**
 - While verifying (days 1–3)
   - Full gameplay allowed; contributions are stored as "pending"
+  - The player plays in their **candidate community** = the community with the most check-in days in the last 7 Calgary days (tie → the most recent check-in); verification happens in whichever community first reaches 3 days
   - A visit from another community (e.g. workplace) doesn't count as a verification day; a visit from home later the same day does
 - After verification
   - **No more location checks** (play from anywhere)
-  - Pending contributions are applied to the community
+  - Pending contributions are applied to the community **from the verification day**: they count toward the construction projects they were given to; earlier days' attendance and Vitality do not change; contributions to a project that already finished are not carried over. Pending contributions given in another community are not applied
 - **Changing community**: see 6.4 (moving)
 - Users getting verified in their workplace community are allowed in the MVP (keep rules simple); a free correction is available (6.4)
 
@@ -135,13 +138,14 @@ Goal: moving never punishes the person who moves or the residents who stay.
   - From the moment the move starts, they are **excluded from the old community's streak and Vitality denominators** (7.4, 7.5), so they cannot break its streak or drag its mood down
   - Their actions are stored as pending contributions for the new community (6.3)
   - If re-verification is not completed within **7 days** of starting, the move is **cancelled automatically**: nothing is lost, they count normally in the old community again, the cooldown is not used, and they can start again at any time
+  - The user can also **cancel the move themselves** at any time before it completes, with the same result as the automatic cancel
 - **When the move completes**:
   - Their house moves to the new community and pending contributions are applied there
   - The old community **keeps** its cumulative Verified Resident count, completed buildings and unlocks (7.6, 7.8)
   - The old community's newspaper shows a **farewell line** (11)
   - **Personal records follow the person**: badges (including Founding Resident), total active days and, from Phase 2, profile and rank
   - Invite rewards already granted stay; moving never creates a new invite reward (12.3)
-- **Cooldown**: 90 days from the last **completed** move (cancelled moves do not count)
+- **Cooldown**: 90 days from the last **completed** move or, before any move, from the **first verification** (cancelled moves do not count)
 - **One free correction**: within **14 days of the first verification**, a user may move once without waiting for the cooldown (e.g. verified at their workplace by mistake). Once per account.
 
 ---
@@ -773,6 +777,20 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.23
+**Changed:** 6.2: checks with accuracy worse than 1 km are not counted; at most 20 checks per account per day; only residential communities count. 6.3: candidate community while verifying (most check-in days in the last 7, tie → most recent); pending contributions apply from the verification day to the projects they were given to (past days unchanged; finished projects and other communities not carried over).
+
+6.4: the cooldown also starts at the first verification (so the free correction is the only way to move within 90 days of it); the user can cancel a move themselves.
+
+**Why:** M7 needs exact rules (user decisions 2026-11-20). Read literally, the first move had no cooldown, which made the free correction meaningless.
+
+**Previous:**
+- 6.4: `- **Cooldown**: 90 days from the last **completed** move (cancelled moves do not count)`
+- 6.4: (no user cancel)
+- 6.2: (no accuracy, rate-limit or residential-only rule)
+- 6.3: (no candidate-community rule)
+- 6.3: `  - Pending contributions are applied to the community`
 
 ### 2026-11-19 — v1.22
 **Changed:** 6.1: nickname chosen on the first visit with the shirt colour (suggested nickname pre-filled, 2–16 characters, blocked-words filter, changeable later).

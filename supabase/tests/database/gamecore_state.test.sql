@@ -9,8 +9,10 @@ select plan(48);
 delete from gamecore.actions;
 delete from gamecore.projects;
 delete from gamecore.building_openings;
-delete from gamecore.players;
-delete from gamecore.membership_events;
+delete from residency.verifications;
+delete from residency.moves;
+delete from residency.check_ins;
+delete from residency.check_days;
 delete from gamecore.community_days;
 delete from gamecore.community_snapshots;
 
@@ -29,7 +31,7 @@ create function pg_temp.noon(n integer) returns timestamptz language sql as $$
   select (pg_temp.d(n)::timestamp + interval '18 hours') at time zone 'UTC'
 $$;
 create function pg_temp.join_(who integer, code text, n integer) returns void language sql as $$
-  select gamecore.choose_community_at(pg_temp.u(who), pg_temp.c(code), pg_temp.noon(n));
+  select residency.add_verified_resident_at(pg_temp.u(who), pg_temp.c(code), pg_temp.noon(n));
   select gamecore.ensure_tree(pg_temp.c(code), pg_temp.d(n));
 $$;
 -- One action by a player in a community on a day (on any of its projects).
@@ -56,7 +58,7 @@ select pg_temp.join_(1, 'MAH', 0);
 select pg_temp.join_(3, 'MAH', 0);
 select pg_temp.join_(2, 'MAH', 2);
 select pg_temp.join_(3, 'AUB', 3);
-select pg_temp.join_(3, 'AUB', 4); -- choosing the same community again adds no event
+select pg_temp.join_(3, 'AUB', 4); -- verified again in the same community: no new record
 
 select is((select array_agg(m.user_id order by m.user_id) from gamecore.members_on(pg_temp.c('MAH'), pg_temp.d(4)) m),
           array[pg_temp.u(1), pg_temp.u(2)], 'members on a day: the latest join decides');
@@ -64,10 +66,8 @@ select is((select array_agg(m.user_id order by m.user_id) from gamecore.members_
           array[pg_temp.u(1), pg_temp.u(3)], 'members before a later move are still members on earlier days');
 select is(gamecore.cumulative_residents(pg_temp.c('MAH')), 3, 'cumulative residents count everyone who ever joined');
 select is(gamecore.cumulative_residents_on(pg_temp.c('MAH'), pg_temp.d(1)), 2, 'cumulative residents on a day');
-select is((select count(*)::int from gamecore.membership_events where user_id = pg_temp.u(3)), 2, 'choosing the same community again adds no event');
-select throws_ok(
-  $$update gamecore.membership_events set joined_on = joined_on - 1$$, '42501', null, 'membership events are append-only'
-);
+select is(gamecore.cumulative_residents(pg_temp.c('AUB')), 1, 'the same person verified twice in a community counts once');
+select is(gamecore.first_day(pg_temp.c('AUB')), pg_temp.d(3), 'first resident day of a community');
 
 -- Attendance: at least half (rounded up) of the 7-day active residents (§7.5) ------------
 -- BLN: 5 residents, all act on day 0.
@@ -171,7 +171,7 @@ select is(pg_temp.state('GLA', 13) -> 'changes' -> 'opened', '[{"title": "Playgr
           'the next day lists it as unlocked, even once its construction started');
 select is(gamecore.refresh_snapshots(pg_temp.noon(12)), 8, 'the 5-minute job rebuilds every community with residents');
 select pg_temp.join_(2, 'GLA', 12);
-select ok(not exists (select 1 from gamecore.community_snapshots where community_id in (pg_temp.c('GLA'), pg_temp.c('MAH'))), 'moving drops both communities'' snapshots');
+select ok(residency.changed_at(pg_temp.c('GLA')) >= (select built_at from gamecore.community_snapshots where community_id = pg_temp.c('GLA')), 'a verification makes the community''s snapshot stale');
 select is(pg_temp.state('GLA', 12) -> 'community' ->> 'residents', '2', 'and the next read shows the new resident');
 
 select * from finish();

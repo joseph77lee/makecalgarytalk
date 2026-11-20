@@ -79,13 +79,16 @@ export interface ServerCommunityState {
   projects: ServerProject[];
   streak: ServerStreak;
   changes: ServerChanges;
-  me: { member: boolean; energy_max: number; energy_left: number } | null;
+  /** `member`: I play in this community; `pending`: my help here counts once I am verified (§6.3). */
+  me: { member: boolean; pending: boolean; energy_max: number; energy_left: number } | null;
 }
 
 export interface ServerMe {
   calgary_day: string;
   next_day_start: string;
+  /** Where I play: my verified community, or my candidate while verifying (then `pending`). */
   community_id: string | null;
+  pending: boolean;
   energy_max: number;
   energy_left: number;
 }
@@ -179,8 +182,6 @@ async function call<T>(client: SupabaseClient, fn: string, args?: Record<string,
 export const api = {
   listCommunities: (c: SupabaseClient) => call<CommunityListItem[]>(c, 'gamecore_list_communities'),
   getMe: (c: SupabaseClient) => call<ServerMe>(c, 'gamecore_get_me'),
-  chooseCommunity: (c: SupabaseClient, communityId: string) =>
-    call<ServerMe>(c, 'gamecore_choose_community', { p_community_id: communityId }),
   async getCommunityState(c: SupabaseClient, communityId: string): Promise<ServerCommunityState> {
     const data = await call<unknown>(c, 'gamecore_get_community_state', { p_community_id: communityId });
     assertCommunityState(data);

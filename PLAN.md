@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.29 |
+| Plan version | v1.32 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
-| Based on | `requirement.md` v1.22 |
-| Current module | M7 Residency (next; M6 ✅ Done) |
+| Based on | `requirement.md` v1.23 |
+| Current module | M1 🔁 Sleepy mood fix (next; M7 ✅ Done); then M12 Invites (moved before M8) |
 
 ---
 
@@ -45,7 +45,7 @@
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
 | M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ✅ |
 | M6 | Identity | FE + BE | | M4 | ✅ |
-| M7 | Residency | FE + BE | | M6 | ⬜ |
+| M7 | Residency | FE + BE | | M6 | ✅ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |
 | M9 | Village News | BE + FE | | M8 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
@@ -53,6 +53,8 @@
 | M12 | Invites | FE + BE | | M6, M7 | ⬜ |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
 | M14 | Launch Readiness | All | | All above | ⬜ |
+
+**Order after M7 (user decision 2026-11-20):** M1 🔁 Sleepy mood fix → **M12 Invites** (before M8: bringing neighbours in is the core of the game) → M8 → M9 → M10 → M11 → M13 → M14.
 
 No time estimates: with AI-assisted (vibe) coding, modules may finish faster or slower than expected. This plan tracks **order, completeness and progress**, not schedule.
 
@@ -310,21 +312,34 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Dev:** `?devuser=1|2` signs in as the seeded users (now with profiles, so they skip the first visit); without it, dev uses the real anonymous flow. A private window = a new anonymous player.
   - **Not tested / known gaps:** real Google linking and re-join (no OAuth client yet); real Turnstile keys and challenge UI; a real phone; Cloudflare-level rate limiting (deploy); account deletion with hashed identifier (§6.1) is not in M6.
 
-### M7 — Residency ⬜
+### M7 — Residency ✅
 **Goal:** Users belong to the community they live in.
 - **In scope**
-  - [ ] browser geolocation → server-side point-in-polygon (PostGIS, via Postgres function or Edge Function) → **coordinates discarded**, only community ID stored
-  - [ ] pending contributions
-  - [ ] **3 different days within 7** → Verified Resident
-  - [ ] no location checks after verification
-  - [ ] moving (`requirement.md` §6.4): user-started "I moved", stays in old community until re-verified, excluded from old community's streak/Vitality denominators during the move, auto-cancel after 7 days, 90-day cooldown from last completed move, one free correction within 14 days of first verification
-  - [ ] cumulative Verified Residents counted as distinct people per community (movers stay counted, returners not counted twice)
-  - [ ] "verify on your phone" hint
+  - [x] browser geolocation → server-side point-in-polygon (PostGIS, via Postgres function or Edge Function) → **coordinates discarded**, only community ID stored
+  - [x] pending contributions
+  - [x] **3 different days within 7** → Verified Resident
+  - [x] no location checks after verification
+  - [x] moving (`requirement.md` §6.4): user-started "I moved", stays in old community until re-verified, excluded from old community's streak/Vitality denominators during the move, auto-cancel after 7 days, 90-day cooldown from last completed move, one free correction within 14 days of first verification
+  - [x] cumulative Verified Residents counted as distinct people per community (movers stay counted, returners not counted twice)
+  - [x] "verify on your phone" hint
+  - [x] candidate community while verifying; accuracy and per-day check limits (`requirement.md` v1.23 §6.2–6.3)
+  - [x] replace the temporary manual community choice (M4); resident records move from `gamecore` to the `residency` schema, gamecore reads them through residency functions
+  - [x] local phone testing over HTTPS on the same Wi-Fi (dev only)
 - **Definition of Done**
-  - [ ] tests prove coordinates are never persisted or logged
-  - [ ] verification edge cases tested (other community visit same day, day boundary)
-  - [ ] move edge cases tested (auto-cancel at day 7, cooldown not used on cancel, free correction once only, old community keeps cumulative count, returner not double counted)
-  - [ ] user verified their own community
+  - [x] tests prove coordinates are never persisted or logged
+  - [x] verification edge cases tested (other community visit same day, day boundary)
+  - [x] move edge cases tested (auto-cancel at day 7, cooldown not used on cancel, free correction once only, old community keeps cumulative count, returner not double counted)
+  - [x] user verified their own community — user checked in from their own community on their phone over local HTTPS (day 1 of 3 counted, correct community, pending help); the remaining days were verified with simulated days
+- **Handoff**
+  - **Code:** migrations `20261120125900_gamecore_community_lookup.sql` (community id/name lookups for other modules), `20261120130000_residency_schema.sql`, `20261120130100_residency_boundaries.sql` (GENERATED by `supabase/data/build_boundaries_sql.py` from `calgary_boundaries.json`, 223 residential communities, PostGIS), `20261120130200_residency_rules.sql`, `20261120130300_gamecore_residency_inputs.sql`. Tests `supabase/tests/database/residency_rules.test.sql` (81). Frontend `frontend/src/modules/residency/` (store with injected deps, `FindCommunity`, `ResidencyChip` + sheet, `MoveSection` inside the profile sheet via `ProfileButton` children, `?devloc=` dev override).
+  - **Module boundary changed:** `gamecore.players`, `gamecore.membership_events` and `gamecore_choose_community` are gone. Residents live in `residency.verifications` (append-only; latest one = current community, first = first verification). gamecore reads them only through `residency.counted_residents_on`, `cumulative_residents_on`, `first_day`, `communities_with_residents`, `play_on`, `applied_on`, `changed_at` (one-way dependency gamecore → residency; residency only uses `gamecore.community_name` / `community_id_by_code` for reference data). Snapshots are rebuilt when `residency.changed_at` is not older than the snapshot (strict, so a change in the same transaction time rebuilds).
+  - **Pending:** `gamecore.actions.pending` is set at insert (player not verified in that community). Progress counts a pending action from `residency.applied_on` (first verification there on/after the action day) — shown the day after like all help; finished days never change.
+  - **Where a player plays:** verified → their community; verifying → candidate (pending); moving → candidate (pending), or still the old community (not pending) before any check-in elsewhere; none → `community_id: null` (frontend shows "Find your community"; "Just look around first" opens the community list view-only — my avatar is hidden and taps do nothing).
+  - **Seed/tests:** `residency.add_verified_resident_at(uid, community, now)` makes a Verified Resident directly (seed and DB tests only; not exposed).
+  - **Dev:** `?devloc=MAH` uses a point inside that community (dev builds only; production drops it). `npm run dev:phone` → `https://<LAN IP>:5181` (self-signed cert, `/supabase` proxy) for real phone GPS on the same Wi-Fi. The scratch "next day" script must also shift `residency.check_days`, `check_ins`, `verifications`, `moves`.
+  - **Playwright gotcha:** Chromium's location emulation stops answering once the Turnstile iframe has loaded (also for a direct `getCurrentPosition` call), so screen checks use `?devloc=`. The real browser prompt path is covered by the user's phone test.
+  - **Not tested / known gaps:** a real phone (DoD item, waiting for the user); the browser permission prompt in automation (see gotcha); Postgres/API gateway logs were not inspected — tests prove coordinates are not stored, not returned and not raised as notices, and PostgREST passes RPC arguments as bound parameters; location spoofing is accepted for the MVP; Founding Resident badge, farewell line and houses moving are later modules (M8, M9); real 7-day runs (all day logic verified with time travel).
+
 
 ### M8 — Residents & Villagers ⬜
 **Goal:** Show who lives here and what they did.
@@ -428,6 +443,44 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.32
+**Changed:** M7 ✅ Done (user confirmed on their phone). Order after M7: M1 🔁 Sleepy mood fix, then M12 Invites before M8.
+
+**Why:** User decisions 2026-11-20: the Gloomy look is too dark for a newcomer's first impression; bringing neighbours in is the core of the game, so invites come next.
+
+**Previous:**
+- Header: `| Plan version | v1.31 |`
+- Header: `| Current module | M7 Residency (🟨 Ready for playtest; waiting for the phone check) |`
+- Overview: `| M7 | Residency | FE + BE | | M6 | 🟨 |`
+- Overview: (no order note; modules in number order)
+- M7: `### M7 — Residency 🟨`
+- M7: `  - [ ] user verified their own community`
+
+### 2026-11-20 — v1.31
+**Changed:** M7 items ticked except the DoD "user verified their own community" (needs the user's phone); status 🟨 with Handoff.
+
+**Why:** M7 implemented and verified locally (tests and screen checks with simulated days).
+
+**Previous:**
+- Header: `| Plan version | v1.30 |`
+- Header: `| Current module | M7 Residency (in progress; M6 ✅ Done) |`
+- Overview: `| M7 | Residency | FE + BE | | M6 | 🟦 |`
+- M7: `### M7 — Residency 🟦`
+- M7: all checklist items were `- [ ]`; no Handoff
+
+### 2026-11-20 — v1.30
+**Changed:** "Based on" → `requirement.md` v1.23. M7 🟦 in progress; scope items for the candidate community and check limits, replacing the manual choice (resident records move to `residency`), and local phone testing over HTTPS.
+
+**Why:** M7 started; user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.29 |`
+- Header: `| Based on | `requirement.md` v1.22 |`
+- Header: `| Current module | M7 Residency (next; M6 ✅ Done) |`
+- Overview: `| M7 | Residency | FE + BE | | M6 | ⬜ |`
+- M7: `### M7 — Residency ⬜`
+- M7: (no items for candidate community, replacing the manual choice, or phone testing)
 
 ### 2026-11-20 — v1.29
 **Changed:** M6 ✅ Done (user confirmed). Real verification of Google linking / re-join and the DoD "linking Google keeps progress" moved to M14 (code stays in M6). Header → M7 next.

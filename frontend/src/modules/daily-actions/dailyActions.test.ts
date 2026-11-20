@@ -45,7 +45,7 @@ function serverState(patch: Partial<ServerCommunityState> = {}): ServerCommunity
     ],
     streak: { days: 2, today: { acted: 1, active_residents: 4, needed: 2, attended: false } },
     changes: { actions: 0, progress: [], built: [], opened: [], new_residents: 0, land_grew: false, vitality_before: null },
-    me: { member: true, energy_max: 3, energy_left: 3 },
+    me: { member: true, pending: false, energy_max: 3, energy_left: 3 },
     ...patch,
   };
 }
@@ -217,14 +217,13 @@ describe('filterCommunities', () => {
 
 function setup(opts: { me?: { community_id: string | null }; submit?: (actions: unknown) => Promise<ServerSubmitResult>; state?: ServerCommunityState } = {}) {
   let state = opts.state ?? serverState();
+  let meCommunity: string | null = opts.me ? opts.me.community_id : 'c1';
   const rpc = vi.fn(async (fn: string, args: Record<string, unknown>) => {
     switch (fn) {
       case 'gamecore_get_me':
-        return { data: { calgary_day: DAY, next_day_start: NEXT, community_id: opts.me ? opts.me.community_id : 'c1', energy_max: 3, energy_left: 3 }, error: null };
+        return { data: { calgary_day: DAY, next_day_start: NEXT, community_id: meCommunity, pending: false, energy_max: 3, energy_left: 3 }, error: null };
       case 'gamecore_list_communities':
         return { data: [{ id: 'c1', code: 'MAH', name: 'Mahogany', sector: 'Southeast', population: 1 }], error: null };
-      case 'gamecore_choose_community':
-        return { data: { community_id: args.p_community_id }, error: null };
       case 'gamecore_get_community_state':
         return { data: state, error: null };
       case 'gamecore_submit_actions':
@@ -258,7 +257,7 @@ function setup(opts: { me?: { community_id: string | null }; submit?: (actions: 
     storage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => void store.set(k, v) },
   };
   const useStore = createDailyActionsStore(deps);
-  return { useStore, rpc, timers, arrivals, helped, deps, storage: store, setState: (s: ServerCommunityState) => (state = s) };
+  return { useStore, rpc, timers, arrivals, helped, deps, storage: store, setState: (s: ServerCommunityState) => (state = s), setMe: (id: string | null) => (meCommunity = id) };
 }
 
 const settle = () => new Promise((r) => setTimeout(r, 0));
@@ -273,12 +272,31 @@ describe('daily actions store', () => {
     expect(t.timers.at(-1)?.ms).toBe(10 * 3600_000 + MIDNIGHT_GRACE_MS);
   });
 
-  it('asks to choose a community when the player has none', async () => {
+  it('without a community it waits for Residency, and can look around view-only', async () => {
     const t = setup({ me: { community_id: null } });
     await t.useStore.getState().init();
-    expect(t.useStore.getState().status).toBe('pick-community');
-    await t.useStore.getState().chooseCommunity('c1');
+    expect(t.useStore.getState().status).toBe('no-community');
+    await t.useStore.getState().openLookAround();
+    expect(t.useStore.getState().pickerOpen).toBe(true);
+    t.setState({ ...serverState(), me: { member: false, pending: false, energy_max: 3, energy_left: 3 } });
+    await t.useStore.getState().viewCommunity('c1');
     expect(t.useStore.getState().status).toBe('ready');
+    expect(t.useStore.getState().pickerOpen).toBe(false);
+    // looking around: tapping a project does not spend energy
+    t.useStore.getState().act(0);
+    expect(energyShown(t.useStore.getState().queue!)).toBe(3);
+    expect(t.useStore.getState().toast?.text).toMatch(/Find your community/);
+    expect(t.rpc.mock.calls.some(([fn]) => fn === 'gamecore_choose_community')).toBe(false);
+  });
+
+  it('reload follows where Residency says the player plays', async () => {
+    const t = setup({ me: { community_id: null } });
+    await t.useStore.getState().init();
+    expect(t.useStore.getState().status).toBe('no-community');
+    t.setMe('c1');
+    await t.useStore.getState().reload();
+    expect(t.useStore.getState().status).toBe('ready');
+    expect(t.useStore.getState().view?.communityName).toBe('Mahogany');
   });
 
   it('a tap spends energy at once, walks the avatar, and sends after arrival', async () => {
@@ -365,7 +383,7 @@ describe('daily actions store', () => {
   });
 
   it('without energy a tap only explains when energy returns', async () => {
-    const t = setup({ state: serverState({ me: { member: true, energy_max: 3, energy_left: 0 } }) });
+    const t = setup({ state: serverState({ me: { member: true, pending: false, energy_max: 3, energy_left: 0 } }) });
     await t.useStore.getState().init();
     t.useStore.getState().act(0);
     expect(t.deps.moveTo).not.toHaveBeenCalled();
@@ -373,12 +391,12 @@ describe('daily actions store', () => {
   });
 
   it('the midnight refresh shows yesterday\'s help as progress and restores energy', async () => {
-    const t = setup({ state: serverState({ me: { member: true, energy_max: 3, energy_left: 0 } }) });
+    const t = setup({ state: serverState({ me: { member: true, pending: false, energy_max: 3, energy_left: 0 } }) });
     await t.useStore.getState().init();
     const next = serverState({
       calgary_day: '2026-12-02',
       next_day_start: '2026-12-03T06:00:00+00:00',
-      me: { member: true, energy_max: 3, energy_left: 3 },
+      me: { member: true, pending: false, energy_max: 3, energy_left: 3 },
     });
     next.projects[0].progress = 15;
     next.buildings[1].progress = 0.75;

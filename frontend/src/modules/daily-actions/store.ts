@@ -21,7 +21,8 @@ import {
 import { api, type CommunityListItem, type ServerCommunityState } from './api';
 import { toViewState } from './toViewState';
 
-export type SessionStatus = 'loading' | 'no-config' | 'signed-out' | 'pick-community' | 'ready' | 'error';
+/** `no-community`: the player has no community yet (Residency finds it) and is not looking around. */
+export type SessionStatus = 'loading' | 'no-config' | 'signed-out' | 'no-community' | 'ready' | 'error';
 
 export interface DailyActionsDeps {
   /** Resolves the Supabase client, or null when the app has no configuration. */
@@ -47,14 +48,20 @@ export interface DailyActionsState {
   status: SessionStatus;
   error: string | null;
   communities: CommunityListItem[] | null;
+  /** The "look around" list is open (view any community without joining). */
+  pickerOpen: boolean;
   server: ServerCommunityState | null;
   view: CommunityViewState | null;
   plan: IslandPlan | null;
   queue: QueueState | null;
   toast: { id: number; text: string } | null;
   init: () => Promise<void>;
-  chooseCommunity: (communityId: string) => Promise<void>;
-  openCommunityPicker: () => Promise<void>;
+  /** Reloads where the player plays (after a residency change). */
+  reload: () => Promise<void>;
+  openLookAround: () => Promise<void>;
+  closeLookAround: () => void;
+  /** Shows any community, view only. */
+  viewCommunity: (communityId: string) => Promise<void>;
   refresh: () => Promise<void>;
   act: (projectIndex: number) => void;
   flush: () => Promise<void>;
@@ -156,6 +163,7 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
       status: 'loading',
       error: null,
       communities: null,
+      pickerOpen: false,
       server: null,
       view: null,
       plan: null,
@@ -167,32 +175,45 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
           const c = deps.getClient();
           if (!c) return set({ status: 'no-config' });
           if (!(await deps.ensureSession(c))) return set({ status: 'signed-out' });
-          const me = await api.getMe(c);
-          if (!me.community_id) {
-            set({ communities: await api.listCommunities(c), status: 'pick-community' });
-            return;
+          await get().reload();
+        } catch (e) {
+          set({ status: 'error', error: e instanceof Error ? e.message : String(e) });
+        }
+      },
+
+      async reload() {
+        try {
+          const me = await api.getMe(client());
+          if (me.community_id) {
+            await loadState(me.community_id);
+          } else if (!get().server) {
+            set({ status: 'no-community' });
+          } else {
+            await get().refresh(); // keep looking around
           }
-          await loadState(me.community_id);
         } catch (e) {
           set({ status: 'error', error: e instanceof Error ? e.message : String(e) });
         }
       },
 
-      async openCommunityPicker() {
+      async openLookAround() {
         try {
-          set({ communities: get().communities ?? (await api.listCommunities(client())), status: 'pick-community' });
+          set({ communities: get().communities ?? (await api.listCommunities(client())), pickerOpen: true });
         } catch (e) {
-          set({ status: 'error', error: e instanceof Error ? e.message : String(e) });
+          get().showToast(`Could not load communities: ${e instanceof Error ? e.message : String(e)}`);
         }
       },
 
-      async chooseCommunity(communityId) {
+      closeLookAround() {
+        set({ pickerOpen: false });
+      },
+
+      async viewCommunity(communityId) {
         try {
-          set({ status: 'loading' });
-          await api.chooseCommunity(client(), communityId);
+          set({ pickerOpen: false });
           await loadState(communityId);
         } catch (e) {
-          set({ status: 'error', error: e instanceof Error ? e.message : String(e) });
+          get().showToast(`Could not load that community: ${e instanceof Error ? e.message : String(e)}`);
         }
       },
 
@@ -210,6 +231,10 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
         const { server, queue, plan, view } = get();
         const project = server?.projects[projectIndex];
         if (!server || !queue || !project) return;
+        if (!server.me?.member) {
+          get().showToast('You are looking around. Find your community to help build it.');
+          return;
+        }
         if (!canAct(queue)) {
           const wait = formatCountdown(msUntil(new Date(server.next_day_start), deps.now()));
           get().showToast(`No energy left today. New energy in ${wait}.`);

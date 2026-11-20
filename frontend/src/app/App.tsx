@@ -3,6 +3,7 @@ import { Avatar, moveTo } from '../modules/avatar';
 import { BuildMap, ChangesPanel, StreakBar } from '../modules/community-state';
 import { ActionBar, CommunityPicker, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
+import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import {
   IslandDevPanel,
   IslandHud,
@@ -48,9 +49,17 @@ function LiveApp() {
   const markChangesSeen = useIdentity((s) => s.markChangesSeen);
   const plan = useDailyActions((s) => s.plan);
   const init = useDailyActions((s) => s.init);
-  const openPicker = useDailyActions((s) => s.openCommunityPicker);
+  const openLookAround = useDailyActions((s) => s.openLookAround);
+  const residencyStatus = useResidency((s) => s.status?.status);
   useEffect(() => {
     void init();
+    void useResidency.getState().init();
+    // Where the player plays comes from Residency: reload the game when it changes
+    // (first check-in, verification, move started/completed/cancelled).
+    return useResidency.subscribe((s, prev) => {
+      const key = (r: typeof s.status) => (r ? `${r.play_community?.id ?? ''}:${r.pending}` : null);
+      if (prev.status && key(s.status) !== key(prev.status)) void useDailyActions.getState().reload();
+    });
   }, [init]);
 
   return (
@@ -59,8 +68,22 @@ function LiveApp() {
         <ExampleView plan={plan} communityName={view.communityName} onBack={() => setExample(false)} />
       ) : (
         <>
-          {view && plan && <Island plan={plan} state={view} />}
-          {view && <IslandHud state={view} left={<ProfileButton />} />}
+          {view && plan && <Island plan={plan} state={view} showAvatar={server?.me?.member === true} />}
+          {view && (
+            <IslandHud
+              state={view}
+              left={
+                <ProfileButton>
+                  <MoveSection />
+                </ProfileButton>
+              }
+            />
+          )}
+          {view && (
+            <div className="pointer-events-none absolute inset-x-0 top-[7.25rem] z-30 flex justify-center">
+              <ResidencyChip />
+            </div>
+          )}
           {status === 'ready' && server && (
             <>
               <StreakBar streak={server.streak} nextLandResidents={server.community.next_land_residents} onOpenMap={() => setMapOpen(true)} />
@@ -82,18 +105,10 @@ function LiveApp() {
           )}
         </>
       )}
-      {status === 'pick-community' && <CommunityPicker />}
+      {status === 'no-community' && residencyStatus === 'new' && <FindCommunity onLookAround={() => void openLookAround()} />}
+      <CommunityPicker />
       <SessionScreen />
       <Toast />
-      {import.meta.env.DEV && status === 'ready' && !example && (
-        <button
-          type="button"
-          onClick={() => void openPicker()}
-          className="absolute bottom-40 left-3 z-30 rounded-full bg-white/80 px-3 py-1 text-[11px] text-slate-600 shadow-sm"
-        >
-          Switch community (dev)
-        </button>
-      )}
     </main>
   );
 }
@@ -133,11 +148,12 @@ function ExampleView({ plan, communityName, onBack }: { plan: IslandPlan; commun
   );
 }
 
-function Island({ plan, state }: { plan: IslandPlan; state: CommunityViewState }) {
+/** My avatar walks only in the community I play in (not while looking around elsewhere). */
+function Island({ plan, state, showAvatar = true }: { plan: IslandPlan; state: CommunityViewState; showAvatar?: boolean }) {
   const profile = useIdentity((s) => s.profile);
   return (
-    <IslandView plan={plan} state={state} onTileTap={moveTo}>
-      <Avatar nickname={profile?.nickname ?? 'You'} shirtColor={shirtColor(profile?.shirt)} />
+    <IslandView plan={plan} state={state} onTileTap={showAvatar ? moveTo : undefined}>
+      {showAvatar && <Avatar nickname={profile?.nickname ?? 'You'} shirtColor={shirtColor(profile?.shirt)} />}
     </IslandView>
   );
 }
