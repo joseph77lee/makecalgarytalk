@@ -14,11 +14,14 @@ client never computes time zones; it only counts down to `next_day_start`.
 | `gamecore_list_communities()` | anon, authenticated | All game communities |
 | `gamecore_get_community_state(p_community_id)` | anon, authenticated | Buildings, streak, Vitality, changes, my energy |
 | `gamecore_submit_actions(p_actions)` | authenticated | Spend energy on projects |
-| `gamecore_get_me()` | authenticated | My community and energy |
-| `gamecore_choose_community(p_community_id)` | authenticated | **Temporary until M7** |
+| `gamecore_get_me()` | authenticated | The community I play in, pending flag, energy |
 | `identity_get_profile()` | authenticated | My nickname, shirt, account type |
 | `identity_save_profile(p_nickname, p_shirt)` | authenticated | First-visit setup and later changes |
 | `identity_mark_changes_seen()` | authenticated | "What changed since yesterday" seen today |
+| `residency_get_status()` | authenticated | My residency: verifying, verified, moving |
+| `residency_check_location(p_lat, p_lon, p_accuracy)` | authenticated | Location check-in (coordinates never stored) |
+| `residency_start_move()` | authenticated | "I moved" |
+| `residency_cancel_move()` | authenticated | Cancel my move |
 
 **Accounts (Identity, M6):** every visitor gets a Supabase Auth account on the first visit
 with `signInAnonymously` (no form). Sign-ups need a Cloudflare **Turnstile** token
@@ -71,7 +74,7 @@ constructions start while fewer than 3 are active; these rows are written once).
     { "id": "uuid", "building_key": "welcome-sign", "title": "Welcome sign", "level": 2,
       "required": 4, "progress": 1, "stage": "scaffolding" }
   ],
-  "me": { "member": true, "energy_max": 3, "energy_left": 2 }
+  "me": { "member": true, "pending": false, "energy_max": 3, "energy_left": 2 }
 }
 ```
 - `community.residents`: cumulative residents = distinct people who have ever joined
@@ -98,7 +101,9 @@ constructions start while fewer than 3 are active; these rows are written once).
   `gamecore_submit_actions`. `progress` counts actions from **before today** (today's
   actions show tomorrow), capped at `required`. `stage`: `scaffolding` below half, `frame`
   from half. A building is `built` the day after its goal was reached.
-- `me`: `null` for visitors (not signed in).
+- `me`: `null` for visitors (not signed in). `member`: this is the community I play in
+  (otherwise I am only looking around and cannot act). `pending`: my actions here are saved but
+  count only once I am a Verified Resident here (§6.3).
 - Errors: unknown community → `P0002`.
 
 ## `gamecore_submit_actions(p_actions jsonb)`
@@ -110,7 +115,7 @@ At most 10 entries per call. Each entry is processed in order and gets a result:
 ```json
 {
   "calgary_day": "2026-12-01", "next_day_start": "2026-12-02T06:00:00+00:00",
-  "energy_max": 3, "energy_left": 0,
+  "pending": false, "energy_max": 3, "energy_left": 0,
   "results": [
     { "id": "…", "status": "accepted" },
     { "id": "…", "status": "duplicate" },
@@ -124,7 +129,7 @@ At most 10 entries per call. Each entry is processed in order and gets a result:
 | `accepted` | Stored; one energy spent |
 | `duplicate` | This id was already accepted for you (safe retry; no energy spent, even after midnight) |
 | `rejected` · `no_energy` | 3 actions already today (Calgary day) |
-| `rejected` · `not_member` | You have not joined a community |
+| `rejected` · `not_member` | You have no community yet (no counted location check-in) |
 | `rejected` · `other_community` | The project (building) belongs to another community |
 | `rejected` · `project_not_active` | The construction is finished (goal reached) |
 | `rejected` · `project_not_found` | Unknown project id |
@@ -135,17 +140,18 @@ At most 10 entries per call. Each entry is processed in order and gets a result:
   reuse it on retries.
 - The action's day is the **server's** Calgary day when it arrives. An action queued
   offline before midnight and sent after midnight counts for the new day.
+- Actions go to the community I play in (`gamecore_get_me`). While verifying, they are stored
+  with `pending = true` and count toward progress from the day I am verified there (shown the
+  day after, like all help); past days' attendance and Vitality do not change.
 - Errors: not signed in → `28000`; body not an array or more than 10 entries → `22023`.
 
 ## `gamecore_get_me()`
 ```json
-{ "calgary_day": "2026-12-01", "next_day_start": "…", "community_id": "uuid | null", "energy_max": 3, "energy_left": 3 }
+{ "calgary_day": "2026-12-01", "next_day_start": "…", "community_id": "uuid | null", "pending": true, "energy_max": 3, "energy_left": 3 }
 ```
-
-## `gamecore_choose_community(p_community_id uuid)` — temporary
-Joins (or switches to) a community chosen from the list; returns the same shape as
-`gamecore_get_me()`. **Residency (M7) replaces this** with location-based verification and
-the moving rules (§6.4).
+`community_id` comes from Residency: my verified community, or my candidate community while
+verifying or moving (then `pending: true`). While moving and before any check-in elsewhere, I
+still play in my old community (`pending: false`). `null` = no community yet.
 
 ## `identity_get_profile()`
 ```json
@@ -168,6 +174,56 @@ Creates or updates my profile. Returns `{ "ok": true, ...identity_get_profile }`
 ## `identity_mark_changes_seen()`
 Records today's Calgary day as seen; returns the same shape as `identity_get_profile()`.
 
+## `residency_get_status()`
+```json
+{
+  "calgary_day": "2026-12-03",
+  "status": "verifying",
+  "community": null,
+  "candidate": { "id": "uuid", "name": "Mahogany", "days": 2, "needed": 3, "checked_today": true },
+  "play_community": { "id": "uuid", "name": "Mahogany" },
+  "pending": true,
+  "move": null,
+  "can_move": { "allowed": false, "reason": "not_verified" },
+  "checks_left": 19
+}
+```
+- `status`: `new` (no counted check-in) · `verifying` · `verified` · `moving`.
+- `community`: my verified community with `verified_on`, or `null`.
+- `candidate`: while verifying or moving, the community with the most check-in days in the last
+  7 Calgary days (tie → most recent check-in; during a move only days since it started and not
+  the old community).
+- `move`: `{ started_on, last_day, free_correction }` while moving (cancelled automatically
+  after `last_day`).
+- `can_move`: `{ allowed: true, free_correction, correction_until? }` or
+  `{ allowed: false, reason: not_verified | moving | cooldown, available_on? }`.
+
+## `residency_check_location(p_lat float8, p_lon float8, p_accuracy float8)`
+The server finds the residential community that contains the point and **forgets the
+coordinates**: they are never written to a table, a log or the response. Only "this player
+checked in from this community on this Calgary day" is kept (no clock time). The frontend
+rounds coordinates to 4 decimals (about 11 m) before sending.
+
+Returns the status above plus `result` and `checked_community` (`{id, name}` or `null`):
+
+| `result` | Meaning |
+|---|---|
+| `counted` | Check-in counted for `checked_community` |
+| `verified` | That was the 3rd day within 7: now a Verified Resident (or the move completed) |
+| `not_needed` | Already verified and not moving: no location checks any more (not counted) |
+| `limit` | More than 20 checks today (Calgary day) |
+| `inaccurate` | Accuracy missing or worse than 1 km ("verify on your phone") |
+| `no_community` | Not inside a Calgary residential community |
+| `current_community` | Moving, but this is the community I am moving from |
+
+Errors: not signed in → `28000`; latitude/longitude out of range, NaN or a negative accuracy →
+`22023`.
+
+## `residency_start_move()` / `residency_cancel_move()`
+Return the status plus `ok`. Not allowed → `{ ok: false, problem }` with
+`not_verified | moving | cooldown` (start) or `not_moving` (cancel). A cancelled move (by the
+player or after 7 days) loses nothing and does not start the cooldown.
+
 ---
 
 ## Rules (starting values, `requirement.md` §7.7, §8, §22.8)
@@ -184,9 +240,15 @@ Records today's Calgary day as seen; returns the same shape as `identity_get_pro
   Active residents = members whose last active day (later of joining and last action) is
   within the last 30 Calgary days.
 - Land tiers (cumulative residents → land stage): 0, 3, 6, 11, 26, 51 → 0–5.
-- **Members** come from membership events (one row per join into a different community,
-  append-only). Members on a day = players whose latest join on or before that day was into
-  the community. **Temporary** until M7 (Verified Residents, moves in progress).
+- **Members** are Verified Residents (Residency, M7): players whose latest verification on or
+  before that day was into the community, **excluding players with a move in progress** (§6.4).
+  Cumulative residents = distinct people ever verified there (movers stay counted, returners
+  count once). gamecore reads these only through `residency.*` functions.
+- **Verification** (§6.3): check-ins from the same community on 3 different Calgary days within
+  7 (today and the 6 days before). **Moving** (§6.4): started by the player; re-verification in
+  another community from the move's start; cancelled after 7 days or by the player; cooldown 90
+  days from the last completed move, or from the first verification before any move; one free
+  correction within 14 days of the first verification.
 - **Community streak** (§7.5): an attendance day = at least half (rounded up) of the members
   who acted within the last 7 Calgary days acted that day; 0 active → not an attendance day.
 - **Vitality** (§7.4): daily ratio = members who acted ÷ members whose last active day (later
@@ -199,10 +261,17 @@ Records today's Calgary day as seen; returns the same shape as `identity_get_pro
 ## Local development
 - `supabase db reset` applies migrations and `supabase/seed.sql`, which creates two **local-only**
   dev users, `dev@makecalgarytalk.local` and `dev2@makecalgarytalk.local` (password
-  `dev-password`), members of Mahogany with profiles ("Dev One", "Dev Two").
+  `dev-password`), Verified Residents of Mahogany with profiles ("Dev One", "Dev Two").
 - The app signs in as them only with `?devuser=1` or `?devuser=2` (dev builds). Without the
   parameter it uses the real flow: anonymous account → first-visit example → profile setup.
   A private window gives a fresh anonymous player.
 - Turnstile runs locally with Cloudflare's public **test** keys (always pass): the secret in
   `supabase/config.toml`, the site key in `frontend/.env.local` (`VITE_TURNSTILE_SITE_KEY`).
   The browser loads the widget from `challenges.cloudflare.com`, so local play needs internet.
+- **Location in dev:** `?devloc=MAH` (dev builds only) pretends the browser is inside that
+  community (any community code); the server still checks the point. Without it the browser's
+  real location is used (computers locate by Wi-Fi and can be off).
+- **Phone testing on the same Wi-Fi:** `npm run dev:phone` (in `frontend/`) serves
+  `https://<computer's LAN IP>:5181` with a self-signed certificate (accept the warning once on
+  the phone) and proxies `/supabase` to the local API, so the phone's GPS works (browsers allow
+  location only on https). Nothing is exposed outside the local network.

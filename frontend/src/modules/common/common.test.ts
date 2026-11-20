@@ -28,6 +28,17 @@ describe('readSupabaseConfig', () => {
     });
   });
 
+  it('resolves a path URL (phone testing through the dev proxy) against the page origin', () => {
+    expect(readSupabaseConfig({ VITE_SUPABASE_URL: '/supabase', VITE_SUPABASE_PUBLISHABLE_KEY: key }, 'https://192.168.1.20:5181')).toEqual({
+      ok: true,
+      config: { url: 'https://192.168.1.20:5181/supabase', publishableKey: key },
+    });
+    expect(readSupabaseConfig({ VITE_SUPABASE_URL: url, VITE_SUPABASE_PUBLISHABLE_KEY: key }, 'https://x')).toEqual({
+      ok: true,
+      config: { url, publishableKey: key },
+    });
+  });
+
   it.each(['sb_secret_123', 'eyJ.role-service_role.sig'])('refuses a secret key (%s)', (secret) => {
     expect(() => readSupabaseConfig({ VITE_SUPABASE_URL: url, VITE_SUPABASE_PUBLISHABLE_KEY: secret })).toThrow(
       /secret Supabase key/,

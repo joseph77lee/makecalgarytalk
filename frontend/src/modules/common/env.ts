@@ -15,8 +15,13 @@ export type ConfigResult =
 
 type EnvSource = Record<string, string | undefined>;
 
-export function readSupabaseConfig(env: EnvSource = import.meta.env): ConfigResult {
-  const url = env.VITE_SUPABASE_URL?.trim();
+/**
+ * `VITE_SUPABASE_URL` may be a path such as `/supabase` (phone testing through the dev server's
+ * proxy); it is then resolved against the page's origin.
+ */
+export function readSupabaseConfig(env: EnvSource = import.meta.env, origin: string | undefined = globalThis.location?.origin): ConfigResult {
+  const raw = env.VITE_SUPABASE_URL?.trim();
+  const url = raw?.startsWith('/') && origin ? origin + raw : raw;
   const publishableKey = env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
   const missing = [
     ...(url ? [] : ['VITE_SUPABASE_URL']),

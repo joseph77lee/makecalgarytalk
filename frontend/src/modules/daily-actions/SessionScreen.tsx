@@ -5,7 +5,7 @@ export function SessionScreen() {
   const status = useDailyActions((s) => s.status);
   const error = useDailyActions((s) => s.error);
   const init = useDailyActions((s) => s.init);
-  if (status === 'ready' || status === 'pick-community') return null;
+  if (status === 'ready' || status === 'no-community') return null;
   const text = {
     loading: 'Loading your community…',
     'no-config': 'The app is not configured (frontend/.env.local is missing).',

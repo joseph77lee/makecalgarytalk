@@ -12,6 +12,8 @@ export function ActionBar() {
   if (!server || !queue) return null;
 
   const energy = energyShown(queue);
+  const viewOnly = !server.me?.member;
+  const pending = server.me?.pending === true;
   const resetIn = formatCountdown(msUntil(new Date(server.next_day_start), now));
 
   return (
@@ -31,7 +33,7 @@ export function ActionBar() {
             ))}
           </div>
           <span className="text-[11px] text-slate-500">
-            {energy > 0 ? 'Tap a project to help' : `New energy in ${resetIn}`}
+            {viewOnly ? 'Looking around (view only)' : energy > 0 ? 'Tap a project to help' : `New energy in ${resetIn}`}
           </span>
         </div>
         <div className="grid grid-cols-3 gap-1.5">
@@ -44,9 +46,9 @@ export function ActionBar() {
                 key={p.id}
                 type="button"
                 onClick={() => act(i)}
-                aria-disabled={energy === 0}
+                aria-disabled={energy === 0 || viewOnly}
                 className={`group flex min-w-0 flex-col gap-1 rounded-2xl bg-slate-50 p-2 text-left transition active:scale-95 ${
-                  energy === 0 ? 'opacity-60' : ''
+                  energy === 0 || viewOnly ? 'opacity-60' : ''
                 }`}
               >
                 <span className="flex min-w-0 items-center gap-1 text-xs font-semibold text-slate-700">
@@ -62,8 +64,11 @@ export function ActionBar() {
                     {p.progress}/{p.required}
                   </span>
                   {mine + waiting > 0 && (
-                    <span className="rounded-full bg-emerald-100 px-1.5 font-semibold text-emerald-700" title="Shows on the bar tomorrow">
-                      +{mine + waiting} today
+                    <span
+                      className={`rounded-full px-1.5 font-semibold ${pending ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}
+                      title={pending ? 'Saved: counts once you are a Verified Resident' : 'Shows on the bar tomorrow'}
+                    >
+                      +{mine + waiting} {pending ? 'saved' : 'today'}
                     </span>
                   )}
                 </span>
@@ -71,7 +76,11 @@ export function ActionBar() {
             );
           })}
         </div>
-        <p className="mt-1.5 px-1 text-center text-[10px] text-slate-400">Today's help shows on the island tomorrow.</p>
+        {pending ? (
+          <p className="mt-1.5 px-1 text-center text-[10px] text-amber-700">Your help is saved and counts once you are a Verified Resident here.</p>
+        ) : (
+          <p className="mt-1.5 px-1 text-center text-[10px] text-slate-400">Today's help shows on the island tomorrow.</p>
+        )}
       </div>
     </div>
   );

@@ -102,7 +102,7 @@ export function syncEnergy(q: QueueState, energyLeft: number, energyMax: number,
 export const REJECT_MESSAGES: Record<RejectReason, string> = {
   no_energy: "You're out of energy for today.",
   project_not_active: 'That project was just finished!',
-  not_member: 'Join a community first.',
+  not_member: 'Find your community first.',
   other_community: 'You can only help your own community.',
   project_not_found: 'That project no longer exists.',
   id_conflict: 'Something went wrong. Please try again.',

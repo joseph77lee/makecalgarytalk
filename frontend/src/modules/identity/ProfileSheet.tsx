@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { ProfileForm } from './ProfileForm';
 import { GOOGLE_LINKING, useIdentity } from './liveStore';
 import { shirtColor } from './shirts';
 
-/** Top-left chip with my nickname; opens a sheet to change it and to link Google. */
-export function ProfileButton() {
+/** Top-left chip with my nickname; opens a sheet to change it and to link Google. `children` adds sections (e.g. my community). */
+export function ProfileButton({ children }: { children?: ReactNode }) {
   const profile = useIdentity((s) => s.profile);
   const [open, setOpen] = useState(false);
   if (!profile) return null;
@@ -21,12 +21,12 @@ export function ProfileButton() {
         <span className="h-7 w-7 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: shirtColor(profile.shirt) }} aria-hidden />
       </button>
       {/* Portal: the chip sits inside the small top bar; the sheet must cover the whole screen. */}
-      {open && createPortal(<ProfileSheet onClose={() => setOpen(false)} />, document.body)}
+      {open && createPortal(<ProfileSheet onClose={() => setOpen(false)}>{children}</ProfileSheet>, document.body)}
     </>
   );
 }
 
-function ProfileSheet({ onClose }: { onClose: () => void }) {
+function ProfileSheet({ onClose, children }: { onClose: () => void; children?: ReactNode }) {
   const profile = useIdentity((s) => s.profile);
   const isAnonymous = useIdentity((s) => s.isAnonymous);
   const saveProfile = useIdentity((s) => s.saveProfile);
@@ -53,6 +53,7 @@ function ProfileSheet({ onClose }: { onClose: () => void }) {
             return err;
           }}
         />
+        {children}
         {GOOGLE_LINKING && (
           <div className="mt-4 border-t border-slate-100 pt-4">
             {isAnonymous ? (
