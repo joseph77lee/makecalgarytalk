@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.32 |
+| Plan version | v1.33 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
-| Based on | `requirement.md` v1.23 |
-| Current module | M1 🔁 Sleepy mood fix (next; M7 ✅ Done); then M12 Invites (moved before M8) |
+| Based on | `requirement.md` v1.24 |
+| Current module | M1 🔁 Sleepy mood fix (🟨 Ready for review); then M12 Invites (moved before M8) |
 
 ---
 
@@ -39,7 +39,7 @@
 | # | Module | Layer | Core? | Depends on | Status |
 |---|---|---|---|---|---|
 | M0 | Foundation | FE + Supabase + infra | Base | — | ✅ |
-| M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🔁 |
 | M2 | Avatar | FE (R3F) | ⭐ Core | M1 | ✅ |
 | M3 | Game Core | BE | ⭐ Core | M0 | ✅ |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
@@ -103,7 +103,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
   - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
-### M1 — Island View ⭐ ✅
+### M1 — Island View ⭐ 🔁
 **Reopened 2026-11-19** (`requirement.md` v1.18 §7.6–7.8, §20.4; branch `fix/m1-real-shape-islands`, after M4 is merged). The original items below stay ticked; the rework:
 - **In scope (rework)**
   - [x] Island from the **real community boundary**: rasterize to ~1,024 tiles (equal max land), smooth thin spurs, keep the largest part, centre = farthest from the edge, reveal order by walking distance; land tiers 64 / 144 / 256 / 400 / 676 / all
@@ -139,7 +139,8 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] Island of size N×N (tiers from `requirement.md` §7.8) with layered dirt
   - [x] **Asset registry**: asset key → box model React component (house, building, silhouette, tree, construction site, sign, mini villager)
   - [x] Render entirely from a **mock community state JSON** (no backend yet)
-  - [x] 3 Vitality moods (Lively / Normal / Gloomy) change colours and props
+  - [x] 3 Vitality moods (Lively / Normal / Sleepy) change colours and props
+  - [x] 🔁 Sleepy (was Gloomy, requirement v1.24): snowy winter-evening palette instead of grey; "<Community> is sleepy. Help today to wake it up!" line in the streak bar (branch `fix/m1-sleepy-mood`)
   - [x] Island growth animation when N increases
   - [x] Labels and speech bubbles via drei `Html`, with a show/hide labels toggle (`requirement.md` §10.1)
   - [x] Instanced rendering for tiles and repeated boxes (raw `InstancedMesh`, see Change Log v1.11); animations in `useFrame` with refs (no per-frame React state); phone-size viewport check
@@ -443,6 +444,19 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.33
+**Changed:** "Based on" → `requirement.md` v1.24. M1 🔁 Reopened for the Sleepy mood (renamed from Gloomy, warmer look, wake-up line); ready for review.
+
+**Why:** User decision 2026-11-20 after the phone test (newcomers saw a dull grey community).
+
+**Previous:**
+- Header: `| Plan version | v1.32 |`
+- Header: `| Based on | `requirement.md` v1.23 |`
+- Header: `| Current module | M1 🔁 Sleepy mood fix (next; M7 ✅ Done); then M12 Invites (moved before M8) |`
+- Overview: `| M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |`
+- M1: `### M1 — Island View ⭐ ✅`
+- M1: `  - [x] 3 Vitality moods (Lively / Normal / Gloomy) change colours and props`
 
 ### 2026-11-20 — v1.32
 **Changed:** M7 ✅ Done (user confirmed on their phone). Order after M7: M1 🔁 Sleepy mood fix, then M12 Invites before M8.
