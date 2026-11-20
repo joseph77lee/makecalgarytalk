@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.45 |
+| Plan version | v1.46 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.27 |
-| Current module | M9 Community News (🟨 Ready for playtest) |
+| Current module | M15 Community Posts (next; M9 ✅ Done) |
 
 ---
 
@@ -47,7 +47,7 @@
 | M6 | Identity | FE + BE | | M4 | ✅ |
 | M7 | Residency | FE + BE | | M6 | ✅ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
-| M9 | Community News | BE + FE | | M8 | 🟨 |
+| M9 | Community News | BE + FE | | M8 | ✅ |
 | M15 | Community Posts | FE + BE | | M9 | ⬜ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
@@ -363,7 +363,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; villagers do not walk to the site during the replay (bubble only); badges other than Founding Resident are not in the bubble (decision); interiors are a Phase 3 idea (requirement §22.3).
 
 
-### M9 — Community News 🟨
+### M9 — Community News ✅
 **Goal:** A daily reason to check in.
 - **In scope**
   - [x] daily newspaper about real community life: new neighbours (count + nicknames) and farewells; game events stay in the "Since yesterday" panel; a "Local news" slot announces resident posts (next module)
@@ -486,6 +486,17 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.46
+**Changed:** M9 ✅ Done (user confirmed). Header → M15 next.
+
+**Why:** User confirmed M9 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.45 |`
+- Header: `| Current module | M9 Community News (🟨 Ready for playtest) |`
+- Overview: `| M9 | Community News | BE + FE | | M8 | 🟨 |`
+- M9: `### M9 — Community News 🟨`
 
 ### 2026-11-20 — v1.45
 **Changed:** M9 newspaper covers real community life (new neighbours, farewells, a Local news slot); game events stay in "Since yesterday". New module **M15 Community Posts** (resident-written local news, Verified Residents only) right after M9.
