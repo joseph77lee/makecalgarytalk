@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.24 |
+| Plan version | v1.25 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
 | Based on | `requirement.md` v1.21 |
@@ -295,6 +295,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] Cloudflare Turnstile
   - [ ] sign-up rate limits
   - [ ] re-join with same Google account restores record
+  - [ ] "What changed since yesterday" seen once per **account** per Calgary day (server-side record instead of the M5 per-browser localStorage flag)
 - **Definition of Done**
   - [ ] new visitor plays instantly without a form
   - [ ] linking Google keeps progress
@@ -417,6 +418,15 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.25
+**Changed:** M6 in scope: "What changed since yesterday" seen once per account per Calgary day (server-side), replacing M5's per-browser flag.
+
+**Why:** User decision (2026-11-19): with real accounts the panel should follow the person, not the browser (today two accounts in one browser share the flag; one person on two devices sees it twice).
+
+**Previous:**
+- Header: `| Plan version | v1.24 |`
+- M6: (no item about the changes panel)
 
 ### 2026-11-19 — v1.24
 **Changed:** M5 items ticked (except the 3-real-days playtest), status 🟨 with Handoff.
