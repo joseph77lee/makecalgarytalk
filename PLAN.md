@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.41 |
+| Plan version | v1.42 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
-| Based on | `requirement.md` v1.26 |
-| Current module | M9 Village News (next; M8 ✅ Done) |
+| Based on | `requirement.md` v1.27 |
+| Current module | M9 Village News (in progress; M8 ✅ Done) |
 
 ---
 
@@ -47,7 +47,7 @@
 | M6 | Identity | FE + BE | | M4 | ✅ |
 | M7 | Residency | FE + BE | | M6 | ✅ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
-| M9 | Village News | BE + FE | | M8 | ⬜ |
+| M9 | Village News | BE + FE | | M8 | 🟦 |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
@@ -362,7 +362,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; villagers do not walk to the site during the replay (bubble only); badges other than Founding Resident are not in the bubble (decision); interiors are a Phase 3 idea (requirement §22.3).
 
 
-### M9 — Village News ⬜
+### M9 — Village News 🟦
 **Goal:** A daily reason to check in.
 - **In scope**
   - [ ] auto-generated daily newspaper from game events (templates)
@@ -370,6 +370,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] roadmap notices + "Coming soon" locks
   - [ ] newspaper opens on tap of the Welcome sign; the Warming hut adds the community board; the Community hall takes both over (`requirement.md` §7.6, §11); no walking required
   - [ ] global operator announcements (one feed for all communities) at the top of the newspaper, managed by the operator (no per-community announcements)
+  - [ ] newspaper written once per community per Calgary day and stored; locked until the Welcome sign is built; board section locked until the Warming hut (`requirement.md` v1.27 §11)
 - **Definition of Done**
   - [ ] newspaper reflects yesterday's real events with nicknames
   - [ ] no activity times exposed
@@ -466,6 +467,19 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.42
+**Changed:** "Based on" → `requirement.md` v1.27. M9 🟦 in progress; scope item for the daily stored edition and the locks.
+
+**Why:** M9 started; user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.41 |`
+- Header: `| Based on | `requirement.md` v1.26 |`
+- Header: `| Current module | M9 Village News (next; M8 ✅ Done) |`
+- Overview: `| M9 | Village News | BE + FE | | M8 | ⬜ |`
+- M9: `### M9 — Village News ⬜`
+- M9: (no item for the stored edition and locks)
 
 ### 2026-11-20 — v1.41
 **Changed:** M8 ✅ Done (user checked it on their phone). Header → M9 next.
