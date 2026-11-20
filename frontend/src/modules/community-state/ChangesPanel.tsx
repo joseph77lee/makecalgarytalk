@@ -1,39 +1,19 @@
-import { useState } from 'react';
 import type { ServerChanges } from '../daily-actions';
 import { changeItems } from './changesText';
 
-const SEEN_KEY = 'mct.changesSeen.v1';
-
-function seenDay(): string | null {
-  try {
-    return window.localStorage.getItem(SEEN_KEY);
-  } catch {
-    return null;
-  }
-}
-function markSeen(day: string) {
-  try {
-    window.localStorage.setItem(SEEN_KEY, day);
-  } catch {
-    // storage unavailable: the panel just shows again next visit
-  }
-}
-
 interface Props {
-  calgaryDay: string;
   changes: ServerChanges;
   vitality: number | null;
+  /** Seen today by this account (server-side, identity module). */
+  seen: boolean;
+  onSeen: () => void;
 }
 
-/** On entry, once per Calgary day: what changed since yesterday (requirement.md §10.1). */
-export function ChangesPanel({ calgaryDay, changes, vitality }: Props) {
-  const [closedDay, setClosedDay] = useState<string | null>(seenDay);
+/** On entry, once per account per Calgary day: what changed since yesterday (requirement.md §10.1). */
+export function ChangesPanel({ changes, vitality, seen, onSeen }: Props) {
   const items = changeItems(changes, vitality);
-  if (items.length === 0 || closedDay === calgaryDay) return null;
-  const close = () => {
-    markSeen(calgaryDay);
-    setClosedDay(calgaryDay);
-  };
+  if (items.length === 0 || seen) return null;
+  const close = onSeen;
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/20 p-4" onClick={close}>
       <div

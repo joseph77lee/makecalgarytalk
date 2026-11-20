@@ -14,10 +14,12 @@ const SPAWN: Tile = { x: 0, z: 0 };
 
 interface Props {
   nickname: string;
+  /** Shirt colour chosen on the first visit (Identity, §10.2). */
+  shirtColor?: string;
 }
 
 /** The player's avatar: box character, name label, tap/click/keyboard movement (requirement.md §10.2). */
-export function Avatar({ nickname }: Props) {
+export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
   const { walkable, walkableKeys } = useIslandWalkable();
   const showLabels = useShowIslandLabels();
   const portal = useHtmlPortal();
@@ -113,7 +115,7 @@ export function Avatar({ nickname }: Props) {
           </mesh>
           <mesh position={[0, 0.27, 0]} castShadow>
             <boxGeometry args={[0.3, 0.3, 0.22]} />
-            <meshStandardMaterial color="#ff8a5c" roughness={0.95} />
+            <meshStandardMaterial color={shirtColor} roughness={0.95} />
           </mesh>
           <mesh position={[0, 0.56, 0]} castShadow>
             <boxGeometry args={[0.27, 0.27, 0.27]} />

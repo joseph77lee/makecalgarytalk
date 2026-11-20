@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { vitalityMood, type VitalityMood } from '../mood';
 import type { CommunityViewState } from '../types';
 import { useIslandUi } from '../uiStore';
@@ -8,15 +9,15 @@ const MOOD_LABEL: Record<VitalityMood, { text: string; className: string }> = {
   gloomy: { text: 'Gloomy', className: 'bg-slate-200 text-slate-600' },
 };
 
-/** Top bar: community name, Vitality mood and the labels toggle. M5 adds the streak bar and goals. */
-export function IslandHud({ state }: { state: CommunityViewState }) {
+/** Top bar: optional left slot (e.g. my profile), community name with Vitality mood, labels toggle. */
+export function IslandHud({ state, left }: { state: CommunityViewState; left?: ReactNode }) {
   const mood = state.vitality === null ? null : MOOD_LABEL[vitalityMood(state.vitality)];
   const showLabels = useIslandUi((u) => u.showLabels);
   const setShowLabels = useIslandUi((u) => u.setShowLabels);
 
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 p-3">
-      <span className="w-10 shrink-0" aria-hidden />
+      <div className="pointer-events-auto flex w-10 shrink-0 justify-start">{left}</div>
       <div className="flex min-w-0 items-center gap-2 rounded-full bg-white/85 px-4 py-1.5 shadow-sm backdrop-blur">
         <span className="truncate text-sm font-bold text-slate-800">{state.communityName}</span>
         {mood && state.vitality !== null && (

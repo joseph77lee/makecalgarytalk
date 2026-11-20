@@ -17,7 +17,6 @@ import {
   type QueueState,
 } from './actionQueue';
 import { ApiError, assertCommunityState, type ServerCommunityState, type ServerSubmitResult } from './api';
-import { devUserFromSearch } from './devSession';
 import { filterCommunities } from './filterCommunities';
 import { ARRIVAL_TIMEOUT_MS, MIDNIGHT_GRACE_MS, RETRY_DELAYS, createDailyActionsStore, type DailyActionsDeps } from './store';
 import { toViewState } from './toViewState';
@@ -212,13 +211,7 @@ describe('filterCommunities', () => {
   });
 });
 
-describe('dev session', () => {
-  it('picks the second dev user only with ?devuser=2', () => {
-    expect(devUserFromSearch('')).toBe('1');
-    expect(devUserFromSearch('?devuser=2')).toBe('2');
-    expect(devUserFromSearch('?devuser=7')).toBe('1');
-  });
-});
+
 
 // --- Store flow with fakes ----------------------------------------------------------
 

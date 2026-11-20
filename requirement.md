@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.21 |
+| Document version | v1.22 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
 | Status | Initial draft for starting MVP development |
@@ -106,6 +106,7 @@ The service grows in this order; features are judged by how they serve it. The *
 - **Anonymous account auto-created** on first visit (Supabase Anonymous Sign-in). No email/password
 - **Bot protection**: Cloudflare Turnstile
 - **Sign-up rate limit**: cap accounts created per IP/device per day
+- **Nickname on the first visit**, together with the avatar shirt colour (10.2): a suggested nickname is pre-filled (e.g. "Snowy Moose 42") so the player can just continue; 2–16 characters, a basic blocked-words filter, checked on the server; changeable later. Shown on house name tags (7.2) and in the newspaper (11)
 - **Link Google account (optional)**: prompt "Link Google to keep your progress" once the community grows or the user becomes verified
 - Re-joining with the same Google account **restores the existing record** instead of creating a new one (deleted accounts keep only a hashed identifier)
 
@@ -772,6 +773,14 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-19 — v1.22
+**Changed:** 6.1: nickname chosen on the first visit with the shirt colour (suggested nickname pre-filled, 2–16 characters, blocked-words filter, changeable later).
+
+**Why:** Nicknames are used on house name tags and in the newspaper but no step chose them (user decision for M6, 2026-11-19).
+
+**Previous:**
+- 6.1: (no rule for choosing a nickname)
 
 ### 2026-11-19 — v1.21
 **Changed:** 7.4: Vitality formula (max of 3-day and 7-day averages of finished days). 7.5: streak length counts up to yesterday plus today once today is an attendance day.

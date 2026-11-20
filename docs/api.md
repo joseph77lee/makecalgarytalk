@@ -12,10 +12,21 @@ client never computes time zones; it only counts down to `next_day_start`.
 |---|---|---|
 | `common_health()` | anon, authenticated | Connectivity check |
 | `gamecore_list_communities()` | anon, authenticated | All game communities |
-| `gamecore_get_community_state(p_community_id)` | anon, authenticated | Projects and my energy |
+| `gamecore_get_community_state(p_community_id)` | anon, authenticated | Buildings, streak, Vitality, changes, my energy |
 | `gamecore_submit_actions(p_actions)` | authenticated | Spend energy on projects |
 | `gamecore_get_me()` | authenticated | My community and energy |
 | `gamecore_choose_community(p_community_id)` | authenticated | **Temporary until M7** |
+| `identity_get_profile()` | authenticated | My nickname, shirt, account type |
+| `identity_save_profile(p_nickname, p_shirt)` | authenticated | First-visit setup and later changes |
+| `identity_mark_changes_seen()` | authenticated | "What changed since yesterday" seen today |
+
+**Accounts (Identity, M6):** every visitor gets a Supabase Auth account on the first visit
+with `signInAnonymously` (no form). Sign-ups need a Cloudflare **Turnstile** token
+(`options.captchaToken`); Supabase Auth checks it and limits anonymous sign-ups per IP
+(`[auth.rate_limit] anonymous_users`). Anonymous players use the `authenticated` role like
+everyone else. Optional Google linking uses `linkIdentity` (same user id, progress kept);
+signing in with a Google account that is already linked restores that account
+(`signInWithOAuth`).
 
 ---
 
@@ -136,6 +147,27 @@ Joins (or switches to) a community chosen from the list; returns the same shape 
 `gamecore_get_me()`. **Residency (M7) replaces this** with location-based verification and
 the moving rules (§6.4).
 
+## `identity_get_profile()`
+```json
+{ "calgary_day": "2026-12-01", "is_anonymous": true,
+  "profile": { "nickname": "Snowy Moose 42", "shirt": 3 },
+  "changes_seen_today": false }
+```
+- `profile` is `null` until the first-visit setup is saved (the app then shows the finished
+  example and the setup).
+- `shirt`: index 0–7 into the client's palette.
+
+## `identity_save_profile(p_nickname text, p_shirt integer)`
+Creates or updates my profile. Returns `{ "ok": true, ...identity_get_profile }`, or
+`{ "ok": false, "problem": "length" | "characters" | "blocked" | "shirt" }`.
+- Nickname is trimmed and inner spaces collapsed, then: 2–16 characters; letters (any
+  language), digits, spaces and `- _ . '`, with at least one letter or digit; not a blocked
+  word (`identity.blocked_words`: equal to one of its words, or contained in it with symbols
+  removed for words of 5+ letters).
+
+## `identity_mark_changes_seen()`
+Records today's Calgary day as seen; returns the same shape as `identity_get_profile()`.
+
 ---
 
 ## Rules (starting values, `requirement.md` §7.7, §8, §22.8)
@@ -165,5 +197,12 @@ the moving rules (§6.4).
 - Actions are append-only; progress and completion are computed from the action log.
 
 ## Local development
-- `supabase db reset` applies migrations and `supabase/seed.sql`, which creates a **local-only**
-  dev user: `dev@makecalgarytalk.local` / `dev-password`, already a member of Mahogany.
+- `supabase db reset` applies migrations and `supabase/seed.sql`, which creates two **local-only**
+  dev users, `dev@makecalgarytalk.local` and `dev2@makecalgarytalk.local` (password
+  `dev-password`), members of Mahogany with profiles ("Dev One", "Dev Two").
+- The app signs in as them only with `?devuser=1` or `?devuser=2` (dev builds). Without the
+  parameter it uses the real flow: anonymous account → first-visit example → profile setup.
+  A private window gives a fresh anonymous player.
+- Turnstile runs locally with Cloudflare's public **test** keys (always pass): the secret in
+  `supabase/config.toml`, the site key in `frontend/.env.local` (`VITE_TURNSTILE_SITE_KEY`).
+  The browser loads the widget from `challenges.cloudflare.com`, so local play needs internet.

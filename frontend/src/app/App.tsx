@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
 import { BuildMap, ChangesPanel, StreakBar } from '../modules/community-state';
 import { ActionBar, CommunityPicker, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
+import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
 import {
   IslandDevPanel,
   IslandHud,
@@ -17,7 +18,23 @@ const params = new URLSearchParams(window.location.search);
 const mockMode = params.has('mock');
 
 export function App() {
-  return mockMode ? <MockApp /> : <LiveApp />;
+  return mockMode ? <MockApp /> : <IdentityGate />;
+}
+
+/** Signs the player in (anonymous + Turnstile) and runs the first visit before the game starts. */
+function IdentityGate() {
+  const status = useIdentity((s) => s.status);
+  const init = useIdentity((s) => s.init);
+  useEffect(() => {
+    void init();
+  }, [init]);
+  if (status === 'ready') return <LiveApp />;
+  return (
+    <main className="relative h-dvh w-full overflow-hidden bg-gradient-to-b from-sky-100 to-indigo-50">
+      <FirstVisit />
+      <IdentityScreen />
+    </main>
+  );
 }
 
 /** The real game: community state from the server, daily actions. */
@@ -27,6 +44,8 @@ function LiveApp() {
   const view = useDailyActions((s) => s.view);
   const [mapOpen, setMapOpen] = useState(false);
   const [example, setExample] = useState(false);
+  const changesSeen = useIdentity((s) => s.changesSeenToday);
+  const markChangesSeen = useIdentity((s) => s.markChangesSeen);
   const plan = useDailyActions((s) => s.plan);
   const init = useDailyActions((s) => s.init);
   const openPicker = useDailyActions((s) => s.openCommunityPicker);
@@ -41,12 +60,12 @@ function LiveApp() {
       ) : (
         <>
           {view && plan && <Island plan={plan} state={view} />}
-          {view && <IslandHud state={view} />}
+          {view && <IslandHud state={view} left={<ProfileButton />} />}
           {status === 'ready' && server && (
             <>
               <StreakBar streak={server.streak} nextLandResidents={server.community.next_land_residents} onOpenMap={() => setMapOpen(true)} />
               <ActionBar />
-              <ChangesPanel calgaryDay={server.calgary_day} changes={server.changes} vitality={server.community.vitality} />
+              <ChangesPanel changes={server.changes} vitality={server.community.vitality} seen={changesSeen} onSeen={markChangesSeen} />
             </>
           )}
           {mapOpen && server && view && (
@@ -115,10 +134,10 @@ function ExampleView({ plan, communityName, onBack }: { plan: IslandPlan; commun
 }
 
 function Island({ plan, state }: { plan: IslandPlan; state: CommunityViewState }) {
+  const profile = useIdentity((s) => s.profile);
   return (
     <IslandView plan={plan} state={state} onTileTap={moveTo}>
-      {/* Nickname comes from Identity (M6); a placeholder until then. */}
-      <Avatar nickname="You" />
+      <Avatar nickname={profile?.nickname ?? 'You'} shirtColor={shirtColor(profile?.shirt)} />
     </IslandView>
   );
 }
