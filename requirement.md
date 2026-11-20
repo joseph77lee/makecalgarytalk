@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.26 |
+| Document version | v1.27 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Status | Initial draft for starting MVP development |
@@ -375,16 +375,20 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ---
 
-## 11. Village news (community newspaper)
+## 11. Community news (community newspaper)
 
 - **Available from the MVP**: the newspaper opens from the **Welcome sign**; the **Warming hut** adds the community board (operator announcements, events); the **Community hall** takes both over and expands them (7.6)
   - Opens when the player taps the building; the avatar does not need to walk there
 - **Auto-generated community newspaper** (no operator effort)
-  - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed. Sarah hit a 7-day streak!"
+  - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed."
+  - The newspaper is about **real community life, not game events**: how many new neighbours joined yesterday (with nicknames), farewells, and **local news written by Verified Residents** (events, deals, lost & found; see 14, built right after this section's first version). Game events (buildings, island growth, who helped, streak) stay in the "What changed since yesterday" panel. No personal streak lines; day-level only, no times
+  - Written **once per community per Calgary day** (the first time someone opens it) and then served as stored (no extra cost per reader)
+  - Before the Welcome sign is built, tapping its spot says "Build the Welcome sign to open the community newspaper"
   - Shows nicknames of active residents (recognition)
   - Farewell line when a resident moves away (6.4), e.g. "Sarah moved to Bridgeland — thanks for everything, neighbour!" (no times)
 - **Upcoming updates (roadmap)**: e.g. "December: Community board opens"
 - **Operator announcements (global)**: short notices written by the operator (events, maintenance, rule changes), shown to **all communities** at the top of the newspaper. No per-community announcements in the MVP
+  - Always at the top of the newspaper (also before the Warming hut). The **community board** section (events and roadmap) opens with the Warming hut; before that it shows a lock ("Opens with the Warming hut"). MVP: the operator adds announcements with SQL in the Supabase dashboard (an admin screen comes later)
 - Locked features are shown with a lock icon + "Coming soon"
 
 ---
@@ -441,7 +445,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ---
 
-## 14. Resident board (Phase 2, communities with a Community hall)
+## 14. Resident board (MVP, next module after Community news; details decided when it starts)
 
 | Rule | Newcomer | Verified Resident |
 |---|---|---|
@@ -786,6 +790,19 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.27
+**Changed:** 11: newspaper lines listed (no personal streak lines; the example no longer mentions one); written once per community per day; locked until the Welcome sign is built; announcements always at the top, the community board section (events, roadmap) opens with the Warming hut; MVP announcements via SQL.
+
+Section renamed "Village news" → "Community news" (Calgary calls each neighbourhood a community); the newspaper is titled "Community News". The newspaper covers real community life (new neighbours, farewells, resident-written local news) instead of game events; resident posts (14) move from Phase 2 into the MVP as the next module, Verified Residents only.
+
+**Why:** M9 needs exact rules; announcements were listed both at the top of the newspaper and on the Warming hut board (user decisions 2026-11-20).
+
+**Previous:**
+- 11: `## 11. Village news (community newspaper)`
+- 14: `## 14. Resident board (Phase 2, communities with a Community hall)`
+- 11: `  - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed. Sarah hit a 7-day streak!"`
+- 11: (no line list, generation rule, lock text, board/announcement split or announcement tooling)
 
 ### 2026-11-20 — v1.26
 **Changed:** 7.2: houses show whose they are when tapped (no floating name tags; my house marked; labels toggle shows all); active houses get window lights only (no chimney smoke); each resident keeps a fixed house lot (assignment, reuse of archived residents' lots when full, "+N more residents" overflow). 22.3: idea of entering buildings and decorating my own house.

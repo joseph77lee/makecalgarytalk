@@ -76,7 +76,7 @@ export function ProfileForm({ initialNickname, initialShirt = 0, submitLabel, on
             🎲
           </button>
         </span>
-        <span className="mt-1 block text-xs text-slate-500">Shown on your house and in the village news. No real names needed.</span>
+        <span className="mt-1 block text-xs text-slate-500">Shown on your house and in the community news. No real names needed.</span>
       </label>
       {error && <p className="text-sm text-rose-600">{error}</p>}
       <button type="submit" disabled={saving} className="rounded-2xl bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-60">

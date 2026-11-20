@@ -47,8 +47,8 @@ export function badgeText(b: Badge): { icon: string; title: string; detail: stri
 /** Welcome card line after the first check-in (§5.1): how many neighbours until the island grows. */
 export function welcomeGoal(nextLandResidents: number | null): string {
   if (nextLandResidents === null) return 'Invite neighbours to finish it together.';
-  if (nextLandResidents <= 1) return 'One more neighbour and the island grows!';
-  return `${nextLandResidents} more neighbours and the island grows.`;
+  if (nextLandResidents <= 1) return 'One more neighbour and your community grows!';
+  return `${nextLandResidents} more neighbours and your community grows.`;
 }
 
 export type ShareOutcome = 'shared' | 'copied' | 'cancelled' | 'failed';
@@ -71,10 +71,10 @@ export interface NudgeInputs {
 /** One short nudge at a good moment (requirement §5.1), or null. The closest goal wins. */
 export function inviteNudge(n: NudgeInputs): string | null {
   const more = (k: number) => (k === 1 ? '1 more neighbour' : `${k} more neighbours`);
-  if (n.nextLandResidents !== null && n.nextLandResidents <= 2) return `${more(n.nextLandResidents)} and the island grows! Invite someone nearby.`;
+  if (n.nextLandResidents !== null && n.nextLandResidents <= 2) return `${more(n.nextLandResidents)} and your community grows! Invite someone nearby.`;
   if (n.closestBuildingResidents !== null && n.closestBuildingResidents <= 2 && n.closestBuildingTitle)
     return `${more(n.closestBuildingResidents)} and the ${n.closestBuildingTitle} opens! Invite someone nearby.`;
-  if (n.landGrew) return 'The island grew! Invite neighbours to grow it again.';
+  if (n.landGrew) return 'Your community grew! Invite neighbours to grow it again.';
   if (n.builtSinceYesterday) return `The ${n.builtSinceYesterday} is built! Share it with your neighbours.`;
   return null;
 }

@@ -19,7 +19,7 @@ export function streakText({ days, today }: ServerStreak): { title: string; toda
 /** Island growth goal (§7.8), or null at the largest island. */
 export function landGoalText(nextLandResidents: number | null): string | null {
   if (nextLandResidents === null) return null;
-  return `${more(nextLandResidents, 'neighbour', 'neighbours')} until the island grows`;
+  return `${more(nextLandResidents, 'neighbour', 'neighbours')} to grow`;
 }
 
 /** Shown while the community is Sleepy (Vitality 0–29, §7.4): help is what wakes it up. */

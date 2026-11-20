@@ -4,6 +4,7 @@ import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen } from '../modules/
 import { ActionBar, CommunityPicker, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
 import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
+import { NewspaperPanel, newsBuildingKeys, newsReady, useNews } from '../modules/news';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import {
   IslandDevPanel,
@@ -107,7 +108,22 @@ function LiveApp() {
         <ExampleView plan={plan} communityName={view.communityName} onBack={() => setExample(false)} />
       ) : (
         <>
-          {view && plan && <Island plan={plan} state={view} showAvatar={server?.me?.member === true} />}
+          {view && plan && server && (
+            <Island
+              plan={plan}
+              state={view}
+              showAvatar={server.me?.member === true}
+              newsBuildings={(() => {
+                const built = view.buildings.filter((b) => b.status === 'built' || b.level > 1).map((b) => b.key);
+                return newsReady(built) ? newsBuildingKeys(built) : [];
+              })()}
+              onBuildingTap={(key) => {
+                // The newspaper lives on the Welcome sign's lot, later the Community hall (§7.6, §11);
+                // tapping the sign's construction site says it opens once the sign is built.
+                if (['welcome-sign', 'gateway-arch', 'community-hall'].includes(key)) void useNews.getState().show(server.community.id);
+              }}
+            />
+          )}
           {view && (
             <IslandHud
               state={view}
@@ -171,6 +187,7 @@ function LiveApp() {
       )}
       {status === 'no-community' && residencyStatus === 'new' && <FindCommunity onLookAround={() => void openLookAround()} />}
       <CommunityPicker />
+      <NewspaperPanel />
       <SessionScreen />
       <Toast />
     </main>
@@ -213,10 +230,22 @@ function ExampleView({ plan, communityName, onBack }: { plan: IslandPlan; commun
 }
 
 /** My avatar walks only in the community I play in (not while looking around elsewhere). */
-function Island({ plan, state, showAvatar = true }: { plan: IslandPlan; state: CommunityViewState; showAvatar?: boolean }) {
+function Island({
+  plan,
+  state,
+  showAvatar = true,
+  newsBuildings = [],
+  onBuildingTap,
+}: {
+  plan: IslandPlan;
+  state: CommunityViewState;
+  showAvatar?: boolean;
+  newsBuildings?: string[];
+  onBuildingTap?: (key: string) => void;
+}) {
   const profile = useIdentity((s) => s.profile);
   return (
-    <IslandView plan={plan} state={state} onTileTap={showAvatar ? moveTo : undefined}>
+    <IslandView plan={plan} state={state} onTileTap={showAvatar ? moveTo : undefined} onBuildingTap={onBuildingTap} newsBuildingKeys={newsBuildings}>
       {showAvatar && <Avatar nickname={profile?.nickname ?? 'You'} shirtColor={shirtColor(profile?.shirt)} />}
     </IslandView>
   );

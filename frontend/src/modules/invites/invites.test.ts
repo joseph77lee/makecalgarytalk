@@ -52,8 +52,8 @@ describe('invite texts', () => {
     expect(badgeText({ key: 'pioneer_sponsor', count: 2 }).title).toBe('Pioneer Sponsor ×2');
   });
   it('welcome goal and share results', () => {
-    expect(welcomeGoal(3)).toBe('3 more neighbours and the island grows.');
-    expect(welcomeGoal(1)).toBe('One more neighbour and the island grows!');
+    expect(welcomeGoal(3)).toBe('3 more neighbours and your community grows.');
+    expect(welcomeGoal(1)).toBe('One more neighbour and your community grows!');
     expect(welcomeGoal(null)).toMatch(/finish it together/);
     expect(shareOutcomeText('cancelled')).toBeNull();
     expect(shareOutcomeText('copied')).toMatch(/copied/);
@@ -64,13 +64,13 @@ describe('invite nudges', () => {
   const none = { nextLandResidents: 5, closestBuildingResidents: null, closestBuildingTitle: null, builtSinceYesterday: null, landGrew: false };
   it('nudges only at good moments, the closest goal first', () => {
     expect(inviteNudge(none)).toBeNull();
-    expect(inviteNudge({ ...none, nextLandResidents: 1 })).toBe('1 more neighbour and the island grows! Invite someone nearby.');
-    expect(inviteNudge({ ...none, nextLandResidents: 2, closestBuildingResidents: 1, closestBuildingTitle: 'Skating rink' })).toMatch(/island grows/);
+    expect(inviteNudge({ ...none, nextLandResidents: 1 })).toBe('1 more neighbour and your community grows! Invite someone nearby.');
+    expect(inviteNudge({ ...none, nextLandResidents: 2, closestBuildingResidents: 1, closestBuildingTitle: 'Skating rink' })).toMatch(/community grows/);
     expect(inviteNudge({ ...none, closestBuildingResidents: 2, closestBuildingTitle: 'Skating rink' })).toBe(
       '2 more neighbours and the Skating rink opens! Invite someone nearby.',
     );
     expect(inviteNudge({ ...none, closestBuildingResidents: 3, closestBuildingTitle: 'Skating rink' })).toBeNull();
-    expect(inviteNudge({ ...none, landGrew: true, builtSinceYesterday: 'Fire pit' })).toMatch(/island grew/);
+    expect(inviteNudge({ ...none, landGrew: true, builtSinceYesterday: 'Fire pit' })).toMatch(/community grew/);
     expect(inviteNudge({ ...none, builtSinceYesterday: 'Fire pit' })).toBe('The Fire pit is built! Share it with your neighbours.');
     expect(inviteNudge({ ...none, nextLandResidents: null })).toBeNull();
   });

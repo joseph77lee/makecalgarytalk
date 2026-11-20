@@ -25,6 +25,7 @@ client never computes time zones; it only counts down to `next_day_start`.
 | `invites_get_mine()` | authenticated | My invite code, counts, who invited me, badges |
 | `invites_accept(p_code)` | authenticated | Accept an invite (once) |
 | `invites_lookup(p_code)` | anon, authenticated | Who sent an invite link (nickname, community) |
+| `news_get_newspaper(p_community_id)` | anon, authenticated | Today's community newspaper |
 
 **Accounts (Identity, M6):** every visitor gets a Supabase Auth account on the first visit
 with `signInAnonymously` (no form). Sign-ups need a Cloudflare **Turnstile** token
@@ -267,6 +268,32 @@ The app remembers the link's code on the first visit and accepts it right after 
 ## `invites_lookup(p_code text)`
 `{ "nickname": "Snowy Moose", "community": "Mahogany" }` (community `null` if the inviter has
 none yet), or `null` for an unknown code. Works before sign-in (invite landing banner).
+
+## `news_get_newspaper(p_community_id uuid)`
+```json
+{
+  "calgary_day": "2026-12-02",
+  "community": "Mahogany",
+  "locked": null,
+  "announcements": [{ "title": "Maintenance Sunday", "body": "Short break at night." }],
+  "lines": [
+    { "icon": "👋", "text": "2 new neighbours joined yesterday: Maple Fox and Snowy Moose. Welcome!" },
+    { "icon": "💐", "text": "Sarah moved to Bridgeland — thanks for everything, neighbour!" }
+  ],
+  "board": { "open": false, "roadmap": [] }
+}
+```
+- `lines`: real people news about yesterday: how many new neighbours joined (with nicknames) and
+  farewells (with the new community). Game events stay in the community state's `changes`. Written
+  **once per community per Calgary day** on the first read, then served from `news.editions`.
+  No clock times.
+- `locked: "welcome_sign"` until the Welcome sign is built (`lines` empty).
+- `announcements`: global operator notices running today (always shown). Add one with SQL:
+  `insert into news.announcements (title, body, starts_on, ends_on) values ('…', '…', '2026-12-01', '2026-12-03');`
+- `board.open` once the Warming hut is built; `board.roadmap` = "Coming soon" items from
+  `news.roadmap` (set `done = true` to hide one).
+- The app opens it when the player taps the Welcome sign's lot (sign or Gateway arch), later the
+  Community hall; a "📰 News" chip marks it.
 
 ---
 

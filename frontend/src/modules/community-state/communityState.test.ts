@@ -25,8 +25,8 @@ describe('streak bar text (requirement.md §7.5)', () => {
     expect(streakText(streak(0, 0, 0, 1, false))).toEqual({ title: 'No streak yet', today: 'Today 0/1', hint: '1 more neighbour today starts a streak' });
   });
   it('island growth goal, none at the largest island', () => {
-    expect(landGoalText(1)).toBe('1 more neighbour until the island grows');
-    expect(landGoalText(4)).toBe('4 more neighbours until the island grows');
+    expect(landGoalText(1)).toBe('1 more neighbour to grow');
+    expect(landGoalText(4)).toBe('4 more neighbours to grow');
     expect(landGoalText(null)).toBeNull();
   });
 });
@@ -57,7 +57,7 @@ describe('what changed since yesterday', () => {
       'Frozen pond was built',
       'Welcome sign upgraded to Lv 2',
       'Playground unlocked',
-      'The island grew',
+      'Your community grew!',
       '2 new neighbours joined',
       '4 actions yesterday: Fire pit +3, Welcome sign Lv 2 +1',
       'Vitality 40 → 55',
