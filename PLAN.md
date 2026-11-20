@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.28 |
+| Plan version | v1.29 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-19 |
+| Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.22 |
-| Current module | M6 Identity (🟨 Ready for playtest; Google linking awaits an OAuth client) |
+| Current module | M7 Residency (next; M6 ✅ Done) |
 
 ---
 
@@ -44,7 +44,7 @@
 | M3 | Game Core | BE | ⭐ Core | M0 | ✅ |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
 | M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ✅ |
-| M6 | Identity | FE + BE | | M4 | 🟨 |
+| M6 | Identity | FE + BE | | M4 | ✅ |
 | M7 | Residency | FE + BE | | M6 | ⬜ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |
 | M9 | Village News | BE + FE | | M8 | ⬜ |
@@ -285,21 +285,21 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real Calgary midnight (days simulated by shifting data); a real phone; load (one job rebuilds all communities with residents — fine at MVP size, measure before launch); Community Revival effect and share card (M11); houses still empty (M8).
   - **Dev tip:** to simulate "the next day" locally, move all gamecore dates back one day with `session_replication_role = replica` (actions in two steps because of the energy-slot unique key) and clear `community_days` and `community_snapshots`.
 
-### M6 — Identity 🟨
+### M6 — Identity ✅
 **Goal:** Real users without friction.
 - **In scope**
   - [x] Supabase anonymous sign-in on first visit
-  - [ ] optional Google linking — code done; verify with a real Google OAuth client
+  - [x] optional Google linking — code done; real verification moved to M14
   - [x] avatar shirt colour choice on first visit, changeable later (`requirement.md` §10.2)
   - [x] nickname on first visit with a suggested default, validated on the server, changeable later (`requirement.md` §6.1)
   - [x] completed-neighbourhood example on the first visit only (one image or short animated scene rendered with the real engine, `requirement.md` §5.1)
   - [x] Cloudflare Turnstile (local: Cloudflare test keys; real keys at deploy, M14)
   - [x] sign-up rate limits (Supabase Auth per-IP anonymous limit; Cloudflare rate limiting at deploy, M14)
-  - [ ] re-join with same Google account restores record — code done (`signInWithOAuth`); verify with a real Google OAuth client
+  - [x] re-join with same Google account restores record — code done (`signInWithOAuth`); real verification moved to M14
   - [x] "What changed since yesterday" seen once per **account** per Calgary day (server-side record instead of the M5 per-browser localStorage flag)
 - **Definition of Done**
   - [x] new visitor plays instantly without a form
-  - [ ] linking Google keeps progress
+  - [x] linking Google keeps progress — moved to M14 (needs the production Google OAuth client)
   - [x] bot check active
 - **Handoff**
   - **Code:** migration `supabase/migrations/20261120120000_identity_profiles.sql` (schema `identity`: `profiles`, `blocked_words`; RPC `identity_get_profile`, `identity_save_profile`, `identity_mark_changes_seen`); tests `supabase/tests/database/identity_profiles.test.sql` (26). Frontend `frontend/src/modules/identity/` (store with injected deps, Turnstile loader, `FirstVisit`, `ProfileForm`, `ProfileButton`/sheet, `IdentityScreen`, dev sign-in). App: `IdentityGate` signs in and runs the first visit before `LiveApp`; `IslandHud` got a `left` slot for the profile chip; `Avatar` takes `shirtColor`. Auth settings in `supabase/config.toml` (anonymous sign-ins, manual linking, Turnstile captcha, site URL `http://localhost:5180`).
@@ -402,6 +402,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] abnormal sign-up flags
   - [ ] optional update-email opt-in (CASL)
   - [ ] production deploy
+  - [ ] Google OAuth client (production domain + local redirect); verify Google linking keeps progress and re-join with the same Google account restores the record (moved from M6; code in `frontend/src/modules/identity/`, see M6 Handoff)
   - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6)
   - [ ] low-end phone performance pass
   - [ ] **family/friends playtest**
@@ -427,6 +428,22 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.29
+**Changed:** M6 ✅ Done (user confirmed). Real verification of Google linking / re-join and the DoD "linking Google keeps progress" moved to M14 (code stays in M6). Header → M7 next.
+
+**Why:** User decision 2026-11-20: the Google OAuth client has to be created for the production domain anyway, so verify both together at launch. The buttons stay hidden until `VITE_GOOGLE_LINKING=true`.
+
+**Previous:**
+- Header: `| Plan version | v1.28 |`
+- Header: `| Last updated | 2026-11-19 |`
+- Header: `| Current module | M6 Identity (🟨 Ready for playtest; Google linking awaits an OAuth client) |`
+- Overview: `| M6 | Identity | FE + BE | | M4 | 🟨 |`
+- M6: `### M6 — Identity 🟨`
+- M6: `  - [ ] optional Google linking — code done; verify with a real Google OAuth client`
+- M6: `  - [ ] re-join with same Google account restores record — code done (`signInWithOAuth`); verify with a real Google OAuth client`
+- M6: `  - [ ] linking Google keeps progress`
+- M14: no Google item
 
 ### 2026-11-20 — v1.28
 **Changed:** M6 items ticked except Google linking / re-join and its DoD (code done, not verified); status 🟨 with Handoff.
