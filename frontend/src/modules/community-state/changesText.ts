@@ -21,3 +21,8 @@ export function changeItems(c: ServerChanges, vitality: number | null): ChangeIt
   }
   return items;
 }
+
+/** Whether the changes panel is showing (others wait for it, e.g. the invite nudge). */
+export function changesPanelOpen(changes: ServerChanges, vitality: number | null, seen: boolean): boolean {
+  return !seen && changeItems(changes, vitality).length > 0;
+}

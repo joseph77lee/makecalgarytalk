@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
-import { BuildMap, ChangesPanel, StreakBar } from '../modules/community-state';
+import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen } from '../modules/community-state';
 import { ActionBar, CommunityPicker, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
+import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import {
   IslandDevPanel,
@@ -33,7 +34,7 @@ function IdentityGate() {
   if (status === 'ready') return <LiveApp />;
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-gradient-to-b from-sky-100 to-indigo-50">
-      <FirstVisit />
+      <FirstVisit banner={<InviteLandingBanner />} />
       <IdentityScreen />
     </main>
   );
@@ -52,16 +53,53 @@ function LiveApp() {
   const init = useDailyActions((s) => s.init);
   const openLookAround = useDailyActions((s) => s.openLookAround);
   const residencyStatus = useResidency((s) => s.status?.status);
+  const welcomedIds = useInvites((s) => s.welcomedIds);
   useEffect(() => {
     void init();
     void useResidency.getState().init();
+    void useInvites.getState().init();
     // Where the player plays comes from Residency: reload the game when it changes
     // (first check-in, verification, move started/completed/cancelled).
     return useResidency.subscribe((s, prev) => {
       const key = (r: typeof s.status) => (r ? `${r.play_community?.id ?? ''}:${r.pending}` : null);
-      if (prev.status && key(s.status) !== key(prev.status)) void useDailyActions.getState().reload();
+      if (prev.status && key(s.status) !== key(prev.status)) {
+        void useDailyActions.getState().reload();
+        void useInvites.getState().reload(); // badges change with verifications
+      }
     });
   }, [init]);
+
+  const invite = () => {
+    const name = server?.me?.member ? server.community.name : null;
+    void useInvites
+      .getState()
+      .invite(name)
+      .then((o) => {
+        const text = shareOutcomeText(o);
+        if (text) useDailyActions.getState().showToast(text);
+      });
+  };
+  // A nudge for the floating Invite button at a good moment (closest goal wins).
+  const closest = view?.buildings
+    .filter((b) => b.status === 'locked' && b.remaining && b.remaining.residents > 0)
+    .sort((x, y) => (x.remaining?.residents ?? 0) - (y.remaining?.residents ?? 0))[0];
+  const nudge = server
+    ? inviteNudge({
+        nextLandResidents: server.community.next_land_residents,
+        closestBuildingResidents: closest?.remaining?.residents ?? null,
+        closestBuildingTitle: closest?.title ?? null,
+        builtSinceYesterday: server.changes.built[0]?.title ?? null,
+        landGrew: server.changes.land_grew,
+      })
+    : null;
+  const panelOpen = !!server && changesPanelOpen(server.changes, server.community.vitality, changesSeen);
+  // Welcome card right after the first counted check-in (§5.1), once per community.
+  const showWelcome =
+    status === 'ready' &&
+    !!server?.me?.member &&
+    server.me.pending &&
+    (residencyStatus === 'verifying' || residencyStatus === 'moving') &&
+    !welcomedIds.includes(server.community.id);
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-gradient-to-b from-sky-100 to-indigo-50">
@@ -76,6 +114,7 @@ function LiveApp() {
               left={
                 <ProfileButton>
                   <MoveSection />
+                  <InviteSection onInvite={invite} />
                 </ProfileButton>
               }
             />
@@ -86,12 +125,32 @@ function LiveApp() {
                 streak={server.streak}
                 nextLandResidents={server.community.next_land_residents}
                 onOpenMap={() => setMapOpen(true)}
+                onInvite={server.me?.member ? invite : undefined}
                 sleepyName={server.community.vitality !== null && vitalityMood(server.community.vitality) === 'sleepy' ? server.community.name : null}
               >
                 <ResidencyChip />
               </StreakBar>
               <ActionBar />
-              <ChangesPanel changes={server.changes} vitality={server.community.vitality} seen={changesSeen} onSeen={markChangesSeen} />
+              {server.me?.member && !showWelcome && (
+                // Remounts when the changes panel closes, so the nudge is not shown behind it.
+                <InviteFab
+                  key={panelOpen ? 'behind-panel' : 'visible'}
+                  calgaryDay={server.calgary_day}
+                  nudge={panelOpen ? null : nudge}
+                  onInvite={invite}
+                />
+              )}
+              {showWelcome ? (
+                <WelcomeCard
+                  communityId={server.community.id}
+                  communityName={server.community.name}
+                  residents={server.community.residents}
+                  nextLandResidents={server.community.next_land_residents}
+                  onInvite={invite}
+                />
+              ) : (
+                <ChangesPanel changes={server.changes} vitality={server.community.vitality} seen={changesSeen} onSeen={markChangesSeen} />
+              )}
             </>
           )}
           {mapOpen && server && view && (
@@ -100,6 +159,7 @@ function LiveApp() {
               streakDays={server.streak.days}
               buildings={view.buildings}
               onClose={() => setMapOpen(false)}
+              onInvite={server.me?.member ? invite : undefined}
               onShowExample={() => {
                 setMapOpen(false);
                 setExample(true);

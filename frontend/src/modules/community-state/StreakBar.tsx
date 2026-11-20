@@ -1,11 +1,14 @@
 import type { ServerStreak } from '../daily-actions';
 import type { ReactNode } from 'react';
+import { InviteChip } from './InviteChip';
 import { landGoalText, sleepyText, streakText } from './streakText';
 
 interface Props {
   streak: ServerStreak;
   nextLandResidents: number | null;
   onOpenMap: () => void;
+  /** Opens the invite from the "N more neighbours" goal (§5.1). */
+  onInvite?: () => void;
   /** Community name while it is Sleepy (adds the wake-up line), otherwise null. */
   sleepyName?: string | null;
   /** Shown under the bar (e.g. the residency chip), so it never overlaps however tall the bar is. */
@@ -13,7 +16,7 @@ interface Props {
 }
 
 /** Under the top bar: community streak with today's progress, the island goal and the build map button. */
-export function StreakBar({ streak, nextLandResidents, onOpenMap, sleepyName = null, children }: Props) {
+export function StreakBar({ streak, nextLandResidents, onOpenMap, onInvite, sleepyName = null, children }: Props) {
   const t = streakText(streak);
   const goal = landGoalText(nextLandResidents);
   return (
@@ -27,7 +30,15 @@ export function StreakBar({ streak, nextLandResidents, onOpenMap, sleepyName = n
             </span>
           </div>
           <div className="truncate">{t.hint}</div>
-          {goal && <div className="truncate text-sky-700">🏝 {goal}</div>}
+          {goal &&
+            (onInvite ? (
+              <div className="flex min-w-0 items-center text-sky-700">
+                <span className="truncate">🏝 {goal}</span>
+                <InviteChip onClick={onInvite} />
+              </div>
+            ) : (
+              <div className="truncate text-sky-700">🏝 {goal}</div>
+            ))}
           {sleepyName && <div className="truncate font-semibold text-indigo-600">{sleepyText(sleepyName)}</div>}
         </div>
         <button
