@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.47 |
+| Plan version | v1.48 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.28 |
-| Current module | M15 Community Posts (in progress; M9 ✅ Done) |
+| Current module | M15 Community Posts (🟨 Ready for playtest) |
 
 ---
 
@@ -48,7 +48,7 @@
 | M7 | Residency | FE + BE | | M6 | ✅ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
 | M9 | Community News | BE + FE | | M8 | ✅ |
-| M15 | Community Posts | FE + BE | | M9 | 🟦 |
+| M15 | Community Posts | FE + BE | | M9 | 🟨 |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
@@ -385,18 +385,24 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; announcements are not rate-limited or moderated beyond the operator; the board has no events yet (roadmap only).
 
 
-### M15 — Community Posts 🟦
+### M15 — Community Posts 🟨
 **Goal:** Neighbours write the community's local news.
 - **In scope** (`requirement.md` v1.28 §14)
-  - [ ] Verified Residents post in their own community once the Welcome sign is built: kind + up to 300 characters, 1 per Calgary day, no links/photos
-  - [ ] shown in Community News → Local news with nickname and "today / yesterday / 2 days ago"; visible 3 Calgary days; author can delete
-  - [ ] blocked words, phone numbers and street addresses refused
-  - [ ] reports (Verified 2 points, others 1; 3 points hide), operator report-block and hide (SQL)
-  - [ ] thanks (once per player per post) and the Community Reporter badge (10 thanks)
-  - [ ] posts come with the newspaper response (no extra request when opening)
+  - [x] Verified Residents post in their own community once the Welcome sign is built: kind + up to 300 characters, 1 per Calgary day, no links/photos
+  - [x] shown in Community News → Local news with nickname and "today / yesterday / 2 days ago"; visible 3 Calgary days; author can delete
+  - [x] blocked words, phone numbers and street addresses refused
+  - [x] reports (Verified 2 points, others 1; 3 points hide), operator report-block and hide (SQL)
+  - [x] thanks (once per player per post) and the Community Reporter badge (10 thanks)
+  - [x] posts come with the newspaper response (no extra request when opening)
 - **Definition of Done**
-  - [ ] only Verified Residents can post; abuse is limited and tested
-  - [ ] no times exposed
+  - [x] only Verified Residents can post; abuse is limited and tested
+  - [x] no times exposed
+- **Handoff**
+  - **Code:** migrations `20261120170000_identity_text_filter.sql` (`identity.has_blocked_words`: per-word, reserved names allowed), `20261120170100_posts.sql` (schema `posts`: `posts`, `reports`, `thanks`, `report_blocks`; `body_problem`, `can_post_at`, `feed_at`, `create_at` / `delete_at` / `report_at` / `thank_at`; RPC `posts_*`), `20261120170200_news_posts.sql` (`news.newspaper_at(c, now, uid)` adds `posts` and `can_post`), `20261120170300_invites_reporter_badge.sql`. Tests `supabase/tests/database/posts_rules.test.sql` (55). Frontend `frontend/src/modules/posts/` (`LocalNews` with composer, post items, thanks, report/delete), wired into `NewspaperPanel`; news store `show(id, {quiet})` refreshes after changes.
+  - **Filters:** address = house number + street type (with "10 am"-style times skipped), or + Calgary quadrant; phone = 10 digits with separators; links = scheme, www or common TLDs. False positives get a friendly message ("a landmark is fine"). Blocked words: per word, no substring (so "therapist" passes).
+  - **Daily limit counts deleted posts** (no delete-and-repost); reports are once per player; the operator hides posts and blocks reporters with SQL (docs/api.md).
+  - **Not tested / known gaps:** a real phone; no notification for authors; no operator UI; links/photos stay out (decision).
+
 
 ### M10 — World Map ⬜
 **Goal:** See all of Calgary and spread to empty communities.
@@ -490,6 +496,18 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.48
+**Changed:** M15 items ticked; status 🟨 with Handoff.
+
+**Why:** M15 implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.47 |`
+- Header: `| Current module | M15 Community Posts (in progress; M9 ✅ Done) |`
+- Overview: `| M15 | Community Posts | FE + BE | | M9 | 🟦 |`
+- M15: `### M15 — Community Posts 🟦`
+- M15: all checklist items were `- [ ]`; no Handoff
 
 ### 2026-11-20 — v1.47
 **Changed:** "Based on" → `requirement.md` v1.28. M15 🟦 in progress with its detailed scope.

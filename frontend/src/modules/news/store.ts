@@ -12,7 +12,9 @@ export interface NewsState {
   loading: boolean;
   error: string | null;
   paper: Newspaper | null;
-  show: (communityId: string) => Promise<void>;
+  communityId: string | null;
+  /** Opens (or, with `quiet`, refreshes without a loading state) the community's paper. */
+  show: (communityId: string, opts?: { quiet?: boolean }) => Promise<void>;
   close: () => void;
 }
 
@@ -22,8 +24,9 @@ export function createNewsStore(deps: NewsDeps) {
     loading: false,
     error: null,
     paper: null,
-    async show(communityId) {
-      set({ open: true, loading: true, error: null });
+    communityId: null,
+    async show(communityId, opts) {
+      set({ open: true, loading: !opts?.quiet, error: null, communityId });
       try {
         const c = deps.getClient();
         if (!c) throw new Error('Supabase is not configured');

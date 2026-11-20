@@ -50,6 +50,7 @@ describe('invite texts', () => {
     expect(badgeText({ key: 'good_neighbour', count: 1 }).title).toBe('Good Neighbour');
     expect(badgeText({ key: 'good_neighbour', count: 3 }).title).toBe('Good Neighbour ×3');
     expect(badgeText({ key: 'pioneer_sponsor', count: 2 }).title).toBe('Pioneer Sponsor ×2');
+    expect(badgeText({ key: 'community_reporter' }).title).toBe('Community Reporter');
   });
   it('welcome goal and share results', () => {
     expect(welcomeGoal(3)).toBe('3 more neighbours and your community grows.');
