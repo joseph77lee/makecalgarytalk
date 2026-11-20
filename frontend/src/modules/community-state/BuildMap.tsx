@@ -1,6 +1,7 @@
 import { projectIcon, type ServerCommunityState } from '../daily-actions';
 import { BUILDING_TREE, remainingText, type BuildingView } from '../island-view';
 import { completionPercent, groupByStage, isBuilt } from './buildMapModel';
+import { InviteChip } from './InviteChip';
 import { landGoalText } from './streakText';
 
 interface Props {
@@ -58,11 +59,7 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
             {goal && (
               <p className="mt-1 text-xs text-sky-800">
                 🏝 {goal}
-                {onInvite && (
-                  <button type="button" onClick={onInvite} className="ml-1 font-semibold underline">
-                    Invite
-                  </button>
-                )}
+                {onInvite && <InviteChip onClick={onInvite} />}
               </p>
             )}
             <button
@@ -120,11 +117,7 @@ function BuildingRow({ b, onInvite }: { b: BuildingView; onInvite?: () => void }
       {b.status === 'locked' && b.remaining && (
         <p className="mt-1 text-[11px]">
           {remainingText(b.remaining)}
-          {onInvite && b.remaining.residents > 0 && (
-            <button type="button" onClick={onInvite} className="ml-1 font-semibold text-sky-700 underline">
-              Invite
-            </button>
-          )}
+          {onInvite && b.remaining.residents > 0 && <InviteChip onClick={onInvite} />}
         </p>
       )}
     </li>

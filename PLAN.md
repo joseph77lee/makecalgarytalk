@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.36 |
+| Plan version | v1.37 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.25 |
@@ -401,6 +401,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] invite link landing: "<nickname> invited you to build <community> together"
   - [x] welcome card after the first counted check-in with Invite neighbours; "N more neighbours" goals (streak bar, build map) open the invite; share via the phone's share sheet (copy link fallback)
   - [x] first-visit copy: "You can't finish it alone"
+  - [x] always-visible floating Invite button (bottom right, × hides it for the Calgary day) with a once-a-day nudge at good moments; invite chips next to goals are green buttons
 - **Definition of Done**
   - [x] rewards cannot be farmed with self-invites (tests)
 - **Handoff**
@@ -408,6 +409,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Rewards are computed on read** from acceptances + residency verifications (no reward rows): Good Neighbour = the invitee's first verification is in the community the inviter lives in that day; Pioneer Sponsor = that first verification founded the community; Founding Resident = earliest verification of a community (same day → lower id). So moves never remove or create rewards.
   - **Farming guards:** no self-invite; one acceptance per account (append-only); only before the invitee's first verification; rewards need the 3-of-7-day verification. Codes are public identifiers (not secrets); `invites_lookup` is open to anon and only returns nickname + community.
   - **Link flow:** `?invite=CODE` is read at app load, saved in localStorage and removed from the address bar; accepted right after sign-in (kept on a network failure, forgotten once the server answered). Share uses `navigator.share`, else copies "message + link" to the clipboard (toast). The share text always names the community.
+  - **Floating Invite button:** `InviteFab` (bottom right above the action bar; toast moved up to `bottom-[13.5rem]`). Hidden day and nudge day are per device (localStorage, Calgary day from the server). Nudge text from `inviteNudge` (closest goal ≤ 2 neighbours, then island grew, then built).
   - **Welcome card:** shown when the player plays pending in a community (verifying or moving) and has not seen it for that community on this device; it takes the place of the changes panel that time.
   - **Not tested / known gaps:** the real share sheet on a phone (headless Chromium has no `navigator.share`; the copy fallback was checked); M8 (houses) will show badges on name tags later; decorations are Phase 2; no per-IP limit on `invites_lookup` (low value: nickname + community only).
 
@@ -456,6 +458,15 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.37
+**Changed:** M12: floating Invite button with hide-for-the-day and a once-a-day nudge; invite chips are green buttons.
+
+**Why:** User feedback 2026-11-20: the underlined "Invite" was too small to notice; inviting must always be easy to see.
+
+**Previous:**
+- Header: `| Plan version | v1.36 |`
+- M12: (no floating Invite button item)
 
 ### 2026-11-20 — v1.36
 **Changed:** M12 items ticked; status 🟨 with Handoff.

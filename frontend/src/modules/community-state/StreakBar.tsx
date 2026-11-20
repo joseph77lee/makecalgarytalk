@@ -1,5 +1,6 @@
 import type { ServerStreak } from '../daily-actions';
 import type { ReactNode } from 'react';
+import { InviteChip } from './InviteChip';
 import { landGoalText, sleepyText, streakText } from './streakText';
 
 interface Props {
@@ -31,9 +32,10 @@ export function StreakBar({ streak, nextLandResidents, onOpenMap, onInvite, slee
           <div className="truncate">{t.hint}</div>
           {goal &&
             (onInvite ? (
-              <button type="button" onClick={onInvite} className="block max-w-full truncate text-left text-sky-700">
-                🏝 {goal} · <span className="font-semibold underline">Invite</span>
-              </button>
+              <div className="flex min-w-0 items-center text-sky-700">
+                <span className="truncate">🏝 {goal}</span>
+                <InviteChip onClick={onInvite} />
+              </div>
             ) : (
               <div className="truncate text-sky-700">🏝 {goal}</div>
             ))}

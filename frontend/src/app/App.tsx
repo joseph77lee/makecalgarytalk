@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
-import { BuildMap, ChangesPanel, StreakBar } from '../modules/community-state';
+import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen } from '../modules/community-state';
 import { ActionBar, CommunityPicker, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
-import { InviteLandingBanner, InviteSection, WelcomeCard, shareOutcomeText, useInvites } from '../modules/invites';
+import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import {
   IslandDevPanel,
@@ -79,6 +79,20 @@ function LiveApp() {
         if (text) useDailyActions.getState().showToast(text);
       });
   };
+  // A nudge for the floating Invite button at a good moment (closest goal wins).
+  const closest = view?.buildings
+    .filter((b) => b.status === 'locked' && b.remaining && b.remaining.residents > 0)
+    .sort((x, y) => (x.remaining?.residents ?? 0) - (y.remaining?.residents ?? 0))[0];
+  const nudge = server
+    ? inviteNudge({
+        nextLandResidents: server.community.next_land_residents,
+        closestBuildingResidents: closest?.remaining?.residents ?? null,
+        closestBuildingTitle: closest?.title ?? null,
+        builtSinceYesterday: server.changes.built[0]?.title ?? null,
+        landGrew: server.changes.land_grew,
+      })
+    : null;
+  const panelOpen = !!server && changesPanelOpen(server.changes, server.community.vitality, changesSeen);
   // Welcome card right after the first counted check-in (§5.1), once per community.
   const showWelcome =
     status === 'ready' &&
@@ -117,6 +131,15 @@ function LiveApp() {
                 <ResidencyChip />
               </StreakBar>
               <ActionBar />
+              {server.me?.member && !showWelcome && (
+                // Remounts when the changes panel closes, so the nudge is not shown behind it.
+                <InviteFab
+                  key={panelOpen ? 'behind-panel' : 'visible'}
+                  calgaryDay={server.calgary_day}
+                  nudge={panelOpen ? null : nudge}
+                  onInvite={invite}
+                />
+              )}
               {showWelcome ? (
                 <WelcomeCard
                   communityId={server.community.id}

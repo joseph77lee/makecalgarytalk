@@ -92,6 +92,7 @@ The service grows in this order; features are judged by how they serve it. The *
    - Existing community: construction progress bar rises, mini villagers cheer
 5. The next goal from the building tree, e.g. "2 more neighbours and the frozen pond becomes a skating rink" + **Invite button**
    - Shown as a **welcome card** right after the first counted check-in ("Welcome to <community>! N more neighbours and the island grows") with Invite neighbours / Look around first; "N more neighbours" goals elsewhere (streak bar, build map) also open the invite
+   - A floating **Invite** button is always visible at the bottom right of my community; a small × hides it for the rest of the Calgary day. At good moments (the island or a building is 1–2 neighbours away, something was built, the island grew) it shows a one-line nudge, at most once a day and not on a hidden day
    - The first-visit example says that a community can only be finished together ("You can't finish it alone")
 
 ### 5.2 Daily routine
@@ -785,7 +786,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > ```
 
 ### 2026-11-20 — v1.25
-**Changed:** 12.3: MVP invite reward = "Good Neighbour" badge for both (decorations in Phase 2); what "same community" means; accept rules; the invite link shows the inviter's nickname and community. 7.1: Founding Resident = the community's first Verified Resident. 5.1: welcome card with the invite after the first check-in; "N more neighbours" goals open the invite; first-visit copy stresses building together.
+**Changed:** 12.3: MVP invite reward = "Good Neighbour" badge for both (decorations in Phase 2); what "same community" means; accept rules; the invite link shows the inviter's nickname and community. 7.1: Founding Resident = the community's first Verified Resident. 5.1: welcome card with the invite after the first check-in; "N more neighbours" goals open the invite; an always-visible floating Invite button (hide for the day) with a once-a-day nudge at good moments; first-visit copy stresses building together.
 
 **Why:** M12 needs exact rules; bringing neighbours in must be clear from the first visit (user decisions 2026-11-20).
 

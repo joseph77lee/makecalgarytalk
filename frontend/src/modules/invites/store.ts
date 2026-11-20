@@ -35,10 +35,18 @@ export interface InvitesState {
   /** Communities whose welcome card was seen on this device (once per community). */
   welcomedIds: string[];
   markWelcomed: (communityId: string) => void;
+  /** Calgary day on which the floating Invite button was hidden (×), shown again the next day. */
+  hiddenDay: string | null;
+  hideForDay: (calgaryDay: string) => void;
+  /** Calgary day of the last nudge (at most one a day). */
+  nudgedDay: string | null;
+  markNudged: (calgaryDay: string) => void;
 }
 
 const PENDING_KEY = 'mct.inviteCode.v1';
 const WELCOMED_KEY = 'mct.welcomed.v1';
+const HIDDEN_KEY = 'mct.inviteHiddenDay.v1';
+const NUDGED_KEY = 'mct.inviteNudgedDay.v1';
 
 export function createInvitesStore(deps: InvitesDeps) {
   const read = (k: string): string | null => {
@@ -64,6 +72,8 @@ export function createInvitesStore(deps: InvitesDeps) {
     mine: null,
     landing: null,
     welcomedIds: (read(WELCOMED_KEY) ?? '').split(',').filter(Boolean),
+    hiddenDay: read(HIDDEN_KEY),
+    nudgedDay: read(NUDGED_KEY),
 
     async loadLanding() {
       const code = pendingCode();
@@ -127,6 +137,16 @@ export function createInvitesStore(deps: InvitesDeps) {
         }
       }
       return 'failed';
+    },
+
+    hideForDay(calgaryDay) {
+      write(HIDDEN_KEY, calgaryDay);
+      set({ hiddenDay: calgaryDay });
+    },
+
+    markNudged(calgaryDay) {
+      write(NUDGED_KEY, calgaryDay);
+      set({ nudgedDay: calgaryDay });
     },
 
     markWelcomed(communityId) {

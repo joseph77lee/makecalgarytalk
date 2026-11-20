@@ -1,5 +1,5 @@
 import type { ServerChanges } from '../daily-actions';
-import { changeItems } from './changesText';
+import { changeItems, changesPanelOpen } from './changesText';
 
 interface Props {
   changes: ServerChanges;
@@ -11,8 +11,8 @@ interface Props {
 
 /** On entry, once per account per Calgary day: what changed since yesterday (requirement.md §10.1). */
 export function ChangesPanel({ changes, vitality, seen, onSeen }: Props) {
+  if (!changesPanelOpen(changes, vitality, seen)) return null;
   const items = changeItems(changes, vitality);
-  if (items.length === 0 || seen) return null;
   const close = onSeen;
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/20 p-4" onClick={close}>

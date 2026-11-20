@@ -56,3 +56,25 @@ export type ShareOutcome = 'shared' | 'copied' | 'cancelled' | 'failed';
 export function shareOutcomeText(o: ShareOutcome): string | null {
   return { shared: 'Thanks for inviting a neighbour!', copied: 'Invite link copied. Paste it to a neighbour.', cancelled: null, failed: 'Could not share the link.' }[o];
 }
+
+export interface NudgeInputs {
+  /** Neighbours until the island grows (null at the largest island). */
+  nextLandResidents: number | null;
+  /** Fewest more residents a locked building still needs (null if none waits for residents). */
+  closestBuildingResidents: number | null;
+  closestBuildingTitle: string | null;
+  /** Something was built or the island grew since yesterday. */
+  builtSinceYesterday: string | null;
+  landGrew: boolean;
+}
+
+/** One short nudge at a good moment (requirement §5.1), or null. The closest goal wins. */
+export function inviteNudge(n: NudgeInputs): string | null {
+  const more = (k: number) => (k === 1 ? '1 more neighbour' : `${k} more neighbours`);
+  if (n.nextLandResidents !== null && n.nextLandResidents <= 2) return `${more(n.nextLandResidents)} and the island grows! Invite someone nearby.`;
+  if (n.closestBuildingResidents !== null && n.closestBuildingResidents <= 2 && n.closestBuildingTitle)
+    return `${more(n.closestBuildingResidents)} and the ${n.closestBuildingTitle} opens! Invite someone nearby.`;
+  if (n.landGrew) return 'The island grew! Invite neighbours to grow it again.';
+  if (n.builtSinceYesterday) return `The ${n.builtSinceYesterday} is built! Share it with your neighbours.`;
+  return null;
+}

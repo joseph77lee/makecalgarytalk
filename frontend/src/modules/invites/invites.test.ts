@@ -5,6 +5,7 @@ import {
   badgeText,
   inviteCodeFromSearch,
   inviteMessage,
+  inviteNudge,
   inviteUrl,
   landingText,
   shareOutcomeText,
@@ -56,6 +57,22 @@ describe('invite texts', () => {
     expect(welcomeGoal(null)).toMatch(/finish it together/);
     expect(shareOutcomeText('cancelled')).toBeNull();
     expect(shareOutcomeText('copied')).toMatch(/copied/);
+  });
+});
+
+describe('invite nudges', () => {
+  const none = { nextLandResidents: 5, closestBuildingResidents: null, closestBuildingTitle: null, builtSinceYesterday: null, landGrew: false };
+  it('nudges only at good moments, the closest goal first', () => {
+    expect(inviteNudge(none)).toBeNull();
+    expect(inviteNudge({ ...none, nextLandResidents: 1 })).toBe('1 more neighbour and the island grows! Invite someone nearby.');
+    expect(inviteNudge({ ...none, nextLandResidents: 2, closestBuildingResidents: 1, closestBuildingTitle: 'Skating rink' })).toMatch(/island grows/);
+    expect(inviteNudge({ ...none, closestBuildingResidents: 2, closestBuildingTitle: 'Skating rink' })).toBe(
+      '2 more neighbours and the Skating rink opens! Invite someone nearby.',
+    );
+    expect(inviteNudge({ ...none, closestBuildingResidents: 3, closestBuildingTitle: 'Skating rink' })).toBeNull();
+    expect(inviteNudge({ ...none, landGrew: true, builtSinceYesterday: 'Fire pit' })).toMatch(/island grew/);
+    expect(inviteNudge({ ...none, builtSinceYesterday: 'Fire pit' })).toBe('The Fire pit is built! Share it with your neighbours.');
+    expect(inviteNudge({ ...none, nextLandResidents: null })).toBeNull();
   });
 });
 
@@ -139,6 +156,15 @@ describe('invites store', () => {
 
     const t4 = setup({ shareEnv: {} });
     expect(await t4.useStore.getState().invite('Mahogany')).toBe('failed');
+  });
+  it('the × hides the invite button for one Calgary day; nudges once a day', () => {
+    const t = setup({ stored: { 'mct.inviteHiddenDay.v1': '2026-12-01' } });
+    expect(t.useStore.getState().hiddenDay).toBe('2026-12-01');
+    t.useStore.getState().hideForDay('2026-12-02');
+    expect(t.store.get('mct.inviteHiddenDay.v1')).toBe('2026-12-02');
+    t.useStore.getState().markNudged('2026-12-02');
+    expect(t.useStore.getState().nudgedDay).toBe('2026-12-02');
+    expect(t.store.get('mct.inviteNudgedDay.v1')).toBe('2026-12-02');
   });
   it('the welcome card is remembered per community', () => {
     const t = setup({ stored: { 'mct.welcomed.v1': 'c-old' } });
