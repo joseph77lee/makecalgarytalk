@@ -119,8 +119,8 @@ function Composer({ onDone }: { onDone: (posted: boolean) => void }) {
 function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
   const [thanked, setThanked] = useState(post.thanked);
   const [thanks, setThanks] = useState(post.thanks);
-  const [menu, setMenu] = useState(false);
   const [reported, setReported] = useState(post.reported);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const k = KIND_LABEL[post.kind];
   const thank = async () => {
@@ -134,59 +134,70 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
       setThanks((n) => n - 1);
     }
   };
+  const report = () => {
+    setReported(true);
+    void postsApi.report(postsClient(), post.id).then((problem) => {
+      if (problem) {
+        setReported(false);
+        setNote(REPORT_PROBLEM[problem] ?? 'Could not report this post.');
+      } else {
+        setNote('Thanks for letting us know.');
+        onChanged();
+      }
+    });
+  };
   return (
     <li className="rounded-2xl bg-white p-3 ring-1 ring-slate-200">
       <div className="mb-1 flex items-center gap-1.5 text-[11px] text-slate-500">
         <span className="rounded-full bg-slate-100 px-1.5 py-px font-semibold text-slate-600">
           {k.icon} {k.label}
         </span>
-        <span className="font-semibold text-slate-700">{post.nickname}</span>
+        <span className="font-semibold text-slate-700">{post.mine ? 'You' : post.nickname}</span>
         <span>· {ageText(post.days_ago)}</span>
-        <button type="button" onClick={() => setMenu((m) => !m)} aria-label="More" className="ml-auto rounded-full px-1.5 text-slate-400">
-          ⋯
-        </button>
       </div>
       <p className="whitespace-pre-wrap break-words text-sm text-slate-800">{post.body}</p>
       {post.kind === 'safety' && <p className="mt-1 text-[11px] text-rose-700">In an emergency, call 911.</p>}
       <div className="mt-2 flex items-center gap-2">
-        {!(post.mine && thanks === 0) && (
         <button
           type="button"
           onClick={() => void thank()}
           disabled={post.mine}
           aria-pressed={thanked}
-          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${thanked ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'} disabled:opacity-60`}
+          aria-label={post.mine ? `${thanks} thanks` : thanked ? 'Thanked' : 'Thanks'}
+          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${thanked ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'} disabled:opacity-70`}
         >
-          👍 {thanks > 0 ? thanks : ''} {post.mine ? '' : thanked ? 'Thanked' : 'Thanks'}
+          👍 {post.mine ? thanks : `${thanks > 0 ? `${thanks} ` : ''}${thanked ? 'Thanked' : 'Thanks'}`}
         </button>
-        )}
-        {menu &&
-          (post.mine ? (
-            <button
-              type="button"
-              onClick={() => void postsApi.remove(postsClient(), post.id).then(onChanged)}
-              className="rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700"
-            >
-              Delete my post
-            </button>
+        {post.mine ? (
+          confirmDelete ? (
+            <span className="ml-auto flex items-center gap-1.5">
+              <span className="text-[11px] text-slate-500">Delete?</span>
+              <button
+                type="button"
+                onClick={() => void postsApi.remove(postsClient(), post.id).then(onChanged)}
+                className="rounded-full bg-rose-500 px-2.5 py-1 text-xs font-semibold text-white"
+              >
+                Delete
+              </button>
+              <button type="button" onClick={() => setConfirmDelete(false)} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
+                Keep
+              </button>
+            </span>
           ) : (
-            <button
-              type="button"
-              disabled={reported}
-              onClick={() => {
-                setReported(true);
-                void postsApi.report(postsClient(), post.id).then((problem) => {
-                  if (problem) {
-                    setReported(false);
-                    setNote(REPORT_PROBLEM[problem] ?? 'Could not report this post.');
-                  } else onChanged();
-                });
-              }}
-              className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 disabled:opacity-60"
-            >
-              {reported ? 'Reported' : 'Report'}
+            <button type="button" onClick={() => setConfirmDelete(true)} className="ml-auto rounded-full px-2 py-1 text-xs text-slate-500">
+              🗑 Delete
             </button>
-          ))}
+          )
+        ) : (
+          <button
+            type="button"
+            disabled={reported}
+            onClick={report}
+            className="ml-auto rounded-full px-2 py-1 text-xs text-slate-500 disabled:opacity-60"
+          >
+            {reported ? '🚩 Reported' : '🚩 Report'}
+          </button>
+        )}
       </div>
       {note && <p className="mt-1 text-[11px] text-amber-700">{note}</p>}
     </li>
