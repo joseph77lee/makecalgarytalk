@@ -41,3 +41,9 @@ values (
 -- Joins through the game rule so the membership event is recorded too.
 select gamecore.choose_community_at('d0000000-0000-4000-8000-00000000de02', c.id, now())
 from gamecore.communities c where c.city = 'calgary' and c.code = 'MAH';
+
+-- Dev users skip the first visit (profile already set); the anonymous flow shows it.
+insert into identity.profiles (user_id, nickname, shirt) values
+  ('d0000000-0000-4000-8000-00000000de01', 'Dev One', 0),
+  ('d0000000-0000-4000-8000-00000000de02', 'Dev Two', 4)
+on conflict (user_id) do nothing;

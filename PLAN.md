@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.27 |
+| Plan version | v1.28 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-19 |
 | Based on | `requirement.md` v1.22 |
-| Current module | M6 Identity (in progress; M5 ✅ Done) |
+| Current module | M6 Identity (🟨 Ready for playtest; Google linking awaits an OAuth client) |
 
 ---
 
@@ -44,7 +44,7 @@
 | M3 | Game Core | BE | ⭐ Core | M0 | ✅ |
 | M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | ✅ |
 | M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ✅ |
-| M6 | Identity | FE + BE | | M4 | 🟦 |
+| M6 | Identity | FE + BE | | M4 | 🟨 |
 | M7 | Residency | FE + BE | | M6 | ⬜ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |
 | M9 | Village News | BE + FE | | M8 | ⬜ |
@@ -285,22 +285,30 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real Calgary midnight (days simulated by shifting data); a real phone; load (one job rebuilds all communities with residents — fine at MVP size, measure before launch); Community Revival effect and share card (M11); houses still empty (M8).
   - **Dev tip:** to simulate "the next day" locally, move all gamecore dates back one day with `session_replication_role = replica` (actions in two steps because of the energy-slot unique key) and clear `community_days` and `community_snapshots`.
 
-### M6 — Identity 🟦
+### M6 — Identity 🟨
 **Goal:** Real users without friction.
 - **In scope**
-  - [ ] Supabase anonymous sign-in on first visit
-  - [ ] optional Google linking
-  - [ ] avatar shirt colour choice on first visit, changeable later (`requirement.md` §10.2)
-  - [ ] nickname on first visit with a suggested default, validated on the server, changeable later (`requirement.md` §6.1)
-  - [ ] completed-neighbourhood example on the first visit only (one image or short animated scene rendered with the real engine, `requirement.md` §5.1)
-  - [ ] Cloudflare Turnstile
-  - [ ] sign-up rate limits
-  - [ ] re-join with same Google account restores record
-  - [ ] "What changed since yesterday" seen once per **account** per Calgary day (server-side record instead of the M5 per-browser localStorage flag)
+  - [x] Supabase anonymous sign-in on first visit
+  - [ ] optional Google linking — code done; verify with a real Google OAuth client
+  - [x] avatar shirt colour choice on first visit, changeable later (`requirement.md` §10.2)
+  - [x] nickname on first visit with a suggested default, validated on the server, changeable later (`requirement.md` §6.1)
+  - [x] completed-neighbourhood example on the first visit only (one image or short animated scene rendered with the real engine, `requirement.md` §5.1)
+  - [x] Cloudflare Turnstile (local: Cloudflare test keys; real keys at deploy, M14)
+  - [x] sign-up rate limits (Supabase Auth per-IP anonymous limit; Cloudflare rate limiting at deploy, M14)
+  - [ ] re-join with same Google account restores record — code done (`signInWithOAuth`); verify with a real Google OAuth client
+  - [x] "What changed since yesterday" seen once per **account** per Calgary day (server-side record instead of the M5 per-browser localStorage flag)
 - **Definition of Done**
-  - [ ] new visitor plays instantly without a form
+  - [x] new visitor plays instantly without a form
   - [ ] linking Google keeps progress
-  - [ ] bot check active
+  - [x] bot check active
+- **Handoff**
+  - **Code:** migration `supabase/migrations/20261120120000_identity_profiles.sql` (schema `identity`: `profiles`, `blocked_words`; RPC `identity_get_profile`, `identity_save_profile`, `identity_mark_changes_seen`); tests `supabase/tests/database/identity_profiles.test.sql` (26). Frontend `frontend/src/modules/identity/` (store with injected deps, Turnstile loader, `FirstVisit`, `ProfileForm`, `ProfileButton`/sheet, `IdentityScreen`, dev sign-in). App: `IdentityGate` signs in and runs the first visit before `LiveApp`; `IslandHud` got a `left` slot for the profile chip; `Avatar` takes `shirtColor`. Auth settings in `supabase/config.toml` (anonymous sign-ins, manual linking, Turnstile captcha, site URL `http://localhost:5180`).
+  - **First visit = no profile yet.** The finished example uses Mahogany's stored plan with the sign reading "Your community"; then nickname + shirt; then the community picker (World Map in M10).
+  - **Turnstile:** every Supabase Auth sign-in/sign-up needs a token (also the dev password sign-in). Local uses Cloudflare's public test keys (always pass, need internet). For production: create a Turnstile widget, put the site key in the frontend env and the secret in the hosted Supabase project's Auth → Bot protection.
+  - **Google (open):** `linkIdentity` / `signInWithOAuth` are wired and unit-tested with fakes; the buttons show only with `VITE_GOOGLE_LINKING=true`. To verify: create a Google OAuth client (redirect URI `http://127.0.0.1:55421/auth/v1/callback` locally), put id/secret in `supabase/.env`, set `[auth.external.google] enabled = true`, restart Supabase. Linking an already-linked Google account returns an error; the sheet then offers "Sign in with Google" (the anonymous account's progress stays on that anonymous account).
+  - **Nicknames:** validated in Postgres (length, characters, blocked words); the client mirrors length/characters for instant hints only. Blocked list is basic (reserved names + common profanity); extend `identity.blocked_words` as needed.
+  - **Dev:** `?devuser=1|2` signs in as the seeded users (now with profiles, so they skip the first visit); without it, dev uses the real anonymous flow. A private window = a new anonymous player.
+  - **Not tested / known gaps:** real Google linking and re-join (no OAuth client yet); real Turnstile keys and challenge UI; a real phone; Cloudflare-level rate limiting (deploy); account deletion with hashed identifier (§6.1) is not in M6.
 
 ### M7 — Residency ⬜
 **Goal:** Users belong to the community they live in.
@@ -419,6 +427,18 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.28
+**Changed:** M6 items ticked except Google linking / re-join and its DoD (code done, not verified); status 🟨 with Handoff.
+
+**Why:** M6 implemented and verified locally; Google needs an OAuth client the user creates.
+
+**Previous:**
+- Header: `| Plan version | v1.27 |`
+- Header: `| Current module | M6 Identity (in progress; M5 ✅ Done) |`
+- Overview: `| M6 | Identity | FE + BE | | M4 | 🟦 |`
+- M6: `### M6 — Identity 🟦`
+- M6: all checklist items were `- [ ]`
 
 ### 2026-11-19 — v1.27
 **Changed:** "Based on" → `requirement.md` v1.22. M6: nickname on the first visit added to scope.

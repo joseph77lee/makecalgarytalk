@@ -2,7 +2,6 @@
 import { getSupabaseClient, readSupabaseConfig } from '../common';
 import { moveTo, playWork, useAvatarStore } from '../avatar';
 import { buildIslandLayout, buildingSiteTile, celebrateIsland, loadIslandPlan } from '../island-view';
-import { ensureDevSession } from './devSession';
 import { playHelpSound } from './sound';
 import { createDailyActionsStore } from './store';
 
@@ -19,12 +18,8 @@ export const useDailyActions = createDailyActionsStore({
     const cfg = readSupabaseConfig();
     return cfg.ok ? getSupabaseClient(cfg.config) : null;
   },
+  // Identity (M6) signs the player in before this store starts.
   ensureSession: async (client) => {
-    if (import.meta.env.DEV) {
-      await ensureDevSession(client, window.location.search);
-      return true;
-    }
-    // Production sign-in arrives with Identity (M6).
     const { data } = await client.auth.getSession();
     return data.session !== null;
   },
