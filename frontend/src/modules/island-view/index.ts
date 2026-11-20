@@ -2,6 +2,7 @@
 export { IslandView } from './scene/IslandView';
 export { celebrateIsland, useIslandWalkable } from './scene/islandContext';
 export { useShowIslandLabels } from './uiStore';
+export { useHtmlPortal } from './scene/htmlPortal';
 export { setCameraFocus, clearCameraFocus } from './scene/cameraFocus';
 export { IslandHud } from './scene/IslandHud';
 export { IslandDevPanel } from './dev/IslandDevPanel';

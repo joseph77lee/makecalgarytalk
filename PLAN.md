@@ -205,7 +205,8 @@ M0 ─┬─ M1 ── M2 ─┐
   - **API change:** `community` now has `residents`, `land_stage`, `settled`; new `buildings` array (every tree building with status/level/progress/remaining); `projects` items use `building_key` (no `seq`/`kind`); `completed_projects` is gone. `docs/api.md` updated.
   - **Temporary inputs:** cumulative residents = players currently in the community (M7: distinct Verified Residents ever, so it never shrinks); community streak = 0 (M5), so Playground, Warming hut and other streak buildings stay locked in live mode — this is expected, not a bug. `land_stage` is computed on the server now (the M1 note "land stage 2 until M3 🔁" no longer applies).
   - **Pre-launch reset:** the migration deletes all actions and projects (old catalog). Fine locally and in CI; it must never be repeated after launch.
-  - **Not tested / known gaps:** no load test; `ensure_tree` and `remaining` run on every state read (M5 snapshots should take the read path); upgrades of a built building show as a construction site on the island (M1 draws the chain's active construction) — see the open question in the report; the build map (M5) is not built yet.
+  - **Island display (island-view, done on this branch with the user's OK, 2026-11-19):** an upgrade (status `building`, level 2+) keeps the built model on its lot with a small scaffold and a progress label (`BuildingObject.upgrade`, `level` = built level); only a new building of the chain shows a construction site. Also fixed a latent M1 bug: drei `Html` overlays could stay **empty** (the Welcome sign's name tag vanished) because their React root was rebuilt when `events.connected` changed; every overlay now uses `useHtmlPortal()` (labels, villager bubbles, avatar tag).
+  - **Not tested / known gaps:** no load test; `ensure_tree` and `remaining` run on every state read (M5 snapshots should take the read path); the build map (M5) is not built yet; the overlay fix was checked in Chromium (desktop + phone size) only.
 
 **Original M3 (done 2026-11-18):**
 **Goal:** Backend domain for communities, projects and actions with server-side rules.
@@ -408,7 +409,7 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > ```
 
 ### 2026-11-19 — v1.21
-**Changed:** M3 rework items ticked, status 🟨 with a rework Handoff.
+**Changed:** M3 rework items ticked, status 🟨 with a rework Handoff (includes two island-view display fixes made on the M3 branch with the user's approval: upgrades in place and empty overlays).
 
 **Why:** Building tree on the server finished and verified.
 

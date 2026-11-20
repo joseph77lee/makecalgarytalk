@@ -46,7 +46,7 @@ describe('models', () => {
   });
 
   const built = (buildingKey: string, w: number, d: number, level = 1): BuildingObject => ({
-    assetKey: `building.${buildingKey}`, id: 'b', x: 0, z: 0, stage: 0, w, d, buildingKey, title: buildingKey, level, next: null,
+    assetKey: `building.${buildingKey}`, id: 'b', x: 0, z: 0, stage: 0, w, d, buildingKey, title: buildingKey, level, next: null, upgrade: null,
   });
 
   it.each(BUILDING_TREE.buildings.filter((b) => b.lot).map((b) => [b.key, BUILDING_TREE.lots[b.lot as string].size] as const))(
@@ -64,6 +64,20 @@ describe('models', () => {
   it('upgrades add one gold marker per level (max 4)', () => {
     const markers = (level: number) => building(built('fire-pit', 3, 3, level), ctx('normal')).filter((p) => p.c === '#f2c94c').length;
     expect([markers(1), markers(2), markers(3), markers(9)]).toEqual([0, 1, 2, 4]);
+  });
+
+  it('an upgrade adds a small scaffold inside the lot without hiding the building', () => {
+    const plain = built('fire-pit', 3, 3, 1);
+    const upgrading: BuildingObject = { ...plain, upgrade: { level: 2, progress: 0.4 } };
+    const before = building(plain, ctx('normal'));
+    const after = building(upgrading, ctx('normal'));
+    expect(after.slice(0, before.length)).toEqual(before);
+    const extra = after.slice(before.length);
+    expect(extra.length).toBeGreaterThan(0);
+    for (const p of extra) {
+      expect(Math.abs(p.p[0]) + p.s[0] / 2).toBeLessThanOrEqual(1.5);
+      expect(Math.abs(p.p[2]) + p.s[2] / 2).toBeLessThanOrEqual(1.5);
+    }
   });
 
   it('unknown buildings get the placeholder model', () => {

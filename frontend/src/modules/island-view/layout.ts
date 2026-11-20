@@ -4,7 +4,8 @@
  * Positions come only from the stored plan (requirement.md §7.8), so they never change.
  * Land of stages up to `landStage` is shown; the rest of the real outline is drawn as
  * "future land" clouds. Each lot shows the most advanced building of its growth chain
- * (§7.6): a construction site while building, else the last built one, else a silhouette.
+ * (§7.6): a construction site while a new building goes up, else the last built one (with a
+ * small scaffold while it is upgraded in place), else a silhouette.
  */
 import { vitalityMood, type VitalityMood } from './mood';
 import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
@@ -69,6 +70,8 @@ export type PlacedObject =
         level: number;
         /** Next building of the growth chain on this lot, if any (for the label). */
         next: { title: string; remaining: Remaining | null; status: BuildingView['status'] } | null;
+        /** Upgrade in place under way (§7.6): the built model stays, `level` is the built one. */
+        upgrade: { level: number; progress: number } | null;
       });
 
 export type ObjectOf<K extends PlacedObject['assetKey']> = Extract<PlacedObject, { assetKey: K }>;
@@ -173,10 +176,11 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     if (!shown) continue;
     usedLots.push(lotKey);
     if (spec.kind !== 'entrance') rTiles.forEach((t) => occupied.add(tileKey(t)));
-    const buildingIdx = views.findIndex((v) => v?.status === 'building');
+    const buildingIdx = views.findIndex((v) => v?.status === 'building' && v.level === 1);
     let builtIdx = -1;
     views.forEach((v, i) => {
-      if (v?.status === 'built') builtIdx = i;
+      // An upgrade (building at level 2+) stands on a built building: draw that one.
+      if (v?.status === 'built' || (v?.status === 'building' && v.level > 1)) builtIdx = i;
     });
     if (buildingIdx >= 0) {
       const v = views[buildingIdx] as BuildingView;
@@ -191,7 +195,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
         assetKey: `building.${v.key}`,
         buildingKey: v.key,
         title: v.title,
-        level: v.level,
+        ...builtLevel(v),
         next: nextSpec ? { title: nextSpec.name, remaining: nextView?.remaining ?? null, status: nextView?.status ?? 'locked' } : null,
       });
     } else {
@@ -223,9 +227,9 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     usedLots.push(spare.key);
     lotTiles(spare.rect).forEach((t) => occupied.add(tileKey(t)));
     objects.push(
-      b.status === 'building'
+      b.status === 'building' && b.level === 1
         ? { ...base, id: `lot:${spare.key}`, assetKey: 'construction-site', buildingKey: b.key, title: b.title, progress: b.progress, level: b.level }
-        : { ...base, id: `lot:${spare.key}`, assetKey: 'building.placeholder', buildingKey: b.key, title: b.title, level: b.level, next: null },
+        : { ...base, id: `lot:${spare.key}`, assetKey: 'building.placeholder', buildingKey: b.key, title: b.title, ...builtLevel(b), next: null },
     );
   }
 
@@ -297,6 +301,13 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     cameraAzimuth: plan.cameraAzimuth,
     hiddenHouseCount: Math.max(0, state.houses.length - lots.length) + hiddenUnknown,
   };
+}
+
+/** Built level and upgrade info: a building at level N under construction is built at N − 1. */
+function builtLevel(v: BuildingView): { level: number; upgrade: { level: number; progress: number } | null } {
+  return v.status === 'building' && v.level > 1
+    ? { level: v.level - 1, upgrade: { level: v.level, progress: v.progress } }
+    : { level: v.level, upgrade: null };
 }
 
 /** Tile to walk to when helping a building (the avatar stops next to its lot). */

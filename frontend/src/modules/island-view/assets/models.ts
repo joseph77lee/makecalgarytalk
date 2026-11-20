@@ -363,10 +363,24 @@ export const BUILDING_MODELS: Record<string, Builder> = {
   'neighbourhood-park': neighbourhoodPark,
 };
 
+/** Small scaffold at the back corner while a built building is upgraded in place. */
+function upgradeScaffold(w: number, d: number): BoxPart[] {
+  const pole = '#e0a96d';
+  const x = -w / 2 + 0.2;
+  const z = -d / 2 + 0.2;
+  return [
+    box('solid', x, 0, z, 0.05, 0.8, 0.05, pole),
+    box('solid', x + 0.35, 0, z, 0.05, 0.8, 0.05, pole),
+    box('solid', x + 0.175, 0.4, z, 0.4, 0.04, 0.05, pole),
+    box('solid', x + 0.175, 0.78, z, 0.4, 0.04, 0.05, pole),
+    box('solid', x + 0.2, 0, z + 0.3, 0.22, 0.16, 0.18, '#c8a27a'),
+  ];
+}
+
 /** A built building of the tree (placeholder for unknown keys), with upgrade markers. */
 export function building(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
   const make = BUILDING_MODELS[item.buildingKey] ?? placeholder;
-  return [...make(item, ctx), ...levelMarkers(item.level, item.w, item.d)];
+  return [...make(item, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
 }
 
 /** A locked (or ready) building: its model as a translucent ghost on its lot. */
