@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { POST_KINDS, isCanPost, isPost } from './api';
-import { KIND_LABEL, PROBLEM_TEXT, ageText, cannotPostText } from './postText';
+import { KIND_LABEL, PROBLEM_TEXT, REPORT_PROBLEM, SAFETY_NOTE, ageText, cannotPostText } from './postText';
 
 const post = { id: 'p1', kind: 'event', body: 'Skating Saturday', nickname: 'Maple Fox', days_ago: 0, thanks: 0, mine: false, thanked: false, reported: false };
 
@@ -9,6 +9,9 @@ describe('community post texts', () => {
     expect(ageText(0)).toBe('today');
     expect(ageText(1)).toBe('yesterday');
     expect(ageText(2)).toBe('2 days ago');
+  });
+  it('kinds are about real community life, safety first', () => {
+    expect(POST_KINDS).toEqual(['safety', 'deal', 'event', 'lost_found', 'talk']);
   });
   it('every kind has a label and a writing hint', () => {
     for (const k of POST_KINDS) {
@@ -21,6 +24,8 @@ describe('community post texts', () => {
       expect(PROBLEM_TEXT[p].length).toBeGreaterThan(10);
     }
     expect(PROBLEM_TEXT.address).toMatch(/landmark/);
+    expect(REPORT_PROBLEM.limit).toMatch(/3 posts a day/);
+    expect(SAFETY_NOTE).toMatch(/911/);
   });
   it('tells why the write button is not there', () => {
     expect(cannotPostText({ allowed: true })).toBeNull();

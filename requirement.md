@@ -449,12 +449,14 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 - **Verified Residents only**, in their own community. Opens when the community's **Welcome sign** is built (together with the newspaper)
 - Shown in the **Local news** section of Community News (11), credited by nickname, newest first
-- A post: a kind (Event / Deal / Lost & found / Other) and up to **300 characters**; **1 post per resident per Calgary day**; **no links or photos**
+- A post: a kind and up to **300 characters**; **1 post per resident per Calgary day**; **no links or photos**
+  - Kinds are about what is really happening in the community: 🚨 **Safety** (e.g. car break-ins overnight), 🏷️ **Local deals** (local store events and sales), 🎉 **Events**, 🔎 **Lost & found**, 💬 **Free talk**
+  - Safety posts remind the writer and readers: "Say what happened, not who. No names or photos. In an emergency, call 911"
 - Visible for **3 Calgary days** (the posting day and the next two), then gone; the author can delete their own post (no editing)
 - Day-level only: posts show "today", "yesterday", "2 days ago", never a time
 - **Safety**
   - Blocked-words filter (same list as nicknames); **phone numbers and street addresses are blocked** (e.g. "403 555 1234", "123 Main St")
-  - **Reports**: any signed-in player can report a post once; reports from Verified Residents count 2, others 1; **3 points hide the post**. The operator can block an account from reporting and can hide any post
+  - **Reports**: any signed-in player can report a post once, **at most 3 reports per day**; reports from Verified Residents count 2, others 1; **3 points hide the post** (one person alone cannot hide a post). The operator can hide any post, **restore** a hidden one (a restored post ignores reports), see who reported restored posts, and block an account from reporting
   - Hidden posts stay hidden until they expire
 - **Participation**
   - 👍 **Thanks**: any signed-in player, once per post; the count is shown (no ranking)
@@ -692,6 +694,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Real-time presence**: other online residents' avatars visible and moving in the same island (broadcast destination events per community channel, e.g. Supabase Realtime; cap ~30 visible avatars per island; distinct label colour for online residents; simple emoji greetings)
 - Community petitions (16.2)
 - Advanced share/update celebration events
+- **Community marketplace** (buy, sell, give away): needs in-app messaging and trade-safety rules first; not in the MVP's community posts (14)
 - **Enter buildings and decorate my own house** (idea, not planned yet): tap a building or my house to go inside a small interior scene; residents decorate their own house. The fixed house lot (7.2) is what makes "my house" stable for this
 
 ### 22.4 Phase 4 (monetization)
@@ -793,7 +796,9 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### 2026-11-20 — v1.28
 **Changed:** 14 rewritten as **Community posts** for the MVP: Verified Residents only, opens with the Welcome sign, 1 post a day, 300 characters, 4 kinds, no links/photos, 3-day visibility, own-post delete, phone/address blocking, report points (Verified 2, others 1, 3 hides), operator blocks, thanks and the Community Reporter badge (10 thanks).
 
-**Why:** M15 needs exact rules (user decisions 2026-11-20: open with the Welcome sign, no links).
+Kinds: Safety, Local deals, Events, Lost & found, Free talk (Safety posts carry a reminder); reports limited to 3 a day; the operator can restore a post. 22.3: community marketplace added as a later idea.
+
+**Why:** M15 needs exact rules (user decisions 2026-11-20: open with the Welcome sign, no links; kinds centred on real community life; marketplace later; report limit and restore).
 
 **Previous:**
     ## 14. Resident board (MVP, next module after Community news; details decided when it starts)

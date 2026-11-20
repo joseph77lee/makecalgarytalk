@@ -2,7 +2,7 @@
 -- 3-day visibility, reports and hiding, thanks and the badge, newspaper wiring, permissions
 -- (requirement.md v1.28 §14). Day N = 2026-12-01 + N.
 begin;
-select plan(55);
+select plan(59);
 
 delete from posts.thanks;
 delete from posts.reports;
@@ -71,7 +71,7 @@ select is(pg_temp.post(2, 'Hello Auburn Bay', 1), 'locked', 'each community need
 select is(pg_temp.problem(repeat('a', 300)), 'ok', '300 characters');
 select is(pg_temp.problem(repeat('a', 301)), 'length', '301 characters are too many');
 select is(pg_temp.problem(''), 'length', 'empty');
-select is(posts.create_at(pg_temp.u(1), 'other', '   ', pg_temp.noon(3)) ->> 'problem', 'length', 'only spaces');
+select is(posts.create_at(pg_temp.u(1), 'talk', '   ', pg_temp.noon(3)) ->> 'problem', 'length', 'only spaces');
 select is(pg_temp.problem('See https://example.org for more'), 'link', 'no links (http)');
 select is(pg_temp.problem('Visit www.example.com'), 'link', 'no links (www)');
 select is(pg_temp.problem('Check mahoganydeals.ca today'), 'link', 'no links (bare domain)');
@@ -111,7 +111,17 @@ insert into posts.report_blocks (user_id) values (pg_temp.u(4));
 select is(posts.report_at(pg_temp.u(4), pg_temp.post_id('Lost: blue mitten'), pg_temp.noon(3)) ->> 'problem', 'blocked', 'blocked reporters cannot report');
 select posts.report_at(pg_temp.u(5), pg_temp.post_id('Lost: blue mitten'), pg_temp.noon(3));
 select is(jsonb_path_query_array(pg_temp.feed('MAH', 3), '$[*].body'), '["Skating on Saturday!"]'::jsonb, '3 points (2 + 1 from a player not verified) hide the post');
-update posts.posts set hidden = true where body = 'Skating on Saturday!';
+update posts.posts set restored = true where body = 'Lost: blue mitten';
+select is(jsonb_path_query_array(pg_temp.feed('MAH', 3), '$[*].body'), '["Lost: blue mitten", "Skating on Saturday!"]'::jsonb,
+  'a post the operator restored stays visible whatever the reports say');
+-- At most 3 reports per player per Calgary day
+select pg_temp.verify(n, 'MAH', 0) from generate_series(9, 12) n;
+select 'post: ' || pg_temp.post(n, 'Safety: lock your cars tonight ' || n, 3, 'safety') from generate_series(9, 12) n;
+select posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight ' || n), pg_temp.noon(3)) from generate_series(9, 11) n;
+select is(posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 12'), pg_temp.noon(3)) ->> 'problem', 'limit', 'the 4th report of the day is refused');
+select is(posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 9'), pg_temp.noon(3)) ->> 'ok', 'true', 'repeating an earlier report is not counted again');
+select is(posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 12'), pg_temp.noon(4)) ->> 'ok', 'true', 'a new day allows reports again');
+update posts.posts set hidden = true where body = 'Skating on Saturday!' or body like 'Safety:%' or body = 'Lost: blue mitten';
 select is(pg_temp.feed('MAH', 3), '[]'::jsonb, 'the operator can hide any post');
 
 -- Thanks and the badge --------------------------------------------------------------------------

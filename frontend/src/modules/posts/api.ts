@@ -1,7 +1,7 @@
 /** Typed wrappers for the posts RPC (docs/api.md). The feed itself comes with the newspaper. */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export const POST_KINDS = ['event', 'deal', 'lost_found', 'other'] as const;
+export const POST_KINDS = ['safety', 'deal', 'event', 'lost_found', 'talk'] as const;
 export type PostKind = (typeof POST_KINDS)[number];
 
 export interface Post {
@@ -55,8 +55,10 @@ export const postsApi = {
   async remove(c: SupabaseClient, id: string): Promise<void> {
     await call(c, 'posts_delete', { p_post_id: id });
   },
-  async report(c: SupabaseClient, id: string): Promise<void> {
-    await call(c, 'posts_report', { p_post_id: id });
+  /** null when reported, else why not (`limit`: 3 reports a day). */
+  async report(c: SupabaseClient, id: string): Promise<string | null> {
+    const d = await call(c, 'posts_report', { p_post_id: id });
+    return d.ok === true ? null : String(d.problem ?? 'error');
   },
   async thank(c: SupabaseClient, id: string): Promise<void> {
     await call(c, 'posts_thank', { p_post_id: id });

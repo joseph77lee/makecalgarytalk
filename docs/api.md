@@ -304,16 +304,20 @@ none yet), or `null` for an unknown code. Works before sign-in (invite landing b
 
 ## `posts_create(p_kind text, p_body text)` and friends
 - `posts_create`: Verified Residents, own community, once the Welcome sign is built; `kind` =
-  `event | deal | lost_found | other`; 1–300 characters (spaces tidied); 1 per Calgary day
+  `safety | deal | event | lost_found | talk`; 1–300 characters (spaces tidied); 1 per Calgary day
   (a deleted post still counts). `{ok: true, post_id}` or `{ok: false, problem}`:
   `not_verified | locked | daily_limit | kind | length | link | phone | address | blocked`.
   Links, phone numbers, street addresses (house number + street type, or + NW/NE/SW/SE) and
   blocked words are refused. Visible for 3 Calgary days.
-- `posts_delete(id)`: my own post. `posts_report(id)`: once per player; Verified Residents 2
-  points, others 1; 3 points hide the post; not my own; refused (`blocked`) for accounts in
-  `posts.report_blocks`. `posts_thank(id)`: once per player, not my own.
-- Operator (SQL): hide a post `update posts.posts set hidden = true where id = '…';`, block a
-  reporter `insert into posts.report_blocks (user_id) values ('…');`.
+- `posts_delete(id)`: my own post. `posts_report(id)`: once per player per post, at most 3 per
+  Calgary day (`limit`); Verified Residents 2 points, others 1; 3 points hide the post; not my own;
+  refused (`blocked`) for accounts in `posts.report_blocks`. `posts_thank(id)`: once per player, not
+  my own.
+- Operator (SQL):
+  - hide a post: `update posts.posts set hidden = true where id = '…';`
+  - restore a post hidden by reports (it then ignores reports): `update posts.posts set restored = true where id = '…';`
+  - who reported restored posts: `select reporter_id, count(*) from posts.reports r join posts.posts p on p.id = r.post_id where p.restored group by 1 order by 2 desc;`
+  - block a reporter: `insert into posts.report_blocks (user_id) values ('…');`
 - Badge: 10 thanks received in total → `community_reporter` in `invites_get_mine().badges`.
 
 ---

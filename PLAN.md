@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.48 |
+| Plan version | v1.49 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.28 |
@@ -388,10 +388,10 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M15 — Community Posts 🟨
 **Goal:** Neighbours write the community's local news.
 - **In scope** (`requirement.md` v1.28 §14)
-  - [x] Verified Residents post in their own community once the Welcome sign is built: kind + up to 300 characters, 1 per Calgary day, no links/photos
+  - [x] Verified Residents post in their own community once the Welcome sign is built: kind (Safety, Local deals, Events, Lost & found, Free talk) + up to 300 characters, 1 per Calgary day, no links/photos; Safety posts carry a reminder (no names, call 911)
   - [x] shown in Community News → Local news with nickname and "today / yesterday / 2 days ago"; visible 3 Calgary days; author can delete
   - [x] blocked words, phone numbers and street addresses refused
-  - [x] reports (Verified 2 points, others 1; 3 points hide), operator report-block and hide (SQL)
+  - [x] reports (Verified 2 points, others 1; 3 points hide; at most 3 reports per player per day), operator hide / restore / report-block (SQL)
   - [x] thanks (once per player per post) and the Community Reporter badge (10 thanks)
   - [x] posts come with the newspaper response (no extra request when opening)
 - **Definition of Done**
@@ -496,6 +496,16 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.49
+**Changed:** M15: post kinds centred on real community life (Safety, Local deals, Events, Lost & found, Free talk); reports limited to 3 a day; operator restore.
+
+**Why:** User feedback 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.48 |`
+- M15: `  - [x] Verified Residents post in their own community once the Welcome sign is built: kind + up to 300 characters, 1 per Calgary day, no links/photos`
+- M15: `  - [x] reports (Verified 2 points, others 1; 3 points hide), operator report-block and hide (SQL)`
 
 ### 2026-11-20 — v1.48
 **Changed:** M15 items ticked; status 🟨 with Handoff.

@@ -1,11 +1,21 @@
 /** Community post texts (pure functions, tested). */
 import type { CanPost, PostKind, PostProblem } from './api';
 
+/** Kinds of local news: what is really happening in the community (requirement.md v1.28 §14). */
 export const KIND_LABEL: Record<PostKind, { icon: string; label: string; hint: string }> = {
-  event: { icon: '🎉', label: 'Event', hint: 'A get-together, a game, a market…' },
-  deal: { icon: '🏷️', label: 'Local deal', hint: 'A local shop’s sale or special (no links)' },
-  lost_found: { icon: '🔎', label: 'Lost & found', hint: 'Something lost or found nearby' },
-  other: { icon: '💬', label: 'Other', hint: 'Anything neighbours should know' },
+  safety: { icon: '🚨', label: 'Safety', hint: 'e.g. Car break-ins reported overnight. Lock your cars!' },
+  deal: { icon: '🏷️', label: 'Local deals', hint: 'e.g. The bakery by the lake: 2-for-1 buns this weekend' },
+  event: { icon: '🎉', label: 'Events', hint: 'e.g. Skating at the lake, Saturday afternoon' },
+  lost_found: { icon: '🔎', label: 'Lost & found', hint: 'e.g. Found a blue mitten by the rink' },
+  talk: { icon: '💬', label: 'Free talk', hint: 'Anything neighbours should know' },
+};
+
+/** Shown while writing a Safety post, and under Safety posts. */
+export const SAFETY_NOTE = 'Say what happened, not who. No names or photos. In an emergency, call 911.';
+
+export const REPORT_PROBLEM: Record<string, string> = {
+  limit: 'You can report up to 3 posts a day.',
+  blocked: 'Reporting is turned off for your account.',
 };
 
 export function ageText(daysAgo: number): string {

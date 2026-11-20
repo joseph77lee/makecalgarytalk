@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { POST_KINDS, postsApi, type CanPost, type Post, type PostKind } from './api';
 import { postsClient } from './client';
-import { KIND_LABEL, MAX_CHARS, PROBLEM_TEXT, ageText, cannotPostText } from './postText';
+import { KIND_LABEL, MAX_CHARS, PROBLEM_TEXT, REPORT_PROBLEM, SAFETY_NOTE, ageText, cannotPostText } from './postText';
 
 interface Props {
   posts: Post[];
@@ -50,7 +50,7 @@ export function LocalNews({ posts, canPost, onChanged }: Props) {
 }
 
 function Composer({ onDone }: { onDone: (posted: boolean) => void }) {
-  const [kind, setKind] = useState<PostKind>('event');
+  const [kind, setKind] = useState<PostKind>('talk');
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -83,6 +83,7 @@ function Composer({ onDone }: { onDone: (posted: boolean) => void }) {
           </button>
         ))}
       </div>
+      {kind === 'safety' && <p className="mb-2 rounded-xl bg-rose-50 px-2 py-1.5 text-xs text-rose-800">🚨 {SAFETY_NOTE}</p>}
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value.slice(0, MAX_CHARS))}
@@ -120,6 +121,7 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
   const [thanks, setThanks] = useState(post.thanks);
   const [menu, setMenu] = useState(false);
   const [reported, setReported] = useState(post.reported);
+  const [note, setNote] = useState<string | null>(null);
   const k = KIND_LABEL[post.kind];
   const thank = async () => {
     if (thanked || post.mine) return;
@@ -145,6 +147,7 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
         </button>
       </div>
       <p className="whitespace-pre-wrap break-words text-sm text-slate-800">{post.body}</p>
+      {post.kind === 'safety' && <p className="mt-1 text-[11px] text-rose-700">In an emergency, call 911.</p>}
       <div className="mt-2 flex items-center gap-2">
         {!(post.mine && thanks === 0) && (
         <button
@@ -172,7 +175,12 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
               disabled={reported}
               onClick={() => {
                 setReported(true);
-                void postsApi.report(postsClient(), post.id).then(onChanged);
+                void postsApi.report(postsClient(), post.id).then((problem) => {
+                  if (problem) {
+                    setReported(false);
+                    setNote(REPORT_PROBLEM[problem] ?? 'Could not report this post.');
+                  } else onChanged();
+                });
               }}
               className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 disabled:opacity-60"
             >
@@ -180,6 +188,7 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
             </button>
           ))}
       </div>
+      {note && <p className="mt-1 text-[11px] text-amber-700">{note}</p>}
     </li>
   );
 }

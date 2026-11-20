@@ -3,8 +3,10 @@
 --   * Verified Residents post in their own community once its Welcome sign is built: a kind and up
 --     to 300 characters, 1 per Calgary day, no links, no phone numbers or street addresses, no
 --     blocked words. Visible 3 Calgary days; the author can delete.
---   * Reports: once per player per post; Verified Residents count 2 points, others 1; 3 points hide
---     the post. The operator can block an account from reporting and hide any post (SQL).
+--   * Kinds: safety, deal (local store events/sales), event, lost_found, talk (free talk).
+--   * Reports: once per player per post, at most 3 a day; Verified Residents count 2 points, others
+--     1; 3 points hide the post. The operator can hide or restore a post (a restored post ignores
+--     reports) and block an account from reporting (SQL).
 --   * Thanks: once per player per post; 10 thanks received in total → Community Reporter badge.
 --   * Day-level only: the feed says how many days ago, never a time.
 --   * Reads other modules only through functions: residency.community_on, gamecore.built_level,
@@ -17,12 +19,13 @@ create table posts.posts (
   id uuid primary key default gen_random_uuid(),
   community_id uuid not null references gamecore.communities (id),
   author_id uuid not null references auth.users (id) on delete cascade,
-  kind text not null check (kind in ('event', 'deal', 'lost_found', 'other')),
+  kind text not null check (kind in ('safety', 'deal', 'event', 'lost_found', 'talk')),
   body text not null check (char_length(body) between 1 and 300),
   posted_on date not null,
   deleted boolean not null default false,
-  -- Set by the operator.
+  -- Set by the operator: hidden, or restored (stays visible whatever the reports say).
   hidden boolean not null default false,
+  restored boolean not null default false,
   created_at timestamptz not null default now()
 );
 alter table posts.posts enable row level security;
@@ -33,8 +36,10 @@ create table posts.reports (
   post_id uuid not null references posts.posts (id) on delete cascade,
   reporter_id uuid not null references auth.users (id) on delete cascade,
   points smallint not null check (points in (1, 2)),
+  reported_on date not null,
   primary key (post_id, reporter_id)
 );
+create index reports_reporter_idx on posts.reports (reporter_id, reported_on);
 alter table posts.reports enable row level security;
 
 create table posts.thanks (
@@ -59,6 +64,7 @@ create function posts.max_chars() returns integer language sql immutable as $$ s
 create function posts.visible_days() returns integer language sql immutable as $$ select 3 $$;
 create function posts.hide_points() returns integer language sql immutable as $$ select 3 $$;
 create function posts.reporter_thanks() returns integer language sql immutable as $$ select 10 $$;
+create function posts.reports_per_day() returns integer language sql immutable as $$ select 3 $$;
 
 -- Why a post body is refused, or null.
 create function posts.body_problem(p_body text)
@@ -132,7 +138,7 @@ as $$
     and p.posted_on > common.calgary_day(p_now) - posts.visible_days()
     and p.posted_on <= common.calgary_day(p_now)
     and not p.deleted and not p.hidden
-    and posts.points(p.id) < posts.hide_points()
+    and (p.restored or posts.points(p.id) < posts.hide_points())
 $$;
 
 -- A visible post (not deleted/hidden/expired/reported away), or null.
@@ -144,7 +150,7 @@ as $$
   where p.id = p_post_id
     and p.posted_on > common.calgary_day(p_now) - posts.visible_days()
     and not p.deleted and not p.hidden
-    and posts.points(p.id) < posts.hide_points()
+    and (p.restored or posts.points(p.id) < posts.hide_points())
 $$;
 
 create function posts.thanks_received(p_uid uuid)
@@ -157,6 +163,7 @@ $$;
 -- Actions -----------------------------------------------------------------------------------
 
 -- {ok: true, post_id} or {ok: false, problem: not_verified|locked|daily_limit|kind|length|link|phone|address|blocked}
+-- Kinds: safety | deal | event | lost_found | talk.
 create function posts.create_at(p_uid uuid, p_kind text, p_body text, p_now timestamptz)
 returns jsonb
 language plpgsql set search_path = ''
@@ -175,7 +182,7 @@ begin
   if not (v_can ->> 'allowed')::boolean then
     return jsonb_build_object('ok', false, 'problem', v_can ->> 'reason');
   end if;
-  if p_kind is null or p_kind not in ('event', 'deal', 'lost_found', 'other') then
+  if p_kind is null or p_kind not in ('safety', 'deal', 'event', 'lost_found', 'talk') then
     return jsonb_build_object('ok', false, 'problem', 'kind');
   end if;
   v_problem := posts.body_problem(v_body);
@@ -202,7 +209,8 @@ begin
 end;
 $$;
 
--- {ok} or {ok: false, problem: not_found|own|blocked}. Idempotent per player.
+-- {ok} or {ok: false, problem: not_found|own|blocked|limit}. Idempotent per player; at most 3 reports
+-- per player per Calgary day.
 create function posts.report_at(p_uid uuid, p_post_id uuid, p_now timestamptz)
 returns jsonb
 language plpgsql set search_path = ''
@@ -222,8 +230,16 @@ begin
   if exists (select 1 from posts.report_blocks b where b.user_id = p_uid) then
     return jsonb_build_object('ok', false, 'problem', 'blocked');
   end if;
-  insert into posts.reports (post_id, reporter_id, points)
-  values (p_post_id, p_uid, case when residency.community_on(p_uid, common.calgary_day(p_now)) is not null then 2 else 1 end)
+  if exists (select 1 from posts.reports r where r.post_id = p_post_id and r.reporter_id = p_uid) then
+    return jsonb_build_object('ok', true);
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('posts.reporter:' || p_uid::text, 0));
+  if (select count(*) from posts.reports r where r.reporter_id = p_uid and r.reported_on = common.calgary_day(p_now)) >= posts.reports_per_day() then
+    return jsonb_build_object('ok', false, 'problem', 'limit');
+  end if;
+  insert into posts.reports (post_id, reporter_id, points, reported_on)
+  values (p_post_id, p_uid, case when residency.community_on(p_uid, common.calgary_day(p_now)) is not null then 2 else 1 end,
+          common.calgary_day(p_now))
   on conflict do nothing;
   return jsonb_build_object('ok', true);
 end;
@@ -259,7 +275,7 @@ create function public.posts_create(p_kind text, p_body text)
 returns jsonb language sql volatile security definer set search_path = ''
 as $$ select posts.create_at(auth.uid(), p_kind, p_body, now()) $$;
 comment on function public.posts_create(text, text) is
-  'Post local news in my community (kind: event|deal|lost_found|other, up to 300 characters). {ok: false, problem: not_verified|locked|daily_limit|kind|length|link|phone|address|blocked}.';
+  'Post local news in my community (kind: safety|deal|event|lost_found|talk, up to 300 characters). {ok: false, problem: not_verified|locked|daily_limit|kind|length|link|phone|address|blocked}.';
 
 create function public.posts_delete(p_post_id uuid)
 returns jsonb language sql volatile security definer set search_path = ''
@@ -269,7 +285,7 @@ comment on function public.posts_delete(uuid) is 'Delete my post.';
 create function public.posts_report(p_post_id uuid)
 returns jsonb language sql volatile security definer set search_path = ''
 as $$ select posts.report_at(auth.uid(), p_post_id, now()) $$;
-comment on function public.posts_report(uuid) is 'Report a post (once). Verified Residents count 2 points, others 1; 3 points hide it.';
+comment on function public.posts_report(uuid) is 'Report a post (once; at most 3 reports a day). Verified Residents count 2 points, others 1; 3 points hide it. {ok: false, problem: not_found|own|blocked|limit}.';
 
 create function public.posts_thank(p_post_id uuid)
 returns jsonb language sql volatile security definer set search_path = ''
