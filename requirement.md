@@ -456,7 +456,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Day-level only: posts show "today", "yesterday", "2 days ago", never a time
 - **Safety**
   - Blocked-words filter (same list as nicknames); **phone numbers and street addresses are blocked** (e.g. "403 555 1234", "123 Main St")
-  - **Reports**: any signed-in player can report a post once, **at most 3 reports per day**; reports from Verified Residents count 2, others 1; **3 points hide the post** (one person alone cannot hide a post). The operator can hide any post, **restore** a hidden one (a restored post ignores reports), see who reported restored posts, and block an account from reporting
+  - **Reports**: any signed-in player can report a post once, **at most 3 reports per day**; reports from Verified Residents count 2, others 1; **3 points hide the post** (one person alone cannot hide a post). Reporting asks to confirm, and a report can be **taken back** (a mistake), which removes its points and frees that day's report. The operator can hide any post, **restore** a hidden one (a restored post ignores reports), see who reported restored posts, and block an account from reporting
   - Hidden posts stay hidden until they expire
 - **Participation**
   - 👍 **Thanks**: any signed-in player, once per post; the count is shown (no ranking)
@@ -796,7 +796,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### 2026-11-20 — v1.28
 **Changed:** 14 rewritten as **Community posts** for the MVP: Verified Residents only, opens with the Welcome sign, 1 post a day, 300 characters, 4 kinds, no links/photos, 3-day visibility, own-post delete, phone/address blocking, report points (Verified 2, others 1, 3 hides), operator blocks, thanks and the Community Reporter badge (10 thanks).
 
-Kinds: Safety, Local deals, Events, Lost & found, Free talk (Safety posts carry a reminder); reports limited to 3 a day; the operator can restore a post. 22.3: community marketplace added as a later idea.
+Kinds: Safety, Local deals, Events, Lost & found, Free talk (Safety posts carry a reminder); reports limited to 3 a day, confirmed before sending and can be taken back; the operator can restore a post. 22.3: community marketplace added as a later idea.
 
 **Why:** M15 needs exact rules (user decisions 2026-11-20: open with the Welcome sign, no links; kinds centred on real community life; marketplace later; report limit and restore).
 

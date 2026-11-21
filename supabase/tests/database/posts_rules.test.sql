@@ -2,7 +2,7 @@
 -- 3-day visibility, reports and hiding, thanks and the badge, newspaper wiring, permissions
 -- (requirement.md v1.28 §14). Day N = 2026-12-01 + N.
 begin;
-select plan(59);
+select plan(61);
 
 delete from posts.thanks;
 delete from posts.reports;
@@ -120,7 +120,10 @@ select 'post: ' || pg_temp.post(n, 'Safety: lock your cars tonight ' || n, 3, 's
 select posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight ' || n), pg_temp.noon(3)) from generate_series(9, 11) n;
 select is(posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 12'), pg_temp.noon(3)) ->> 'problem', 'limit', 'the 4th report of the day is refused');
 select is(posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 9'), pg_temp.noon(3)) ->> 'ok', 'true', 'repeating an earlier report is not counted again');
-select is(posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 12'), pg_temp.noon(4)) ->> 'ok', 'true', 'a new day allows reports again');
+select posts.unreport_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 11'));
+select is(posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 12'), pg_temp.noon(3)) ->> 'ok', 'true', 'taking a report back frees that day''s slot');
+select is(posts.points(pg_temp.post_id('Safety: lock your cars tonight 11')), 0, 'and removes its points');
+select is(posts.unreport_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 11')) ->> 'ok', 'false', 'nothing to take back twice');
 update posts.posts set hidden = true where body = 'Skating on Saturday!' or body like 'Safety:%' or body = 'Lost: blue mitten';
 select is(pg_temp.feed('MAH', 3), '[]'::jsonb, 'the operator can hide any post');
 

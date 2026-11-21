@@ -245,6 +245,20 @@ begin
 end;
 $$;
 
+-- Takes back my report (a mistake): the points go away and it no longer counts for the day.
+create function posts.unreport_at(p_uid uuid, p_post_id uuid)
+returns jsonb
+language plpgsql set search_path = ''
+as $$
+begin
+  if p_uid is null then
+    raise exception 'not authenticated' using errcode = '28000';
+  end if;
+  delete from posts.reports where post_id = p_post_id and reporter_id = p_uid;
+  return jsonb_build_object('ok', found);
+end;
+$$;
+
 -- {ok, thanks} or {ok: false, problem: not_found|own}. Idempotent per player.
 create function posts.thank_at(p_uid uuid, p_post_id uuid, p_now timestamptz)
 returns jsonb
@@ -287,6 +301,11 @@ returns jsonb language sql volatile security definer set search_path = ''
 as $$ select posts.report_at(auth.uid(), p_post_id, now()) $$;
 comment on function public.posts_report(uuid) is 'Report a post (once; at most 3 reports a day). Verified Residents count 2 points, others 1; 3 points hide it. {ok: false, problem: not_found|own|blocked|limit}.';
 
+create function public.posts_unreport(p_post_id uuid)
+returns jsonb language sql volatile security definer set search_path = ''
+as $$ select posts.unreport_at(auth.uid(), p_post_id) $$;
+comment on function public.posts_unreport(uuid) is 'Take back my report of a post (a mistake).';
+
 create function public.posts_thank(p_post_id uuid)
 returns jsonb language sql volatile security definer set search_path = ''
 as $$ select posts.thank_at(auth.uid(), p_post_id, now()) $$;
@@ -295,8 +314,10 @@ comment on function public.posts_thank(uuid) is 'Thank a post (once).';
 revoke all on function public.posts_create(text, text) from public;
 revoke all on function public.posts_delete(uuid) from public;
 revoke all on function public.posts_report(uuid) from public;
+revoke all on function public.posts_unreport(uuid) from public;
 revoke all on function public.posts_thank(uuid) from public;
 grant execute on function public.posts_create(text, text) to authenticated;
 grant execute on function public.posts_delete(uuid) to authenticated;
 grant execute on function public.posts_report(uuid) to authenticated;
+grant execute on function public.posts_unreport(uuid) to authenticated;
 grant execute on function public.posts_thank(uuid) to authenticated;

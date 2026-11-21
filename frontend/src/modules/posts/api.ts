@@ -60,6 +60,9 @@ export const postsApi = {
     const d = await call(c, 'posts_report', { p_post_id: id });
     return d.ok === true ? null : String(d.problem ?? 'error');
   },
+  async unreport(c: SupabaseClient, id: string): Promise<void> {
+    await call(c, 'posts_unreport', { p_post_id: id });
+  },
   async thank(c: SupabaseClient, id: string): Promise<void> {
     await call(c, 'posts_thank', { p_post_id: id });
   },

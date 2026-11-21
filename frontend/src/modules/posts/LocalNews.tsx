@@ -121,6 +121,7 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
   const [thanks, setThanks] = useState(post.thanks);
   const [reported, setReported] = useState(post.reported);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmReport, setConfirmReport] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const k = KIND_LABEL[post.kind];
   const thank = async () => {
@@ -134,7 +135,13 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
       setThanks((n) => n - 1);
     }
   };
+  const unreport = () => {
+    setReported(false);
+    setNote(null);
+    void postsApi.unreport(postsClient(), post.id).then(onChanged);
+  };
   const report = () => {
+    setConfirmReport(false);
     setReported(true);
     void postsApi.report(postsClient(), post.id).then((problem) => {
       if (problem) {
@@ -188,14 +195,26 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
               🗑 Delete
             </button>
           )
+        ) : reported ? (
+          <span className="ml-auto flex items-center gap-1 text-xs text-slate-500">
+            🚩 Reported ·
+            <button type="button" onClick={unreport} className="rounded-full px-1.5 py-1 font-semibold text-slate-700 underline">
+              Undo
+            </button>
+          </span>
+        ) : confirmReport ? (
+          <span className="ml-auto flex items-center gap-1.5">
+            <span className="text-[11px] text-slate-500">Report this post?</span>
+            <button type="button" onClick={report} className="rounded-full bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white">
+              Report
+            </button>
+            <button type="button" onClick={() => setConfirmReport(false)} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
+              Cancel
+            </button>
+          </span>
         ) : (
-          <button
-            type="button"
-            disabled={reported}
-            onClick={report}
-            className="ml-auto rounded-full px-2 py-1 text-xs text-slate-500 disabled:opacity-60"
-          >
-            {reported ? '🚩 Reported' : '🚩 Report'}
+          <button type="button" onClick={() => setConfirmReport(true)} className="ml-auto rounded-full px-2 py-1 text-xs text-slate-500">
+            🚩 Report
           </button>
         )}
       </div>

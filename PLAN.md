@@ -391,7 +391,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] Verified Residents post in their own community once the Welcome sign is built: kind (Safety, Local deals, Events, Lost & found, Free talk) + up to 300 characters, 1 per Calgary day, no links/photos; Safety posts carry a reminder (no names, call 911)
   - [x] shown in Community News → Local news with nickname and "today / yesterday / 2 days ago"; visible 3 Calgary days; author can delete
   - [x] blocked words, phone numbers and street addresses refused
-  - [x] reports (Verified 2 points, others 1; 3 points hide; at most 3 reports per player per day), operator hide / restore / report-block (SQL)
+  - [x] reports (Verified 2 points, others 1; 3 points hide; at most 3 reports per player per day; confirm before sending; a report can be taken back), operator hide / restore / report-block (SQL)
   - [x] thanks (once per player per post) and the Community Reporter badge (10 thanks)
   - [x] posts come with the newspaper response (no extra request when opening)
 - **Definition of Done**
@@ -498,7 +498,7 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > ```
 
 ### 2026-11-20 — v1.49
-**Changed:** M15: post kinds centred on real community life (Safety, Local deals, Events, Lost & found, Free talk); reports limited to 3 a day; operator restore.
+**Changed:** M15: post kinds centred on real community life (Safety, Local deals, Events, Lost & found, Free talk); reports limited to 3 a day, confirmed before sending and can be taken back; operator restore.
 
 **Why:** User feedback 2026-11-20.
 

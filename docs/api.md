@@ -28,7 +28,7 @@ client never computes time zones; it only counts down to `next_day_start`.
 | `news_get_newspaper(p_community_id)` | anon, authenticated | Today's community newspaper (incl. local news posts) |
 | `posts_create(p_kind, p_body)` | authenticated | Post local news (Verified Residents) |
 | `posts_delete(p_post_id)` | authenticated | Delete my post |
-| `posts_report(p_post_id)` | authenticated | Report a post |
+| `posts_report(p_post_id)` / `posts_unreport(p_post_id)` | authenticated | Report a post / take it back |
 | `posts_thank(p_post_id)` | authenticated | Thank a post |
 
 **Accounts (Identity, M6):** every visitor gets a Supabase Auth account on the first visit
@@ -311,8 +311,8 @@ none yet), or `null` for an unknown code. Works before sign-in (invite landing b
   blocked words are refused. Visible for 3 Calgary days.
 - `posts_delete(id)`: my own post. `posts_report(id)`: once per player per post, at most 3 per
   Calgary day (`limit`); Verified Residents 2 points, others 1; 3 points hide the post; not my own;
-  refused (`blocked`) for accounts in `posts.report_blocks`. `posts_thank(id)`: once per player, not
-  my own.
+  refused (`blocked`) for accounts in `posts.report_blocks`. `posts_unreport(id)`: take my report
+  back (removes its points, frees the day's slot). `posts_thank(id)`: once per player, not my own.
 - Operator (SQL):
   - hide a post: `update posts.posts set hidden = true where id = '…';`
   - restore a post hidden by reports (it then ignores reports): `update posts.posts set restored = true where id = '…';`
