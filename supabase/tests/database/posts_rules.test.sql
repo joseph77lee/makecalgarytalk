@@ -2,7 +2,7 @@
 -- 3-day visibility, reports and hiding, thanks and the badge, newspaper wiring, permissions
 -- (requirement.md v1.28 §14). Day N = 2026-12-01 + N.
 begin;
-select plan(61);
+select plan(64);
 
 delete from posts.thanks;
 delete from posts.reports;
@@ -124,6 +124,13 @@ select posts.unreport_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars t
 select is(posts.report_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 12'), pg_temp.noon(3)) ->> 'ok', 'true', 'taking a report back frees that day''s slot');
 select is(posts.points(pg_temp.post_id('Safety: lock your cars tonight 11')), 0, 'and removes its points');
 select is(posts.unreport_at(pg_temp.u(8), pg_temp.post_id('Safety: lock your cars tonight 11')) ->> 'ok', 'false', 'nothing to take back twice');
+-- Thanks and reports exclude each other
+select posts.thank_at(pg_temp.u(13), pg_temp.post_id('Safety: lock your cars tonight 10'), pg_temp.noon(4));
+select posts.report_at(pg_temp.u(13), pg_temp.post_id('Safety: lock your cars tonight 10'), pg_temp.noon(4));
+select is((select count(*)::int from posts.thanks where user_id = pg_temp.u(13)), 0, 'reporting takes back my thanks');
+select is(posts.thank_at(pg_temp.u(13), pg_temp.post_id('Safety: lock your cars tonight 10'), pg_temp.noon(4)) ->> 'problem', 'reported', 'no thanks while I have reported it');
+select posts.unreport_at(pg_temp.u(13), pg_temp.post_id('Safety: lock your cars tonight 10'));
+select is(posts.thank_at(pg_temp.u(13), pg_temp.post_id('Safety: lock your cars tonight 10'), pg_temp.noon(4)) ->> 'ok', 'true', 'after Undo I can thank again');
 update posts.posts set hidden = true where body = 'Skating on Saturday!' or body like 'Safety:%' or body = 'Lost: blue mitten';
 select is(pg_temp.feed('MAH', 3), '[]'::jsonb, 'the operator can hide any post');
 

@@ -241,6 +241,8 @@ begin
   values (p_post_id, p_uid, case when residency.community_on(p_uid, common.calgary_day(p_now)) is not null then 2 else 1 end,
           common.calgary_day(p_now))
   on conflict do nothing;
+  -- Reporting and thanking contradict each other: a report takes back my thanks.
+  delete from posts.thanks where post_id = p_post_id and user_id = p_uid;
   return jsonb_build_object('ok', true);
 end;
 $$;
@@ -259,7 +261,8 @@ begin
 end;
 $$;
 
--- {ok, thanks} or {ok: false, problem: not_found|own}. Idempotent per player.
+-- {ok, thanks} or {ok: false, problem: not_found|own|reported}. Idempotent per player; not while
+-- I have reported the post.
 create function posts.thank_at(p_uid uuid, p_post_id uuid, p_now timestamptz)
 returns jsonb
 language plpgsql set search_path = ''
@@ -275,6 +278,9 @@ begin
   end if;
   if v_post.author_id = p_uid then
     return jsonb_build_object('ok', false, 'problem', 'own');
+  end if;
+  if exists (select 1 from posts.reports r where r.post_id = p_post_id and r.reporter_id = p_uid) then
+    return jsonb_build_object('ok', false, 'problem', 'reported');
   end if;
   insert into posts.thanks (post_id, user_id) values (p_post_id, p_uid) on conflict do nothing;
   return jsonb_build_object('ok', true, 'thanks', (select count(*) from posts.thanks t where t.post_id = p_post_id));

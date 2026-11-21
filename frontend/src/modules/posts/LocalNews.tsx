@@ -143,16 +143,31 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
   const report = () => {
     setConfirmReport(false);
     setReported(true);
+    // A report takes back my thanks (they contradict each other).
+    if (thanked) {
+      setThanked(false);
+      setThanks((n) => Math.max(0, n - 1));
+    }
     void postsApi.report(postsClient(), post.id).then((problem) => {
       if (problem) {
         setReported(false);
         setNote(REPORT_PROBLEM[problem] ?? 'Could not report this post.');
       } else {
-        setNote('Thanks for letting us know.');
         onChanged();
       }
     });
   };
+  if (reported) {
+    // Folded away for me; others still see it until enough reports hide it.
+    return (
+      <li className="flex items-center gap-2 rounded-2xl bg-slate-100 px-3 py-2 text-xs text-slate-500">
+        <span>🚩 You reported this post. It's hidden for you.</span>
+        <button type="button" onClick={unreport} className="ml-auto rounded-full px-1.5 py-1 font-semibold text-slate-700 underline">
+          Undo
+        </button>
+      </li>
+    );
+  }
   return (
     <li className="rounded-2xl bg-white p-3 ring-1 ring-slate-200">
       <div className="mb-1 flex items-center gap-1.5 text-[11px] text-slate-500">
@@ -195,13 +210,6 @@ function PostItem({ post, onChanged }: { post: Post; onChanged: () => void }) {
               🗑 Delete
             </button>
           )
-        ) : reported ? (
-          <span className="ml-auto flex items-center gap-1 text-xs text-slate-500">
-            🚩 Reported ·
-            <button type="button" onClick={unreport} className="rounded-full px-1.5 py-1 font-semibold text-slate-700 underline">
-              Undo
-            </button>
-          </span>
         ) : confirmReport ? (
           <span className="ml-auto flex items-center gap-1.5">
             <span className="text-[11px] text-slate-500">Report this post?</span>
