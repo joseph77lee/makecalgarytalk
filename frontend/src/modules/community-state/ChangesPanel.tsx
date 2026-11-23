@@ -1,5 +1,5 @@
 import type { ServerChanges } from '../daily-actions';
-import { changeItems, changesPanelOpen } from './changesText';
+import { changeItems, changesPanelOpen, type ChangeCard, type ChangeItem } from './changesText';
 
 interface Props {
   changes: ServerChanges;
@@ -7,12 +7,16 @@ interface Props {
   /** Seen today by this account (server-side, identity module). */
   seen: boolean;
   onSeen: () => void;
+  /** Lines from other modules shown first (e.g. Monday's ranking result). */
+  extra?: ChangeItem[];
+  /** Opens a share card for a line that has one. */
+  onShare?: (card: ChangeCard) => void;
 }
 
 /** On entry, once per account per Calgary day: what changed since yesterday (requirement.md §10.1). */
-export function ChangesPanel({ changes, vitality, seen, onSeen }: Props) {
-  if (!changesPanelOpen(changes, vitality, seen)) return null;
-  const items = changeItems(changes, vitality);
+export function ChangesPanel({ changes, vitality, seen, onSeen, extra = [], onShare }: Props) {
+  if (!changesPanelOpen(changes, vitality, seen, extra)) return null;
+  const items = changeItems(changes, vitality, extra);
   const close = onSeen;
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/20 p-4" onClick={close}>
@@ -25,9 +29,18 @@ export function ChangesPanel({ changes, vitality, seen, onSeen }: Props) {
         <h2 className="mb-2 text-base font-bold text-slate-800">Since yesterday</h2>
         <ul className="mb-3 space-y-1.5">
           {items.map((it, i) => (
-            <li key={i} className="flex gap-2 text-sm text-slate-700">
+            <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
               <span aria-hidden>{it.icon}</span>
-              <span>{it.text}</span>
+              <span className="min-w-0 flex-1">{it.text}</span>
+              {it.card && onShare && (
+                <button
+                  type="button"
+                  onClick={() => onShare(it.card!)}
+                  className="shrink-0 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600 active:scale-95"
+                >
+                  📣 Share
+                </button>
+              )}
             </li>
           ))}
         </ul>

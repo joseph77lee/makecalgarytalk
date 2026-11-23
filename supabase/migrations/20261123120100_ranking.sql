@@ -135,7 +135,7 @@ as $$
   ), pub as (
     select e.ord, e.x ->> 'community_id' as community_id, jsonb_build_object(
       'rank', e.rank, 'code', e.x ->> 'code', 'name', e.x ->> 'name',
-      'score', round((e.x ->> 'score')::numeric, 1),
+      'score', round((e.x ->> 'score')::numeric, 2),
       'acting_residents', (e.x ->> 'acting_residents')::integer,
       'needed', greatest(0, ranking.min_residents() - (e.x ->> 'acting_residents')::integer)
     ) as entry, e.rank
@@ -202,7 +202,7 @@ as $$
 $$;
 comment on function public.ranking_weekly() is
   'Weekly ranking: {min_residents, results_day, home, last_week: {week_start, top, ranked, mine, champions}, '
-  'this_week: {..., updated_at}}. Entries: {rank|null, code, name, score (1 decimal), acting_residents, needed}.';
+  'this_week: {..., updated_at}}. Entries: {rank|null, code, name, score (2 decimals), acting_residents, needed}.';
 
 revoke all on function public.ranking_weekly() from public;
 grant execute on function public.ranking_weekly() to anon, authenticated;

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ServerChanges, ServerStreak } from '../daily-actions';
 import { BUILDING_TREE, buildIslandLayout, decodePlan, finishedExampleState, type BuildingView } from '../island-view';
 import { completionPercent, groupByStage, isBuilt } from './buildMapModel';
-import { changeItems } from './changesText';
+import { changeItems, changesPanelOpen, revivedToday } from './changesText';
 import { landGoalText, sleepyText, streakText } from './streakText';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -62,6 +62,30 @@ describe('what changed since yesterday', () => {
       '4 actions yesterday: Fire pit +3, Welcome sign Lv 2 +1',
       'Vitality 40 → 55',
     ]);
+  });
+  it('built lines carry a share card; others do not', () => {
+    const items = changeItems(changes({ built: [{ building_key: 'fire-pit', title: 'Fire pit', level: 1 }], new_residents: 1 }), null);
+    expect(items[0]?.card).toEqual({ kind: 'built', title: 'Fire pit was built' });
+    expect(items[1]?.card).toBeUndefined();
+  });
+  it('Community Revival: Sleepy (0–29) yesterday → 30+ today, first line with a card', () => {
+    expect(revivedToday(changes({ vitality_before: 29 }), 30)).toBe(true);
+    expect(revivedToday(changes({ vitality_before: 0 }), 75)).toBe(true);
+    expect(revivedToday(changes({ vitality_before: 29 }), 29)).toBe(false); // still sleepy
+    expect(revivedToday(changes({ vitality_before: 30 }), 45)).toBe(false); // was not sleepy
+    expect(revivedToday(changes({ vitality_before: 40 }), 20)).toBe(false); // fell asleep
+    expect(revivedToday(changes({ vitality_before: null }), 40)).toBe(false); // new community
+    expect(revivedToday(changes({ vitality_before: 10 }), null)).toBe(false);
+    const items = changeItems(changes({ vitality_before: 25 }), 31);
+    expect(items[0]).toEqual({ icon: '🌸', text: 'Community Revival! Your community woke up', card: { kind: 'revival', title: 'Community Revival!' } });
+    expect(items.map((i) => i.text)).toContain('Vitality 25 → 31');
+  });
+  it('extra lines (Monday ranking) come first and open the panel on their own', () => {
+    const extra = [{ icon: '🏆', text: 'Last week Mahogany ranked #2 in Calgary', card: { kind: 'weekly' as const, title: '#2 in Calgary this week' } }];
+    expect(changeItems(changes(), 50, extra)).toEqual(extra);
+    expect(changesPanelOpen(changes(), 50, false, extra)).toBe(true);
+    expect(changesPanelOpen(changes(), 50, true, extra)).toBe(false);
+    expect(changesPanelOpen(changes(), 50, false)).toBe(false);
   });
 });
 

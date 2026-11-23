@@ -32,9 +32,15 @@ export function useIslandCtx(): IslandCtx {
  * Short-lived scene effects. Read with getState() inside useFrame (no re-render).
  * celebrateUntil: performance.now() timestamp until which villagers cheer.
  */
-export const useSceneFx = create<{ celebrateUntil: number }>(() => ({ celebrateUntil: 0 }));
+export const useSceneFx = create<{ celebrateUntil: number; bloomUntil: number }>(() => ({ celebrateUntil: 0, bloomUntil: 0 }));
 
 /** Make the mini villagers cheer for `ms` (e.g. after an action). */
 export function celebrateIsland(ms = 1500): void {
   useSceneFx.setState({ celebrateUntil: performance.now() + ms });
+}
+
+/** Community Revival (requirement.md v1.31 §7.4): villagers cheer and flowers bloom for `ms`. */
+export function reviveIsland(ms = 7000): void {
+  const until = performance.now() + ms;
+  useSceneFx.setState({ celebrateUntil: until, bloomUntil: until });
 }

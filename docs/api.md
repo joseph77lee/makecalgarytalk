@@ -27,6 +27,7 @@ client never computes time zones; it only counts down to `next_day_start`.
 | `invites_accept(p_code)` | authenticated | Accept an invite (once) |
 | `invites_lookup(p_code)` | anon, authenticated | Who sent an invite link (nickname, community) |
 | `news_get_newspaper(p_community_id)` | anon, authenticated | Today's community newspaper (incl. local news posts) |
+| `ranking_weekly()` | anon, authenticated | Weekly ranking: last week (fixed) and this week so far, top 10 + my community |
 | `posts_create(p_kind, p_body)` | authenticated | Post local news (Verified Residents) |
 | `posts_delete(p_post_id)` | authenticated | Delete my post |
 | `posts_report(p_post_id)` / `posts_unreport(p_post_id)` | authenticated | Report a post / take it back |
@@ -312,6 +313,30 @@ none yet), or `null` for an unknown code. Works before sign-in (invite landing b
   `news.roadmap` (set `done = true` to hide one).
 - The app opens it when the player taps the Welcome sign's lot (sign or Gateway arch), later the
   Community hall; a "📰 News" chip marks it.
+
+## `ranking_weekly()`
+```json
+{
+  "min_residents": 5,
+  "results_day": false,
+  "home": { "code": "MAH", "name": "Mahogany" },
+  "last_week": {
+    "week_start": "2026-11-09",
+    "top": [{ "rank": 1, "code": "MAH", "name": "Mahogany", "score": 0.53, "acting_residents": 9, "needed": 0 }],
+    "ranked": 6,
+    "mine": { "rank": 1, "code": "MAH", "name": "Mahogany", "score": 0.53, "acting_residents": 9, "needed": 0 },
+    "champions": ["MAH"]
+  },
+  "this_week": { "week_start": "2026-11-16", "updated_at": "2026-11-22T20:00:00Z", "top": [], "ranked": 0, "mine": null, "champions": [] }
+}
+```
+Requirement §12.1. Week = Monday–Sunday, Calgary days. `score` = (sum of daily active Verified
+Residents ÷ 7) ÷ max(population, 1,000) × 1,000, two decimals (no population figure = 1,000).
+Ranked only with 5+ Verified Residents who acted during the week (`rank` null otherwise; `needed`
+= how many more). Equal scores share a rank. `last_week` is fixed on the first read on or after
+Monday and never changes; `this_week` is cached for 5 minutes. `home` / `mine` are the caller's
+community (null for visitors). `champions` of last week wear the crown on the World Map;
+`results_day` (Monday) drives the "Since yesterday" announcement.
 
 ## `posts_create(p_kind text, p_body text)` and friends
 - `posts_create`: Verified Residents, own community, once the Welcome sign is built; `kind` =

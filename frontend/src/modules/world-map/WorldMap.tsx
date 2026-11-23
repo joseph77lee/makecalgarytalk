@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MOOD_PALETTES, vitalityMood } from '../island-view';
 import { getSupabaseClient, readSupabaseConfig } from '../common';
+import { RankingSheet, useRanking, type RankEntry } from '../ranking';
 import { fetchStatuses, loadShapes, type CommunityStatus } from './api';
 import { drawIcon, type MoodColours } from './draw';
 import { bbox, codeSeed, communityAt, fitView, frameBox, iconPlan, iconSpots, type MapCommunity, type MapShapes, type View } from './geometry';
@@ -12,6 +13,8 @@ interface Props {
   onEnter: (communityId: string) => void;
   onInvite: (communityName: string) => void;
   onClose: () => void;
+  /** Share my community's result of last week (from the ranking sheet). */
+  onShareLastWeek?: (entry: RankEntry) => void;
 }
 
 interface Prepared {
@@ -35,15 +38,22 @@ function moodColours(vitality: number | null): { fill: string; edge: string; c: 
 }
 
 /** Calgary World Map (requirement.md v1.29 §9): every residential community with its development. */
-export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
+export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLastWeek }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [shapes, setShapes] = useState<MapShapes | null>(null);
   const [statuses, setStatuses] = useState<Map<string, CommunityStatus>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  const [rankingOpen, setRankingOpen] = useState(false);
+  // Last week's #1 wears the crown for the whole week (requirement.md v1.31 §12.1).
+  const championList = useRanking((s) => s.data?.last_week.champions);
+  const champions = useMemo(() => new Set(championList ?? []), [championList]);
   const myCode = useMemo(() => [...statuses.values()].find((s) => s.id === myCommunityId)?.code ?? null, [statuses, myCommunityId]);
   const view = useRef<View>({ scale: 0.01, ox: 0, oy: 0 });
+  // Latest values for the drawing loop (its listeners are set up once per shapes file).
+  const live = useRef({ statuses, selected, myCode, champions });
+  live.current = { statuses, selected, myCode, champions };
   const redraw = useRef<() => void>(() => {});
   const animTo = useRef<(v: View) => void>(() => {});
 
@@ -56,6 +66,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
         (list) => alive && setStatuses(new Map(list.map((s) => [s.code, s]))),
         () => {}, // the map still works; every community looks unsettled
       );
+    void useRanking.getState().load();
     return () => {
       alive = false;
     };
@@ -95,6 +106,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
     const draw = () => {
       frame = 0;
       const { scale, ox, oy } = view.current;
+      const { statuses, selected, myCode, champions } = live.current;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
       // Community grounds
@@ -145,6 +157,13 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
           drawIcon(ctx, kind, spot[0] * scale + ox, spot[1] * scale + oy, icon, colours, p.seed + i);
           ctx.globalAlpha = 1;
         });
+      }
+      // Crowns on last week's #1 (always visible, above the main icon)
+      ctx.font = `${Math.round(Math.max(16, Math.min(30, icon * 1.3)))}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      for (const p of prepared) {
+        if (!champions.has(p.c.code)) continue;
+        ctx.fillText('👑', p.c.label[0] * scale + ox, p.c.label[1] * scale + oy - icon * 0.9);
       }
       // Names: mine and the selected one first, then bigger communities first; a name that would
       // overlap one already drawn waits for more zoom.
@@ -267,7 +286,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
 
   useEffect(() => {
     redraw.current();
-  }, [statuses, selected, myCode]);
+  }, [statuses, selected, myCode, champions]);
 
   const sel = selected ? prepared.find((p) => p.c.code === selected) : undefined;
   const selStatus = selected ? statuses.get(selected) : undefined;
@@ -302,6 +321,14 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
             </ul>
           )}
         </div>
+        <button
+          type="button"
+          onClick={() => setRankingOpen(true)}
+          aria-label="Weekly ranking"
+          className="rounded-full bg-white/95 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
+        >
+          🏆
+        </button>
         <button type="button" onClick={onClose} aria-label="Close the map" className="rounded-full bg-white/95 px-3 py-2 text-sm text-slate-700 shadow-sm">
           ✕
         </button>
@@ -324,6 +351,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
                   {selStatus && selStatus.level > 0 && selStatus.vitality !== null && ` · ${vitalityMood(selStatus.vitality)}`}
                   {` · ${selStatus?.residents ?? 0} ${selStatus?.residents === 1 ? 'resident' : 'residents'}`}
                 </p>
+                {champions.has(sel.c.code) && <p className="mt-0.5 text-xs font-semibold text-amber-600">👑 #1 in Calgary last week</p>}
               </div>
               <button type="button" onClick={() => setSelected(null)} aria-label="Close" className="rounded-full bg-slate-100 px-2.5 py-1 text-sm text-slate-600">
                 ✕
@@ -352,6 +380,17 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
             )}
           </div>
         </div>
+      )}
+      {rankingOpen && (
+        <RankingSheet
+          onClose={() => setRankingOpen(false)}
+          onShareLastWeek={onShareLastWeek}
+          onPick={(code) => {
+            setRankingOpen(false);
+            const c = shapes?.communities.find((x) => x.code === code);
+            if (c) choose(c);
+          }}
+        />
       )}
     </div>
   );

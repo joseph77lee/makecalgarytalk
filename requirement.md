@@ -405,7 +405,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Only communities with **5+ Verified Residents who took at least one action during that ranking week** (Monday 00:00 – Sunday 23:59, Calgary time) are ranked
 - Display: TOP 10 + my community's rank, in a 🏆 sheet on the World Map; tapping a community in the list shows it on the map
   - **Last week** (final, fixed on Monday) on top, **this week so far** below (refreshed every few minutes; the score keeps dividing by 7, so it only grows during the week)
-  - Equal scores share a rank (then listed by name); scores shown with one decimal
+  - Equal scores share a rank (then listed by name); scores shown with two decimals (real scores are small, e.g. 0.37)
   - My community shows its rank, or how many more acting Verified Residents it needs to be ranked ("2 more residents to enter the ranking")
 - **Resets every Monday 00:00 (Calgary time)**; last week's results announced on Monday (in the "Since yesterday" panel, with a share card for my community when it was ranked)
 - The **crown** on the World Map marks last week's #1 for the whole following week
@@ -802,7 +802,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > ```
 
 ### 2026-11-22 — v1.31
-**Changed:** 12.1: ranking shown in a 🏆 sheet on the World Map with last week (final) and this week so far; shared ranks for equal scores; "N more residents to enter the ranking"; Monday announcement in "Since yesterday"; the crown marks last week's #1. 12.2: cards made on the phone and shared as images; one site-wide link preview (per-community previews later); random surprises later. 7.4: "recovered" defined.
+**Changed:** 12.1: ranking shown in a 🏆 sheet on the World Map with last week (final) and this week so far; shared ranks for equal scores; two-decimal scores; "N more residents to enter the ranking"; Monday announcement in "Since yesterday"; the crown marks last week's #1. 12.2: cards made on the phone and shared as images; one site-wide link preview (per-community previews later); random surprises later. 7.4: "recovered" defined.
 
 **Why:** User decisions for M11 (2026-11-22): cards on the phone (no server cost), ranking inside the World Map, last week + this week, revival effect built in M11.
 
