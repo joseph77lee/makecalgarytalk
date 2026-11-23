@@ -50,7 +50,7 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
             <div className="h-2 overflow-hidden rounded-full bg-white">
               <div className="h-full rounded-full bg-indigo-500 transition-[width] duration-700" style={{ width: `${percent}%` }} />
             </div>
-            <div className="mt-3 text-xs font-semibold text-indigo-900">Island size</div>
+            <div className="mt-3 text-xs font-semibold text-indigo-900">Community size</div>
             <div className="mt-1 flex gap-1" aria-label={`Land stage ${community.land_stage + 1} of ${tiers.length}`}>
               {tiers.map((t, i) => (
                 <div key={i} className="flex-1 text-center">

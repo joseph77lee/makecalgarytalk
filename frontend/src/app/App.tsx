@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
-import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen } from '../modules/community-state';
+import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen, revivedToday, type ChangeCard, type ChangeItem } from '../modules/community-state';
 import { ActionBar, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
 import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
 import { NewspaperPanel, newsBuildingKeys, newsReady, useNews } from '../modules/news';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
+import { useRanking, weeklyAnnouncement, weeklyCardTitle } from '../modules/ranking';
+import { ShareCardDialog, type ShareCard } from '../modules/share-cards';
 import { WorldMap } from '../modules/world-map';
 import {
   IslandDevPanel,
   IslandHud,
   IslandView,
+  captureIsland,
   finishedExampleState,
+  reviveIsland,
   vitalityMood,
   useMockCommunityStore,
   type CommunityViewState,
@@ -57,6 +61,14 @@ function LiveApp() {
   const init = useDailyActions((s) => s.init);
   const residencyStatus = useResidency((s) => s.status?.status);
   const welcomedIds = useInvites((s) => s.welcomedIds);
+  const ranking = useRanking((s) => s.data);
+  const [shareCard, setShareCard] = useState<{ card: ShareCard; island: HTMLCanvasElement | null } | null>(null);
+  const member = server?.me?.member === true;
+  const homeId = member ? server?.community.id : undefined;
+  useEffect(() => {
+    // Monday: last week's result for "Since yesterday" (§12.1). Cached on the server.
+    if (homeId) void useRanking.getState().load();
+  }, [homeId]);
   useEffect(() => {
     void init();
     void useResidency.getState().init();
@@ -95,7 +107,12 @@ function LiveApp() {
         landGrew: server.changes.land_grew,
       })
     : null;
-  const panelOpen = !!server?.me?.member && changesPanelOpen(server.changes, server.community.vitality, changesSeen);
+  // Share cards always name the community; the island picture only when it is that community's island.
+  const openCard = (c: ChangeCard, communityName: string) =>
+    setShareCard({ card: { ...c, communityName }, island: server?.community.name === communityName ? captureIsland() : null });
+  const weekly = member && ranking?.home?.code === server?.community.code ? weeklyAnnouncement(ranking) : null;
+  const extraChanges: ChangeItem[] = weekly ? [{ icon: '🏆', text: weekly.text, card: { kind: 'weekly', title: weeklyCardTitle(weekly.rank) } }] : [];
+  const panelOpen = !!server?.me?.member && changesPanelOpen(server.changes, server.community.vitality, changesSeen, extraChanges);
   // Welcome card right after the first counted check-in (§5.1), once per community.
   const showWelcome =
     status === 'ready' &&
@@ -192,7 +209,18 @@ function LiveApp() {
               ) : (
                 // Only in my own community (visiting elsewhere must not use up today's panel).
                 server.me?.member && (
-                  <ChangesPanel changes={server.changes} vitality={server.community.vitality} seen={changesSeen} onSeen={markChangesSeen} />
+                  <ChangesPanel
+                    changes={server.changes}
+                    vitality={server.community.vitality}
+                    seen={changesSeen}
+                    extra={extraChanges}
+                    onShare={(c) => openCard(c, server.community.name)}
+                    onSeen={() => {
+                      // Community Revival plays on the island once the panel closes (§7.4).
+                      if (revivedToday(server.changes, server.community.vitality)) reviveIsland();
+                      markChangesSeen();
+                    }}
+                  />
                 )
               )}
             </>
@@ -218,6 +246,7 @@ function LiveApp() {
         <WorldMap
           myCommunityId={myCommunityId}
           onClose={() => setWorldOpen(false)}
+          onShareLastWeek={(e) => e.rank !== null && openCard({ kind: 'weekly', title: weeklyCardTitle(e.rank) }, e.name)}
           onEnter={(id) => {
             setWorldOpen(false);
             if (id !== server?.community.id) void useDailyActions.getState().viewCommunity(id);
@@ -231,6 +260,14 @@ function LiveApp() {
                 if (text) useDailyActions.getState().showToast(text);
               })
           }
+        />
+      )}
+      {shareCard && (
+        <ShareCardDialog
+          card={shareCard.card}
+          island={shareCard.island}
+          onClose={() => setShareCard(null)}
+          onResult={(m) => m && useDailyActions.getState().showToast(m)}
         />
       )}
       <NewspaperPanel />

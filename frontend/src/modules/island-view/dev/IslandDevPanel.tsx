@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMockCommunityStore } from '../mockStore';
 import { vitalityMood } from '../mood';
+import { reviveIsland } from '../scene/islandContext';
 import { BUILDING_TREE, LAND_STAGE_COUNT } from '../plan/buildingTree';
 import { BUILDING_STATUSES, MAX_MINI_VILLAGERS, type BuildingStatus, type BuildingView, type CommunityViewState } from '../types';
 
@@ -57,6 +58,9 @@ export function IslandDevPanel() {
       <div className="mb-2 flex items-center justify-between">
         <span className="font-bold">Mock community state</span>
         <div className="flex gap-1">
+          <button type="button" className="rounded bg-slate-100 px-2 py-0.5" onClick={() => reviveIsland()}>
+            Revive fx
+          </button>
           <button type="button" className="rounded bg-slate-100 px-2 py-0.5" onClick={reset}>
             Reset
           </button>

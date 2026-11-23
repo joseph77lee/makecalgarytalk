@@ -8,9 +8,11 @@ import { FIXED_ASSET_KEYS, buildIslandLayout, tileKey, type BuildingObject, type
 import { MOOD_PALETTES, type MoodPalette } from '../mood';
 import { stageMap, type IslandPlan } from '../plan/islandPlan';
 import type { CommunityViewState } from '../types';
+import { BloomBurst } from './BloomBurst';
 import { BoxBatch } from './BoxBatch';
 import { ISLAND_AZIMUTH, northScreenAngle, viewFrame, zoomForFrame, type ViewFrame } from './camera';
 import { cameraFocus, followStrength } from './cameraFocus';
+import { opaqueBox, setIslandCapturer } from './capture';
 import { IslandContext, useSceneFx, type IslandCtx } from './islandContext';
 import { IslandLabels } from './Labels';
 import { futureLandParts, terrainParts } from './terrainParts';
@@ -191,6 +193,7 @@ function IslandScene({
         far={300}
       />
       <CameraRig frame={landFrame} whole={wholeFrame} azimuth={az} />
+      <CaptureRegistrar />
       <Lights palette={palette} radius={layout.landRadius} azimuth={az} />
 
       <BoxBatch parts={future} castShadow={false} receiveShadow={false} />
@@ -203,6 +206,7 @@ function IslandScene({
 
       {(onTileTap || houseBoxes.length > 0) && <TapPlane radius={outlineRadius} isLand={(t) => stageOf(t) <= settled} onTileTap={tap} />}
       <ObjectsLayer objects={shown} />
+      <BloomBurst layout={layout} />
       <IslandLabels
         objects={shown}
         houseBubbles={houseBubbles}
@@ -446,4 +450,33 @@ function NorthArrow({ channel }: { channel: AngleChannel }) {
       </svg>
     </div>
   );
+}
+
+/** Lets share cards take a picture of the island: render once, copy the canvas, crop to the island. */
+function CaptureRegistrar() {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  useEffect(() => {
+    setIslandCapturer(() => {
+      gl.render(scene, camera);
+      const src = gl.domElement;
+      const full = document.createElement('canvas');
+      full.width = src.width;
+      full.height = src.height;
+      const fctx = full.getContext('2d', { willReadFrequently: true });
+      if (!fctx || !full.width || !full.height) return null;
+      fctx.drawImage(src, 0, 0); // same task as the render, so the drawing buffer is still there
+      const box = opaqueBox(fctx.getImageData(0, 0, full.width, full.height).data, full.width, full.height);
+      if (!box) return null;
+      const pad = Math.round(Math.max(box.w, box.h) * 0.03);
+      const out = document.createElement('canvas');
+      out.width = box.w + pad * 2;
+      out.height = box.h + pad * 2;
+      out.getContext('2d')?.drawImage(full, box.x, box.y, box.w, box.h, pad, pad, box.w, box.h);
+      return out;
+    });
+    return () => setIslandCapturer(null);
+  }, [gl, scene, camera]);
+  return null;
 }

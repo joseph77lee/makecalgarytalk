@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.30 |
+| Document version | v1.32 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-22 |
+| Last updated | 2026-11-23 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -195,6 +195,7 @@ Goal: moving never punishes the person who moves or the residents who stay.
 - Don't make it too depressing ("cute sleepy"): a newcomer's first look must still be inviting
 - While Sleepy, the streak bar says "<Community> is sleepy. Help today to wake it up!", so a quiet community becomes a reason to help
 - Sleepy → recovered triggers a **"Community Revival" effect** (cheering, flowers bloom) + a share card
+  - Recovered = yesterday's Vitality was Sleepy (0–29) and today's is 30 or more; shown once in the "Since yesterday" panel of that day
 
 ### 7.5 Community Streak
 - **Active Verified Resident (7-day)** = a Verified Resident who took at least one action within the **last 7 Calgary days, including today**. Residents inactive longer (including those whose houses are archived after 30 days) are **not** counted, so dormant residents cannot make the streak impossible.
@@ -402,12 +403,17 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - Formula: (sum of daily active Verified Residents over the week ÷ 7) ÷ max(community population, 1,000) × 1,000
   - "Daily active Verified Residents" = Verified Residents who took at least one action that Calgary day (each person counts at most once per day)
 - Only communities with **5+ Verified Residents who took at least one action during that ranking week** (Monday 00:00 – Sunday 23:59, Calgary time) are ranked
-- Display: TOP 10 + my community's rank
-- **Resets every Monday 00:00 (Calgary time)**; last week's results announced on Monday
+- Display: TOP 10 + my community's rank, in a 🏆 sheet on the World Map; tapping a community in the list shows it on the map
+  - **Last week** (final, fixed on Monday) on top, **this week so far** below (refreshed every few minutes; the score keeps dividing by 7, so it only grows during the week)
+  - Equal scores share a rank (then listed by name); scores shown with two decimals (real scores are small, e.g. 0.37)
+  - My community shows its rank, or how many more acting Verified Residents it needs to be ranked ("2 more residents to enter the ranking")
+- **Resets every Monday 00:00 (Calgary time)**; last week's results announced on Monday (in the "Since yesterday" panel, with a share card for my community when it was ranked)
+- The **crown** on the World Map marks last week's #1 for the whole following week
 
 ### 12.2 Share cards
 - The image **always includes the community name** (so it spreads in community Facebook groups, etc.)
-- Generated on: weekly results, building completion, community revival, random surprises
+- Generated on: weekly results, building completion, community revival (random surprises: later)
+- MVP: the card image is **made on the phone** (a picture of the island + text) and shared as an image (system share sheet, or saved when sharing files is not supported), with the site link in the text. Link previews use one site-wide preview image; per-community link previews (server-made images) come later
 
 ### 12.3 Invites
 - Personal invite link
@@ -759,7 +765,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Mini villager | Ambient voxel character showing the community's mood; never represents or impersonates a real player |
 | Avatar | The user's own controllable character in their community's island (tap/click to move) |
 | Destination event | Avatar movement expressed as "move to tile (x, y)"; local-only in the MVP, broadcastable for real-time presence later |
-| Island / diorama | The floating voxel island in the real shape of one community; its land grows inside the visible outline with cumulative Verified Residents |
+| Island / diorama | The floating voxel island in the real shape of one community; its land grows inside the visible outline with cumulative Verified Residents. **Internal term only: player-facing text says "community"** (e.g. "Visit this community", "Back to my community", "Community size") |
 | Feature library | Reusable signature blocks (lake, creek, hill, park, etc.) assigned to communities for identity |
 | Petition | Residents' request to add a feature-library block to their island; operator decides monthly |
 | Action replay | Mini villagers re-enacting real actions residents took today, with a system speech bubble |
@@ -794,6 +800,25 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.32
+**Changed:** 23 Glossary, Island / diorama: "island" is an internal term; player-facing text says "community".
+
+**Why:** User decision (2026-11-23): players think of their community, not an island; "Visit the island" / "Island size" felt off.
+
+**Previous:**
+- 23: `| Island / diorama | The floating voxel island in the real shape of one community; its land grows inside the visible outline with cumulative Verified Residents |`
+
+### 2026-11-22 — v1.31
+**Changed:** 12.1: ranking shown in a 🏆 sheet on the World Map with last week (final) and this week so far; shared ranks for equal scores; two-decimal scores; "N more residents to enter the ranking"; Monday announcement in "Since yesterday"; the crown marks last week's #1. 12.2: cards made on the phone and shared as images; one site-wide link preview (per-community previews later); random surprises later. 7.4: "recovered" defined.
+
+**Why:** User decisions for M11 (2026-11-22): cards on the phone (no server cost), ranking inside the World Map, last week + this week, revival effect built in M11.
+
+**Previous:**
+- 12.1: `- Display: TOP 10 + my community's rank`
+- 12.1: `- **Resets every Monday 00:00 (Calgary time)**; last week's results announced on Monday`
+- 12.2: `- Generated on: weekly results, building completion, community revival, random surprises`
+- 7.4: only `- Sleepy → recovered triggers a **"Community Revival" effect** (cheering, flowers bloom) + a share card`
 
 ### 2026-11-22 — v1.30
 **Changed:** 7.8: the island's default camera angle is the same for every community and keeps the World Map's orientation (instead of turning each community so its long side is vertical); a compass shows north.

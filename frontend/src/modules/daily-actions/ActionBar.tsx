@@ -79,7 +79,7 @@ export function ActionBar() {
         {pending ? (
           <p className="mt-1.5 px-1 text-center text-[10px] text-amber-700">Your help is saved and counts once you are a Verified Resident here.</p>
         ) : (
-          <p className="mt-1.5 px-1 text-center text-[10px] text-slate-400">Today's help shows on the island tomorrow.</p>
+          <p className="mt-1.5 px-1 text-center text-[10px] text-slate-400">Today's help shows in the community tomorrow.</p>
         )}
       </div>
     </div>
