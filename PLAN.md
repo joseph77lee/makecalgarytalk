@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.60 |
+| Plan version | v1.61 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
 | Based on | `requirement.md` v1.34 |
-| Current module | M13 Feature Library (🟨 Ready for playtest) |
+| Current module | M14 Launch Readiness (next; M13 ✅ Done) |
 
 ---
 
@@ -52,7 +52,7 @@
 | M10 | World Map | FE (2D) + BE | | M5 | ✅ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ✅ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
-| M13 | Feature Library | FE + data | | M1 | 🟨 |
+| M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Readiness | All | | All above | ⬜ |
 
 **Order after M7 (user decision 2026-11-20):** M1 🔁 Sleepy mood fix → **M12 Invites** (before M8: bringing neighbours in is the core of the game) → M8 → M9 → **M15 Community Posts** (resident-written local news, right after M9) → M10 → M11 → M13 → M14.
@@ -472,7 +472,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** the real share sheet on a phone (headless Chromium has no `navigator.share`; the copy fallback was checked); M8 (houses) will show badges on name tags later; decorations are Phase 2; no per-IP limit on `invites_lookup` (low value: nickname + community only).
 
 
-### M13 — Feature Library 🟨
+### M13 — Feature Library ✅
 **Goal:** Each island feels like its community.
 - **In scope** (`requirement.md` v1.34 §7.9, §9)
   - [x] 6 feature blocks as box models: CTrain station, pond, hill, creek, big park, school (real water inside the boundary is already drawn since M1 🔁)
@@ -484,7 +484,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done**
   - [x] communities show their features (200 of 223 have at least one block; 46 have CTrain track; checked on screen: Varsity, Bridgeland, Signal Hill, Bowness, Mahogany)
   - [x] adding a feature = data change only (edit `community_features_override.csv`, rerun `build_features.py`)
-  - [ ] user has looked at it
+  - [x] user has looked at it (confirmed 2026-11-23)
 - **Handoff**
   - **Data pipeline (run in this order):** `supabase/data/build_ctrain.py` (OSM route relations → `calgary_ctrain.json`: one track centreline per line in stop order, simplified to 8 m, stations in stop order; retries when Overpass is busy) → `frontend/scripts/island_plans.py --rail` (rewrites only plans that get track) → `supabase/data/build_features.py` (reads the plans: no symbolic station where there is track; pond/creek only with < 20 water tiles) → `frontend/scripts/world_map.py` (adds `ctrain` to `public/worldmap/calgary.json`; community shapes unchanged). OSM data is ODbL (attribution in each file's `about`; add it to the site credits in M14). `--cache <file>` on the two OSM scripts saves/reuses the Overpass answer.
   - **Plan format v3** (only the 46 track communities; the other 177 stay v2, the decoder accepts both): `rail` (runs `{line, tiles}` in track order, 4-connected, ≥ 4 tiles), `stations` (`{name, lines, rect}` 2×1 platform touching the track), `railEnds` (`{line, next, tile, dir}` only where the track really leaves the island, one sign per station name). Generator rules: track within one tile of the land snaps to the edge row (lines run in road medians = community boundaries); track never on the plaza (runs split there); paths may cross track but pay a cost to run along it; track cells are never lots/houses/trees; stations need a reachable door like lots. New generator check: later lots must not leave a > 150° gap (retries with a stronger spread weight 14, 20) — Bridgeland needed it.
@@ -527,6 +527,15 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.61
+**Changed:** M13 ✅ Done ("user has looked at it" ticked); current module → M14.
+
+**Why:** The user played M13 and confirmed it (2026-11-23); CI green.
+
+**Previous:**
+- Header: `| Plan version | v1.60 |`, `| Current module | M13 Feature Library (🟨 Ready for playtest) |`
+- Overview row: `| M13 | Feature Library | FE + data | | M1 | 🟨 |`; heading `### M13 — Feature Library 🟨`; DoD `  - [ ] user has looked at it`
 
 ### 2026-11-23 — v1.60
 **Changed:** M13 scope extended after the user's review: CTrain on the islands (track, stations, train, next-station signs; 46 plans regenerated) and on the World Map; features appear with their land instead of faint previews; build map preview of the next land's features. Handoff rewritten. "Based on" → `requirement.md` v1.34.
