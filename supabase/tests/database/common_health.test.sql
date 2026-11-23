@@ -78,7 +78,7 @@ select is_empty(
     left join pg_depend d on d.objid = p.oid and d.deptype = 'e'
     where n.nspname = 'public'
       and d.objid is null
-      and p.proname !~ '^(common|gamecore|communitystate|identity|residency|residents|news|worldmap|ranking|invites|features|posts)_'
+      and p.proname !~ '^(common|gamecore|communitystate|identity|residency|residents|news|worldmap|ranking|invites|features|posts|analytics|admin)_'
   $$,
   'every public function is prefixed with its module name'
 );

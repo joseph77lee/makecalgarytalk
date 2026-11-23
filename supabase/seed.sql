@@ -47,3 +47,6 @@ insert into identity.profiles (user_id, nickname, shirt) values
   ('d0000000-0000-4000-8000-00000000de01', 'Dev One', 0),
   ('d0000000-0000-4000-8000-00000000de02', 'Dev Two', 4)
 on conflict (user_id) do nothing;
+
+-- LOCAL ONLY: the first dev user is an operator, so ?admin shows the dashboard locally.
+insert into admin.operators (user_id, note) values ('d0000000-0000-4000-8000-00000000de01', 'local dev') on conflict do nothing;
