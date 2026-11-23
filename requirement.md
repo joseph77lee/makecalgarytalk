@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.27 |
+| Document version | v1.28 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Status | Initial draft for starting MVP development |
@@ -445,23 +445,24 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ---
 
-## 14. Resident board (MVP, next module after Community news; details decided when it starts)
+## 14. Community posts (resident-written local news, MVP)
 
-| Rule | Newcomer | Verified Resident |
-|---|---|---|
-| Character limit | 100 | 300 |
-| Posts per day | 1 | 1 |
-| Links / photos | None | None |
-| Label | "Newcomer" | "Verified Resident" badge |
-| Visible for | 1 day | 3 days |
-
-- Short notice-style posts
-- Auto-hidden after 3 reports (reports from Verified Residents count double)
-- Accounts abusing reports lose reporting ability
-- Hidden posts are kept until auto-deletion at the end of their visibility period
-- Profanity filter; warn/block phone number and address patterns
-
----
+- **Verified Residents only**, in their own community. Opens when the community's **Welcome sign** is built (together with the newspaper)
+- Shown in the **Local news** section of Community News (11), credited by nickname, newest first
+- A post: a kind and up to **300 characters**; **1 post per resident per Calgary day**; **no links or photos**
+  - Kinds are about what is really happening in the community: 🚨 **Safety** (e.g. car break-ins overnight), 🏷️ **Local deals** (local store events and sales), 🎉 **Events**, 🔎 **Lost & found**, 💬 **Free talk**
+  - Safety posts remind the writer and readers: "Say what happened, not who. No names or photos. In an emergency, call 911"
+- Visible for **3 Calgary days** (the posting day and the next two), then gone; the author can delete their own post (no editing)
+- Day-level only: posts show "today", "yesterday", "2 days ago", never a time
+- **Safety**
+  - Blocked-words filter (same list as nicknames); **phone numbers and street addresses are blocked** (e.g. "403 555 1234", "123 Main St")
+  - **Reports**: any signed-in player can report a post once, **at most 3 reports per day**; reports from Verified Residents count 2, others 1; **3 points hide the post** (one person alone cannot hide a post). Reporting asks to confirm, and a report can be **taken back** (a mistake), which removes its points and frees that day's report. Thanks and a report exclude each other: reporting takes back my thanks, and a post I reported is folded away for me ("You reported this post · Undo") until I take the report back The operator can hide any post, **restore** a hidden one (a restored post ignores reports), see who reported restored posts, and block an account from reporting
+  - Hidden posts stay hidden until they expire
+- **Participation**
+  - 👍 **Thanks**: any signed-in player, once per post; the count is shown (no ranking)
+  - **"Community Reporter" badge** once a resident's posts have received 10 thanks in total
+  - The write box suggests what to post (an event, a local deal, something lost or found)
+- Paid business ads stay in Phase 4 (22.4); residents may mention a local deal in words (no links)
 
 ## 15. Speech bubbles (Phase 2)
 - **"Neighbour" rank and above**
@@ -693,6 +694,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Real-time presence**: other online residents' avatars visible and moving in the same island (broadcast destination events per community channel, e.g. Supabase Realtime; cap ~30 visible avatars per island; distinct label colour for online residents; simple emoji greetings)
 - Community petitions (16.2)
 - Advanced share/update celebration events
+- **Community marketplace** (buy, sell, give away): needs in-app messaging and trade-safety rules first; not in the MVP's community posts (14)
 - **Enter buildings and decorate my own house** (idea, not planned yet): tap a building or my house to go inside a small interior scene; residents decorate their own house. The fixed house lot (7.2) is what makes "my house" stable for this
 
 ### 22.4 Phase 4 (monetization)
@@ -790,6 +792,32 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-20 — v1.28
+**Changed:** 14 rewritten as **Community posts** for the MVP: Verified Residents only, opens with the Welcome sign, 1 post a day, 300 characters, 4 kinds, no links/photos, 3-day visibility, own-post delete, phone/address blocking, report points (Verified 2, others 1, 3 hides), operator blocks, thanks and the Community Reporter badge (10 thanks).
+
+Kinds: Safety, Local deals, Events, Lost & found, Free talk (Safety posts carry a reminder); reports limited to 3 a day, confirmed before sending, can be taken back, and exclude thanks (a reported post folds away for the reporter); the operator can restore a post. 22.3: community marketplace added as a later idea.
+
+**Why:** M15 needs exact rules (user decisions 2026-11-20: open with the Welcome sign, no links; kinds centred on real community life; marketplace later; report limit and restore).
+
+**Previous:**
+    ## 14. Resident board (MVP, next module after Community news; details decided when it starts)
+
+    | Rule | Newcomer | Verified Resident |
+    |---|---|---|
+    | Character limit | 100 | 300 |
+    | Posts per day | 1 | 1 |
+    | Links / photos | None | None |
+    | Label | "Newcomer" | "Verified Resident" badge |
+    | Visible for | 1 day | 3 days |
+
+    - Short notice-style posts
+    - Auto-hidden after 3 reports (reports from Verified Residents count double)
+    - Accounts abusing reports lose reporting ability
+    - Hidden posts are kept until auto-deletion at the end of their visibility period
+    - Profanity filter; warn/block phone number and address patterns
+
+    ---
 
 ### 2026-11-20 — v1.27
 **Changed:** 11: newspaper lines listed (no personal streak lines; the example no longer mentions one); written once per community per day; locked until the Welcome sign is built; announcements always at the top, the community board section (events, roadmap) opens with the Warming hut; MVP announcements via SQL.

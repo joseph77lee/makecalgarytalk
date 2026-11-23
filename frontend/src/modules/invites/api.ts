@@ -4,7 +4,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 export type Badge =
   | { key: 'founding_resident'; community: string }
   | { key: 'good_neighbour'; count: number }
-  | { key: 'pioneer_sponsor'; count: number };
+  | { key: 'pioneer_sponsor'; count: number }
+  | { key: 'community_reporter' };
 
 export interface ServerInvites {
   code: string;
@@ -27,6 +28,7 @@ function isBadge(b: unknown): b is Badge {
   const o = b as Record<string, unknown> | null;
   if (!o) return false;
   if (o.key === 'founding_resident') return typeof o.community === 'string';
+  if (o.key === 'community_reporter') return true;
   if (o.key === 'good_neighbour' || o.key === 'pioneer_sponsor') return isCount(o.count) && (o.count as number) > 0;
   return false;
 }

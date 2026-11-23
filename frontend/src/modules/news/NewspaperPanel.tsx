@@ -1,3 +1,4 @@
+import { LocalNews } from '../posts';
 import { useNews } from './liveStore';
 import { yesterdayLabel } from './newsText';
 
@@ -8,6 +9,8 @@ export function NewspaperPanel() {
   const error = useNews((s) => s.error);
   const paper = useNews((s) => s.paper);
   const close = useNews((s) => s.close);
+  const show = useNews((s) => s.show);
+  const communityId = useNews((s) => s.communityId);
   if (!open) return null;
 
   return (
@@ -67,9 +70,7 @@ export function NewspaperPanel() {
                   )}
 
                   <h3 className="mb-2 mt-5 font-serif text-lg font-bold text-slate-900">Local news</h3>
-                  <p className="rounded-2xl bg-white px-3 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
-                    🗞️ Soon, Verified Residents can post local news here: events, deals, lost &amp; found.
-                  </p>
+                  <LocalNews posts={paper.posts} canPost={paper.can_post} onChanged={() => communityId && void show(communityId, { quiet: true })} />
                 </>
               )}
 

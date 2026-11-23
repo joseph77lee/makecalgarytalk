@@ -1,5 +1,6 @@
 /** Typed wrapper for the news RPC (docs/api.md), with response checks. */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isCanPost, isPost, type CanPost, type Post } from '../posts';
 
 export interface Newspaper {
   calgary_day: string;
@@ -8,6 +9,10 @@ export interface Newspaper {
   locked: 'welcome_sign' | null;
   announcements: { title: string; body: string }[];
   lines: { icon: string; text: string }[];
+  /** Local news written by residents (newest first). */
+  posts: Post[];
+  /** Whether I can post in this community now, and why not. */
+  can_post: CanPost;
   board: { open: boolean; roadmap: { title: string; detail: string }[] };
 }
 
@@ -25,6 +30,9 @@ export function assertNewspaper(v: unknown): asserts v is Newspaper {
     o.announcements.every((a) => isText(a?.title) && isText(a?.body)) &&
     Array.isArray(o.lines) &&
     o.lines.every((l) => isText(l?.icon) && isText(l?.text)) &&
+    Array.isArray(o.posts) &&
+    o.posts.every(isPost) &&
+    isCanPost(o.can_post) &&
     typeof b?.open === 'boolean' &&
     Array.isArray(b?.roadmap) &&
     (b.roadmap as unknown[]).every((r) => isText((r as Record<string, unknown>)?.title));

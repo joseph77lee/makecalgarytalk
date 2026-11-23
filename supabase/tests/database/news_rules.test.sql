@@ -43,7 +43,7 @@ create function pg_temp.act(who integer, n integer, building text default 'welco
          coalesce((select max(a.energy_slot) from gamecore.actions a where a.user_id = pg_temp.u(who) and a.calgary_day = pg_temp.d(n)), 0) + 1,
          clock_timestamp()
 $$;
-create function pg_temp.paper(n integer) returns jsonb language sql as $$ select news.newspaper_at(pg_temp.c('MAH'), pg_temp.noon(n)) $$;
+create function pg_temp.paper(n integer) returns jsonb language sql as $$ select news.newspaper_at(pg_temp.c('MAH'), pg_temp.noon(n), null) $$;
 create function pg_temp.text(n integer) returns text language sql as $$
   select string_agg(l ->> 'text', ' | ') from jsonb_array_elements(pg_temp.paper(n) -> 'lines') l
 $$;

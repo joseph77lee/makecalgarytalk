@@ -9,7 +9,9 @@ const paper = (patch: Partial<Newspaper> = {}): Newspaper => ({
   community: 'Mahogany',
   locked: null,
   announcements: [{ title: 'Maintenance Sunday', body: '' }],
-  lines: [{ icon: '🙌', text: '2 neighbours helped yesterday: A and B.' }],
+  lines: [{ icon: '👋', text: '2 new neighbours joined yesterday: A and B. Welcome!' }],
+  posts: [{ id: 'p1', kind: 'event', body: 'Skating Saturday', nickname: 'Maple Fox', days_ago: 1, thanks: 2, mine: false, thanked: false, reported: false }],
+  can_post: { allowed: false, reason: 'not_verified' },
   board: { open: false, roadmap: [] },
   ...patch,
 });
@@ -39,6 +41,8 @@ describe('newspaper API checks', () => {
     expect(() => assertNewspaper({ ...paper(), locked: 'other' })).toThrow();
     expect(() => assertNewspaper({ ...paper(), lines: [{ text: 'x' }] })).toThrow();
     expect(() => assertNewspaper({ ...paper(), board: {} })).toThrow();
+    expect(() => assertNewspaper({ ...paper(), posts: [{ id: 'x', kind: 'ad' }] })).toThrow();
+    expect(() => assertNewspaper({ ...paper(), can_post: {} })).toThrow();
   });
 });
 

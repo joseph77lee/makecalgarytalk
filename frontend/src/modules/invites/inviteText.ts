@@ -39,6 +39,8 @@ export function badgeText(b: Badge): { icon: string; title: string; detail: stri
       return { icon: '🏅', title: 'Founding Resident', detail: `First resident of ${b.community}` };
     case 'good_neighbour':
       return { icon: '🤝', title: b.count > 1 ? `Good Neighbour ×${b.count}` : 'Good Neighbour', detail: 'Brought a neighbour home' };
+    case 'community_reporter':
+      return { icon: '🗞️', title: 'Community Reporter', detail: 'Neighbours thanked your local news 10 times' };
     case 'pioneer_sponsor':
       return { icon: '🚩', title: b.count > 1 ? `Pioneer Sponsor ×${b.count}` : 'Pioneer Sponsor', detail: 'Invited the first resident of a community' };
   }
