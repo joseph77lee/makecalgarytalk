@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.58 |
+| Plan version | v1.59 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
-| Based on | `requirement.md` v1.32 |
-| Current module | M13 Feature Library (next; M11 ✅ Done) |
+| Based on | `requirement.md` v1.33 |
+| Current module | M13 Feature Library (🟨 Ready for playtest) |
 
 ---
 
@@ -52,7 +52,7 @@
 | M10 | World Map | FE (2D) + BE | | M5 | ✅ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ✅ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
-| M13 | Feature Library | FE + data | | M1 | ⬜ |
+| M13 | Feature Library | FE + data | | M1 | 🟨 |
 | M14 | Launch Readiness | All | | All above | ⬜ |
 
 **Order after M7 (user decision 2026-11-20):** M1 🔁 Sleepy mood fix → **M12 Invites** (before M8: bringing neighbours in is the core of the game) → M8 → M9 → **M15 Community Posts** (resident-written local news, right after M9) → M10 → M11 → M13 → M14.
@@ -472,15 +472,22 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** the real share sheet on a phone (headless Chromium has no `navigator.share`; the copy fallback was checked); M8 (houses) will show badges on name tags later; decorations are Phase 2; no per-IP limit on `invites_lookup` (low value: nickname + community only).
 
 
-### M13 — Feature Library ⬜
+### M13 — Feature Library 🟨
 **Goal:** Each island feels like its community.
-- **In scope**
-  - [ ] a few feature blocks (lake, creek, hill, park) as box models — most important for communities whose real shape is close to a rectangle (e.g. Mahogany's lake)
-  - [ ] community → feature mapping (OSM / City hydrology suggestion + CSV override) for launch communities
-  - [ ] feature/landmark lots come from the stored lot plan (M1 🔁)
+- **In scope** (`requirement.md` v1.33 §7.9)
+  - [x] 6 feature blocks as box models: CTrain station, pond, hill, creek, big park, school (real water inside the boundary is already drawn since M1 🔁)
+  - [x] community → feature mapping for **all 223** residential communities: OpenStreetMap suggestions + operator CSV override, at most 3 each in priority order
+  - [x] features stand on the spare lots of the stored lot plan (M1 🔁); faint on future land from day one, solid once the land rises; labels with public place names
 - **Definition of Done**
-  - [ ] launch communities show their features
-  - [ ] adding a feature = data change only
+  - [x] communities show their features (203 of 223 have at least one; checked on screen: Varsity, Signal Hill, Bowness, Mahogany)
+  - [x] adding a feature = data change only (edit `community_features_override.csv`, rerun `build_features.py`)
+  - [ ] user has looked at it
+- **Handoff**
+  - **Data:** `supabase/data/build_features.py` (Python, standard library) queries OpenStreetMap through the Overpass API once (`--cache <file>` saves/reuses the answer) and writes `supabase/data/community_features.json` (`communities: { CODE: [{ key, name }] }`, priority order, ≤ 3). Only the derived mapping is stored, never OSM geometry; ODbL attribution is in the file's `about` (add it to the site credits in M14). `community_features_override.csv` (`code,action,feature,name`, action add/remove) is applied after the suggestions; operator additions always survive the cap. Rules are in the script's docstring (station ≤ 150 m, pond ≥ 2 ha within 250 m only if the plan has < 20 water tiles, hill from named peaks / hill-named parks / community names containing hill|heights|ridge|mount|crest, creek ≥ 250 m inside, big park ≥ 6 ha overlap, school inside).
+  - **Results (2026-11-23):** station 48, pond 31, hill 52, creek 50, big park 110, school 127; 19 communities have none (mostly small inner-city or brand-new ones: e.g. Bankview, Chinatown, Wolf Willow) — add them through the CSV if wanted. The "hill by community name" rule is symbolic (e.g. Hillhurst, Mount Pleasant).
+  - **Code:** `island-view/plan/features.ts` (`featuresFor(code)`, `FEATURE_INFO`, `featureLabel`, validation that throws listing every problem); `layout.ts` puts features on spare lots in plan order (spare-1 …), `assetKey: 'feature'` with `faint` (lot not on land yet → stage 0, see-through on the mist) or solid (blocks its lot, counted in `usedLots`); unknown-building placeholders get the spare lots left. `buildIslandLayout(plan, state, features = featuresFor(plan.code))` — tests pass `[]` to check behaviour without features. Models in `assets/models.ts` (`FEATURE_MODELS`, `feature()`; faint = ghost layer, own colours, lowered onto the mist), labels in `scene/Labels.tsx` (solid: name chip always, since phones rarely reach the detailed zoom; faint: emoji, plus "Appears as the community grows" when zoomed in).
+  - **Tests:** `plan/features.test.ts` (every plan has an entry, valid keys, ≤ 3, priority order, names ≤ 60 chars, ≥ 85% of communities have a feature, models inside the 2×2 lot in every mood, faint variant) and feature cases in `layout.test.ts` (spare-lot order, faint → solid, blocking, placeholders after features, Mahogany data).
+  - **Not tested / known gaps:** real phone; OSM data quality varies (unnamed parks show "Big park", some creeks have no name); features are not tappable (no info sheet); the faint→solid switch has no animation of its own (it appears with the risen land); Activity-based feature upgrades are Phase 2.
 
 ### M14 — Launch Readiness ⬜
 **Goal:** Safe to show the public.
@@ -516,6 +523,17 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.59
+**Changed:** M13 scope as decided (6 blocks, all 223 communities, faint from day one; DoD "launch communities" → communities, plus "user has looked at it"); items ticked; status 🟨 with Handoff. "Based on" → `requirement.md` v1.33.
+
+**Why:** User decisions for M13 (2026-11-23); implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.58 |`, `| Based on | \`requirement.md\` v1.32 |`, `| Current module | M13 Feature Library (next; M11 ✅ Done) |`
+- Overview row: `| M13 | Feature Library | FE + data | | M1 | ⬜ |`
+- M13 In scope: `  - [ ] a few feature blocks (lake, creek, hill, park) as box models — most important for communities whose real shape is close to a rectangle (e.g. Mahogany's lake)` / `  - [ ] community → feature mapping (OSM / City hydrology suggestion + CSV override) for launch communities` / `  - [ ] feature/landmark lots come from the stored lot plan (M1 🔁)`
+- M13 DoD: `  - [ ] launch communities show their features` / `  - [ ] adding a feature = data change only`
 
 ### 2026-11-23 — v1.58
 **Changed:** M11 ✅ Done (DoD "user has played it" added and ticked; Handoff notes on demo data and wording); current module → M13.
