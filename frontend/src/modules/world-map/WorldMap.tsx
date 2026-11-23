@@ -24,7 +24,9 @@ interface Prepared {
 
 const TAP_PX = 8;
 const ICON_ROOM_PX = 15;
-const MAX_SCALE = 0.12;
+const MAX_SCALE = 0.3;
+/** A community's name shows once it covers this many screen px² (and does not overlap a bigger one). */
+const NAME_MIN_PX2 = 1200;
 
 function moodColours(vitality: number | null): { fill: string; edge: string; c: MoodColours } {
   const mood = vitality === null ? 'normal' : vitalityMood(vitality);
@@ -144,14 +146,25 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
           ctx.globalAlpha = 1;
         });
       }
-      // Names when there is room, and always for mine / the selected one
+      // Names: mine and the selected one first, then bigger communities first; a name that would
+      // overlap one already drawn waits for more zoom.
       ctx.font = '600 11px system-ui, sans-serif';
       ctx.textAlign = 'center';
-      for (const p of prepared) {
-        const big = p.c.area * scale * scale > 9000;
-        if (!big && p.c.code !== myCode && p.c.code !== selected) continue;
+      ctx.lineJoin = 'round'; // no spikes on the white halo
+      const placed: { x0: number; y0: number; x1: number; y1: number }[] = [];
+      const order = [...prepared].sort(
+        (a, b) =>
+          Number(b.c.code === selected || b.c.code === myCode) - Number(a.c.code === selected || a.c.code === myCode) || b.c.area - a.c.area,
+      );
+      for (const p of order) {
+        const forced = p.c.code === myCode || p.c.code === selected;
+        if (!forced && p.c.area * scale * scale < NAME_MIN_PX2) continue;
         const x = p.c.label[0] * scale + ox, y = p.c.label[1] * scale + oy + icon * 1.1;
-        if (x < -50 || y < -20 || x > rect.width + 50 || y > rect.height + 20) continue;
+        if (x < -80 || y < -20 || x > rect.width + 80 || y > rect.height + 20) continue;
+        const w = ctx.measureText(p.c.name).width;
+        const r = { x0: x - w / 2 - 2, y0: y - 10, x1: x + w / 2 + 2, y1: y + 3 };
+        if (!forced && placed.some((q) => r.x0 < q.x1 && r.x1 > q.x0 && r.y0 < q.y1 && r.y1 > q.y0)) continue;
+        placed.push(r);
         ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgba(255,255,255,0.9)';
         ctx.strokeText(p.c.name, x, y);
