@@ -33,7 +33,11 @@ export interface IslandPlan {
   bridges: Tile[];
   /** Cumulative DRY land per stage (the first two may be a little larger next to central water). */
   tiers: number[];
-  /** Default camera orbit angle (long side vertical on a portrait phone). */
+  /**
+   * Stored per-community camera angle (long side vertical). Not used since requirement.md v1.30:
+   * every island opens with the World Map orientation (scene/camera.ts ISLAND_AZIMUTH).
+   * Kept so stored plans decode unchanged.
+   */
   cameraAzimuth: number;
 }
 

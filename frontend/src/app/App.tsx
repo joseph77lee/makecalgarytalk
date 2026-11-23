@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
 import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen } from '../modules/community-state';
-import { ActionBar, CommunityPicker, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
+import { ActionBar, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
 import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
 import { NewspaperPanel, newsBuildingKeys, newsReady, useNews } from '../modules/news';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
+import { WorldMap } from '../modules/world-map';
 import {
   IslandDevPanel,
   IslandHud,
@@ -47,12 +48,13 @@ function LiveApp() {
   const server = useDailyActions((s) => s.server);
   const view = useDailyActions((s) => s.view);
   const [mapOpen, setMapOpen] = useState(false);
+  const [worldOpen, setWorldOpen] = useState(false);
+  const myCommunityId = useResidency((s) => s.status?.play_community?.id ?? null);
   const [example, setExample] = useState(false);
   const changesSeen = useIdentity((s) => s.changesSeenToday);
   const markChangesSeen = useIdentity((s) => s.markChangesSeen);
   const plan = useDailyActions((s) => s.plan);
   const init = useDailyActions((s) => s.init);
-  const openLookAround = useDailyActions((s) => s.openLookAround);
   const residencyStatus = useResidency((s) => s.status?.status);
   const welcomedIds = useInvites((s) => s.welcomedIds);
   useEffect(() => {
@@ -93,7 +95,7 @@ function LiveApp() {
         landGrew: server.changes.land_grew,
       })
     : null;
-  const panelOpen = !!server && changesPanelOpen(server.changes, server.community.vitality, changesSeen);
+  const panelOpen = !!server?.me?.member && changesPanelOpen(server.changes, server.community.vitality, changesSeen);
   // Welcome card right after the first counted check-in (§5.1), once per community.
   const showWelcome =
     status === 'ready' &&
@@ -133,6 +135,17 @@ function LiveApp() {
                   <InviteSection onInvite={invite} />
                 </ProfileButton>
               }
+              right={
+                <button
+                  type="button"
+                  onClick={() => setWorldOpen(true)}
+                  aria-label="Calgary map"
+                  title="Calgary map"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-lg shadow-sm backdrop-blur"
+                >
+                  🗺️
+                </button>
+              }
             />
           )}
           {status === 'ready' && server && (
@@ -145,6 +158,18 @@ function LiveApp() {
                 sleepyName={server.community.vitality !== null && vitalityMood(server.community.vitality) === 'sleepy' ? server.community.name : null}
               >
                 <ResidencyChip />
+                {!server.me?.member && myCommunityId && (
+                  <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-slate-800/85 py-1.5 pl-3 pr-1.5 text-xs text-white shadow-sm backdrop-blur">
+                    <span>👀 Visiting {server.community.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => void useDailyActions.getState().reload()}
+                      className="rounded-full bg-white px-2.5 py-1 font-semibold text-slate-800"
+                    >
+                      Back home
+                    </button>
+                  </div>
+                )}
               </StreakBar>
               <ActionBar />
               {server.me?.member && !showWelcome && (
@@ -165,7 +190,10 @@ function LiveApp() {
                   onInvite={invite}
                 />
               ) : (
-                <ChangesPanel changes={server.changes} vitality={server.community.vitality} seen={changesSeen} onSeen={markChangesSeen} />
+                // Only in my own community (visiting elsewhere must not use up today's panel).
+                server.me?.member && (
+                  <ChangesPanel changes={server.changes} vitality={server.community.vitality} seen={changesSeen} onSeen={markChangesSeen} />
+                )
               )}
             </>
           )}
@@ -185,8 +213,26 @@ function LiveApp() {
           )}
         </>
       )}
-      {status === 'no-community' && residencyStatus === 'new' && <FindCommunity onLookAround={() => void openLookAround()} />}
-      <CommunityPicker />
+      {status === 'no-community' && residencyStatus === 'new' && !worldOpen && <FindCommunity onLookAround={() => setWorldOpen(true)} />}
+      {worldOpen && (
+        <WorldMap
+          myCommunityId={myCommunityId}
+          onClose={() => setWorldOpen(false)}
+          onEnter={(id) => {
+            setWorldOpen(false);
+            if (id !== server?.community.id) void useDailyActions.getState().viewCommunity(id);
+          }}
+          onInvite={(name) =>
+            void useInvites
+              .getState()
+              .invite(name, 'start')
+              .then((o) => {
+                const text = shareOutcomeText(o);
+                if (text) useDailyActions.getState().showToast(text);
+              })
+          }
+        />
+      )}
       <NewspaperPanel />
       <SessionScreen />
       <Toast />

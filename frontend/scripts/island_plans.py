@@ -464,7 +464,8 @@ def make_plan(code, name, lonlat_rings, water_rings):
         used.add(c)
         trees.append(c)
 
-    # Camera: long side of the shape vertical on a portrait phone.
+    # Camera: long side of the shape vertical on a portrait phone. Unused by the app since
+    # requirement.md v1.30 (every island uses the World Map orientation); kept in the plan format.
     mx = sum(c[0] for c in cells) / len(cells)
     mz = sum(c[1] for c in cells) / len(cells)
     sxx = sum((c[0] - mx) ** 2 for c in cells)

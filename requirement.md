@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.28 |
+| Document version | v1.30 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-20 |
+| Last updated | 2026-11-22 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -84,8 +84,8 @@ The service grows in this order; features are judged by how they serve it. The *
 ## 5. Core user flows
 
 ### 5.1 First visit (60 seconds)
-1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → snowy pastel **Calgary World Map**. Shown on the first visit only; afterwards it is available from the build map ("See a finished example"), not on every entry
-2. "Which community do you live in?" → allow location
+1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → nickname and shirt. Shown on the first visit only; afterwards the example is available from the build map ("See a finished example"), not on every entry
+2. "Which community do you live in?" → allow location. "Just look around first" opens the **Calgary World Map** (9) instead; the map is also always one tap away (🗺 Calgary button)
 3. Tap into their community → the community's voxel diorama island appears, with **my avatar** standing in it
 4. First action click → **immediate visible change**
    - Empty community: fog clears, "You are the Founding Resident!"
@@ -278,7 +278,7 @@ Community unlock buildings and construction projects are **one building tree**. 
 - Buildings opened by the tree always have land: their resident conditions match the land available at that resident count.
 - First-stage buildings sit around the plaza (a cosy village centre); later buildings get lots in the **newly grown outer land, spread in different directions**, so every growth brings new building spots.
 - **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings; if water would cut the land apart, a small bridge path keeps every part reachable. Land amounts count dry land only; where water sits next to the plaza, the first two stages get a little more dry land (up to 112 / 176 tiles) so the first buildings and Main Street fit.
-- Default camera angle per community fits its shape on a portrait phone (long side vertical).
+- **Map orientation:** every island opens with the same diagonal camera angle, keeping the World Map's orientation (east to the lower right, north to the upper right), so a community looks like its outline on the map (9). A small compass shows where north is and turns when the player rotates the view.
 - UI shows the next growth goal (e.g. "2 more neighbours until the island grows").
 
 ### 7.9 Community identity & feature library
@@ -315,15 +315,16 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Not 3D: rendering ~200 islands at once is too heavy for phones. Keeps the first screen light.
 - **Each community polygon shows its development with small illustrations inside it**, not just a colour (prototype demo built 2026-11-16):
 
-| Development level | Shown inside the polygon |
-|---|---|
-| Unsettled | Grey dashed boundary, a cloud, empty ground |
-| 1 | A couple of small houses + welcome sign |
-| 2 | More houses + playground / skating rink |
-| 3 | Houses + community hall with flag |
-| 4 | Dense houses + community hall + neighbourhood park |
+| Development level | Built buildings (7.6) | Shown inside the polygon |
+|---|---|---|
+| Unsettled | no Welcome sign | Grey dashed boundary, a cloud, empty ground |
+| 1 | Welcome sign | A couple of small houses + welcome sign |
+| 2 | + Playground or Skating rink | More houses + playground / skating rink |
+| 3 | + Community hall | Houses + community hall with flag |
+| 4 | + Neighbourhood park | Dense houses + community hall + neighbourhood park |
 
-  - Level is derived from cumulative Verified Residents and unlocked buildings (same data as the island; 7.6, 7.8)
+  - Level comes from the community's built buildings (same data as the island; 7.6, 7.8); the map loads the shapes as a static file and the levels, moods and resident counts in one request
+  - Shown for the 223 residential communities
   - **Vitality is shown through mood**: lively = green ground, window lights, flowers; normal = plain; sleepy = snowy ground and trees under a dusk sky
   - Crown on this week's #1 community
   - Illustrations use the **same designs as the island buildings** so the map and islands feel like one world
@@ -333,6 +334,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - **Zoom-dependent detail**: at city zoom show a few representative icons per community; when zoomed in show more
   - Render with **Canvas** (thousands of small icons) for phone performance; SVG is acceptable for prototypes
 - **Interaction**: tap a community → smooth zoom to it + info card (name, level, mood, residents) → "Enter island"; tap an unsettled community → **"Invite a friend from this community"** (pre-filled message)
+  - **Any community can be visited** (view only), settled or not, including its Community News (reading, thanks and reports; posting only in your own community). A "Visiting <community> · Back home" bar returns to your own community; the "What changed since yesterday" panel only shows in your own community
 - **Art Pass / later enhancements** (target design):
   - **Animated Bow and Elbow rivers** (flowing water), Glenmore Reservoir, major parks (Nose Hill, Fish Creek)
   - **CTrain lines with moving trains** along the real Red and Blue line routes (decorative animation, not a live schedule)
@@ -792,6 +794,24 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-22 — v1.30
+**Changed:** 7.8: the island's default camera angle is the same for every community and keeps the World Map's orientation (instead of turning each community so its long side is vertical); a compass shows north.
+
+**Why:** User request (2026-11-22): a community should look on its island the way it looks on the World Map (e.g. Bayview runs east–west on the map but stood north–south on the island).
+
+**Previous:**
+- 7.8: `- Default camera angle per community fits its shape on a portrait phone (long side vertical).`
+
+### 2026-11-22 — v1.29
+**Changed:** 5.1: the first visit goes example → nickname → find my community; the World Map opens from "Just look around first" and the 🗺 Calgary button (not as a first-visit step). 9: levels defined by built buildings; shapes as a static file, levels in one request; residential communities only; any community can be visited (view only) with its newspaper, with a "Back home" bar.
+
+**Why:** User decision for M10 (2026-11-22): keep the first visit short; levels need an exact definition.
+
+**Previous:**
+- 5.1: `1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → snowy pastel **Calgary World Map**. Shown on the first visit only; afterwards it is available from the build map ("See a finished example"), not on every entry`
+- 5.1: `2. "Which community do you live in?" → allow location`
+- 9: level table without building conditions; `  - Level is derived from cumulative Verified Residents and unlocked buildings (same data as the island; 7.6, 7.8)`
 
 ### 2026-11-20 — v1.28
 **Changed:** 14 rewritten as **Community posts** for the MVP: Verified Residents only, opens with the Welcome sign, 1 post a day, 300 characters, 4 kinds, no links/photos, 3-day visibility, own-post delete, phone/address blocking, report points (Verified 2, others 1, 3 hides), operator blocks, thanks and the Community Reporter badge (10 thanks).

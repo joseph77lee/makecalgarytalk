@@ -95,7 +95,6 @@ export interface IslandLayout {
   walkable: Tile[];
   /** Radius (tiles) of the current land around the plaza, for camera fitting. */
   landRadius: number;
-  cameraAzimuth: number;
   hiddenHouseCount: number;
 }
 
@@ -308,7 +307,6 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     objects,
     walkable,
     landRadius,
-    cameraAzimuth: plan.cameraAzimuth,
     hiddenHouseCount: offLand + (state.extraResidents ?? 0) + hiddenUnknown,
   };
 }

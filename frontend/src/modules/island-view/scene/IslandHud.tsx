@@ -10,7 +10,7 @@ const MOOD_LABEL: Record<VitalityMood, { text: string; className: string }> = {
 };
 
 /** Top bar: optional left slot (e.g. my profile), community name with Vitality mood, labels toggle. */
-export function IslandHud({ state, left }: { state: CommunityViewState; left?: ReactNode }) {
+export function IslandHud({ state, left, right }: { state: CommunityViewState; left?: ReactNode; right?: ReactNode }) {
   const mood = state.vitality === null ? null : MOOD_LABEL[vitalityMood(state.vitality)];
   const showLabels = useIslandUi((u) => u.showLabels);
   const setShowLabels = useIslandUi((u) => u.setShowLabels);
@@ -26,6 +26,8 @@ export function IslandHud({ state, left }: { state: CommunityViewState; left?: R
           </span>
         )}
       </div>
+      <div className="pointer-events-auto flex shrink-0 items-start gap-2">
+      {right}
       <button
         type="button"
         onClick={() => setShowLabels(!showLabels)}
@@ -41,6 +43,7 @@ export function IslandHud({ state, left }: { state: CommunityViewState; left?: R
           {!showLabels && <path d="M4 4l16 16" />}
         </svg>
       </button>
+      </div>
     </div>
   );
 }

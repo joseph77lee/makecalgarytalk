@@ -47,7 +47,7 @@ export function StreakBar({ streak, nextLandResidents, onOpenMap, onInvite, slee
           className="flex shrink-0 flex-col items-center rounded-xl bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-700 active:scale-95"
         >
           <span className="text-base leading-none" aria-hidden>
-            🗺️
+            🏗️
           </span>
           Community
         </button>

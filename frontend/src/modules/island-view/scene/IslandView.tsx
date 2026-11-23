@@ -9,7 +9,7 @@ import { MOOD_PALETTES, type MoodPalette } from '../mood';
 import { stageMap, type IslandPlan } from '../plan/islandPlan';
 import type { CommunityViewState } from '../types';
 import { BoxBatch } from './BoxBatch';
-import { screenAzimuth, viewFrame, zoomForFrame, type ViewFrame } from './camera';
+import { ISLAND_AZIMUTH, northScreenAngle, viewFrame, zoomForFrame, type ViewFrame } from './camera';
 import { cameraFocus, followStrength } from './cameraFocus';
 import { IslandContext, useSceneFx, type IslandCtx } from './islandContext';
 import { IslandLabels } from './Labels';
@@ -44,6 +44,7 @@ interface IslandViewProps {
 export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuildingKeys = [], children }: IslandViewProps) {
   const layout = useMemo(() => buildIslandLayout(plan, state), [plan, state]);
   const palette = MOOD_PALETTES[layout.mood];
+  const north = useMemo(() => createAngleChannel(), []);
 
   return (
     <div className="absolute inset-0 transition-[background] duration-700" style={{ background: palette.sky }}>
@@ -61,7 +62,9 @@ export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuilding
         >
           {children}
         </IslandScene>
+        <CompassTracker channel={north} />
       </Canvas>
+      <NorthArrow channel={north} />
     </div>
   );
 }
@@ -169,10 +172,8 @@ function IslandScene({
   }, [layout, settled, palette]);
   const future = useMemo(() => futureLandParts(layout.futureTiles), [layout.futureTiles]);
   const outlineRadius = useMemo(() => Math.max(4, ...plan.tiles.map((t) => Math.hypot(t.x + 0.5, t.z + 0.5))), [plan]);
-  // The plan's angle puts an elongated community's long side vertical (portrait phone);
-  // on a landscape screen it is turned 90° so the long side runs across.
-  const viewport = useThree((s) => s.size);
-  const az = useMemo(() => screenAzimuth(layout.cameraAzimuth, viewport.width > viewport.height), [layout.cameraAzimuth, viewport.width, viewport.height]);
+  // Same angle for every community and screen, so the island matches the World Map's orientation.
+  const az = ISLAND_AZIMUTH;
   const landFrame = useMemo(() => viewFrame(layout.tiles, az), [layout.tiles, az]);
   const wholeFrame = useMemo(() => viewFrame(plan.tiles, az), [plan, az]);
 
@@ -383,5 +384,66 @@ function Lights({ palette, radius, azimuth }: { palette: MoodPalette; radius: nu
         shadow-camera-far={120}
       />
     </>
+  );
+}
+
+const forward = new Vector3();
+
+/** Hands the camera's north angle from the 3D scene to the DOM arrow without React state. */
+interface AngleChannel {
+  emit: (angle: number) => void;
+  listen: (fn: (angle: number) => void) => () => void;
+}
+
+function createAngleChannel(): AngleChannel {
+  const listeners = new Set<(angle: number) => void>();
+  return {
+    emit: (angle) => listeners.forEach((fn) => fn(angle)),
+    listen: (fn) => {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    },
+  };
+}
+
+/** Reports where north is on screen whenever the camera turns. */
+function CompassTracker({ channel }: { channel: AngleChannel }) {
+  const last = useRef<number | null>(null);
+  useFrame(({ camera }) => {
+    camera.getWorldDirection(forward);
+    const a = northScreenAngle(forward.x, forward.z);
+    if (last.current !== null && Math.abs(a - last.current) < 0.002) return;
+    last.current = a;
+    channel.emit(a);
+  });
+  return null;
+}
+
+/** Small compass in the lower-left corner: the red needle points north (as on the World Map). */
+function NorthArrow({ channel }: { channel: AngleChannel }) {
+  const needle = useRef<SVGGElement>(null);
+  const letter = useRef<SVGTextElement>(null);
+  const start = (ISLAND_AZIMUTH * 180) / Math.PI;
+  useEffect(
+    () =>
+      channel.listen((a) => {
+        const deg = (a * 180) / Math.PI;
+        needle.current?.setAttribute('transform', `rotate(${deg})`);
+        letter.current?.setAttribute('transform', `rotate(${-deg} 0 -10)`);
+      }),
+    [channel],
+  );
+  return (
+    <div className="pointer-events-none absolute bottom-40 left-3 h-11 w-11 rounded-full bg-white/85 shadow" role="img" aria-label="Compass: the red needle points north">
+      <svg viewBox="-22 -22 44 44" className="h-full w-full">
+        <g ref={needle} transform={`rotate(${start})`}>
+          <path d="M0 -5 L4 3 L0 1 L-4 3 Z" transform="translate(0 4)" fill="#94a3b8" />
+          <path d="M0 -4 L3.5 4 L-3.5 4 Z" transform="translate(0 0)" fill="#f43f5e" />
+          <text ref={letter} x="0" y="-10" textAnchor="middle" dominantBaseline="central" fontSize="10" fontWeight="700" fill="#f43f5e" transform={`rotate(${-start} 0 -10)`}>
+            N
+          </text>
+        </g>
+      </svg>
+    </div>
   );
 }

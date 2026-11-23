@@ -196,11 +196,32 @@ describe('camera frame', () => {
   });
 });
 
-describe('screen azimuth', () => {
-  it('keeps the stored angle on portrait screens and for compact shapes; turns 90° on landscape', async () => {
-    const { screenAzimuth } = await import('../scene/camera');
-    expect(screenAzimuth(1.4, false)).toBe(1.4);
-    expect(screenAzimuth(Math.PI / 4, true)).toBe(Math.PI / 4);
-    expect(screenAzimuth(1.4, true)).toBeCloseTo(1.4 - Math.PI / 2);
+describe('island orientation (World Map)', () => {
+  it('every island uses the same diagonal angle', async () => {
+    const { ISLAND_AZIMUTH } = await import('../scene/camera');
+    expect(ISLAND_AZIMUTH).toBeCloseTo(Math.PI / 4);
+  });
+  it('east runs to the lower right and north to the upper right in the default view', async () => {
+    const { ISLAND_AZIMUTH, viewFrame } = await import('../scene/camera');
+    // A strip running east (like Bayview) is wider than tall on screen.
+    const eastWest = Array.from({ length: 20 }, (_, i) => ({ x: i, z: 0 }));
+    const f = viewFrame(eastWest, ISLAND_AZIMUTH);
+    expect(f.width).toBeGreaterThan(10);
+    // Screen axes for the camera: right = (cos a, -sin a), up = (-sin a, -cos a) in x/z.
+    const a = ISLAND_AZIMUTH;
+    const right = (x: number, z: number) => x * Math.cos(a) - z * Math.sin(a);
+    const up = (x: number, z: number) => -x * Math.sin(a) - z * Math.cos(a);
+    expect(right(1, 0)).toBeGreaterThan(0); // east → right
+    expect(up(1, 0)).toBeLessThan(0); // east → down
+    expect(right(0, -1)).toBeGreaterThan(0); // north → right
+    expect(up(0, -1)).toBeGreaterThan(0); // north → up
+  });
+  it('north arrow angle follows the camera', async () => {
+    const { ISLAND_AZIMUTH, northScreenAngle } = await import('../scene/camera');
+    expect(northScreenAngle(0, -1)).toBeCloseTo(0); // looking north: north is up
+    expect(Math.abs(northScreenAngle(0, 1))).toBeCloseTo(Math.PI); // looking south: north is down
+    expect(northScreenAngle(1, 0)).toBeCloseTo(-Math.PI / 2); // looking east: north is left
+    const a = ISLAND_AZIMUTH; // default camera looks along (-sin a, -cos a)
+    expect(northScreenAngle(-Math.sin(a), -Math.cos(a))).toBeCloseTo(Math.PI / 4); // upper right
   });
 });
