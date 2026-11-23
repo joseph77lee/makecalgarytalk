@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.32 |
+| Document version | v1.33 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
 | Status | Initial draft for starting MVP development |
@@ -289,8 +289,10 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - A **custom sign** comes only from a resident photo petition (16.2, Phase 3): the real entrance sign's shape, colours and materials **reinterpreted in voxel style**, showing only the community name — **no developer logos or branding**
 - **Real water** at its real position (7.8)
 - **Signature features** from a reusable **feature library** (not real size/position — symbolic; e.g. hills, CTrain station, mall, school, large parks), placed on spare lots:
-  - Example blocks: lake/pond, creek/river, hill, ravine, large park, off-leash dog park, ice rink, CTrain station, mall, school
-  - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator
+  - **MVP library (6 blocks):** CTrain station, pond, hill, creek, big park, school. Later blocks (Art Pass / Phase 2): ravine, mall, off-leash dog park and others
+  - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator. **Every residential community** gets suggestions (no launch list); **at most 3** per community, in priority order CTrain station → pond → hill → creek → big park → school (operator additions always kept). A pond is suggested only for a lake next to the community when the island shows little real water (water inside the boundary is already drawn, 7.8)
+  - The label shows the public place name when known (e.g. "🚉 Dalhousie", "🌳 Bowness Park"); schools show only "School"
+  - **Visible from day one:** features stand on the spare lots of the stored plan; while a lot is still future land the feature is drawn faint on the mist ("Appears as the community grows") and becomes solid, blocking its lot, once that land rises. Features take spare lots before unknown-building placeholders (7.6b)
 - **Community landmarks** (Phase 3): a community-specific landmark model (e.g. a lakeside clubhouse), made only from a resident photo petition (16.2); until then communities use shared library blocks only
 - Source data for feature suggestions: City of Calgary Open Data (e.g. hydrology water bodies) and OpenStreetMap; features stay symbolic (presence, not real size/position)
 - **Activity-based feature upgrades** (Phase 2): features evolve with activity (e.g. Mahogany's lake → boat dock → lakeside trail)
@@ -739,7 +741,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ### 22.8 Open items
 - [ ] Pastel palette and lighting values (before the Art Pass); save reference screenshots in `docs/references/`
-- [ ] Feature library list and community → feature mapping for launch communities
+- [x] Feature library list and community → feature mapping (decided 2026-11-23, see 7.9: 6 blocks, all communities, at most 3 each)
 - [ ] Island shape conversion parameters (smoothing, minimum width, centre choice) and lot plan generation per community (tuning)
 - [ ] Building tree numbers (conditions, stage multipliers) and models for the new buildings
 - [x] Project list and required actions per project (decided 2026-11-18, see 7.7)
@@ -800,6 +802,16 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.33
+**Changed:** 7.9: MVP feature library = 6 blocks (CTrain station, pond, hill, creek, big park, school); suggestions for every residential community (not only launch communities), at most 3 each in a fixed priority; pond only where the island shows little real water; labels with public place names (not for schools); features visible faint from day one on future land, solid once the land rises; features take spare lots before unknown-building placeholders. 22.8: feature library open item closed.
+
+**Why:** User decisions for M13 (2026-11-23): six recognizable blocks, all 223 communities automatically (no launch list exists), identity from day one without changing stored lot plans.
+
+**Previous:**
+- 7.9: `  - Example blocks: lake/pond, creek/river, hill, ravine, large park, off-leash dog park, ice rink, CTrain station, mall, school`
+- 7.9: `  - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator`
+- 22.8: `- [ ] Feature library list and community → feature mapping for launch communities`
 
 ### 2026-11-23 — v1.32
 **Changed:** 23 Glossary, Island / diorama: "island" is an internal term; player-facing text says "community".
