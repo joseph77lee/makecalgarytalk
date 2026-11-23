@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.59 |
+| Plan version | v1.60 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
-| Based on | `requirement.md` v1.33 |
+| Based on | `requirement.md` v1.34 |
 | Current module | M13 Feature Library (🟨 Ready for playtest) |
 
 ---
@@ -474,20 +474,24 @@ M0 ─┬─ M1 ── M2 ─┐
 
 ### M13 — Feature Library 🟨
 **Goal:** Each island feels like its community.
-- **In scope** (`requirement.md` v1.33 §7.9)
+- **In scope** (`requirement.md` v1.34 §7.9, §9)
   - [x] 6 feature blocks as box models: CTrain station, pond, hill, creek, big park, school (real water inside the boundary is already drawn since M1 🔁)
   - [x] community → feature mapping for **all 223** residential communities: OpenStreetMap suggestions + operator CSV override, at most 3 each in priority order
-  - [x] features stand on the spare lots of the stored lot plan (M1 🔁); faint on future land from day one, solid once the land rises; labels with public place names
+  - [x] features keep their spare lot in the stored plan (M1 🔁) and appear when that land rises (no faint previews); labels with public place names
+  - [x] **CTrain on the islands**: track at its real position (smoothed line, walkable level crossings, rail bridges over water), stations on platforms at their real position, a running three-car train that stops at stations, "Next: <station>" signs where the track leaves; 46 community plans regenerated (pre-launch, `--rail`)
+  - [x] **CTrain on the World Map**: Red and Blue lines and stations (names when zoomed in)
+  - [x] build map preview of what the next land brings ("Coming at 6 neighbours: …")
 - **Definition of Done**
-  - [x] communities show their features (203 of 223 have at least one; checked on screen: Varsity, Signal Hill, Bowness, Mahogany)
+  - [x] communities show their features (200 of 223 have at least one block; 46 have CTrain track; checked on screen: Varsity, Bridgeland, Signal Hill, Bowness, Mahogany)
   - [x] adding a feature = data change only (edit `community_features_override.csv`, rerun `build_features.py`)
   - [ ] user has looked at it
 - **Handoff**
-  - **Data:** `supabase/data/build_features.py` (Python, standard library) queries OpenStreetMap through the Overpass API once (`--cache <file>` saves/reuses the answer) and writes `supabase/data/community_features.json` (`communities: { CODE: [{ key, name }] }`, priority order, ≤ 3). Only the derived mapping is stored, never OSM geometry; ODbL attribution is in the file's `about` (add it to the site credits in M14). `community_features_override.csv` (`code,action,feature,name`, action add/remove) is applied after the suggestions; operator additions always survive the cap. Rules are in the script's docstring (station ≤ 150 m, pond ≥ 2 ha within 250 m only if the plan has < 20 water tiles, hill from named peaks / hill-named parks / community names containing hill|heights|ridge|mount|crest, creek ≥ 250 m inside, big park ≥ 6 ha overlap, school inside).
-  - **Results (2026-11-23):** station 48, pond 31, hill 52, creek 50, big park 110, school 127; 19 communities have none (mostly small inner-city or brand-new ones: e.g. Bankview, Chinatown, Wolf Willow) — add them through the CSV if wanted. The "hill by community name" rule is symbolic (e.g. Hillhurst, Mount Pleasant).
-  - **Code:** `island-view/plan/features.ts` (`featuresFor(code)`, `FEATURE_INFO`, `featureLabel`, validation that throws listing every problem); `layout.ts` puts features on spare lots in plan order (spare-1 …), `assetKey: 'feature'` with `faint` (lot not on land yet → stage 0, see-through on the mist) or solid (blocks its lot, counted in `usedLots`); unknown-building placeholders get the spare lots left. `buildIslandLayout(plan, state, features = featuresFor(plan.code))` — tests pass `[]` to check behaviour without features. Models in `assets/models.ts` (`FEATURE_MODELS`, `feature()`; faint = ghost layer, own colours, lowered onto the mist), labels in `scene/Labels.tsx` (solid: name chip always, since phones rarely reach the detailed zoom; faint: emoji, plus "Appears as the community grows" when zoomed in).
-  - **Tests:** `plan/features.test.ts` (every plan has an entry, valid keys, ≤ 3, priority order, names ≤ 60 chars, ≥ 85% of communities have a feature, models inside the 2×2 lot in every mood, faint variant) and feature cases in `layout.test.ts` (spare-lot order, faint → solid, blocking, placeholders after features, Mahogany data).
-  - **Not tested / known gaps:** real phone; OSM data quality varies (unnamed parks show "Big park", some creeks have no name); features are not tappable (no info sheet); the faint→solid switch has no animation of its own (it appears with the risen land); Activity-based feature upgrades are Phase 2.
+  - **Data pipeline (run in this order):** `supabase/data/build_ctrain.py` (OSM route relations → `calgary_ctrain.json`: one track centreline per line in stop order, simplified to 8 m, stations in stop order; retries when Overpass is busy) → `frontend/scripts/island_plans.py --rail` (rewrites only plans that get track) → `supabase/data/build_features.py` (reads the plans: no symbolic station where there is track; pond/creek only with < 20 water tiles) → `frontend/scripts/world_map.py` (adds `ctrain` to `public/worldmap/calgary.json`; community shapes unchanged). OSM data is ODbL (attribution in each file's `about`; add it to the site credits in M14). `--cache <file>` on the two OSM scripts saves/reuses the Overpass answer.
+  - **Plan format v3** (only the 46 track communities; the other 177 stay v2, the decoder accepts both): `rail` (runs `{line, tiles}` in track order, 4-connected, ≥ 4 tiles), `stations` (`{name, lines, rect}` 2×1 platform touching the track), `railEnds` (`{line, next, tile, dir}` only where the track really leaves the island, one sign per station name). Generator rules: track within one tile of the land snaps to the edge row (lines run in road medians = community boundaries); track never on the plaza (runs split there); paths may cross track but pay a cost to run along it; track cells are never lots/houses/trees; stations need a reachable door like lots. New generator check: later lots must not leave a > 150° gap (retries with a stronger spread weight 14, 20) — Bridgeland needed it.
+  - **Feature results (2026-11-23):** station block 7 (communities next to a station without track), pond 31, hill 52, creek 18, big park 114, school 141; 23 communities have no block (some of them have track, e.g. Manchester).
+  - **Code:** `island-view/plan/ctrain.ts` (`CTRAIN`, `lineColour`, validation), `plan/features.ts`, `plan/upcoming.ts` (`upcomingIdentity(plan, landStage)`, public API; App passes it to `BuildMap upcoming`). `layout.ts`: features only on land; CTrain objects `track` (one per smoothed segment, `smoothTrack` = 7-tile moving average), `rail` (only bridge decks over water / crossing planks on paths), `station`, `rail-end`; `railRoutes` (tiles, smoothed points, station stops) for the trains. Walking: track tiles walkable, station platforms block (`walkableTiles`). `scene/Trains.tsx` + `scene/trainPath.ts`: per run, the longest stretch already on land (≥ 5 tiles), 2.4 tiles/s, 2.5 s station stops, 5–11 s wait off-island, alternating direction; all in `useFrame` with refs. World Map: `geometry.ts mapCtrain()` (ignored if missing/broken), drawn after the community grounds (white casing + line colour), station dots, names from `STATION_NAME_SCALE`.
+  - **Tests:** `plan/islandPlans.test.ts` now checks track (on the island, 4-connected, never under lots/houses/trees/stations, stations beside it, signs at real exits, stations reachable) for every plan; `plan/ctrain.test.ts` (data, island layout, smoothing, train path, preview); `plan/features.test.ts`; feature cases in `layout.test.ts`; `community-state/buildMap.test.tsx` (preview text); World Map data test.
+  - **Not tested / known gaps:** real phone (train animation cost judged fine: ≤ 3 trains × 3 cars of 5 meshes); the train ignores the avatar and villagers on crossings; on phones the track at the island edge needs zooming out to see whole; the shared downtown segment draws Red over Blue on the map; planned Green Line not shown (not operating); features are not tappable.
 
 ### M14 — Launch Readiness ⬜
 **Goal:** Safe to show the public.
@@ -523,6 +527,32 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.60
+**Changed:** M13 scope extended after the user's review: CTrain on the islands (track, stations, train, next-station signs; 46 plans regenerated) and on the World Map; features appear with their land instead of faint previews; build map preview of the next land's features. Handoff rewritten. "Based on" → `requirement.md` v1.34.
+
+**Why:** User review of M13 (2026-11-23), all four recommendations approved.
+
+**Previous:**
+- Header: `| Plan version | v1.60 |`, `| Based on | \`requirement.md\` v1.33 |`
+- M13 section (v1.59), verbatim:
+
+  > ### M13 — Feature Library 🟨
+  > **Goal:** Each island feels like its community.
+  > - **In scope** (`requirement.md` v1.33 §7.9)
+  >   - [x] 6 feature blocks as box models: CTrain station, pond, hill, creek, big park, school (real water inside the boundary is already drawn since M1 🔁)
+  >   - [x] community → feature mapping for **all 223** residential communities: OpenStreetMap suggestions + operator CSV override, at most 3 each in priority order
+  >   - [x] features stand on the spare lots of the stored lot plan (M1 🔁); faint on future land from day one, solid once the land rises; labels with public place names
+  > - **Definition of Done**
+  >   - [x] communities show their features (203 of 223 have at least one; checked on screen: Varsity, Signal Hill, Bowness, Mahogany)
+  >   - [x] adding a feature = data change only (edit `community_features_override.csv`, rerun `build_features.py`)
+  >   - [ ] user has looked at it
+  > - **Handoff**
+  >   - **Data:** `supabase/data/build_features.py` (Python, standard library) queries OpenStreetMap through the Overpass API once (`--cache <file>` saves/reuses the answer) and writes `supabase/data/community_features.json` (`communities: { CODE: [{ key, name }] }`, priority order, ≤ 3). Only the derived mapping is stored, never OSM geometry; ODbL attribution is in the file's `about` (add it to the site credits in M14). `community_features_override.csv` (`code,action,feature,name`, action add/remove) is applied after the suggestions; operator additions always survive the cap. Rules are in the script's docstring (station ≤ 150 m, pond ≥ 2 ha within 250 m only if the plan has < 20 water tiles, hill from named peaks / hill-named parks / community names containing hill|heights|ridge|mount|crest, creek ≥ 250 m inside, big park ≥ 6 ha overlap, school inside).
+  >   - **Results (2026-11-23):** station 48, pond 31, hill 52, creek 50, big park 110, school 127; 19 communities have none (mostly small inner-city or brand-new ones: e.g. Bankview, Chinatown, Wolf Willow) — add them through the CSV if wanted. The "hill by community name" rule is symbolic (e.g. Hillhurst, Mount Pleasant).
+  >   - **Code:** `island-view/plan/features.ts` (`featuresFor(code)`, `FEATURE_INFO`, `featureLabel`, validation that throws listing every problem); `layout.ts` puts features on spare lots in plan order (spare-1 …), `assetKey: 'feature'` with `faint` (lot not on land yet → stage 0, see-through on the mist) or solid (blocks its lot, counted in `usedLots`); unknown-building placeholders get the spare lots left. `buildIslandLayout(plan, state, features = featuresFor(plan.code))` — tests pass `[]` to check behaviour without features. Models in `assets/models.ts` (`FEATURE_MODELS`, `feature()`; faint = ghost layer, own colours, lowered onto the mist), labels in `scene/Labels.tsx` (solid: name chip always, since phones rarely reach the detailed zoom; faint: emoji, plus "Appears as the community grows" when zoomed in).
+  >   - **Tests:** `plan/features.test.ts` (every plan has an entry, valid keys, ≤ 3, priority order, names ≤ 60 chars, ≥ 85% of communities have a feature, models inside the 2×2 lot in every mood, faint variant) and feature cases in `layout.test.ts` (spare-lot order, faint → solid, blocking, placeholders after features, Mahogany data).
+  >   - **Not tested / known gaps:** real phone; OSM data quality varies (unnamed parks show "Big park", some creeks have no name); features are not tappable (no info sheet); the faint→solid switch has no animation of its own (it appears with the risen land); Activity-based feature upgrades are Phase 2.
 
 ### 2026-11-23 — v1.59
 **Changed:** M13 scope as decided (6 blocks, all 223 communities, faint from day one; DoD "launch communities" → communities, plus "user has looked at it"); items ticked; status 🟨 with Handoff. "Based on" → `requirement.md` v1.33.
