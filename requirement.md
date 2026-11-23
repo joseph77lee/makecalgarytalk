@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.33 |
+| Document version | v1.34 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
 | Status | Initial draft for starting MVP development |
@@ -290,9 +290,14 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Real water** at its real position (7.8)
 - **Signature features** from a reusable **feature library** (not real size/position — symbolic; e.g. hills, CTrain station, mall, school, large parks), placed on spare lots:
   - **MVP library (6 blocks):** CTrain station, pond, hill, creek, big park, school. Later blocks (Art Pass / Phase 2): ravine, mall, off-leash dog park and others
-  - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator. **Every residential community** gets suggestions (no launch list); **at most 3** per community, in priority order CTrain station → pond → hill → creek → big park → school (operator additions always kept). A pond is suggested only for a lake next to the community when the island shows little real water (water inside the boundary is already drawn, 7.8)
-  - The label shows the public place name when known (e.g. "🚉 Dalhousie", "🌳 Bowness Park"); schools show only "School"
-  - **Visible from day one:** features stand on the spare lots of the stored plan; while a lot is still future land the feature is drawn faint on the mist ("Appears as the community grows") and becomes solid, blocking its lot, once that land rises. Features take spare lots before unknown-building placeholders (7.6b)
+  - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator. **Every residential community** gets suggestions (no launch list); **at most 3** per community, in priority order CTrain station → pond → hill → creek → big park → school (operator additions always kept). A pond or creek is suggested only when the island shows little real water (water inside the boundary is already drawn, 7.8); a big park is never the same place as the hill
+  - The label shows the public place name when known (e.g. "🌳 Bowness Park"); schools show only "School"
+  - **Features appear as the community grows:** they keep their spare lot in the stored plan and appear (blocking the lot) when that land rises; nothing is drawn on land still to come. Features take spare lots before unknown-building placeholders (7.6b). The build map shows what the next land brings ("Coming at 6 neighbours: 🚉 Dalhousie, 🌳 Dale Hodges Park")
+- **CTrain** (Calgary's most visible landmark): where the Red or Blue line runs through a community, its island shows the **track at its real position** (one tile wide, drawn along a smoothed line so diagonals look straight), the **stations at their real position** on platforms beside it, a **train** (three cars) that runs along the visible track, stops at the stations, leaves the island and comes back, and a **"Next: <station>" sign** where the track leaves the island
+  - Track tiles are never built on but stay walkable (level crossings), so the track never cuts the island apart; over water it is a rail bridge
+  - Track that runs along the outline (lines often run in road medians that are community boundaries) is drawn on the edge row
+  - A community next to a station but without track inside keeps the symbolic **CTrain station** block; only operating stations count (planned lines are not shown)
+  - Track and stations appear with their land, like everything else
 - **Community landmarks** (Phase 3): a community-specific landmark model (e.g. a lakeside clubhouse), made only from a resident photo petition (16.2); until then communities use shared library blocks only
 - Source data for feature suggestions: City of Calgary Open Data (e.g. hydrology water bodies) and OpenStreetMap; features stay symbolic (presence, not real size/position)
 - **Activity-based feature upgrades** (Phase 2): features evolve with activity (e.g. Mahogany's lake → boat dock → lakeside trail)
@@ -330,6 +335,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - Shown for the 223 residential communities
   - **Vitality is shown through mood**: lively = green ground, window lights, flowers; normal = plain; sleepy = snowy ground and trees under a dusk sky
   - Crown on this week's #1 community
+  - **CTrain Red and Blue lines** drawn over the communities with their stations (names when zoomed in), so the map shows how the communities are connected (7.9)
   - Illustrations use the **same designs as the island buildings** so the map and islands feel like one world
 - **Layout rules**
   - Icons are placed inside the polygon (point-in-polygon), away from edges, without overlapping
@@ -573,7 +579,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ### 19.4 Asset list (draft)
 - MVP (code boxes): island tiles (grass, path, snow), dirt layers, trees, resident house (roof/wall colour variants via code), buildings of the tree (7.6: welcome sign → gateway arch, fire pit → warming hut → community hall, frozen pond → skating rink → lit hockey rink, playground, sledding hill, dog park, pathway lights, community garden, neighbourhood park) + construction stages (scaffolding/frame/complete) + silhouettes + generic placeholder, avatar, mini villagers
-- Art Pass: refined buildings, feature-library blocks (lake, creek, hill, ravine, dog park, CTrain station, mall, school), props (lamps, fences, fields, stalls, benches), character variants with simple animation, surprise characters (e.g. moose), World Map assets (development icons matching island buildings, animated rivers, CTrain trains and lines, landmark buildings such as Calgary Tower and Peace Bridge, mountains), crown/flag
+- Art Pass: refined buildings, feature-library blocks (lake, creek, hill, ravine, dog park, CTrain station, mall, school), props (lamps, fences, fields, stalls, benches), character variants with simple animation, surprise characters (e.g. moose), World Map assets (development icons matching island buildings, animated rivers, moving CTrain trains on the map (the lines themselves are drawn since M13), landmark buildings such as Calgary Tower and Peace Bridge, mountains), crown/flag
 
 ---
 
@@ -802,6 +808,18 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.34
+**Changed:** 7.9: CTrain track, stations, a running train and next-station signs at their real position on the islands of communities the Red/Blue lines run through (track walkable, never built on; edge track on the edge row); the symbolic station block only for communities next to a station without track, operating stations only; features no longer drawn faint on future land — they appear with their land, and the build map previews what the next land brings; pond and creek only where the island shows little real water; big park never the same place as the hill. 9: CTrain lines and stations on the World Map. Art Pass: the map's CTrain lines are already drawn (moving trains stay Art Pass).
+
+**Why:** User review of M13 (2026-11-23): a station alone looked odd; the CTrain is Calgary's most visible feature and should show the real track and how communities connect; faint buildings on unseen land were unnecessary — features appearing with growth feel like a reward.
+
+**Previous:**
+- 7.9: `  - Which features a community gets: auto-suggested from OpenStreetMap data, supplemented/overridden by a simple CSV maintained by the operator. **Every residential community** gets suggestions (no launch list); **at most 3** per community, in priority order CTrain station → pond → hill → creek → big park → school (operator additions always kept). A pond is suggested only for a lake next to the community when the island shows little real water (water inside the boundary is already drawn, 7.8)`
+- 7.9: `  - The label shows the public place name when known (e.g. "🚉 Dalhousie", "🌳 Bowness Park"); schools show only "School"`
+- 7.9: `  - **Visible from day one:** features stand on the spare lots of the stored plan; while a lot is still future land the feature is drawn faint on the mist ("Appears as the community grows") and becomes solid, blocking its lot, once that land rises. Features take spare lots before unknown-building placeholders (7.6b)`
+- 9: (no CTrain line)
+- 19 Art Pass: `… World Map assets (development icons matching island buildings, animated rivers, CTrain trains and lines, landmark buildings …`
 
 ### 2026-11-23 — v1.33
 **Changed:** 7.9: MVP feature library = 6 blocks (CTrain station, pond, hill, creek, big park, school); suggestions for every residential community (not only launch communities), at most 3 each in a fixed priority; pond only where the island shows little real water; labels with public place names (not for schools); features visible faint from day one on future land, solid once the land rises; features take spare lots before unknown-building placeholders. 22.8: feature library open item closed.
