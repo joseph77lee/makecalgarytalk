@@ -1,0 +1,4 @@
+# Operator corrections to the suggested signature features (requirement.md 7.9).
+# action: add | remove. feature: ctrain-station, pond, hill, creek, big-park, school.
+# name: optional label for "add" (e.g. the park's name). Rerun build_features.py after editing.
+code,action,feature,name

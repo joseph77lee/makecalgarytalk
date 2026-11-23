@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { buildIslandLayout, buildingSiteTile, tileKey, type BuildingObject, type PlacedObject } from './layout';
 import mock from './mockCommunityState.json';
 import { parseCommunityViewState } from './parseState';
+import { featuresFor, type CommunityFeature } from './plan/features';
 import { decodePlan, houseLotOrder, lotTiles, type IslandPlan } from './plan/islandPlan';
 import type { BuildingView, CommunityViewState } from './types';
 
@@ -126,7 +127,7 @@ describe('lots and the building tree (requirement.md §7.6)', () => {
   });
 
   it('Main Street lots have faint markers; empty spare lots show nothing and are walkable', () => {
-    const l = buildIslandLayout(MAH, stateWith({ landStage: 5 }));
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5 }), []);
     expect(at(l.objects, 'lot:main-street-1')).toMatchObject({ assetKey: 'reserved-plot', lotKind: 'main-street' });
     expect(at(l.objects, 'lot:spare-1')).toBeUndefined();
     const walk = new Set(l.walkable.map(tileKey));
@@ -136,7 +137,7 @@ describe('lots and the building tree (requirement.md §7.6)', () => {
 
   it('unknown buildings use the placeholder on spare lots (§7.6b); extra ones are counted, not overlapped', () => {
     const unknown = Array.from({ length: 8 }, (_, i) => view(`future-${i}`, { status: i % 2 ? 'built' : 'building', progress: 0.3, title: `Future ${i}` }));
-    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, buildings: unknown }));
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, buildings: unknown }), []);
     const spares = l.objects.filter((o) => o.id.startsWith('lot:spare-'));
     expect(spares.map((o) => o.assetKey).sort()).toEqual(['building.placeholder', 'building.placeholder', 'building.placeholder', 'construction-site', 'construction-site', 'construction-site']);
     // then Main Street lots, never overlapping; nothing is hidden with 6 spares + 4 Main Street lots
@@ -236,5 +237,54 @@ describe('houses, villagers, mood', () => {
 
   it('is deterministic', () => {
     expect(buildIslandLayout(MAH, baseState())).toEqual(buildIslandLayout(MAH, baseState()));
+  });
+});
+
+describe('signature features (feature library, requirement.md §7.9)', () => {
+  const three: CommunityFeature[] = [
+    { key: 'ctrain-station', name: 'Dalhousie' },
+    { key: 'hill', name: null },
+    { key: 'school', name: null },
+  ];
+  const features = (l: ReturnType<typeof buildIslandLayout>) => l.objects.filter((o) => o.assetKey === 'feature');
+
+  it('take the spare lots in plan order, at most one feature per lot', () => {
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5 }), three);
+    const f = features(l);
+    expect(f.map((o) => 'featureKey' in o && o.featureKey)).toEqual(['ctrain-station', 'hill', 'school']);
+    const lots = ['spare-1', 'spare-2', 'spare-3'].map((k) => MAH.lots[k]);
+    f.forEach((o, i) => expect([o.x, o.z]).toEqual([lots[i].x + lots[i].w / 2, lots[i].z + lots[i].d / 2]));
+  });
+
+  it('are faint on future land from day one (stage 0) and solid once their land has risen', () => {
+    const early = features(buildIslandLayout(MAH, stateWith({ landStage: 0 }), three));
+    expect(early).toHaveLength(3);
+    expect(early.every((o) => 'faint' in o && o.faint && o.stage === 0)).toBe(true);
+    const late = features(buildIslandLayout(MAH, stateWith({ landStage: 5 }), three));
+    expect(late.every((o) => 'faint' in o && !o.faint && o.stage >= 2)).toBe(true);
+  });
+
+  it('a solid feature blocks its lot; a faint one is not on the land at all', () => {
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5 }), three);
+    const walk = new Set(l.walkable.map(tileKey));
+    expect(lotTiles(MAH.lots['spare-1']).some((t) => walk.has(tileKey(t)))).toBe(false);
+    expect(lotTiles(MAH.lots['spare-4']).every((t) => walk.has(tileKey(t)))).toBe(true); // no feature there
+    const early = buildIslandLayout(MAH, stateWith({ landStage: 0 }), three);
+    const land = new Set(early.tiles.map(tileKey));
+    expect(lotTiles(MAH.lots['spare-1']).some((t) => land.has(tileKey(t)))).toBe(false);
+  });
+
+  it('unknown buildings take only the spare lots features left free', () => {
+    const unknown = Array.from({ length: 5 }, (_, i) => view(`future-${i}`, { status: 'built', title: `Future ${i}` }));
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, buildings: unknown }), three);
+    const spares = l.objects.filter((o) => o.id.startsWith('lot:spare-')).map((o) => o.id).sort();
+    expect(spares).toEqual(['lot:spare-4', 'lot:spare-5', 'lot:spare-6']);
+    expect(l.objects.filter((o) => o.id.startsWith('lot:main-street-') && o.assetKey !== 'reserved-plot')).toHaveLength(2);
+    expect(l.hiddenHouseCount).toBe(0);
+  });
+
+  it('come from the community data by default (Mahogany: big park, school)', () => {
+    expect(featuresFor('MAH').map((f) => f.key)).toEqual(['big-park', 'school']);
+    expect(features(buildIslandLayout(MAH, stateWith({ landStage: 0 }))).map((o) => 'featureKey' in o && o.featureKey)).toEqual(['big-park', 'school']);
   });
 });

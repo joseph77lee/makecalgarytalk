@@ -2,6 +2,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState, type ReactNode } from 'react';
 import type { PlacedObject } from '../layout';
+import { FEATURE_INFO, featureLabel } from '../plan/features';
 import { useIslandUi } from '../uiStore';
 import { useHtmlPortal } from './htmlPortal';
 import { BUBBLE_Z, LABEL_Z, remainingText } from './labelText';
@@ -167,6 +168,26 @@ export function IslandLabels({ objects, houseBubbles, communityName, selectedHou
                 )}
               </Overlay>
             );
+          case 'feature': {
+            // Signature feature (§7.9): at most 3 per community, so a solid one always shows its
+            // name (it is the community's identity); a faint one shows its emoji until zoomed in.
+            const f = { key: o.featureKey, name: o.name };
+            const label = featureLabel(f);
+            return (
+              <Overlay key={o.id} x={o.x} y={o.faint ? 0.75 : 1.45} z={o.z}>
+                {!detailed && !o.faint ? (
+                  <span className="block max-w-32 truncate whitespace-nowrap rounded-full bg-white/85 px-1.5 py-px text-[10px] font-semibold text-sky-900 shadow-sm">{label}</span>
+                ) : detailed ? (
+                  <div className={`whitespace-nowrap rounded-lg px-2 py-0.5 text-center text-[10px] leading-tight shadow-sm ${o.faint ? 'bg-white/60 text-slate-500' : 'bg-sky-50/90 text-sky-900'}`}>
+                    <div className="max-w-40 truncate font-semibold">{label}</div>
+                    {o.faint && <div>Appears as the community grows</div>}
+                  </div>
+                ) : (
+                  <span className={`rounded-full px-1.5 py-px text-[10px] shadow-sm ${o.faint ? 'bg-white/50' : 'bg-white/85'}`}>{FEATURE_INFO[f.key].emoji}</span>
+                )}
+              </Overlay>
+            );
+          }
           case 'construction-site':
             return (
               <Overlay key={o.id} x={o.x} y={1.55} z={o.z}>

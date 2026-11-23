@@ -5,6 +5,7 @@
  * of them per asset key without touching game logic (§20.4).
  */
 import type { BuildingObject, ObjectOf } from '../layout';
+import type { FeatureKey } from '../plan/features';
 import { ACCENTS, type MoodPalette, type VitalityMood } from '../mood';
 import { asGhost, box, type BoxPart } from './boxes';
 
@@ -379,6 +380,163 @@ function upgradeScaffold(w: number, d: number): BoxPart[] {
 export function building(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
   const make = BUILDING_MODELS[item.buildingKey] ?? placeholder;
   return [...make(item, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
+}
+
+// --- Signature features (feature library, requirement.md §7.9) ------------------------
+// Symbolic blocks on a spare lot (2×2), not the real size or position.
+
+const WATER = '#8ec5ea';
+const WATER_DEEP = '#6fb1de';
+const SAND = '#eadcb8';
+const REED = '#7fae5b';
+
+const pond: Builder = ({ w, d }, { mood }) => {
+  const water = mood === 'sleepy' ? ICE : WATER;
+  return fit(
+    [
+      box('solid', 0, 0, 0, 1.85, 0.04, 1.7, SAND),
+      box('solid', 0.05, 0.02, 0.05, 1.5, 0.05, 1.3, water),
+      box('solid', -0.2, 0.025, -0.15, 0.9, 0.05, 0.7, mood === 'sleepy' ? '#c3e1f0' : WATER_DEEP),
+      ...[[-0.78, 0.55], [-0.68, 0.68], [0.75, -0.62]].map(([x, z]) => box('solid', x, 0.04, z, 0.06, 0.3, 0.06, REED)),
+      // a duck (and its head)
+      box('solid', 0.35, 0.07, 0.3, 0.16, 0.08, 0.1, '#ffffff'),
+      box('solid', 0.42, 0.13, 0.3, 0.07, 0.07, 0.07, '#ffffff'),
+      box('solid', 0.47, 0.14, 0.3, 0.05, 0.03, 0.04, '#f2a43a'),
+      // a little wooden dock
+      box('solid', -0.6, 0.06, 0.62, 0.36, 0.04, 0.32, WOOD),
+    ],
+    w,
+    d,
+  );
+};
+
+const creek: Builder = ({ w, d }, { palette, mood }) => {
+  const water = mood === 'sleepy' ? ICE : WATER;
+  return fit(
+    [
+      box('solid', 0, 0, 0, 1.9, 0.03, 1.9, palette.grass[1]),
+      // a winding stream across the lot
+      box('solid', -0.6, 0.02, -0.55, 0.7, 0.04, 0.32, water),
+      box('solid', -0.15, 0.02, -0.25, 0.32, 0.04, 0.6, water),
+      box('solid', 0.25, 0.02, 0.15, 0.6, 0.04, 0.32, water),
+      box('solid', 0.62, 0.02, 0.55, 0.32, 0.04, 0.5, water),
+      ...[[-0.85, -0.3], [0.1, -0.55], [0.55, -0.05], [0.25, 0.6]].map(([x, z]) => box('solid', x, 0.03, z, 0.14, 0.08, 0.12, STONE)),
+      // footbridge
+      box('solid', -0.15, 0.06, -0.25, 0.56, 0.05, 0.22, WOOD),
+      box('solid', -0.15, 0.11, -0.36, 0.56, 0.1, 0.03, WOOD),
+      box('solid', -0.15, 0.11, -0.14, 0.56, 0.1, 0.03, WOOD),
+      box('solid', 0.75, 0.03, -0.7, 0.08, 0.26, 0.08, REED),
+    ],
+    w,
+    d,
+  );
+};
+
+const hill: Builder = ({ w, d }, { palette, mood }) => {
+  const g = mood === 'sleepy' ? SNOW : palette.grass[0];
+  const top = mood === 'sleepy' ? SNOW : palette.leaves[1];
+  return fit(
+    [
+      box('solid', 0, 0, 0, 1.9, 0.22, 1.9, g),
+      box('solid', 0.1, 0.22, 0.05, 1.45, 0.24, 1.4, g),
+      box('solid', 0.2, 0.46, 0.1, 1.0, 0.24, 0.95, top),
+      box('solid', 0.25, 0.7, 0.15, 0.55, 0.18, 0.5, top),
+      // stepping stones up the front and a flag on top
+      ...[0.82, 0.62].map((z, i) => box('solid', -0.5 + i * 0.1, 0.22 + i * 0.24, z - 0.1, 0.22, 0.04, 0.16, STONE)),
+      box('solid', 0.25, 0.88, 0.15, 0.04, 0.55, 0.04, '#8a8f99'),
+      box('solid', 0.36, 1.25, 0.15, 0.2, 0.13, 0.02, ACCENTS[0]),
+    ],
+    w,
+    d,
+  );
+};
+
+const bigPark: Builder = ({ w, d }, { palette, mood }) => {
+  const leaves = palette.leaves;
+  const parts: BoxPart[] = [
+    box('solid', 0, 0, 0, 1.92, 0.04, 1.92, palette.grass[0]),
+    box('solid', 0.05, 0.04, 0.2, 1.7, 0.02, 0.22, palette.path[0]),
+  ];
+  // three tall trees (bigger than island trees) and a picnic table
+  for (const [x, z, h, v] of [[-0.55, -0.5, 1.1, 0], [0.4, -0.6, 0.9, 1], [0.6, 0.65, 1.0, 0]] as const) {
+    parts.push(box('solid', x, 0.04, z, 0.14, 0.4, 0.14, palette.trunk));
+    parts.push(box('solid', x, 0.4, z, 0.62, h * 0.6, 0.62, leaves[v]));
+    parts.push(box('solid', x, 0.4 + h * 0.6, z, 0.4, h * 0.3, 0.4, leaves[v]));
+    if (mood === 'sleepy') parts.push(box('solid', x, 0.4 + h * 0.9, z, 0.3, 0.06, 0.3, SNOW));
+  }
+  parts.push(
+    box('solid', -0.45, 0.04, 0.62, 0.5, 0.05, 0.3, WOOD),
+    box('solid', -0.45, 0.24, 0.62, 0.5, 0.04, 0.3, '#b88a64'),
+    box('solid', -0.45, 0.04, 0.62, 0.06, 0.2, 0.06, WOOD),
+  );
+  return fit(parts, w, d);
+};
+
+const ctrainStation: Builder = ({ w, d }) => {
+  const rail = '#8a8f99';
+  return fit(
+    [
+      box('solid', 0, 0, 0, 1.9, 0.03, 1.9, '#d9cdb5'),
+      // track
+      box('solid', 0, 0.03, -0.45, 1.95, 0.03, 0.5, '#b9b2a6'),
+      box('solid', 0, 0.06, -0.57, 1.95, 0.03, 0.04, rail),
+      box('solid', 0, 0.06, -0.33, 1.95, 0.03, 0.04, rail),
+      // a red-and-white CTrain car
+      box('solid', -0.1, 0.09, -0.45, 1.3, 0.42, 0.42, '#f4f4f4'),
+      box('solid', -0.1, 0.09, -0.45, 1.32, 0.12, 0.44, '#d94a4a'),
+      ...[-0.55, -0.25, 0.05, 0.35].map((x) => box('glow', x, 0.32, -0.23, 0.18, 0.13, 0.02, '#cfe8f7')),
+      box('solid', -0.1, 0.51, -0.45, 0.04, 0.16, 0.04, '#5d6470'),
+      // platform with a shelter and a sign
+      box('solid', 0, 0.03, 0.25, 1.9, 0.14, 0.7, '#e7dcc8'),
+      box('solid', 0, 0.17, 0.52, 0.9, 0.5, 0.05, '#b3d8ec'),
+      box('solid', -0.45, 0.17, 0.4, 0.05, 0.55, 0.05, '#5d6470'),
+      box('solid', 0.45, 0.17, 0.4, 0.05, 0.55, 0.05, '#5d6470'),
+      box('solid', 0, 0.72, 0.38, 1.05, 0.06, 0.42, '#d94a4a'),
+      box('solid', 0.78, 0.17, 0.25, 0.05, 0.6, 0.05, '#5d6470'),
+      box('solid', 0.78, 0.66, 0.25, 0.3, 0.16, 0.04, '#ffffff'),
+    ],
+    w,
+    d,
+  );
+};
+
+const school: Builder = ({ w, d }, { palette }) =>
+  fit(
+    [
+      box('solid', 0, 0, 0, 1.9, 0.03, 1.9, palette.path[0]),
+      box('solid', -0.25, 0.03, -0.25, 1.3, 0.62, 0.9, '#f0d9b5'),
+      box('solid', -0.25, 0.65, -0.25, 1.42, 0.12, 1.02, '#d9776a'),
+      box('solid', -0.25, 0.77, -0.25, 0.5, 0.22, 0.4, '#d9776a'),
+      box('solid', -0.25, 0.82, -0.04, 0.2, 0.2, 0.02, '#ffffff'),
+      box('solid', -0.25, 0.03, 0.21, 0.26, 0.36, 0.03, DOOR),
+      ...[-0.7, -0.5, 0.0, 0.2].map((x) => box('glow', x, 0.35, 0.21, 0.14, 0.14, 0.02, WARM_LIGHT)),
+      // flag pole and a small field with a goal
+      box('solid', 0.75, 0.03, -0.7, 0.04, 0.95, 0.04, '#8a8f99'),
+      box('solid', 0.86, 0.85, -0.7, 0.2, 0.12, 0.02, '#e05a5a'),
+      box('solid', 0.3, 0.03, 0.62, 1.1, 0.02, 0.55, '#9fd08a'),
+      box('solid', 0.8, 0.05, 0.62, 0.04, 0.26, 0.4, '#ffffff'),
+    ],
+    w,
+    d,
+  );
+
+export const FEATURE_MODELS: Record<FeatureKey, Builder> = {
+  'ctrain-station': ctrainStation,
+  pond,
+  hill,
+  creek,
+  'big-park': bigPark,
+  school,
+};
+
+/** Faint features stand on the future-land mist (its top is at y = -0.3). */
+const MIST_TOP = -0.3;
+
+/** A signature feature: solid on land, see-through on the mist while its land is still to come. */
+export function feature(item: ObjectOf<'feature'>, ctx: BuildCtx): BoxPart[] {
+  const parts = FEATURE_MODELS[item.featureKey]({ w: item.w, d: item.d, level: 1 }, ctx);
+  if (!item.faint) return parts;
+  return parts.map((b) => ({ ...b, layer: 'ghost', p: [b.p[0], b.p[1] + MIST_TOP, b.p[2]] }));
 }
 
 /** A locked (or ready) building: its model as a translucent ghost on its lot. */

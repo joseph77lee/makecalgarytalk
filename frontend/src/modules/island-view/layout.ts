@@ -9,6 +9,7 @@
  */
 import { vitalityMood, type VitalityMood } from './mood';
 import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
+import { featuresFor, type CommunityFeature, type FeatureKey } from './plan/features';
 import {
   PLAZA,
   houseLotOrder,
@@ -34,6 +35,7 @@ export const FIXED_ASSET_KEYS = [
   'construction-site',
   'silhouette',
   'reserved-plot',
+  'feature',
 ] as const;
 export type FixedAssetKey = (typeof FIXED_ASSET_KEYS)[number];
 /** `building.<key>` draws a built building of the tree (or the placeholder for unknown keys). */
@@ -63,6 +65,11 @@ export type PlacedObject =
   | (Base & Footprint & { assetKey: 'construction-site'; buildingKey: string; title: string; progress: number; level: number })
   | (Base & Footprint & { assetKey: 'silhouette'; buildingKey: string; title: string; ready: boolean; remaining: Remaining | null })
   | (Base & Footprint & { assetKey: 'reserved-plot'; lotKind: string })
+  /**
+   * A signature feature (requirement.md §7.9) on a spare lot. `faint` while its lot is still
+   * future land: drawn see-through on the mist from day one (stage 0), solid once the land rises.
+   */
+  | (Base & Footprint & { assetKey: 'feature'; featureKey: FeatureKey; name: string | null; faint: boolean })
   | (Base &
       Footprint & {
         assetKey: `building.${string}`;
@@ -120,7 +127,7 @@ const N4: Tile[] = [
   { x: 0, z: -1 },
 ];
 
-export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): IslandLayout {
+export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, features: CommunityFeature[] = featuresFor(plan.code)): IslandLayout {
   const landStage = state.landStage;
   const mood: VitalityMood = state.vitality === null ? 'normal' : vitalityMood(state.vitality);
   const stages = stageMap(plan);
@@ -151,13 +158,25 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
   const freeSpares: { key: string; rect: LotRect }[] = [];
   const usedLots: string[] = [];
   const freeMainStreet: { key: string; rect: LotRect }[] = [];
+  const featureQueue = [...features];
   for (const [lotKey, spec] of Object.entries(BUILDING_TREE.lots)) {
     const rect = plan.lots[lotKey];
     const rTiles = lotTiles(rect);
     const stage = Math.max(...rTiles.map(stageOf), spec.landStage);
     const base = { ...centreOf(rect), w: rect.w, d: rect.d, stage };
+    const onLand = spec.landStage <= landStage && rTiles.every(on);
+    // Signature features take the spare lots in plan order, on land or not (§7.9).
+    if (spec.kind === 'spare' && featureQueue.length > 0) {
+      const f = featureQueue.shift() as CommunityFeature;
+      objects.push({ ...base, stage: onLand ? stage : 0, id: `feature:${f.key}`, assetKey: 'feature', featureKey: f.key, name: f.name, faint: !onLand });
+      if (onLand) {
+        usedLots.push(lotKey);
+        rTiles.forEach((t) => occupied.add(tileKey(t)));
+      }
+      continue;
+    }
     // Lots not open yet, spare lots and lots without a building yet stay plain (walkable) land.
-    if (spec.landStage > landStage || !rTiles.every(on)) continue;
+    if (!onLand) continue;
     if (spec.kind === 'spare') {
       freeSpares.push({ key: lotKey, rect });
       continue;
