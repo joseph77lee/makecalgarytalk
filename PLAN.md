@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.49 |
+| Plan version | v1.50 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.28 |
-| Current module | M15 Community Posts (🟨 Ready for playtest) |
+| Current module | M10 World Map (next; M15 ✅ Done) |
 
 ---
 
@@ -48,7 +48,7 @@
 | M7 | Residency | FE + BE | | M6 | ✅ |
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
 | M9 | Community News | BE + FE | | M8 | ✅ |
-| M15 | Community Posts | FE + BE | | M9 | 🟨 |
+| M15 | Community Posts | FE + BE | | M9 | ✅ |
 | M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
@@ -385,7 +385,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; announcements are not rate-limited or moderated beyond the operator; the board has no events yet (roadmap only).
 
 
-### M15 — Community Posts 🟨
+### M15 — Community Posts ✅
 **Goal:** Neighbours write the community's local news.
 - **In scope** (`requirement.md` v1.28 §14)
   - [x] Verified Residents post in their own community once the Welcome sign is built: kind (Safety, Local deals, Events, Lost & found, Free talk) + up to 300 characters, 1 per Calgary day, no links/photos; Safety posts carry a reminder (no names, call 911)
@@ -496,6 +496,17 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-22 — v1.50
+**Changed:** M15 ✅ Done (user confirmed). Header → M10 next.
+
+**Why:** User confirmed M15 2026-11-22.
+
+**Previous:**
+- Header: `| Plan version | v1.49 |`
+- Header: `| Current module | M15 Community Posts (🟨 Ready for playtest) |`
+- Overview: `| M15 | Community Posts | FE + BE | | M9 | 🟨 |`
+- M15: `### M15 — Community Posts 🟨`
 
 ### 2026-11-20 — v1.49
 **Changed:** M15: post kinds centred on real community life (Safety, Local deals, Events, Lost & found, Free talk); reports limited to 3 a day, confirmed before sending, can be taken back, and exclude thanks (the reported post folds away for the reporter); operator restore.
