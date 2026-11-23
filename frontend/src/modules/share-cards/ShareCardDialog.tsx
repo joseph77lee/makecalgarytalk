@@ -9,10 +9,12 @@ interface Props {
   onClose: () => void;
   /** A short message for a toast after sharing/saving (null = nothing to say). */
   onResult?: (message: string | null) => void;
+  /** Called once the card was shared or saved (analytics). */
+  onShared?: (kind: ShareCard['kind']) => void;
 }
 
 /** Preview of a share card with Share / Close (requirement.md v1.31 §12.2). */
-export function ShareCardDialog({ card, island, onClose, onResult }: Props) {
+export function ShareCardDialog({ card, island, onClose, onResult, onShared }: Props) {
   const [blob, setBlob] = useState<Blob | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -44,7 +46,10 @@ export function ShareCardDialog({ card, island, onClose, onResult }: Props) {
     const outcome = await shareImage(blob, cardFileName(card), cardShareText(card, window.location.origin));
     setBusy(false);
     onResult?.(imageShareOutcomeText(outcome));
-    if (outcome === 'shared' || outcome === 'saved') onClose();
+    if (outcome === 'shared' || outcome === 'saved') {
+      onShared?.(card.kind);
+      onClose();
+    }
   };
 
   return (

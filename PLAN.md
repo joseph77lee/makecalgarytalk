@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.61 |
+| Plan version | v1.63 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
-| Based on | `requirement.md` v1.34 |
-| Current module | M14 Launch Readiness (next; M13 ✅ Done) |
+| Based on | `requirement.md` v1.35 |
+| Current module | M16 Deploy & Playtest (next; M14 ✅ Done) |
 
 ---
 
@@ -53,7 +53,8 @@
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ✅ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ✅ |
-| M14 | Launch Readiness | All | | All above | ⬜ |
+| M14 | Launch Prep | All | | All above | ✅ |
+| M16 | Deploy & Playtest | All + operator accounts | | M14 | ⬜ |
 
 **Order after M7 (user decision 2026-11-20):** M1 🔁 Sleepy mood fix → **M12 Invites** (before M8: bringing neighbours in is the core of the game) → M8 → M9 → **M15 Community Posts** (resident-written local news, right after M9) → M10 → M11 → M13 → M14.
 
@@ -72,7 +73,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14
+    (all) ── M14 ── M16
 ```
 
 ---
@@ -83,7 +84,7 @@ M0 ─┬─ M1 ── M2 ─┐
 **Goal:** Empty but runnable project skeleton so every later module has a home.
 - **In scope**
   - [x] Monorepo folders: `frontend/` (React + Vite + TypeScript, Tailwind, Zustand, react-three-fiber + drei), `supabase/` (migrations, functions), `docs/`
-  - [x] **Local** Supabase project (PostgreSQL + PostGIS enabled); Supabase CLI for local dev and SQL migrations; connection pooling via PostgREST (the frontend never opens direct DB connections). The cloud project and its pooler are set up at deploy (M14)
+  - [x] **Local** Supabase project (PostgreSQL + PostGIS enabled); Supabase CLI for local dev and SQL migrations; connection pooling via PostgREST (the frontend never opens direct DB connections). The cloud project and its pooler are set up at deploy (M16)
   - [x] Environment config via env vars (no secrets in git); `.env.example`
   - [x] Health check (Postgres function or Edge Function); frontend calls it and shows "connected"
   - [x] Calgary day boundary (America/Edmonton) as **server-side** Postgres functions with tests; the client does no time zone math (receives `calgary_day` / `next_day_start` from the server)
@@ -101,7 +102,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Frontend module pattern:** `frontend/src/modules/<name>/index.ts` is the only import surface; `common` must not import feature modules; no cycles (`src/architecture.test.ts`). App shell is `src/app/App.tsx` (currently the health screen — M1 replaces it with the island).
   - **Keys:** frontend uses the publishable key (`sb_publishable_…`) only; `readSupabaseConfig` throws on a secret-looking key.
   - **Local env gotchas:** ports are 554xx (54321 is taken by CleanMyMac on this Mac); the Supabase CLI needs Docker on PATH (`export PATH="$HOME/.docker/bin:$PATH"`); `frontend/.env.local` holds the local publishable key (`supabase status`).
-  - **Not covered yet:** cloud Supabase and production tzdata check (M14); real-phone performance (no 3D yet).
+  - **Not covered yet:** cloud Supabase and production tzdata check (M16); real-phone performance (no 3D yet).
   - **CI:** check results with `gh run list --branch <branch>` / `gh run watch <id> --exit-status` (`gh` is installed and logged in; the repo is private, so the unauthenticated REST API returns 404).
 
 ### M1 — Island View ⭐ ✅
@@ -148,7 +149,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Out of scope:** avatar, real data, detailed art
 - **Definition of Done**
   - [x] changing values in the mock JSON (size, buildings, Vitality, silhouettes) updates the island correctly
-  - [ ] runs smoothly at a phone-sized viewport (checked at 390×844 in headless Chromium with a software GPU only; user accepted M1 on 2026-11-18 without a real-phone check — carried to M2 and the M14 low-end phone pass)
+  - [ ] runs smoothly at a phone-sized viewport (checked at 390×844 in headless Chromium with a software GPU only; user accepted M1 on 2026-11-18 without a real-phone check — carried to M2 and the M16 low-end phone pass)
   - [x] user has looked at it (confirmed 2026-11-18)
 - **Handoff**
   - **Code:** `frontend/src/modules/island-view/`. Public API in `index.ts`: `IslandView({ state })`, `IslandHud`, `IslandDevPanel`, `useMockCommunityStore`, `parseCommunityViewState`, `buildIslandLayout`, `vitalityMood`, and the `CommunityViewState` types.
@@ -293,17 +294,17 @@ M0 ─┬─ M1 ── M2 ─┐
 **Goal:** Real users without friction.
 - **In scope**
   - [x] Supabase anonymous sign-in on first visit
-  - [x] optional Google linking — code done; real verification moved to M14
+  - [x] optional Google linking — code done; real verification moved to M16
   - [x] avatar shirt colour choice on first visit, changeable later (`requirement.md` §10.2)
   - [x] nickname on first visit with a suggested default, validated on the server, changeable later (`requirement.md` §6.1)
   - [x] completed-neighbourhood example on the first visit only (one image or short animated scene rendered with the real engine, `requirement.md` §5.1)
-  - [x] Cloudflare Turnstile (local: Cloudflare test keys; real keys at deploy, M14)
-  - [x] sign-up rate limits (Supabase Auth per-IP anonymous limit; Cloudflare rate limiting at deploy, M14)
-  - [x] re-join with same Google account restores record — code done (`signInWithOAuth`); real verification moved to M14
+  - [x] Cloudflare Turnstile (local: Cloudflare test keys; real keys at deploy, M16)
+  - [x] sign-up rate limits (Supabase Auth per-IP anonymous limit; Cloudflare rate limiting at deploy, M16)
+  - [x] re-join with same Google account restores record — code done (`signInWithOAuth`); real verification moved to M16
   - [x] "What changed since yesterday" seen once per **account** per Calgary day (server-side record instead of the M5 per-browser localStorage flag)
 - **Definition of Done**
   - [x] new visitor plays instantly without a form
-  - [x] linking Google keeps progress — moved to M14 (needs the production Google OAuth client)
+  - [x] linking Google keeps progress — moved to M16 (needs the production Google OAuth client)
   - [x] bot check active
 - **Handoff**
   - **Code:** migration `supabase/migrations/20261120120000_identity_profiles.sql` (schema `identity`: `profiles`, `blocked_words`; RPC `identity_get_profile`, `identity_save_profile`, `identity_mark_changes_seen`); tests `supabase/tests/database/identity_profiles.test.sql` (26). Frontend `frontend/src/modules/identity/` (store with injected deps, Turnstile loader, `FirstVisit`, `ProfileForm`, `ProfileButton`/sheet, `IdentityScreen`, dev sign-in). App: `IdentityGate` signs in and runs the first visit before `LiveApp`; `IslandHud` got a `left` slot for the profile chip; `Avatar` takes `shirtColor`. Auth settings in `supabase/config.toml` (anonymous sign-ins, manual linking, Turnstile captcha, site URL `http://localhost:5180`).
@@ -493,18 +494,34 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Tests:** `plan/islandPlans.test.ts` now checks track (on the island, 4-connected, never under lots/houses/trees/stations, stations beside it, signs at real exits, stations reachable) for every plan; `plan/ctrain.test.ts` (data, island layout, smoothing, train path, preview); `plan/features.test.ts`; feature cases in `layout.test.ts`; `community-state/buildMap.test.tsx` (preview text); World Map data test.
   - **Not tested / known gaps:** real phone (train animation cost judged fine: ≤ 3 trains × 3 cars of 5 meshes); the train ignores the avatar and villagers on crossings; on phones the track at the island edge needs zooming out to see whole; the shared downtown segment draws Red over Blue on the map; planned Green Line not shown (not operating); features are not tappable.
 
-### M14 — Launch Readiness ⬜
-**Goal:** Safe to show the public.
-- **In scope**
-  - [ ] Terms of Use + Privacy Policy pages (13+, location statement)
-  - [ ] analytics (D1/D7, shares, invites)
-  - [ ] abnormal sign-up flags
-  - [ ] optional update-email opt-in (CASL)
-  - [ ] production deploy
+### M14 — Launch Prep ✅
+**Goal:** Everything the public launch needs that can be built and checked locally.
+- **In scope** (`requirement.md` v1.35 §17, §18, §20, §21)
+  - [x] Terms of Use + Privacy Policy pages (13+, location statement) — plus Credits (OSM ODbL, City of Calgary OGL); linked from the first visit and the profile sheet
+  - [x] analytics (D1/D7, shares, invites) — own, in Supabase; operator dashboard at `?admin`
+  - [x] abnormal sign-up flags — verification spike flags on the dashboard (Turnstile and per-IP sign-in limits were already in place)
+  - [x] optional update-email opt-in (CASL)
+  - [x] adaptive quality for low-end phones (drei `PerformanceMonitor`: 1× pixel ratio, no shadows when frames drop)
+  - [x] deploy configuration and launch guide (`frontend/public/_headers`, `docs/launch.md`)
+- **Definition of Done**
+  - [x] checked on screen: legal pages, operator dashboard (operator / non-operator), email opt-in and withdrawal, first-visit agreement line
+  - [x] user has looked at it (confirmed 2026-11-23; deploy and playtest moved to M16)
+- **Handoff**
+  - **Server:** migrations `20261123130000_gamecore_residency_admin_interface.sql` (`gamecore.acted_between`, `residency.daily_verifications`), `20261123130050_identity_email_updates.sql` (`identity.email_updates`, RPC `identity_get_email_updates` / `identity_set_email_updates`, consent version `2026-11-23` — bump with `EMAIL_CONSENT_TEXT` in `identity/api.ts`), `20261123130100_analytics_admin.sql` (schemas `analytics`: `visits`, `community_views`, append-only `events` capped 50/player/day, RPC `analytics_visit` / `analytics_event`; `admin`: `operators`, spike rule, RPC `admin_dashboard`). New module prefixes `analytics`, `admin` in the health guardrail. Tests `analytics_admin.test.sql` (35). `seed.sql` makes the local dev user an operator.
+  - **Frontend:** modules `analytics/` (`track.visit/share/inviteVisit`, never throws; App records today's visit + community on screen, invite-link arrivals, card and invite shares) and `admin/` (`AdminDashboard`, `?admin`). `identity/EmailUpdatesSection` + `LegalLinks`; first-visit agreement line. Static pages `frontend/public/{terms,privacy,credits}.html` + `legal.css` (outside the app bundle).
+  - **Launch steps:** `docs/launch.md` lists every operator step (Supabase project in Canada Central, link + `db push`, auth settings, Cloudflare Pages env vars, Turnstile, Google OAuth, email routing, adding an operator, deletion requests, Pro before public launch).
+  - **Legal text** is a template-based first version written from what the game actually stores; professional review once revenue starts (§18). If the Supabase region is not Canada, update the Privacy Policy.
+
+### M16 — Deploy & Playtest ⬜
+**Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
+- **In scope** (`docs/launch.md` has every step; most need the operator's accounts)
+  - [ ] production deploy: Supabase project (Canada Central, Free plan) linked and migrated; Cloudflare Pages with env vars; Turnstile; custom domain; email routing; operator added
   - [ ] Google OAuth client (production domain + local redirect); verify Google linking keeps progress and re-join with the same Google account restores the record (moved from M6; code in `frontend/src/modules/identity/`, see M6 Handoff)
-  - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6)
-  - [ ] low-end phone performance pass
+  - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6) — SQL check in `docs/launch.md` §2
+  - [ ] low-end phone performance pass on a real device (adaptive quality from M14; carried from M1)
   - [ ] **family/friends playtest**
+  - [ ] before the public launch: Supabase Pro, Sentry error monitoring (deferred 2026-11-23)
+- **Out of scope:** new features (playtest feedback goes to modules as 🔁 or to Phase 2)
 - **Definition of Done**
   - [ ] checklist complete
   - [ ] playtest feedback triaged into modules or Phase 2
@@ -527,6 +544,64 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.63
+**Changed:** M14 split: **M14 Launch Prep** ✅ (everything built and checked locally) and new **M16 Deploy & Playtest** ⬜ (production deploy, Google OAuth, production tzdata, real low-end phone, family/friends playtest, Pro + Sentry before the public launch). References to "M14" for deploy-time checks in M0/M1/M6 now say M16; dependency diagram and overview updated.
+
+**Why:** The user wanted the finished launch-prep work on `main` now, while the account-dependent steps wait until the operator is ready. Splitting keeps the merge rule (merge only ✅ modules) intact.
+
+**Previous:**
+- Header: `| Plan version | v1.62 |`, `| Current module | M14 Launch Readiness (in progress) |`
+- Overview row: `| M14 | Launch Readiness | All | | All above | 🟦 |`; diagram `    (all) ── M14`
+- M0/M1/M6 texts: `(M14)`, `the M14 low-end phone pass`, `moved to M14`, `at deploy, M14`
+- M14 section (v1.62), verbatim:
+
+  > ### M14 — Launch Readiness 🟦
+  > **Goal:** Safe to show the public.
+  > - **In scope** (`requirement.md` v1.35 §17, §18, §20, §21, §22.7)
+  >   - [x] Terms of Use + Privacy Policy pages (13+, location statement) — plus Credits (OSM ODbL, City of Calgary OGL); linked from the first visit and the profile sheet
+  >   - [x] analytics (D1/D7, shares, invites) — own, in Supabase; operator dashboard at `?admin`
+  >   - [x] abnormal sign-up flags — verification spike flags on the dashboard (Turnstile and per-IP sign-in limits were already in place)
+  >   - [x] optional update-email opt-in (CASL)
+  >   - [ ] production deploy — config ready (`frontend/public/_headers`, `docs/launch.md`); waits for the operator's Supabase project and Cloudflare Pages setup
+  >   - [ ] Google OAuth client (production domain + local redirect); verify Google linking keeps progress and re-join with the same Google account restores the record (moved from M6; code in `frontend/src/modules/identity/`, see M6 Handoff)
+  >   - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6) — SQL check in `docs/launch.md` §2
+  >   - [ ] low-end phone performance pass — adaptive quality added (drei `PerformanceMonitor`: 1× pixel ratio, no shadows when frames drop); a real low-end phone check is still needed
+  >   - [ ] **family/friends playtest**
+  > - **Definition of Done**
+  >   - [ ] checklist complete
+  >   - [ ] playtest feedback triaged into modules or Phase 2
+  > - **Handoff (in progress)**
+  >   - **Server:** migrations `20261123130000_gamecore_residency_admin_interface.sql` (`gamecore.acted_between`, `residency.daily_verifications`), `20261123130050_identity_email_updates.sql` (`identity.email_updates`, RPC `identity_get_email_updates` / `identity_set_email_updates`, consent version `2026-11-23` — bump with `EMAIL_CONSENT_TEXT` in `identity/api.ts`), `20261123130100_analytics_admin.sql` (schemas `analytics`: `visits`, `community_views`, append-only `events` capped 50/player/day, RPC `analytics_visit` / `analytics_event`; `admin`: `operators`, spike rule, RPC `admin_dashboard`). New module prefixes `analytics`, `admin` in the health guardrail. Tests `analytics_admin.test.sql` (35). `seed.sql` makes the local dev user an operator.
+  >   - **Frontend:** modules `analytics/` (`track.visit/share/inviteVisit`, never throws; App records today's visit + community on screen, invite-link arrivals, card and invite shares) and `admin/` (`AdminDashboard`, `?admin`). `identity/EmailUpdatesSection` + `LegalLinks`; first-visit agreement line. Static pages `frontend/public/{terms,privacy,credits}.html` + `legal.css` (outside the app bundle).
+  >   - **Launch steps:** `docs/launch.md` lists every operator step (Supabase project in Canada Central, link + `db push`, auth settings, Cloudflare Pages env vars, Turnstile, Google OAuth, email routing, adding an operator, deletion requests, Pro before public launch).
+  >   - **Legal text** is a template-based first version written from what the game actually stores; professional review once revenue starts (§18). If the Supabase region is not Canada, update the Privacy Policy.
+
+### 2026-11-23 — v1.62
+**Changed:** M14 🟦 in progress: legal pages, own analytics + operator dashboard, spike flags, email opt-in done locally; deploy config and launch guide ready; adaptive quality for low-end phones; remaining items wait for the operator's accounts. "Based on" → `requirement.md` v1.35.
+
+**Why:** User decisions for M14 (2026-11-23).
+
+**Previous:**
+- Header: `| Plan version | v1.62 |`, `| Based on | \`requirement.md\` v1.34 |`, `| Current module | M14 Launch Readiness (next; M13 ✅ Done) |`
+- Overview row: `| M14 | Launch Readiness | All | | All above | ⬜ |`
+- M14 section (v1.61), verbatim:
+
+  > ### M14 — Launch Readiness ⬜
+  > **Goal:** Safe to show the public.
+  > - **In scope**
+  >   - [ ] Terms of Use + Privacy Policy pages (13+, location statement)
+  >   - [ ] analytics (D1/D7, shares, invites)
+  >   - [ ] abnormal sign-up flags
+  >   - [ ] optional update-email opt-in (CASL)
+  >   - [ ] production deploy
+  >   - [ ] Google OAuth client (production domain + local redirect); verify Google linking keeps progress and re-join with the same Google account restores the record (moved from M6; code in `frontend/src/modules/identity/`, see M6 Handoff)
+  >   - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6)
+  >   - [ ] low-end phone performance pass
+  >   - [ ] **family/friends playtest**
+  > - **Definition of Done**
+  >   - [ ] checklist complete
+  >   - [ ] playtest feedback triaged into modules or Phase 2
 
 ### 2026-11-23 — v1.61
 **Changed:** M13 ✅ Done ("user has looked at it" ticked); current module → M14.

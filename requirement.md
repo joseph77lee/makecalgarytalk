@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.34 |
+| Document version | v1.35 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
 | Status | Initial draft for starting MVP development |
@@ -536,7 +536,11 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Trademarks: do not use official names/logos like "Calgary Stampede" → use generic terms like "Rodeo Season"
 - Never expose activity times in public information
 - Petition photos (16.2): location metadata stripped on upload, never published, operator-only, deleted after the decision
-- Provide a contact email
+- Provide a contact email: **hello@makecalgarytalk.com** (forwarded by Cloudflare Email Routing)
+- Pages: `/terms.html`, `/privacy.html`, `/credits.html` (static; linked from the first visit and the profile sheet). The first-visit screen states "By tapping Start you confirm you are 13 or older and agree to the Terms and Privacy Policy"
+- Data is hosted in Canada (Supabase, Canada Central region); account deletion on request by email within 30 days (all game data is deleted with the account)
+- Email updates: the profile sheet has an unticked checkbox with the consent wording; the address is asked only after ticking; consent time and wording version are recorded; unticking withdraws at once (the address is deleted, the withdrawal time kept). The MVP only collects; sending comes later
+- Data credits: City of Calgary Open Data (Open Government Licence – City of Calgary) and OpenStreetMap (ODbL) on `/credits.html`
 
 ---
 
@@ -605,7 +609,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Bot protection & rate limiting | Cloudflare Turnstile + Cloudflare rate limiting |
 | Testing | **Vitest** (unit), **Playwright** (end-to-end, phone viewport), database tests against local Supabase |
 | Error monitoring | Sentry (before launch) |
-| Analytics | Plausible or PostHog |
+| Analytics | **Own, in Supabase** (day-level visits, community views, share and invite-visit events; operator dashboard) + **Cloudflare Web Analytics** for page views (no cookies) |
 | Voxel modelling | MagicaVoxel |
 
 ### 20.2 Data
@@ -651,12 +655,10 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ## 21. Admin tools & analytics
 
 ### MVP
-- Daily new verifications per community + spike flags
-- Analytics dashboard
-  - Daily new visitors, % reaching the first action
-  - D1 / D7 retention
-  - Share-card shares, invite-link visits
-  - Visits by community
+- Operator screen at `?admin`, for accounts in the `admin.operators` table (added by hand); the server refuses everyone else
+- Daily new verifications per community + spike flags (at least 3 new verifications and more than 3× the community's daily average over the previous 28 days)
+- Analytics dashboard (last 28 days): visitors, new visitors (first visit that day), % of new visitors acting on their first day, D1 / D7 retention (share of a day's new visitors who visit again 1 / 7 days later; shown once that day has passed), shares, invite-link visits, visits by community (last 7 days), number of email opt-ins
+- Analytics data is day-level only (no times, no location, no device data), capped at 50 events per player per day, and deleted with the account
 
 ### Phase 2
 - Report moderation screen (list, hide/restore, suspend users)
@@ -742,6 +744,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 5 | Legal pages, analytics, email subscription, polish → family/friends test |
 
 ### 22.7 Launch
+- Supabase **Free** plan for the family/friends playtest; upgrade to **Pro** (no pausing, daily backups) right before the public launch
 - After family/friends testing, post on r/Calgary and community Facebook groups with a "Calgary dev made this" story
 - After the initial spark, growth comes from in-game invite/share mechanics
 
@@ -754,8 +757,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - [ ] Vitality smoothing details (rise/fall speed)
 - [ ] Random surprise types and probabilities
 - [ ] Newspaper sentence templates
-- [ ] Analytics tool choice (Plausible vs PostHog)
-- [ ] Terms of Use / Privacy Policy wording
+- [x] Analytics tool choice (decided 2026-11-23: own in Supabase + Cloudflare Web Analytics, see 20.1 / 21)
+- [x] Terms of Use / Privacy Policy wording (first version 2026-11-23, template-based; professional review once revenue starts)
 - [ ] Concrete invite reward items
 - All numbers are **starting values** to be tuned with post-launch data
 
@@ -808,6 +811,18 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.35
+**Changed:** 18: contact email, legal page paths, first-visit agreement line, data hosted in Canada, deletion on request within 30 days, email opt-in details (CASL), data credits. 20.1: analytics = own in Supabase + Cloudflare Web Analytics. 21: operator screen and access, spike rule, dashboard figures and definitions, analytics data limits. 22.7: Supabase Free during the playtest, Pro before the public launch. 22.8: analytics tool and legal wording closed.
+
+**Why:** User decisions for M14 (2026-11-23): own analytics (free, no cookies, no third party), domain already on Cloudflare, hello@makecalgarytalk.com as the public address, Free then Pro.
+
+**Previous:**
+- 18: `- Provide a contact email`
+- 20.1: `| Analytics | Plausible or PostHog |`
+- 21: `- Daily new verifications per community + spike flags` / `- Analytics dashboard` / `  - Daily new visitors, % reaching the first action` / `  - D1 / D7 retention` / `  - Share-card shares, invite-link visits` / `  - Visits by community`
+- 22.7: (no plan line)
+- 22.8: `- [ ] Analytics tool choice (Plausible vs PostHog)` / `- [ ] Terms of Use / Privacy Policy wording`
 
 ### 2026-11-23 — v1.34
 **Changed:** 7.9: CTrain track, stations, a running train and next-station signs at their real position on the islands of communities the Red/Blue lines run through (track walkable, never built on; edge track on the edge row); the symbolic station block only for communities next to a station without track, operating stations only; features no longer drawn faint on future land — they appear with their land, and the build map previews what the next land brings; pond and creek only where the island shows little real water; big park never the same place as the hill. 9: CTrain lines and stations on the World Map. Art Pass: the map's CTrain lines are already drawn (moving trains stay Art Pass).

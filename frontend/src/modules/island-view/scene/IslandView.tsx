@@ -1,4 +1,4 @@
-import { OrbitControls, OrthographicCamera } from '@react-three/drei';
+import { OrbitControls, OrthographicCamera, PerformanceMonitor } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { Box3, Vector3, type Group, type OrthographicCamera as OrthoCam, type Ray } from 'three';
@@ -48,10 +48,14 @@ export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuilding
   const layout = useMemo(() => buildIslandLayout(plan, state), [plan, state]);
   const palette = MOOD_PALETTES[layout.mood];
   const north = useMemo(() => createAngleChannel(), []);
+  // Low-end phones (§20.3a): if the frame rate stays low, drop to 1x pixel ratio and no shadows.
+  // One way only (no flip-flopping between qualities while playing).
+  const [lowQuality, setLowQuality] = useState(false);
 
   return (
     <div className="absolute inset-0 transition-[background] duration-700" style={{ background: palette.sky }}>
-      <Canvas flat shadows dpr={[1, 2]} gl={{ antialias: true, alpha: true }}>
+      <Canvas flat shadows={!lowQuality} dpr={lowQuality ? 1 : [1, 2]} gl={{ antialias: true, alpha: true }}>
+        <PerformanceMonitor flipflops={2} onDecline={() => setLowQuality(true)} onFallback={() => setLowQuality(true)} />
         {/* A new community (plan) starts a fresh scene: camera angle, growth state. */}
         <IslandScene
           key={plan.code}
