@@ -231,7 +231,6 @@ describe('houses, villagers, mood', () => {
     for (let stage = 0; stage <= 5; stage++) {
       const l = buildIslandLayout(plan, stateWith({ landStage: stage, houses: residents(10) }));
       expect(l.walkable.length).toBeGreaterThan(0);
-      expect(l.cameraAzimuth).toBe(plan.cameraAzimuth);
     }
   });
 

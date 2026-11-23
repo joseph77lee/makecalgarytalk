@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.29 |
+| Document version | v1.30 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-20 |
+| Last updated | 2026-11-22 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -278,7 +278,7 @@ Community unlock buildings and construction projects are **one building tree**. 
 - Buildings opened by the tree always have land: their resident conditions match the land available at that resident count.
 - First-stage buildings sit around the plaza (a cosy village centre); later buildings get lots in the **newly grown outer land, spread in different directions**, so every growth brings new building spots.
 - **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings; if water would cut the land apart, a small bridge path keeps every part reachable. Land amounts count dry land only; where water sits next to the plaza, the first two stages get a little more dry land (up to 112 / 176 tiles) so the first buildings and Main Street fit.
-- Default camera angle per community fits its shape on a portrait phone (long side vertical).
+- **Map orientation:** every island opens with the same diagonal camera angle, keeping the World Map's orientation (east to the lower right, north to the upper right), so a community looks like its outline on the map (9). A small compass shows where north is and turns when the player rotates the view.
 - UI shows the next growth goal (e.g. "2 more neighbours until the island grows").
 
 ### 7.9 Community identity & feature library
@@ -794,6 +794,14 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-22 — v1.30
+**Changed:** 7.8: the island's default camera angle is the same for every community and keeps the World Map's orientation (instead of turning each community so its long side is vertical); a compass shows north.
+
+**Why:** User request (2026-11-22): a community should look on its island the way it looks on the World Map (e.g. Bayview runs east–west on the map but stood north–south on the island).
+
+**Previous:**
+- 7.8: `- Default camera angle per community fits its shape on a portrait phone (long side vertical).`
 
 ### 2026-11-22 — v1.29
 **Changed:** 5.1: the first visit goes example → nickname → find my community; the World Map opens from "Just look around first" and the 🗺 Calgary button (not as a first-visit step). 9: levels defined by built buildings; shapes as a static file, levels in one request; residential communities only; any community can be visited (view only) with its newspaper, with a "Back home" bar.

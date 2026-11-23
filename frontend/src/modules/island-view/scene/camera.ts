@@ -62,12 +62,18 @@ export function zoomForFrame(frame: ViewFrame, width: number, height: number): n
   return Math.min((width * 0.88) / Math.max(frame.width, 4), (height * 0.62) / Math.max(frame.height, 4));
 }
 
-/** Camera angle for the screen orientation (the stored angle is for portrait). */
-export function screenAzimuth(planAzimuth: number, landscape: boolean): number {
-  const DEFAULT = Math.PI / 4;
-  if (!landscape || Math.abs(planAzimuth - DEFAULT) < 1e-3) return planAzimuth;
-  const options = [planAzimuth + Math.PI / 2, planAzimuth - Math.PI / 2];
-  const dist = (a: number) => Math.abs(Math.atan2(Math.sin(a - DEFAULT), Math.cos(a - DEFAULT)));
-  return dist(options[0]) <= dist(options[1]) ? options[0] : options[1];
-}
+/**
+ * Every island opens with the same diagonal view (requirement.md v1.30 §7.8): the island keeps the
+ * orientation of the World Map (east to the lower right, north to the upper right), so a community
+ * looks like its outline on the map. The angle is the camera's orbit position around the y axis
+ * (0 = camera due south looking north).
+ */
+export const ISLAND_AZIMUTH = Math.PI / 4;
 
+/**
+ * Screen direction of north for a camera looking along (fx, fz) on the ground: radians clockwise
+ * from straight up (0 = north is up). Grid: x = east, z = south.
+ */
+export function northScreenAngle(fx: number, fz: number): number {
+  return Math.atan2(-fx, -fz);
+}

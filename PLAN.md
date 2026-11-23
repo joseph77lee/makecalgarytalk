@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.52 |
+| Plan version | v1.53 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-20 |
-| Based on | `requirement.md` v1.29 |
+| Last updated | 2026-11-22 |
+| Based on | `requirement.md` v1.30 |
 | Current module | M10 World Map (🟨 Ready for playtest) |
 
 ---
@@ -111,7 +111,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] **Whole outline visible from day one** (clouds / translucent future land); new land rises inside it
   - [x] **Lot plan per community generated once and stored** (static JSON, served like other static data): tree building lots reserved at final size, house lots, spare lots, Main Street lots, paths; never regenerated for existing communities
   - [x] Box models for the tree buildings (welcome sign → gateway arch, fire pit → warming hut → community hall, frozen pond → skating rink → lit hockey rink, playground, sledding hill, dog park, pathway lights, community garden, neighbourhood park) and a **generic placeholder** for unknown building keys; remove the M4 showcase miniatures
-  - [x] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land
+  - [x] ~~Default camera angle per community (long side vertical on a portrait phone)~~ replaced in M10 by the World Map orientation (`requirement.md` v1.30 §7.8); growth animation for irregular land
   - [x] Real water from City Hydrology at its real position (not walkable, no lots; bridges if water splits the land) (`requirement.md` v1.19 §7.8)
   - [x] Later-stage lots in newly grown outer land, spread in different directions; first-stage lots around the plaza
   - [x] Locked buildings not drawn on the island; opened buildings as ✨ silhouettes (§7.6)
@@ -414,6 +414,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] tap → zoom + info card → enter community island
   - [x] empty community → invite prompt (M12 invite link naming that community). Animated rivers, CTrain and landmarks are Art Pass (`requirement.md` §9)
   - [x] opens from the 🗺 Calgary button and "Just look around first" (replaces the community list); search a community by name; my community highlighted (`requirement.md` v1.29 §5.1, §9)
+  - [x] island keeps the map's orientation: same diagonal camera angle for every community + compass (`requirement.md` v1.30 §7.8; changes M1's per-community angle)
 - **Definition of Done**
   - [x] all communities render and are tappable on phone
   - [x] loads fast (static data via CDN)
@@ -421,6 +422,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Code:** `frontend/scripts/world_map.py` → `frontend/public/worldmap/calgary.json` (223 residential outlines in metres, Douglas–Peucker 20 m, label points; 60 KB). Migration `20261122120000_gamecore_world_map.sql` (`gamecore.world_map`, RPC `gamecore_world_map`), tests `supabase/tests/database/gamecore_world_map.test.sql` (8). Frontend `frontend/src/modules/world-map/` (`WorldMap` Canvas component, `geometry.ts`, `draw.ts`, `mapText.ts`, tests); island-view exports `MOOD_PALETTES` and `IslandHud` got a `right` slot (🗺 button). The old community list picker is gone (`CommunityPicker` deleted); "Just look around first" opens the map.
   - **Rendering:** grounds and outlines drawn with a world transform from cached `Path2D`s; icons in screen space; icon count = min(level density × km², how many 15 px cells fit) → zoom-dependent detail; unsettled = dashed grey + a faint cloud only where there is room. Pan/pinch/wheel with refs and rAF (no React state per frame); tap = movement under 8 px → hit test → animated zoom + info card. Names: once a community covers 1,200 screen px² (max zoom 0.3 px/m), bigger communities first, overlapping names skipped until more zoom.
   - **Card:** visit any community (the map lists every community with its id; view only, its Community News readable; "👀 Visiting <name> · Back home" bar; Since yesterday only at home); unsettled → also "Invite a friend from <name>" (M12 invite, message "Do you live in <name>? … Be its first resident").
+  - **Island orientation:** `ISLAND_AZIMUTH` (π/4) in `island-view/scene/camera.ts` for every community and screen (portrait and landscape); `screenAzimuth` removed. The stored plans still carry `cameraAzimuth` (unused, kept so the plans decode unchanged; `scripts/island_plans.py` still writes it). Compass (`NorthArrow` in `IslandView.tsx`, lower left above the action panel) turns with the camera through a small listener channel, no React state per frame. Long communities (e.g. Bayview) now look smaller on a portrait phone than before; pinch to zoom.
   - **Not tested / known gaps:** a real phone; crown for the weekly #1 waits for M11; rivers, CTrain, landmarks are Art Pass; an unsettled community's island is mostly empty when visited (by design).
 
 
@@ -503,6 +505,16 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-22 — v1.53
+**Changed:** "Based on" → `requirement.md` v1.30. M10: new item "island keeps the map's orientation" (ticked) and a Handoff note; M1's per-community camera item marked as replaced.
+
+**Why:** User request 2026-11-22: islands should match the World Map's orientation.
+
+**Previous:**
+- Header: `| Plan version | v1.52 |`, `| Last updated | 2026-11-20 |`, `| Based on | `requirement.md` v1.29 |`
+- M10: no orientation item; Handoff without "Island orientation"
+- M1: `  - [x] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land`
 
 ### 2026-11-22 — v1.52
 **Changed:** M10 items ticked; status 🟨 with Handoff.
