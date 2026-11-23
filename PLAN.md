@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.57 |
+| Plan version | v1.58 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
 | Based on | `requirement.md` v1.32 |
-| Current module | M11 Ranking & Share (🟨 Ready for playtest) |
+| Current module | M13 Feature Library (next; M11 ✅ Done) |
 
 ---
 
@@ -50,7 +50,7 @@
 | M9 | Community News | BE + FE | | M8 | ✅ |
 | M15 | Community Posts | FE + BE | | M9 | ✅ |
 | M10 | World Map | FE (2D) + BE | | M5 | ✅ |
-| M11 | Ranking & Share | BE + FE | | M5, M10 | 🟨 |
+| M11 | Ranking & Share | BE + FE | | M5, M10 | ✅ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
 | M14 | Launch Readiness | All | | All above | ⬜ |
@@ -426,7 +426,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; crown for the weekly #1 waits for M11; rivers, CTrain, landmarks are Art Pass; an unsettled community's island is mostly empty when visited (by design).
 
 
-### M11 — Ranking & Share 🟨
+### M11 — Ranking & Share ✅
 **Goal:** Competition and shareable moments.
 - **In scope**
   - [x] weekly ranking (per-1,000 formula, min 5 active verified residents, Monday reset Calgary time); last week fixed on Monday, this week so far cached (`requirement.md` v1.31 §12.1)
@@ -439,12 +439,14 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done**
   - [x] ranking math tested (week boundary at Calgary midnight, 5-resident rule, small population, ties, moves)
   - [x] share card renders correctly on phones; the link preview shows the site image
+  - [x] user has played it (confirmed 2026-11-23, with local demo data: 18 communities, 15 ranked last week)
 - **Handoff**
   - **Code:** migrations `20261123120000_gamecore_ranking_interface.sql` (`gamecore.week_activity`, `gamecore.home_community`) and `20261123120100_ranking.sql` (schema `ranking`: `weeks`, `results`, `live`; RPC `ranking_weekly`), tests `supabase/tests/database/ranking_rules.test.sql` (30). Frontend modules `ranking/` (api, store with 3-minute keep, `RankingSheet`, texts) and `share-cards/` (`drawCard` 1080×1350, `shareImage` = Web Share with files, else download; `ShareCardDialog`). island-view: `captureIsland()` (renders once, copies the WebGL canvas in the same task, crops transparent sky), `reviveIsland()` + `BloomBurst` (big flower patches on free grass, ~7 s, then fold away), compass unchanged. community-state: `ChangesPanel` takes `extra` lines and `onShare`; `revivedToday()`. App wires the Monday line, cards and revival; the World Map has the 🏆 button, sheet and crown.
   - **Decisions:** scores shown with two decimals (real scores are small; one decimal made different ranks look equal). This week's leader shows "#1" in the sheet; only last week's #1 wears 👑 (sheet and map). The ranking uses finished `community_days` + today's live stats, so it matches the streak/Vitality data; last week is fixed by the first read on/after Monday (no cron). Revival is detected on the client from server Vitality values (same as the mood itself) and plays when the "Since yesterday" panel closes. A card's island picture is used only when the card is about the island on screen; otherwise the card shows the event emoji.
   - **Fixed along the way (M10 code):** the World Map's draw loop read statuses/selection from the first render (stale closure); it now reads them through a ref.
   - **Not tested / known gaps:** a real phone's share sheet (desktop test = download path; Web Share with files needs HTTPS on the phone); link preview only checked as an image and meta tags, not in Facebook's debugger (needs the real domain); Monday announcement and revival were checked by patching server responses in the browser (real Monday not waited for); ranking speed with hundreds of active communities (one query per community per day, cached 5 minutes) not load-tested.
-  - **Local demo data:** `rank_demo.sql` style inserts were used for screen checks only (local database; gone after `supabase db reset`).
+  - **Local demo data:** `rank_demo.sql` style inserts were used for screen checks only (local database; gone after `supabase db reset`). For the review, 11 more communities with `@demo.local` residents were added (last week and today's actions); after adding past actions, delete that week's `ranking.results` / `ranking.weeks` rows and `ranking.live` so they are recomputed. Never act for `dev@` / `dev2@` / anonymous accounts.
+  - **Wording (review, requirement v1.32):** player-facing text says "community", never "island" ("Visit this community", "Back to my community", "Community size"); code names (`IslandView`, …) stay.
 
 ### M12 — Invites ✅
 **Goal:** Built-in acquisition.
@@ -514,6 +516,15 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.58
+**Changed:** M11 ✅ Done (DoD "user has played it" added and ticked; Handoff notes on demo data and wording); current module → M13.
+
+**Why:** The user played M11 and confirmed it (2026-11-23); CI green.
+
+**Previous:**
+- Header: `| Plan version | v1.57 |`, `| Current module | M11 Ranking & Share (🟨 Ready for playtest) |`
+- Overview row: `| M11 | Ranking & Share | BE + FE | | M5, M10 | 🟨 |`; heading `### M11 — Ranking & Share 🟨`
 
 ### 2026-11-23 — v1.57
 **Changed:** "Based on" → `requirement.md` v1.32 (player-facing text says "community", not "island"); the wording fix ships on the M11 branch.
