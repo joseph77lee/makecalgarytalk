@@ -1,4 +1,4 @@
-# Launch guide (M14)
+# Launch guide (M16 Deploy & Playtest)
 
 Steps that need the operator's own accounts. Claude Code does everything that runs from this
 repository (linking, migrations, checks) once the accounts exist. Order matters.
@@ -73,7 +73,7 @@ Supabase → Authentication → Users → delete the user. Every game table refe
 with `on delete cascade`, so the player's rows go with it (community totals stay).
 
 ## 10. Before the public launch
-- [ ] Family/friends playtest done, feedback triaged (PLAN.md M14)
+- [ ] Family/friends playtest done, feedback triaged (PLAN.md M16)
 - [ ] Supabase upgraded to **Pro** (no pausing, daily backups)
 - [ ] Low-end phone check on a real device
 - [ ] Error monitoring with Sentry (free plan; requirement.md §20.1 — deferred by the operator on 2026-11-23 until after the family/friends playtest)
