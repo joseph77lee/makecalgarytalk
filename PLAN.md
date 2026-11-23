@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.63 |
+| Plan version | v1.64 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
-| Based on | `requirement.md` v1.35 |
+| Based on | `requirement.md` v1.36 |
 | Current module | M16 Deploy & Playtest (next; M14 ✅ Done) |
 
 ---
@@ -55,6 +55,8 @@
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
 | M16 | Deploy & Playtest | All + operator accounts | | M14 | ⬜ |
+| M17 | Return Reminders | BE + FE | | M16 | ⬜ |
+| M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
 **Order after M7 (user decision 2026-11-20):** M1 🔁 Sleepy mood fix → **M12 Invites** (before M8: bringing neighbours in is the core of the game) → M8 → M9 → **M15 Community Posts** (resident-written local news, right after M9) → M10 → M11 → M13 → M14.
 
@@ -73,7 +75,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M16
+    (all) ── M14 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -519,12 +521,36 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] Google OAuth client (production domain + local redirect); verify Google linking keeps progress and re-join with the same Google account restores the record (moved from M6; code in `frontend/src/modules/identity/`, see M6 Handoff)
   - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6) — SQL check in `docs/launch.md` §2
   - [ ] low-end phone performance pass on a real device (adaptive quality from M14; carried from M1)
-  - [ ] **family/friends playtest**
+  - [ ] **family/friends playtest**, focused on **one pilot community** (e.g. Mahogany) so neighbours actually meet (`requirement.md` v1.36 §22.7)
+  - [ ] read the dashboard after the playtest (first action %, D1, D7) and decide M17's channel (email digest or web push)
   - [ ] before the public launch: Supabase Pro, Sentry error monitoring (deferred 2026-11-23)
 - **Out of scope:** new features (playtest feedback goes to modules as 🔁 or to Phase 2)
 - **Definition of Done**
   - [ ] checklist complete
   - [ ] playtest feedback triaged into modules or Phase 2
+
+### M17 — Return Reminders ⬜
+**Goal:** Players are reminded when their community needs them (`requirement.md` v1.36 §22.7a.1).
+- **In scope** (details decided after M16's playtest data)
+  - [ ] one channel: **email digest** (opted-in players, §18) or **web push** (home-screen web app, iPhone included)
+  - [ ] messages from real community state: streak at risk ("2 more helpers today"), built overnight, land grew, weekly result
+  - [ ] at most one message a day, never at night (Calgary time), one-tap turn off
+- **Definition of Done**
+  - [ ] messages are correct for streak/built/land/weekly cases (tests), limits respected
+  - [ ] D1/D7 compared before and after on the dashboard
+  - [ ] user has looked at it
+
+### M18 — Community Association Partnership ⬜
+**Goal:** The pilot community's association helps bring neighbours in; its notices appear in the community newspaper (`requirement.md` v1.36 §22.7a.2).
+- **In scope**
+  - [ ] operator contacts the pilot association: newsletter / social media mention; permission to show notices
+  - [ ] operator-maintained feed list (community, association, feed URL, permission)
+  - [ ] daily read of the feeds (robots.txt respected), notices stored as title, date, link; simple word filter
+  - [ ] "📢 From <association>" lines in the community newspaper, linking to the original
+- **Out of scope:** copying notice text, Facebook/Instagram-only associations, associations that did not agree
+- **Definition of Done**
+  - [ ] only permitted feeds are read; broken feeds do not break the newspaper (tests)
+  - [ ] user has looked at it
 
 ---
 
@@ -544,6 +570,16 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.64
+**Changed:** Growth order after launch: M16 playtest focuses on one pilot community and ends with a dashboard review; new **M17 Return Reminders** (email digest or web push, chosen from the data) and **M18 Community Association Partnership** (newsletter mention + association notices as title/link in the newspaper). Overview and diagram updated. "Based on" → `requirement.md` v1.36.
+
+**Why:** User decision (2026-11-23): this order makes the site active — density first, then reminders, then associations as a distribution channel.
+
+**Previous:**
+- Header: `| Plan version | v1.63 |`, `| Based on | \`requirement.md\` v1.35 |`
+- M16: `  - [ ] **family/friends playtest**` (no pilot focus, no dashboard review item)
+- Overview: no M17/M18 rows; diagram `    (all) ── M14 ── M16`
 
 ### 2026-11-23 — v1.63
 **Changed:** M14 split: **M14 Launch Prep** ✅ (everything built and checked locally) and new **M16 Deploy & Playtest** ⬜ (production deploy, Google OAuth, production tzdata, real low-end phone, family/friends playtest, Pro + Sentry before the public launch). References to "M14" for deploy-time checks in M0/M1/M6 now say M16; dependency diagram and overview updated.
