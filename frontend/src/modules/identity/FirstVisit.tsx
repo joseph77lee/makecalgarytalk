@@ -45,7 +45,17 @@ export function FirstVisit({ banner }: { banner?: ReactNode }) {
           <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl">
             <h2 className="mb-4 text-lg font-bold text-slate-800">Make your villager</h2>
             <ProfileForm submitLabel="Start" onSubmit={saveProfile} />
-            <p className="mt-3 text-center text-[11px] text-slate-400">For Calgary residents aged 13+.</p>
+            <p className="mt-3 text-center text-[11px] text-slate-400">
+              For Calgary residents aged 13+. By tapping Start you confirm you are 13 or older and agree to the{' '}
+              <a href="/terms.html" target="_blank" rel="noreferrer" className="underline">
+                Terms
+              </a>{' '}
+              and{' '}
+              <a href="/privacy.html" target="_blank" rel="noreferrer" className="underline">
+                Privacy Policy
+              </a>
+              .
+            </p>
           </div>
         </div>
       )}

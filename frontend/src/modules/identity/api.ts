@@ -34,7 +34,38 @@ async function call(client: SupabaseClient, fn: string, args?: Record<string, un
   return data;
 }
 
+/** Optional email updates (requirement.md §18, CASL): explicit opt-in only. */
+export interface EmailUpdates {
+  on: boolean;
+  email: string | null;
+}
+
+/** Wording next to the checkbox; must match identity.email_consent_version() on the server. */
+export const EMAIL_CONSENT_TEXT =
+  'Yes, email me occasional updates about MakeCalgaryTalk (new features, big community moments). I can unsubscribe anytime.';
+
+export function isEmailUpdates(v: unknown): v is EmailUpdates {
+  const o = v as Record<string, unknown> | null;
+  return !!o && typeof o.on === 'boolean' && (o.email === null || typeof o.email === 'string');
+}
+
+/** Same rule as the server: something@something.tld, at most 254 characters. */
+export const isEmail = (text: string): boolean => {
+  const t = text.trim();
+  return t.length <= 254 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t);
+};
+
 export const identityApi = {
+  async getEmailUpdates(c: SupabaseClient): Promise<EmailUpdates> {
+    const data = await call(c, 'identity_get_email_updates');
+    if (!isEmailUpdates(data)) throw new Error('Unexpected server response: email updates');
+    return data;
+  },
+  async setEmailUpdates(c: SupabaseClient, email: string | null, on: boolean): Promise<EmailUpdates> {
+    const data = await call(c, 'identity_set_email_updates', { p_email: email, p_on: on });
+    if (!isEmailUpdates(data)) throw new Error('Unexpected server response: email updates');
+    return data;
+  },
   async getProfile(c: SupabaseClient): Promise<ServerIdentity> {
     const data = await call(c, 'identity_get_profile');
     assertIdentity(data);

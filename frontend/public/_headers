@@ -1,0 +1,16 @@
+# Cloudflare Pages headers (requirement.md v1.35 §20). Docs: https://developers.cloudflare.com/pages/configuration/headers/
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=()
+
+# Hashed build files never change
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Static game data (island plans, World Map): cached a day at the edge and in browsers
+/islands/*
+  Cache-Control: public, max-age=86400
+/worldmap/*
+  Cache-Control: public, max-age=86400

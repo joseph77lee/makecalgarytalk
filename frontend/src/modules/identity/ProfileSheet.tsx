@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { EmailUpdatesSection } from './EmailUpdatesSection';
 import { ProfileForm } from './ProfileForm';
+import { LegalLinks } from './LegalLinks';
 import { GOOGLE_LINKING, useIdentity } from './liveStore';
 import { shirtColor } from './shirts';
 
@@ -76,6 +78,8 @@ function ProfileSheet({ onClose, children }: { onClose: () => void; children?: R
             {googleError && <p className="mt-2 text-xs text-rose-600">{googleError}</p>}
           </div>
         )}
+        <EmailUpdatesSection />
+        <LegalLinks className="mt-4" />
       </div>
     </div>
   );

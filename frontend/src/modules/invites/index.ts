@@ -4,4 +4,4 @@ export { InviteFab } from './InviteFab';
 export { InviteSection } from './InviteSection';
 export { WelcomeCard } from './WelcomeCard';
 export { inviteNudge, shareOutcomeText } from './inviteText';
-export { useInvites } from './liveStore';
+export { arrivedByInvite, useInvites } from './liveStore';

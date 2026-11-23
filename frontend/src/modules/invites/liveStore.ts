@@ -12,6 +12,8 @@ function safeStorage(): Storage | null {
 }
 
 const linkCode = inviteCodeFromSearch(window.location.search);
+/** The page was opened from an invite link (analytics). */
+export const arrivedByInvite = linkCode !== null;
 // Keep the address bar clean (and avoid re-sharing someone else's code by copying it).
 if (linkCode) window.history.replaceState(null, '', withoutInvite(window.location.href));
 

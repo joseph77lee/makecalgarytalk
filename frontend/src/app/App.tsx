@@ -3,7 +3,9 @@ import { Avatar, moveTo } from '../modules/avatar';
 import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen, revivedToday, type ChangeCard, type ChangeItem } from '../modules/community-state';
 import { ActionBar, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
-import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
+import { AdminDashboard } from '../modules/admin';
+import { track } from '../modules/analytics';
+import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, arrivedByInvite, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
 import { NewspaperPanel, newsBuildingKeys, newsReady, useNews } from '../modules/news';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import { useRanking, weeklyAnnouncement, weeklyCardTitle } from '../modules/ranking';
@@ -26,6 +28,8 @@ import {
 const params = new URLSearchParams(window.location.search);
 /** `?mock` shows the M1 mock island with its dev panel (no server needed). */
 const mockMode = params.has('mock');
+/** `?admin` shows the operator dashboard (operators only, checked by the server). */
+const adminMode = params.has('admin');
 
 export function App() {
   return mockMode ? <MockApp /> : <IdentityGate />;
@@ -38,7 +42,7 @@ function IdentityGate() {
   useEffect(() => {
     void init();
   }, [init]);
-  if (status === 'ready') return <LiveApp />;
+  if (status === 'ready') return adminMode ? <AdminDashboard /> : <LiveApp />;
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-gradient-to-b from-sky-100 to-indigo-50">
       <FirstVisit banner={<InviteLandingBanner />} />
@@ -66,6 +70,14 @@ function LiveApp() {
   const [shareCard, setShareCard] = useState<{ card: ShareCard; island: HTMLCanvasElement | null } | null>(null);
   const member = server?.me?.member === true;
   const homeId = member ? server?.community.id : undefined;
+  // Own analytics (§21): today's visit and the community on screen; an invite-link arrival once.
+  const shownCode = server?.community.code ?? null;
+  useEffect(() => {
+    if (status === 'ready') track.visit(shownCode);
+  }, [status, shownCode]);
+  useEffect(() => {
+    if (arrivedByInvite) track.inviteVisit();
+  }, []);
   useEffect(() => {
     // Monday: last week's result for "Since yesterday" (§12.1). Cached on the server.
     if (homeId) void useRanking.getState().load();
@@ -91,6 +103,7 @@ function LiveApp() {
       .getState()
       .invite(name)
       .then((o) => {
+        if (o === 'shared' || o === 'copied') track.share('invite');
         const text = shareOutcomeText(o);
         if (text) useDailyActions.getState().showToast(text);
       });
@@ -270,6 +283,7 @@ function LiveApp() {
           island={shareCard.island}
           onClose={() => setShareCard(null)}
           onResult={(m) => m && useDailyActions.getState().showToast(m)}
+          onShared={(kind) => track.share(kind)}
         />
       )}
       <NewspaperPanel />
