@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.53 |
+| Plan version | v1.54 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-22 |
 | Based on | `requirement.md` v1.30 |
-| Current module | M10 World Map (🟨 Ready for playtest) |
+| Current module | M11 Ranking & Share (next; M10 ✅ Done) |
 
 ---
 
@@ -49,7 +49,7 @@
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
 | M9 | Community News | BE + FE | | M8 | ✅ |
 | M15 | Community Posts | FE + BE | | M9 | ✅ |
-| M10 | World Map | FE (2D) + BE | | M5 | 🟨 |
+| M10 | World Map | FE (2D) + BE | | M5 | ✅ |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
@@ -404,7 +404,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; no notification for authors; no operator UI; links/photos stay out (decision).
 
 
-### M10 — World Map 🟨
+### M10 — World Map ✅
 **Goal:** See all of Calgary and spread to empty communities.
 - **In scope**
   - [x] 2D map from real community boundary polygons (Canvas)
@@ -505,6 +505,16 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-22 — v1.54
+**Changed:** M10 ✅ Done; current module → M11.
+
+**Why:** The user played M10 and confirmed it (2026-11-22); CI green.
+
+**Previous:**
+- Header: `| Plan version | v1.53 |`, `| Current module | M10 World Map (🟨 Ready for playtest) |`
+- Overview: `| M10 | World Map | FE (2D) + BE | | M5 | 🟨 |`
+- M10: `### M10 — World Map 🟨`
 
 ### 2026-11-22 — v1.53
 **Changed:** "Based on" → `requirement.md` v1.30. M10: new item "island keeps the map's orientation" (ticked) and a Handoff note; M1's per-community camera item marked as replaced.
