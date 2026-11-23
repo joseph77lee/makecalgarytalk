@@ -28,6 +28,11 @@ export function inviteMessage(communityName: string | null): string {
     : 'Help build your Calgary community on MakeCalgaryTalk! Neighbours grow it together, a few taps a day. 🏡';
 }
 
+/** Invite for a friend in another (unsettled) community: start it together. */
+export function startCommunityMessage(communityName: string): string {
+  return `Do you live in ${communityName}? Nobody has settled it on MakeCalgaryTalk yet. Be its first resident and grow it with your neighbours! 🏡`;
+}
+
 export function landingText(l: InviteLanding): string {
   const who = l.nickname ?? 'A neighbour';
   return l.community ? `${who} invited you to build ${l.community} together` : `${who} invited you to build your community together`;

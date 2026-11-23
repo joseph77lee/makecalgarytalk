@@ -6,7 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { invitesApi, type InviteLanding, type ServerInvites } from './api';
-import { inviteMessage, inviteUrl, type ShareOutcome } from './inviteText';
+import { inviteMessage, inviteUrl, startCommunityMessage, type ShareOutcome } from './inviteText';
 
 export interface ShareEnv {
   share?: (data: { title: string; text: string; url: string }) => Promise<void>;
@@ -30,8 +30,8 @@ export interface InvitesState {
   /** Signed in: accepts a remembered invite (once), then loads my invite data. */
   init: () => Promise<void>;
   reload: () => Promise<void>;
-  /** Shares my invite link for a community; tells how it went. */
-  invite: (communityName: string | null) => Promise<ShareOutcome>;
+  /** Shares my invite link for my community, or (`start`) for a friend to start another community. */
+  invite: (communityName: string | null, mode?: 'mine' | 'start') => Promise<ShareOutcome>;
   /** Communities whose welcome card was seen on this device (once per community). */
   welcomedIds: string[];
   markWelcomed: (communityId: string) => void;
@@ -112,12 +112,12 @@ export function createInvitesStore(deps: InvitesDeps) {
       }
     },
 
-    async invite(communityName) {
+    async invite(communityName, mode = 'mine') {
       if (!get().mine) await get().reload();
       const code = get().mine?.code;
       if (!code) return 'failed';
       const url = inviteUrl(deps.origin, code);
-      const text = inviteMessage(communityName);
+      const text = mode === 'start' && communityName ? startCommunityMessage(communityName) : inviteMessage(communityName);
       const env = deps.shareEnv();
       if (env.share) {
         try {

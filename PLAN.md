@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.51 |
+| Plan version | v1.52 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Based on | `requirement.md` v1.29 |
-| Current module | M10 World Map (in progress; M15 ✅ Done) |
+| Current module | M10 World Map (🟨 Ready for playtest) |
 
 ---
 
@@ -49,7 +49,7 @@
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
 | M9 | Community News | BE + FE | | M8 | ✅ |
 | M15 | Community Posts | FE + BE | | M9 | ✅ |
-| M10 | World Map | FE (2D) + BE | | M5 | 🟦 |
+| M10 | World Map | FE (2D) + BE | | M5 | 🟨 |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
@@ -404,19 +404,25 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; no notification for authors; no operator UI; links/photos stay out (decision).
 
 
-### M10 — World Map 🟦
+### M10 — World Map 🟨
 **Goal:** See all of Calgary and spread to empty communities.
 - **In scope**
-  - [ ] 2D map from real community boundary polygons (Canvas)
-  - [ ] **small development illustrations inside each polygon** by level (houses + welcome sign → playground / skating rink → community hall → neighbourhood park), settled = Welcome sign built, Vitality mood (ground/roof tone, lights), grey dashed + cloud for unsettled
-  - [ ] icon count scaled by polygon area
-  - [ ] zoom-dependent detail
-  - [ ] tap → zoom + info card → enter community island
-  - [ ] empty community → invite prompt (M12 invite link naming that community). Animated rivers, CTrain and landmarks are Art Pass (`requirement.md` §9)
-  - [ ] opens from the 🗺 Calgary button and "Just look around first" (replaces the community list); search a community by name; my community highlighted (`requirement.md` v1.29 §5.1, §9)
+  - [x] 2D map from real community boundary polygons (Canvas)
+  - [x] **small development illustrations inside each polygon** by level (houses + welcome sign → playground / skating rink → community hall → neighbourhood park), settled = Welcome sign built, Vitality mood (ground/roof tone, lights), grey dashed + cloud for unsettled
+  - [x] icon count scaled by polygon area
+  - [x] zoom-dependent detail
+  - [x] tap → zoom + info card → enter community island
+  - [x] empty community → invite prompt (M12 invite link naming that community). Animated rivers, CTrain and landmarks are Art Pass (`requirement.md` §9)
+  - [x] opens from the 🗺 Calgary button and "Just look around first" (replaces the community list); search a community by name; my community highlighted (`requirement.md` v1.29 §5.1, §9)
 - **Definition of Done**
-  - [ ] all communities render and are tappable on phone
-  - [ ] loads fast (static data via CDN)
+  - [x] all communities render and are tappable on phone
+  - [x] loads fast (static data via CDN)
+- **Handoff**
+  - **Code:** `frontend/scripts/world_map.py` → `frontend/public/worldmap/calgary.json` (223 residential outlines in metres, Douglas–Peucker 20 m, label points; 60 KB). Migration `20261122120000_gamecore_world_map.sql` (`gamecore.world_map`, RPC `gamecore_world_map`), tests `supabase/tests/database/gamecore_world_map.test.sql` (8). Frontend `frontend/src/modules/world-map/` (`WorldMap` Canvas component, `geometry.ts`, `draw.ts`, `mapText.ts`, tests); island-view exports `MOOD_PALETTES` and `IslandHud` got a `right` slot (🗺 button). The old community list picker is gone (`CommunityPicker` deleted); "Just look around first" opens the map.
+  - **Rendering:** grounds and outlines drawn with a world transform from cached `Path2D`s; icons in screen space; icon count = min(level density × km², how many 15 px cells fit) → zoom-dependent detail; unsettled = dashed grey + a faint cloud only where there is room. Pan/pinch/wheel with refs and rAF (no React state per frame); tap = movement under 8 px → hit test → animated zoom + info card.
+  - **Card:** visit any community with a snapshot (level > 0 or residents); unsettled → "Invite a friend from <name>" (M12 invite, message "Do you live in <name>? … Be its first resident").
+  - **Not tested / known gaps:** a real phone; crown for the weekly #1 waits for M11; rivers, CTrain, landmarks are Art Pass; communities without a snapshot (no residents) cannot be visited from the map (their island would be empty).
+
 
 ### M11 — Ranking & Share ⬜
 **Goal:** Competition and shareable moments.
@@ -497,6 +503,18 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-22 — v1.52
+**Changed:** M10 items ticked; status 🟨 with Handoff.
+
+**Why:** M10 implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.51 |`
+- Header: `| Current module | M10 World Map (in progress; M15 ✅ Done) |`
+- Overview: `| M10 | World Map | FE (2D) + BE | | M5 | 🟦 |`
+- M10: `### M10 — World Map 🟦`
+- M10: all checklist items were `- [ ]`; no Handoff
 
 ### 2026-11-22 — v1.51
 **Changed:** "Based on" → `requirement.md` v1.29. M10 🟦 in progress; invite uses M12; entry points and search added.
