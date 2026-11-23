@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.50 |
+| Plan version | v1.51 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
-| Based on | `requirement.md` v1.28 |
-| Current module | M10 World Map (next; M15 ✅ Done) |
+| Based on | `requirement.md` v1.29 |
+| Current module | M10 World Map (in progress; M15 ✅ Done) |
 
 ---
 
@@ -49,7 +49,7 @@
 | M8 | Residents & Villagers | FE + BE | | M5, M7 | ✅ |
 | M9 | Community News | BE + FE | | M8 | ✅ |
 | M15 | Community Posts | FE + BE | | M9 | ✅ |
-| M10 | World Map | FE (2D) + BE | | M5 | ⬜ |
+| M10 | World Map | FE (2D) + BE | | M5 | 🟦 |
 | M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
@@ -404,7 +404,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; no notification for authors; no operator UI; links/photos stay out (decision).
 
 
-### M10 — World Map ⬜
+### M10 — World Map 🟦
 **Goal:** See all of Calgary and spread to empty communities.
 - **In scope**
   - [ ] 2D map from real community boundary polygons (Canvas)
@@ -412,7 +412,8 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] icon count scaled by polygon area
   - [ ] zoom-dependent detail
   - [ ] tap → zoom + info card → enter community island
-  - [ ] empty community → invite prompt (link placeholder until M12). Animated rivers, CTrain and landmarks are Art Pass (`requirement.md` §9)
+  - [ ] empty community → invite prompt (M12 invite link naming that community). Animated rivers, CTrain and landmarks are Art Pass (`requirement.md` §9)
+  - [ ] opens from the 🗺 Calgary button and "Just look around first" (replaces the community list); search a community by name; my community highlighted (`requirement.md` v1.29 §5.1, §9)
 - **Definition of Done**
   - [ ] all communities render and are tappable on phone
   - [ ] loads fast (static data via CDN)
@@ -496,6 +497,19 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-22 — v1.51
+**Changed:** "Based on" → `requirement.md` v1.29. M10 🟦 in progress; invite uses M12; entry points and search added.
+
+**Why:** M10 started; user decision 2026-11-22.
+
+**Previous:**
+- Header: `| Plan version | v1.50 |`
+- Header: `| Based on | `requirement.md` v1.28 |`
+- Header: `| Current module | M10 World Map (next; M15 ✅ Done) |`
+- Overview: `| M10 | World Map | FE (2D) + BE | | M5 | ⬜ |`
+- M10: `### M10 — World Map ⬜`
+- M10: `  - [ ] empty community → invite prompt (link placeholder until M12). Animated rivers, CTrain and landmarks are Art Pass (`requirement.md` §9)`
 
 ### 2026-11-22 — v1.50
 **Changed:** M15 ✅ Done (user confirmed). Header → M10 next.

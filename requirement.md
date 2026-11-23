@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.28 |
+| Document version | v1.29 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-20 |
 | Status | Initial draft for starting MVP development |
@@ -84,8 +84,8 @@ The service grows in this order; features are judged by how they serve it. The *
 ## 5. Core user flows
 
 ### 5.1 First visit (60 seconds)
-1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → snowy pastel **Calgary World Map**. Shown on the first visit only; afterwards it is available from the build map ("See a finished example"), not on every entry
-2. "Which community do you live in?" → allow location
+1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → nickname and shirt. Shown on the first visit only; afterwards the example is available from the build map ("See a finished example"), not on every entry
+2. "Which community do you live in?" → allow location. "Just look around first" opens the **Calgary World Map** (9) instead; the map is also always one tap away (🗺 Calgary button)
 3. Tap into their community → the community's voxel diorama island appears, with **my avatar** standing in it
 4. First action click → **immediate visible change**
    - Empty community: fog clears, "You are the Founding Resident!"
@@ -315,15 +315,16 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Not 3D: rendering ~200 islands at once is too heavy for phones. Keeps the first screen light.
 - **Each community polygon shows its development with small illustrations inside it**, not just a colour (prototype demo built 2026-11-16):
 
-| Development level | Shown inside the polygon |
-|---|---|
-| Unsettled | Grey dashed boundary, a cloud, empty ground |
-| 1 | A couple of small houses + welcome sign |
-| 2 | More houses + playground / skating rink |
-| 3 | Houses + community hall with flag |
-| 4 | Dense houses + community hall + neighbourhood park |
+| Development level | Built buildings (7.6) | Shown inside the polygon |
+|---|---|---|
+| Unsettled | no Welcome sign | Grey dashed boundary, a cloud, empty ground |
+| 1 | Welcome sign | A couple of small houses + welcome sign |
+| 2 | + Playground or Skating rink | More houses + playground / skating rink |
+| 3 | + Community hall | Houses + community hall with flag |
+| 4 | + Neighbourhood park | Dense houses + community hall + neighbourhood park |
 
-  - Level is derived from cumulative Verified Residents and unlocked buildings (same data as the island; 7.6, 7.8)
+  - Level comes from the community's built buildings (same data as the island; 7.6, 7.8); the map loads the shapes as a static file and the levels, moods and resident counts in one request
+  - Shown for the 223 residential communities
   - **Vitality is shown through mood**: lively = green ground, window lights, flowers; normal = plain; sleepy = snowy ground and trees under a dusk sky
   - Crown on this week's #1 community
   - Illustrations use the **same designs as the island buildings** so the map and islands feel like one world
@@ -792,6 +793,16 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-22 — v1.29
+**Changed:** 5.1: the first visit goes example → nickname → find my community; the World Map opens from "Just look around first" and the 🗺 Calgary button (not as a first-visit step). 9: levels defined by built buildings; shapes as a static file, levels in one request; residential communities only.
+
+**Why:** User decision for M10 (2026-11-22): keep the first visit short; levels need an exact definition.
+
+**Previous:**
+- 5.1: `1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → snowy pastel **Calgary World Map**. Shown on the first visit only; afterwards it is available from the build map ("See a finished example"), not on every entry`
+- 5.1: `2. "Which community do you live in?" → allow location`
+- 9: level table without building conditions; `  - Level is derived from cumulative Verified Residents and unlocked buildings (same data as the island; 7.6, 7.8)`
 
 ### 2026-11-20 — v1.28
 **Changed:** 14 rewritten as **Community posts** for the MVP: Verified Residents only, opens with the Welcome sign, 1 post a day, 300 characters, 4 kinds, no links/photos, 3-day visibility, own-post delete, phone/address blocking, report points (Verified 2, others 1, 3 hides), operator blocks, thanks and the Community Reporter badge (10 thanks).
