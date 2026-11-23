@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.35 |
+| Document version | v1.36 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-23 |
 | Status | Initial draft for starting MVP development |
@@ -745,8 +745,14 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ### 22.7 Launch
 - Supabase **Free** plan for the family/friends playtest; upgrade to **Pro** (no pausing, daily backups) right before the public launch
+- **Pilot community first**: the game is only fun with neighbours, so the playtest and the first push focus on **one or two pilot communities** (e.g. Mahogany) until their islands visibly grow; other communities then see them on the World Map. Opening the whole city at once leaves most islands empty
+- Decisions after the playtest are made from the operator dashboard (21): low first-action % → first screens/onboarding; low D1 → return reasons and reminders; low D7 → neighbour density
 - After family/friends testing, post on r/Calgary and community Facebook groups with a "Calgary dev made this" story
 - After the initial spark, growth comes from in-game invite/share mechanics
+
+### 22.7a Growth after launch (in this order)
+1. **Return reminders** (right after the playtest): the game already has reasons to come back (streak, daily energy, overnight construction) but no way to tell players. Either an **email digest** for players who opted in (18) — e.g. "Mahogany's 15-day streak needs 2 more helpers today", "The skating rink was finished overnight" — or **web push** (works on phones once the site is added to the home screen, iPhone included). Which one is decided from the playtest data; at most one message a day, easy to turn off, never at night
+2. **Community association partnership** (pilot community first): ask the association to mention the game in its newsletter / social media; in return the community newspaper (11) shows the association's notices — **title, date and a link to the original only** (no copied text), from an operator-maintained list of feeds (community, association, feed URL, permission), read once a day, respecting robots.txt, with a simple word filter. Only associations whose site has a feed (e.g. WordPress RSS) and that agreed are included; Facebook/Instagram-only associations are out of scope
 
 ### 22.8 Open items
 - [ ] Pastel palette and lighting values (before the Art Pass); save reference screenshots in `docs/references/`
@@ -811,6 +817,19 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.36
+**Changed:** 22.7: pilot community first; post-playtest decisions from the dashboard. New 22.7a Growth after launch: 1. return reminders (email digest or web push, chosen from playtest data), 2. community association partnership with association notices (title + link) in the newspaper.
+
+**Why:** User discussion (2026-11-23) on how to make the site active: neighbour density, a way to remind players, and associations as a distribution channel matter more than scraping notices on their own (low volume, sends players away).
+
+**Previous:**
+- 22.7 (verbatim):
+  > ### 22.7 Launch
+  > - Supabase **Free** plan for the family/friends playtest; upgrade to **Pro** (no pausing, daily backups) right before the public launch
+  > - After family/friends testing, post on r/Calgary and community Facebook groups with a "Calgary dev made this" story
+  > - After the initial spark, growth comes from in-game invite/share mechanics
+- 22.7a: (none)
 
 ### 2026-11-23 — v1.35
 **Changed:** 18: contact email, legal page paths, first-visit agreement line, data hosted in Canada, deletion on request within 30 days, email opt-in details (CASL), data credits. 20.1: analytics = own in Supabase + Cloudflare Web Analytics. 21: operator screen and access, spike rule, dashboard figures and definitions, analytics data limits. 22.7: Supabase Free during the playtest, Pro before the public launch. 22.8: analytics tool and legal wording closed.
