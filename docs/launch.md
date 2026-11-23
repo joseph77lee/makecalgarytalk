@@ -76,3 +76,4 @@ with `on delete cascade`, so the player's rows go with it (community totals stay
 - [ ] Family/friends playtest done, feedback triaged (PLAN.md M14)
 - [ ] Supabase upgraded to **Pro** (no pausing, daily backups)
 - [ ] Low-end phone check on a real device
+- [ ] Error monitoring with Sentry (free plan; requirement.md §20.1 — deferred by the operator on 2026-11-23 until after the family/friends playtest)
