@@ -9,6 +9,7 @@
  */
 import { vitalityMood, type VitalityMood } from './mood';
 import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
+import { featuresFor, type CommunityFeature, type FeatureKey } from './plan/features';
 import {
   PLAZA,
   houseLotOrder,
@@ -34,6 +35,11 @@ export const FIXED_ASSET_KEYS = [
   'construction-site',
   'silhouette',
   'reserved-plot',
+  'feature',
+  'rail',
+  'track',
+  'station',
+  'rail-end',
 ] as const;
 export type FixedAssetKey = (typeof FIXED_ASSET_KEYS)[number];
 /** `building.<key>` draws a built building of the tree (or the placeholder for unknown keys). */
@@ -63,6 +69,16 @@ export type PlacedObject =
   | (Base & Footprint & { assetKey: 'construction-site'; buildingKey: string; title: string; progress: number; level: number })
   | (Base & Footprint & { assetKey: 'silhouette'; buildingKey: string; title: string; ready: boolean; remaining: Remaining | null })
   | (Base & Footprint & { assetKey: 'reserved-plot'; lotKind: string })
+  /** A signature feature (requirement.md §7.9) on a spare lot; appears when its land has risen. */
+  | (Base & Footprint & { assetKey: 'feature'; featureKey: FeatureKey; name: string | null })
+  /** One CTrain track tile under the line: drawn only as a rail bridge (over water) or a level crossing (path). */
+  | (Base & { assetKey: 'rail'; links: RailLinks; overWater: boolean; crossing: boolean })
+  /** A stretch of CTrain track between two smoothed points (world coordinates; the object sits at the first). */
+  | (Base & { assetKey: 'track'; dx: number; dz: number })
+  /** A CTrain station platform beside the track (real position). */
+  | (Base & Footprint & { assetKey: 'station'; name: string; lines: string[]; along: 'x' | 'z' })
+  /** Sign where the track leaves the island: the next station beyond. */
+  | (Base & { assetKey: 'rail-end'; next: string; dir: Tile })
   | (Base &
       Footprint & {
         assetKey: `building.${string}`;
@@ -78,6 +94,24 @@ export type PlacedObject =
 export type ObjectOf<K extends PlacedObject['assetKey']> = Extract<PlacedObject, { assetKey: K }>;
 export type BuildingObject = Extract<PlacedObject, { assetKey: `building.${string}` }>;
 
+export interface RailLinks {
+  /** +x, -x, +z, -z neighbours connected by rails. */
+  px: boolean;
+  nx: boolean;
+  pz: boolean;
+  nz: boolean;
+}
+
+/** A track run in order, for the trains (tiles with their land stage). */
+export interface RailRoute {
+  line: string;
+  tiles: (Tile & { stage: number })[];
+  /** Smoothed track line through the tile centres (world x, z), one point per tile. */
+  points: { x: number; z: number }[];
+  /** Indices of tiles next to a station platform (trains stop there). */
+  stops: number[];
+}
+
 export interface IslandTile extends Tile {
   kind: 'grass' | 'path' | 'water' | 'bridge';
   stage: number;
@@ -92,6 +126,8 @@ export interface IslandLayout {
   /** The rest of the real outline (future land). */
   futureTiles: Tile[];
   objects: PlacedObject[];
+  /** CTrain track runs (all of them; the scene shows the parts on risen land). */
+  railRoutes: RailRoute[];
   walkable: Tile[];
   /** Radius (tiles) of the current land around the plaza, for camera fitting. */
   landRadius: number;
@@ -120,7 +156,7 @@ const N4: Tile[] = [
   { x: 0, z: -1 },
 ];
 
-export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): IslandLayout {
+export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, features: CommunityFeature[] = featuresFor(plan.code)): IslandLayout {
   const landStage = state.landStage;
   const mood: VitalityMood = state.vitality === null ? 'normal' : vitalityMood(state.vitality);
   const stages = stageMap(plan);
@@ -151,13 +187,26 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
   const freeSpares: { key: string; rect: LotRect }[] = [];
   const usedLots: string[] = [];
   const freeMainStreet: { key: string; rect: LotRect }[] = [];
+  const featureQueue = [...features];
   for (const [lotKey, spec] of Object.entries(BUILDING_TREE.lots)) {
     const rect = plan.lots[lotKey];
     const rTiles = lotTiles(rect);
     const stage = Math.max(...rTiles.map(stageOf), spec.landStage);
     const base = { ...centreOf(rect), w: rect.w, d: rect.d, stage };
+    const onLand = spec.landStage <= landStage && rTiles.every(on);
+    // Signature features take the spare lots in plan order, on land or not (§7.9).
+    // A feature keeps its lot while the land is still to come, and appears with that land.
+    if (spec.kind === 'spare' && featureQueue.length > 0) {
+      const f = featureQueue.shift() as CommunityFeature;
+      if (onLand) {
+        objects.push({ ...base, id: `feature:${f.key}`, assetKey: 'feature', featureKey: f.key, name: f.name });
+        usedLots.push(lotKey);
+        rTiles.forEach((t) => occupied.add(tileKey(t)));
+      }
+      continue;
+    }
     // Lots not open yet, spare lots and lots without a building yet stay plain (walkable) land.
-    if (spec.landStage > landStage || !rTiles.every(on)) continue;
+    if (!onLand) continue;
     if (spec.kind === 'spare') {
       freeSpares.push({ key: lotKey, rect });
       continue;
@@ -237,6 +286,76 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     objects.push({ ...centreOf(m.rect), w: m.rect.w, d: m.rect.d, stage: BUILDING_TREE.lots[m.key].landStage, id: `lot:${m.key}`, assetKey: 'reserved-plot', lotKind: 'main-street' });
   }
 
+  // CTrain (requirement.md §7.9): track tiles, station platforms and next-station signs on land.
+  const railRoutes: RailRoute[] = [];
+  const links = new Map<string, RailLinks>();
+  const link = (a: Tile, b: Tile) => {
+    const l = links.get(tileKey(a)) ?? { px: false, nx: false, pz: false, nz: false };
+    if (b.x > a.x) l.px = true;
+    else if (b.x < a.x) l.nx = true;
+    else if (b.z > a.z) l.pz = true;
+    else l.nz = true;
+    links.set(tileKey(a), l);
+  };
+  const stationTiles = plan.stations.map((st) => lotTiles(st.rect));
+  for (const run of plan.rail) {
+    run.tiles.forEach((t, i) => {
+      if (i > 0) link(t, run.tiles[i - 1]);
+      if (i < run.tiles.length - 1) link(t, run.tiles[i + 1]);
+    });
+    const stops = run.tiles.flatMap((t, i) =>
+      stationTiles.some((tiles) => tiles.some((s) => Math.abs(s.x - t.x) + Math.abs(s.z - t.z) === 1)) ? [i] : [],
+    );
+    const points = smoothTrack(run.tiles);
+    railRoutes.push({ line: run.line, tiles: run.tiles.map((t) => ({ ...t, stage: stageOf(t) })), points, stops });
+    // Rails follow the smoothed line, so diagonal runs look straight instead of stair-stepped.
+    const ends = plan.railEnds.filter((e) => run.tiles.some((t) => t.x === e.tile.x && t.z === e.tile.z));
+    const line = [...points];
+    for (const e of ends) {
+      const out = { x: e.tile.x + 0.5 + e.dir.x * 0.5, z: e.tile.z + 0.5 + e.dir.z * 0.5 };
+      if (run.tiles[0].x === e.tile.x && run.tiles[0].z === e.tile.z) line.unshift(out);
+      else line.push(out);
+    }
+    const tileStage = (pt: { x: number; z: number }) => stageOf({ x: Math.floor(pt.x), z: Math.floor(pt.z) });
+    for (let i = 1; i < line.length; i++) {
+      const a = line[i - 1];
+      const b = line[i];
+      const st = Math.max(tileStage(a), tileStage(b));
+      if (st > landStage) continue;
+      objects.push({ assetKey: 'track', id: `track:${run.line}:${tileKey(run.tiles[0])}:${i}`, x: a.x, z: a.z, stage: st, dx: b.x - a.x, dz: b.z - a.z });
+    }
+  }
+  for (const e of plan.railEnds) link(e.tile, { x: e.tile.x + e.dir.x, z: e.tile.z + e.dir.z });
+  for (const [k, l] of links) {
+    const [x, z] = k.split(',').map(Number);
+    const t = { x, z };
+    if (!on(t)) continue;
+    occupied.add(k); // no flowers or snow piles on the track
+    const overWater = waterKeys.has(k);
+    const crossing = pathKeys.has(k);
+    if (overWater || crossing) objects.push({ assetKey: 'rail', id: `rail:${k}`, x: x + 0.5, z: z + 0.5, stage: stageOf(t), links: l, overWater, crossing });
+  }
+  plan.stations.forEach((st, i) => {
+    const tiles = stationTiles[i];
+    if (!tiles.every(on)) return;
+    tiles.forEach((t) => occupied.add(tileKey(t)));
+    objects.push({
+      assetKey: 'station',
+      id: `station:${st.name}`,
+      ...centreOf(st.rect),
+      w: st.rect.w,
+      d: st.rect.d,
+      stage: Math.max(...tiles.map(stageOf)),
+      name: st.name,
+      lines: st.lines,
+      along: st.rect.w >= st.rect.d ? 'x' : 'z',
+    });
+  });
+  for (const e of plan.railEnds) {
+    if (!on(e.tile)) continue;
+    objects.push({ assetKey: 'rail-end', id: `rail-end:${e.next}`, x: e.tile.x + 0.5, z: e.tile.z + 0.5, stage: stageOf(e.tile), next: e.next, dir: e.dir });
+  }
+
   // Pathway lights (a building without a lot): lamps along the shown paths once built.
   if (byKey.get('pathway-lights')?.status === 'built') {
     plan.paths.filter(on).forEach((t, i) => {
@@ -305,10 +424,30 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState): 
     tiles,
     futureTiles,
     objects,
+    railRoutes,
     walkable,
     landRadius,
     hiddenHouseCount: offLand + (state.extraResidents ?? 0) + hiddenUnknown,
   };
+}
+
+/**
+ * Smoothed track line through the tile centres (moving average over 7 tiles, ends kept), so a
+ * 4-connected staircase of tiles becomes a straight diagonal line.
+ */
+export function smoothTrack(tiles: Tile[]): { x: number; z: number }[] {
+  const c = tiles.map((t) => ({ x: t.x + 0.5, z: t.z + 0.5 }));
+  return c.map((p, i) => {
+    const r = Math.min(3, i, c.length - 1 - i);
+    if (r === 0) return p;
+    let x = 0;
+    let z = 0;
+    for (let j = i - r; j <= i + r; j++) {
+      x += c[j].x;
+      z += c[j].z;
+    }
+    return { x: x / (2 * r + 1), z: z / (2 * r + 1) };
+  });
 }
 
 /** Built level and upgrade info: a building at level N under construction is built at N − 1. */

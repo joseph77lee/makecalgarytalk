@@ -4,7 +4,7 @@ import { getSupabaseClient, readSupabaseConfig } from '../common';
 import { RankingSheet, useRanking, type RankEntry } from '../ranking';
 import { fetchStatuses, loadShapes, type CommunityStatus } from './api';
 import { drawIcon, type MoodColours } from './draw';
-import { bbox, codeSeed, communityAt, fitView, frameBox, iconPlan, iconSpots, type MapCommunity, type MapShapes, type View } from './geometry';
+import { bbox, codeSeed, communityAt, fitView, frameBox, iconPlan, iconSpots, mapCtrain, type MapCommunity, type MapShapes, type View } from './geometry';
 import { levelText, searchCommunities } from './mapText';
 
 interface Props {
@@ -30,6 +30,8 @@ const ICON_ROOM_PX = 15;
 const MAX_SCALE = 0.3;
 /** A community's name shows once it covers this many screen px² (and does not overlap a bigger one). */
 const NAME_MIN_PX2 = 1200;
+/** Map scale (px per metre) from which CTrain station names show. */
+const STATION_NAME_SCALE = 0.09;
 
 function moodColours(vitality: number | null): { fill: string; edge: string; c: MoodColours } {
   const mood = vitality === null ? 'normal' : vitalityMood(vitality);
@@ -72,6 +74,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
     };
   }, []);
 
+  const ctrain = useMemo(() => mapCtrain(shapes), [shapes]);
   const prepared = useMemo<Prepared[]>(() => {
     if (!shapes) return [];
     return shapes.communities.map((c) => {
@@ -136,6 +139,46 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
         ctx.strokeStyle = p.c.code === selected ? '#4f46e5' : '#f97316';
         ctx.lineWidth = 3 / scale;
         ctx.stroke(p.path);
+      }
+      // CTrain lines and stations (requirement.md §7.9): white casing, then the line colour.
+      if (ctrain) {
+        ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy);
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        for (const pass of [0, 1]) {
+          for (const l of ctrain.lines) {
+            ctx.beginPath();
+            ctx.moveTo(l.points[0]!, l.points[1]!);
+            for (let i = 2; i < l.points.length; i += 2) ctx.lineTo(l.points[i]!, l.points[i + 1]!);
+            ctx.strokeStyle = pass === 0 ? 'rgba(255,255,255,0.95)' : l.colour;
+            ctx.lineWidth = (pass === 0 ? 5.5 : 3) / scale;
+            ctx.stroke();
+          }
+        }
+        ctx.lineCap = 'butt';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const r = Math.max(2.5, Math.min(5, scale * 60));
+        const named = scale >= STATION_NAME_SCALE;
+        ctx.font = '600 10px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        for (const st of ctrain.stations) {
+          const x = st.at[0] * scale + ox, y = st.at[1] * scale + oy;
+          if (x < -20 || y < -20 || x > rect.width + 20 || y > rect.height + 20) continue;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = st.lines.length > 1 ? '#475569' : st.lines[0] === 'Blue' ? '#3f7fd6' : '#d94a4a';
+          ctx.stroke();
+          if (named) {
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+            ctx.strokeText(`🚉 ${st.name}`, x + r + 3, y + 3);
+            ctx.fillStyle = '#334155';
+            ctx.fillText(`🚉 ${st.name}`, x + r + 3, y + 3);
+          }
+        }
       }
       // Icons (screen space; how many fit depends on the zoom)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -282,7 +325,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
     };
     // Statuses / selection changes only need a redraw (below), not new listeners.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shapes, prepared]);
+  }, [shapes, prepared, ctrain]);
 
   useEffect(() => {
     redraw.current();

@@ -14,10 +14,28 @@ export interface MapCommunity {
   rings: number[][];
 }
 
+/** CTrain lines and stations in the same metres (requirement.md §7.9). */
+export interface MapCtrain {
+  lines: { line: string; colour: string; points: number[] }[];
+  stations: { name: string; at: [number, number]; lines: string[] }[];
+}
+
 export interface MapShapes {
   width: number;
   height: number;
   communities: MapCommunity[];
+  ctrain?: MapCtrain;
+}
+
+/** The CTrain part of the map file, or none when it is missing or malformed (the map still works). */
+export function mapCtrain(v: unknown): MapCtrain | null {
+  const c = (v as { ctrain?: unknown } | null)?.ctrain as Record<string, unknown> | undefined;
+  if (!c || !Array.isArray(c.lines) || !Array.isArray(c.stations)) return null;
+  const linesOk = c.lines.every(
+    (l) => typeof l?.line === 'string' && typeof l?.colour === 'string' && Array.isArray(l?.points) && l.points.length >= 4 && l.points.length % 2 === 0,
+  );
+  const stationsOk = c.stations.every((st) => typeof st?.name === 'string' && Array.isArray(st?.at) && st.at.length === 2 && Array.isArray(st?.lines));
+  return linesOk && stationsOk ? (c as unknown as MapCtrain) : null;
 }
 
 export function isShapes(v: unknown): v is MapShapes {

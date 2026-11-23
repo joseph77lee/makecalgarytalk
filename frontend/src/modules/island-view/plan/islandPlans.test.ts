@@ -96,6 +96,25 @@ describe('stored island plans', () => {
     }
     p.houses.forEach((t) => claim(t, 'house'));
     p.trees.forEach((t) => claim(t, 'tree'));
+    p.stations.forEach((st) => lotTiles(st.rect).forEach((t) => claim(t, `station ${st.name}`)));
+    // CTrain track: on the island, 4-connected in order, never under a lot, house, tree or station
+    // (it may cross paths and run over water as a rail bridge); stations touch the track.
+    const railKeys = new Set(p.rail.flatMap((r) => r.tiles.map(tileKey)));
+    for (const r of p.rail) {
+      expect(r.tiles.length, `${r.line} run length`).toBeGreaterThanOrEqual(4);
+      r.tiles.forEach((t, i) => {
+        expect(stages.has(tileKey(t)), 'track off the island').toBe(true);
+        expect(['path', 'water', undefined], `track under ${owner.get(tileKey(t))}`).toContain(owner.get(tileKey(t)));
+        if (i > 0) expect(Math.abs(t.x - r.tiles[i - 1].x) + Math.abs(t.z - r.tiles[i - 1].z), 'track is 4-connected').toBe(1);
+      });
+    }
+    for (const st of p.stations) {
+      expect(lotTiles(st.rect).every((t) => N4(t).some((n) => railKeys.has(tileKey(n)))), `${st.name} beside the track`).toBe(true);
+    }
+    for (const e of p.railEnds) {
+      expect(railKeys.has(tileKey(e.tile)), `end sign for ${e.next} on the track`).toBe(true);
+      expect(stages.has(tileKey({ x: e.tile.x + e.dir.x, z: e.tile.z + e.dir.z })), `track to ${e.next} leaves the island`).toBe(false);
+    }
 
     // Walking: on every stage, with every house lot taken, all open land is reachable and
     // every active lot and house has a reachable door.
@@ -110,6 +129,7 @@ describe('stored island plans', () => {
       houses.forEach((t) => blocked.add(tileKey(t)));
       p.trees.filter((t) => stages.get(tileKey(t))! <= k).forEach((t) => blocked.add(tileKey(t)));
       p.water.forEach((t) => blocked.add(tileKey(t)));
+      p.stations.forEach((st) => lotTiles(st.rect).filter((t) => stages.get(tileKey(t))! <= k).forEach((t) => blocked.add(tileKey(t))));
       const open = p.tiles.filter((t) => t.stage <= k && !blocked.has(tileKey(t)));
       expect(walk.size, `stage ${k}: ${open.length - walk.size} open tiles unreachable`).toBe(open.length);
       for (const key of activeLots(p, k)) {
@@ -117,7 +137,21 @@ describe('stored island plans', () => {
         expect(lotTiles(p.lots[key]).some((t) => N4(t).some((n) => walk.has(tileKey(n)))), `stage ${k}: lot ${key} unreachable`).toBe(true);
       }
       for (const h of houses) expect(N4(h).some((n) => walk.has(tileKey(n))), `stage ${k}: house ${tileKey(h)} unreachable`).toBe(true);
+      for (const st of p.stations) {
+        if (lotTiles(st.rect).some((t) => stages.get(tileKey(t))! > k)) continue;
+        expect(lotTiles(st.rect).some((t) => N4(t).some((n) => walk.has(tileKey(n)))), `stage ${k}: station ${st.name} unreachable`).toBe(true);
+      }
     }
+  });
+});
+
+describe('CTrain on the islands (requirement.md §7.9)', () => {
+  it('the communities the lines run through have track, and the main stations are drawn', () => {
+    const byCode = new Map(plans.map((p) => [p.code, p]));
+    for (const code of ['VAR', 'BRD', 'SSD', 'TUS', 'BLN']) expect(byCode.get(code)!.rail.length, code).toBeGreaterThan(0);
+    expect(byCode.get('VAR')!.stations.map((s) => s.name).sort()).toEqual(['Brentwood', 'Dalhousie']);
+    expect(byCode.get('MAH')!.rail).toEqual([]);
+    expect(plans.filter((p) => p.rail.length > 0).length).toBeGreaterThanOrEqual(40);
   });
 });
 

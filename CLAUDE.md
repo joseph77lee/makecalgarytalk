@@ -164,3 +164,4 @@ Each module is usually worked on in a **new session** with no memory of earlier 
 - 2026-11-20: ran a Playwright script from the repo folder, so its screenshot (`frontend/m7-phone.png`) landed in the repo and `git add -A` committed it → run screen-check scripts from the scratchpad folder and read `git status` for stray files before every commit
 - 2026-11-22: ranking DB test inserted next-day actions before same-day ones, but finished days are recorded once (ensure_days), so counts came out wrong → in DB tests insert actions day by day in date order, as real play does
 - 2026-11-22: the World Map's canvas draw loop read React state captured when its listeners were set up (stale statuses/selection) → loops and listeners set up once must read changing values through a ref
+- 2026-11-23: `git add <dir>` committed Python `__pycache__` files → check `git status` for generated files before committing a directory; bytecode is now in .gitignore

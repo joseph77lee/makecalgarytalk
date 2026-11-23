@@ -16,6 +16,7 @@ import {
   captureIsland,
   finishedExampleState,
   reviveIsland,
+  upcomingIdentity,
   vitalityMood,
   useMockCommunityStore,
   type CommunityViewState,
@@ -233,6 +234,7 @@ function LiveApp() {
               onClose={() => setMapOpen(false)}
               onInvite={server.me?.member ? invite : undefined}
               extraResidents={server.hidden_houses}
+              upcoming={plan ? upcomingIdentity(plan, server.community.land_stage) : null}
               onShowExample={() => {
                 setMapOpen(false);
                 setExample(true);

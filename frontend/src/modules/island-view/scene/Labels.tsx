@@ -2,6 +2,8 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState, type ReactNode } from 'react';
 import type { PlacedObject } from '../layout';
+import { featureLabel } from '../plan/features';
+import { lineColour } from '../plan/ctrain';
 import { useIslandUi } from '../uiStore';
 import { useHtmlPortal } from './htmlPortal';
 import { BUBBLE_Z, LABEL_Z, remainingText } from './labelText';
@@ -165,6 +167,36 @@ export function IslandLabels({ objects, houseBubbles, communityName, selectedHou
                 ) : (
                   <span className={`rounded-full px-1.5 py-px text-[10px] text-white ${o.ready ? 'bg-emerald-600/80' : 'bg-slate-800/70'}`}>{o.ready ? '✨' : '🔒'}</span>
                 )}
+              </Overlay>
+            );
+          case 'feature':
+            // Signature feature (§7.9): at most 3 per community, so its name always shows (phones
+            // rarely reach the detailed zoom on big islands).
+            return (
+              <Overlay key={o.id} x={o.x} y={1.45} z={o.z}>
+                <span className="block max-w-32 truncate whitespace-nowrap rounded-full bg-white/85 px-1.5 py-px text-[10px] font-semibold text-sky-900 shadow-sm">
+                  {featureLabel({ key: o.featureKey, name: o.name })}
+                </span>
+              </Overlay>
+            );
+          case 'station':
+            return (
+              <Overlay key={o.id} x={o.x} y={1.35} z={o.z}>
+                <span className="flex max-w-40 items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-1.5 py-px text-[10px] font-bold text-slate-800 shadow-sm">
+                  {o.lines.map((l) => (
+                    <span key={l} className="h-2 w-2 shrink-0 rounded-full" style={{ background: lineColour(l) }} />
+                  ))}
+                  <span className="truncate">🚉 {o.name}</span>
+                </span>
+              </Overlay>
+            );
+          case 'rail-end':
+            // Where the track leaves the island: the next station along the line (§7.9).
+            return (
+              <Overlay key={o.id} x={o.x} y={0.95} z={o.z}>
+                <span className="block max-w-36 truncate whitespace-nowrap rounded-md bg-slate-800/75 px-1.5 py-px text-[10px] font-semibold text-white shadow-sm">
+                  Next: {o.next} ›
+                </span>
               </Overlay>
             );
           case 'construction-site':

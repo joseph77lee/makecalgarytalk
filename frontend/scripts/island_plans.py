@@ -5,8 +5,10 @@ Island plan generator (requirement.md 7.8): one stored plan per community.
   python3 -I frontend/scripts/island_plans.py            # write plans that do not exist yet
   python3 -I frontend/scripts/island_plans.py --force    # regenerate all (PRE-LAUNCH ONLY)
   python3 -I frontend/scripts/island_plans.py MAH BLN    # only these communities
+  python3 -I frontend/scripts/island_plans.py --rail      # regenerate only plans with CTrain track (PRE-LAUNCH ONLY)
 
 Inputs:  supabase/data/calgary_boundaries.json, supabase/data/calgary_water.json,
+         supabase/data/calgary_ctrain.json (track and stations at their real position, v3),
          supabase/data/calgary_communities.csv, supabase/data/building_tree.json (lots)
 Output:  frontend/public/islands/<CODE>.json
 
@@ -37,7 +39,11 @@ RING8 = ((1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1))
 MAX_HOUSES = 150
 # Houses each land stage must hold at least (most residents a stage can have, requirement 7.8).
 MIN_HOUSES = [2, 5, 10, 25, 50, 80]
-PLAN_VERSION = 2
+PLAN_VERSION = 3
+CTRAIN = json.loads((DATA / "calgary_ctrain.json").read_text())
+# A station inside the community or this close to its boundary (metres) is drawn on the track.
+STATION_NEAR_M = 150
+MIN_RAIL_RUN = 4  # shorter track pieces (a corner clipped by the outline) are not drawn
 
 
 # ---------------------------------------------------------------- rasterize
@@ -118,7 +124,81 @@ def island_cells(lonlat_rings, water_rings):
     water = set()
     for wr in water_rings:
         water |= scanline([[project(lon, lat) for lon, lat in wr]], scale, origin)
-    return cells, water & cells
+    return cells, water & cells, origin, scale
+
+
+def to_cell_space(origin, scale):
+    minx, maxy = origin
+    return lambda lon, lat: ((project(lon, lat)[0] - minx) / scale, (maxy - project(lon, lat)[1]) / scale)
+
+
+def rail_runs(track_xy, cells):
+    """Cells along a track polyline (cell space) as ordered, 4-connected runs inside the island.
+    CTrain lines often run in road medians, which are community boundaries: track within one
+    tile of the land snaps to the edge row instead of slipping in and out of the outline."""
+
+    def snap(x, y):
+        c = (math.floor(x), math.floor(y))
+        if c in cells:
+            return c
+        near = [(math.hypot(c[0] + dx + 0.5 - x, c[1] + dz + 0.5 - y), (c[0] + dx, c[1] + dz)) for dx, dz in RING8 if (c[0] + dx, c[1] + dz) in cells]
+        near = [n for n in near if n[0] <= 1.05]
+        return min(near)[1] if near else None
+
+    seq = []  # (cell or None, track position)
+    for i in range(1, len(track_xy)):
+        (ax, ay), (bx, by) = track_xy[i - 1], track_xy[i]
+        n = max(1, int(math.hypot(bx - ax, by - ay) / 0.2))
+        for k in range(n + 1):
+            x, y = ax + (bx - ax) * k / n, ay + (by - ay) * k / n
+            t = i - 1 + k / n
+            c = snap(x, y)
+            prev = seq[-1][0] if seq else None
+            if c is not None and prev is not None and c != prev:
+                d = abs(c[0] - prev[0]) + abs(c[1] - prev[1])
+                if d == 2 and abs(c[0] - prev[0]) == 1:
+                    # diagonal step: add the corner the line passes closest to (4-connected track)
+                    corners = [q for q in ((c[0], prev[1]), (prev[0], c[1])) if q in cells]
+                    if corners:
+                        q = min(corners, key=lambda q: math.hypot(q[0] + 0.5 - x, q[1] + 0.5 - y))
+                        seq.append((q, t))
+                    else:
+                        seq.append((None, t))
+                elif d > 1:
+                    seq.append((None, t))  # snapping jumped: start a new run
+            if not seq or c != seq[-1][0]:
+                seq.append((c, t))
+    runs, cur, seen = [], [], set()
+    for c, t in seq:
+        if c is None:
+            if cur:
+                runs.append(cur)
+            cur = []
+            continue
+        if c in seen:
+            continue  # the line came back over cells it already used (sharp curves)
+        if cur and abs(c[0] - cur[-1][0][0]) + abs(c[1] - cur[-1][0][1]) != 1:
+            runs.append(cur)
+            cur = []
+        seen.add(c)
+        cur.append((c, t))
+    if cur:
+        runs.append(cur)
+    return [r for r in runs if len(r) >= MIN_RAIL_RUN]
+
+
+def track_param(track_xy, pt):
+    """Position of the point projected onto the polyline, as segment index + fraction."""
+    best = None
+    for i in range(1, len(track_xy)):
+        (ax, ay), (bx, by) = track_xy[i - 1], track_xy[i]
+        dx, dy = bx - ax, by - ay
+        L = dx * dx + dy * dy
+        t = 0 if L == 0 else max(0.0, min(1.0, ((pt[0] - ax) * dx + (pt[1] - ay) * dy) / L))
+        d = math.hypot(pt[0] - ax - t * dx, pt[1] - ay - t * dy)
+        if best is None or d < best[0]:
+            best = (d, i - 1 + t)
+    return best[1], best[0]
 
 
 # ---------------------------------------------------------------- stages
@@ -189,8 +269,9 @@ def stages_for(cells, water):
 
 # ---------------------------------------------------------------- paths
 
-def road(start_cells, target, cells, blocked):
-    """Path from the plaza to target, preferring straight runs (Dijkstra with a turn cost)."""
+def road(start_cells, target, cells, blocked, costly=frozenset()):
+    """Path from the plaza to target, preferring straight runs (Dijkstra with a turn cost).
+    `costly` cells (the CTrain track) may be crossed but not followed."""
     import heapq
     pq, best, prev = [], {}, {}
     for c in start_cells:
@@ -212,7 +293,7 @@ def road(start_cells, target, cells, blocked):
             n = (c[0] + dx, c[1] + dz)
             if n not in cells or n in blocked:
                 continue
-            nc = cost + 1 + (0.4 if nd != d else 0)
+            nc = cost + 1 + (0.4 if nd != d else 0) + (4 if n in costly else 0)
             if nc < best.get((n, nd), 1e18):
                 best[(n, nd)] = nc
                 prev[(n, nd)] = (c, d)
@@ -340,27 +421,137 @@ def add_bridges(cells, water, stage, plaza):
     return bridges
 
 
-def make_plan(code, name, lonlat_rings, water_rings):
-    cells, water = island_cells(lonlat_rings, water_rings)
+def ctrain_for(cells, origin, scale, lonlat_rings):
+    """CTrain runs (ordered track cells per line), stations near the community, and run ends with
+    the next station beyond the island (requirement.md 7.9)."""
+    cs = to_cell_space(origin, scale)
+    ring = [project(lon, lat) for lon, lat in max(lonlat_rings, key=len)]
+
+    def inside(pt):
+        x, y = pt
+        hit, j = False, len(ring) - 1
+        for i in range(len(ring)):
+            (xi, yi), (xj, yj) = ring[i], ring[j]
+            if (yi > y) != (yj > y) and x < (xj - xi) * (y - yi) / (yj - yi) + xi:
+                hit = not hit
+            j = i
+        return hit
+
+    def near_m(lon, lat):
+        p = project(lon, lat)
+        if inside(p):
+            return 0.0
+        best = 1e18
+        for i in range(len(ring)):
+            (ax, ay), (bx, by) = ring[i - 1], ring[i]
+            dx, dy = bx - ax, by - ay
+            L = dx * dx + dy * dy
+            t = 0 if L == 0 else max(0, min(1, ((p[0] - ax) * dx + (p[1] - ay) * dy) / L))
+            best = min(best, math.hypot(p[0] - ax - t * dx, p[1] - ay - t * dy))
+        return best
+
+    runs, ends, local = [], [], {}
+    for ln in CTRAIN["lines"]:
+        track = [cs(lon, lat) for lon, lat in ln["track"]]
+        params = [(s, track_param(track, cs(*CTRAIN["stations"][s]))[0]) for s in ln["stations"]]
+        for run in rail_runs(track, cells):
+            runs.append((ln["line"], [c for c, _ in run]))
+            t0, t1 = run[0][1], run[-1][1]
+            for (c, t), outward in ((run[0], -1), (run[-1], 1)):
+                # next station beyond this end, in the direction the track leaves the island
+                beyond = [(s, p) for s, p in params if (p - t) * outward > 0 and not (min(t0, t1) <= p <= max(t0, t1))]
+                if not beyond:
+                    continue
+                nxt = min(beyond, key=lambda sp: abs(sp[1] - t))[0]
+                inner = run[1][0] if outward == -1 else run[-2][0]
+                ends.append({"line": ln["line"], "cell": c, "next": nxt, "dir": (c[0] - inner[0], c[1] - inner[1])})
+        for s in ln["stations"]:
+            lon, lat = CTRAIN["stations"][s]
+            if near_m(lon, lat) <= STATION_NEAR_M:
+                local.setdefault(s, {"lines": [], "at": cs(lon, lat)})["lines"].append(ln["line"])
+    rail = {c for _, r in runs for c in r}
+    # A next-station sign only where the track really leaves the island, once per station.
+    seen_next, real = set(), []
+    for e in ends:
+        out = (e["cell"][0] + e["dir"][0], e["cell"][1] + e["dir"][1])
+        if e["next"] in local or out in cells or e["next"] in seen_next:
+            continue
+        seen_next.add(e["next"])
+        real.append(e)
+    ends = real
+    stations = {s: v for s, v in local.items() if rail}
+    return runs, rail, stations, ends
+
+
+def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8):
+    cells, water, origin, scale = island_cells(lonlat_rings, water_rings)
+    runs, rail, station_specs, rail_ends = ctrain_for(cells, origin, scale, lonlat_rings)
     (px, pz), plaza, g, stage = stages_for(cells, water)
     pc = (px + 1, pz + 1)
+    # The plaza never sits on the track; if it would, fall back to plans without track there.
+    if rail & set(plaza):
+        split = []
+        for ln, r in runs:
+            cur = []
+            for c in r + [None]:
+                if c is None or c in plaza:
+                    if len(cur) >= MIN_RAIL_RUN:
+                        split.append((ln, cur))
+                    cur = []
+                else:
+                    cur.append(c)
+        runs = split
+        rail = {c for _, r in runs for c in r}
+        rail_ends = [e for e in rail_ends if e["cell"] in rail]
     bridges = add_bridges(cells, water, stage, plaza)
     dry = cells - water
     g = bfs(plaza, dry)  # walking distance on dry land (roads, targets)
     walk = Walk(cells, stage, plaza, water)
 
-    # Two main paths across the shape.
+    # Two main paths across the shape (they may cross the track, not run along it).
     t1 = far_target(g, stage)
-    path1 = road(plaza, t1, dry, set(plaza))
+    path1 = road(plaza, t1, dry, set(plaza), rail)
     d1 = (t1[0] - pc[0], t1[1] - pc[1])
     n1 = math.hypot(*d1) or 1
     t2 = far_target(g, stage, (d1[0] / n1, d1[1] / n1), pc)
-    path2 = road(plaza, t2, dry, set(plaza) | set(path1)) if t2 else []
+    path2 = road(plaza, t2, dry, set(plaza) | set(path1), rail) if t2 else []
     paths = [c for c in path1 + path2 if c not in plaza and c not in bridges]
     paths += [c for c in sorted(bridges) if c not in paths]
     path_set = set(paths)
-    used = set(plaza) | path_set | water
+    # Track cells are walkable (level crossings) but never built on.
+    used = set(plaza) | path_set | water | rail
     lots = {}
+
+    # CTrain stations: a 2x1 platform beside the track, nearest the real station.
+    stations = []
+    for sname, spec in sorted(station_specs.items()):
+        ax, ay = spec["at"]
+        options = []
+        for c in rail:
+            if c in water:
+                continue
+            for w, d, offs in ((2, 1, ((0, -1), (0, 1))), (1, 2, ((-1, 0), (1, 0)))):
+                for ox_, oz_ in offs:
+                    for sx in range(-(w - 1), 1):
+                        for sz in range(-(d - 1), 1):
+                            x0, z0 = c[0] + ox_ + sx, c[1] + oz_ + sz
+                            tiles = [(x0 + i, z0 + j) for i in range(w) for j in range(d)]
+                            if not all(t in cells and t not in used for t in tiles):
+                                continue
+                            # the platform runs along the track: every tile touches it
+                            if not all(any((t[0] + dx, t[1] + dz) in rail for dx, dz in N4) for t in tiles):
+                                continue
+                            dist = math.hypot(x0 + w / 2 - ax, z0 + d / 2 - ay)
+                            options.append((dist, x0, z0, w, d, tiles))
+        options.sort(key=lambda o: o[:3])
+        for _, x0, z0, w, d, tiles in options[:200]:
+            st = max(stage[t] for t in tiles)
+            if walk.full_ok(tiles, tiles, st):
+                walk.blocked |= set(tiles)
+                walk.lots.append((tiles, st))
+                used.update(tiles)
+                stations.append({"name": sname, "lines": spec["lines"], "rect": [x0, z0, w, d]})
+                break
     later_angles = []
     ring_radius = [max((math.hypot(c[0] - pc[0], c[1] - pc[1]) for c in cells if stage[c] == k), default=4) for k in range(len(TIERS))]
 
@@ -393,7 +584,7 @@ def make_plan(code, name, lonlat_rings, water_rings):
                     target = ring_radius[land_stage] * 0.8
                     ang = math.atan2(cz, cx)
                     near = min((abs(math.atan2(math.sin(ang - a), math.cos(ang - a))) for a in later_angles), default=math.pi)
-                    spread = 8 * max(0.0, 1 - near / (math.pi / 3))
+                    spread = spread_weight * max(0.0, 1 - near / (math.pi / 3))
                     score = abs(dist - target) - (1.5 if touch else 0) + early * 12 + spread
                 cands.append((score, x, z, w, d, tiles))
         cands.sort(key=lambda c: (c[0], c[1], c[2]))
@@ -445,6 +636,13 @@ def make_plan(code, name, lonlat_rings, water_rings):
             reserved_houses = True
         if not place(key, spec["size"], spec["landStage"], spec["kind"]):
             raise RuntimeError(f"{code}: no room for lot {key}")
+
+    # Later lots must not leave a direction empty for more than 150° (validated by the tests).
+    later = [k for k, v in TREE["lots"].items() if v["kind"] in ("building", "spare") and v["landStage"] > 0]
+    angles = sorted(math.atan2(lots[k][1] + lots[k][3] / 2 - pc[1], lots[k][0] + lots[k][2] / 2 - pc[0]) for k in later)
+    gaps = [(angles[(i + 1) % len(angles)] - a) % (2 * math.pi) for i, a in enumerate(angles)]
+    if max(gaps) >= math.radians(150):
+        raise RuntimeError(f"{code}: later lots leave a {math.degrees(max(gaps)):.0f}° gap")
 
     # House lots: centre outward, never touching another house, door kept free.
     add_houses(len(TIERS) - 1, MAX_HOUSES)
@@ -500,6 +698,9 @@ def make_plan(code, name, lonlat_rings, water_rings):
         "trees": flat(trees),
         "water": flat(sorted(water)),
         "bridges": flat(sorted(bridges)),
+        "rail": [{"line": ln, "tiles": flat(r)} for ln, r in runs if r],
+        "stations": [{"name": s["name"], "lines": s["lines"], "rect": [s["rect"][0] - ox, s["rect"][1] - oz, s["rect"][2], s["rect"][3]]} for s in stations],
+        "railEnds": [{"line": e["line"], "next": e["next"], "tile": sh(e["cell"]), "dir": list(e["dir"])} for e in rail_ends if e["cell"] in rail],
         "cameraAzimuth": round(azimuth, 4),
         "tiers": [t if t is not None else len(cells) - len(water) for t in TIERS],
     }
@@ -507,6 +708,7 @@ def make_plan(code, name, lonlat_rings, water_rings):
 
 def main(argv):
     force = "--force" in argv
+    rail_only = "--rail" in argv
     only = [a for a in argv if not a.startswith("--")]
     bounds = json.loads((DATA / "calgary_boundaries.json").read_text())["communities"]
     water_all = json.loads((DATA / "calgary_water.json").read_text())["water"]
@@ -518,7 +720,7 @@ def main(argv):
         if only and code not in only:
             continue
         path = OUT / f"{code}.json"
-        if path.exists() and not force:
+        if path.exists() and not force and not rail_only:
             skipped += 1
             continue
         try:
@@ -530,16 +732,22 @@ def main(argv):
             plan, err = None, None
             for first, second in EARLY_STAGE_TRIES:
                 TIERS[0], TIERS[1] = first, second
-                try:
-                    plan = make_plan(code, names.get(code, code.title()), bounds[code], water_rings)
+                for weight in (8, 14, 20):
+                    try:
+                        plan = make_plan(code, names.get(code, code.title()), bounds[code], water_rings, weight)
+                        break
+                    except RuntimeError as e:
+                        err = e
+                if plan is not None:
                     break
-                except RuntimeError as e:
-                    err = e
             TIERS[0], TIERS[1] = BASE_TIERS[0], BASE_TIERS[1]
             if plan is None:
                 raise err
         except RuntimeError as e:
             failed.append(str(e))
+            continue
+        if rail_only and not plan["rail"]:
+            skipped += 1  # no track here: keep the stored plan untouched
             continue
         path.write_text(json.dumps(plan, separators=(",", ":")))
         written += 1

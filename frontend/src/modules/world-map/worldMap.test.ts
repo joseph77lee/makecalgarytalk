@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { isStatusList } from './api';
-import { bbox, communityAt, fitView, frameBox, iconPlan, iconSpots, inCommunity, isShapes, type MapCommunity } from './geometry';
+import { bbox, communityAt, fitView, frameBox, iconPlan, iconSpots, inCommunity, isShapes, mapCtrain, type MapCommunity } from './geometry';
 import { levelText, searchCommunities } from './mapText';
 
 const FILE = join(dirname(fileURLToPath(import.meta.url)), '../../../public/worldmap/calgary.json');
@@ -83,5 +83,26 @@ describe('map texts and data', () => {
     expect(isStatusList([{ code: 'MAH', id: 'x', level: 2, vitality: 60, residents: 4 }])).toBe(true);
     expect(isStatusList([{ code: 'MAH', id: 'x', level: 7, vitality: null, residents: 4 }])).toBe(false);
     expect(isStatusList(null)).toBe(false);
+  });
+});
+
+describe('CTrain on the World Map (requirement.md §7.9)', () => {
+  const file = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../../../public/worldmap/calgary.json'), 'utf8'));
+
+  it('the map file carries both lines and every station inside the map area', () => {
+    const c = mapCtrain(file)!;
+    expect(c.lines.map((l) => l.line).sort()).toEqual(['Blue', 'Red']);
+    expect(c.stations.length).toBeGreaterThanOrEqual(40);
+    for (const st of c.stations) {
+      expect(st.at[0]).toBeGreaterThanOrEqual(0);
+      expect(st.at[0]).toBeLessThanOrEqual(file.width);
+      expect(st.at[1]).toBeGreaterThanOrEqual(0);
+      expect(st.at[1]).toBeLessThanOrEqual(file.height);
+    }
+  });
+
+  it('a missing or broken CTrain part is ignored (the map still works)', () => {
+    expect(mapCtrain({})).toBeNull();
+    expect(mapCtrain({ ctrain: { lines: [{ line: 'Red', colour: '#f00', points: [1] }], stations: [] } })).toBeNull();
   });
 });
