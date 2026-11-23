@@ -2,7 +2,8 @@
 """
 Writes the World Map shapes (requirement.md v1.29 §9) from supabase/data/calgary_boundaries.json:
 residential community outlines projected to metres (x east, y south), simplified for drawing, with
-each community's area and a label point well inside it.
+each community's area and a label point well inside it; plus the CTrain lines and stations from
+supabase/data/calgary_ctrain.json in the same coordinates (requirement.md 7.9).
 
   python3 -I frontend/scripts/world_map.py
 
@@ -16,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "supabase/data/calgary_boundaries.json"
 NAMES = ROOT / "supabase/data/calgary_communities.csv"
+CTRAIN = ROOT / "supabase/data/calgary_ctrain.json"
 OUT = ROOT / "frontend/public/worldmap/calgary.json"
 TOLERANCE_M = 20
 
@@ -137,12 +139,24 @@ def main():
     for c in communities:
         c["label"] = [c["label"][0] - round(minx), c["label"][1] - round(miny)]
         c["rings"] = [[v - (round(minx) if i % 2 == 0 else round(miny)) for i, v in enumerate(r)] for r in c["rings"]]
+    shift = lambda p: [round(proj(p)[0]) - round(minx), round(proj(p)[1]) - round(miny)]
+    ct = json.loads(CTRAIN.read_text())
+    lines_of = {}
+    for ln in ct["lines"]:
+        for st in ln["stations"]:
+            lines_of.setdefault(st, []).append(ln["line"])
+    ctrain = {
+        "lines": [{"line": ln["line"], "colour": ln["colour"], "points": [v for p in ln["track"] for v in shift(p)]} for ln in ct["lines"]],
+        "stations": [{"name": n, "at": shift(p), "lines": lines_of.get(n, [])} for n, p in ct["stations"].items()],
+    }
     out = {
         "about": "Calgary residential community outlines in metres (x east, y south), simplified for the World Map. "
-        "City of Calgary Open Data (Community District Boundaries), Open Government Licence - City of Calgary.",
+        "City of Calgary Open Data (Community District Boundaries), Open Government Licence - City of Calgary. "
+        "CTrain lines and stations: (c) OpenStreetMap contributors, ODbL.",
         "width": round(maxx - minx),
         "height": round(maxy - miny),
         "communities": communities,
+        "ctrain": ctrain,
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(out, separators=(",", ":")))

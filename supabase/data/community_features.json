@@ -43,16 +43,16 @@
   ],
   "ALB": [
    {
-    "key": "ctrain-station",
-    "name": "Franklin"
-   },
-   {
     "key": "hill",
     "name": null
    },
    {
-    "key": "creek",
-    "name": "Western Headworks Main Canal"
+    "key": "big-park",
+    "name": null
+   },
+   {
+    "key": "school",
+    "name": null
    }
   ],
   "ALP": [
@@ -62,10 +62,6 @@
    }
   ],
   "ALT": [
-   {
-    "key": "creek",
-    "name": "Elbow River"
-   },
    {
     "key": "big-park",
     "name": "River Park"
@@ -83,15 +79,15 @@
   ],
   "ARB": [
    {
-    "key": "ctrain-station",
-    "name": "Crowfoot"
-   },
-   {
     "key": "pond",
     "name": "Arbour Lake"
    },
    {
     "key": "big-park",
+    "name": null
+   },
+   {
+    "key": "school",
     "name": null
    }
   ],
@@ -143,19 +139,11 @@
   ],
   "BLM": [
    {
-    "key": "creek",
-    "name": "Pine Creek"
-   },
-   {
     "key": "big-park",
     "name": null
    }
   ],
   "BLN": [
-   {
-    "key": "ctrain-station",
-    "name": "Victoria Park/Stampede"
-   },
    {
     "key": "creek",
     "name": "Elbow River"
@@ -166,10 +154,6 @@
    }
   ],
   "BNF": [
-   {
-    "key": "ctrain-station",
-    "name": "Banff Trail"
-   },
    {
     "key": "school",
     "name": null
@@ -198,23 +182,19 @@
   ],
   "BRD": [
    {
-    "key": "ctrain-station",
-    "name": "Bridgeland/Memorial"
-   },
-   {
     "key": "hill",
     "name": "Tom Campbell's Hill"
    },
    {
-    "key": "creek",
-    "name": "Bow River"
+    "key": "big-park",
+    "name": "Saint Patrick's Island"
+   },
+   {
+    "key": "school",
+    "name": null
    }
   ],
   "BRE": [
-   {
-    "key": "ctrain-station",
-    "name": "Brentwood"
-   },
    {
     "key": "school",
     "name": null
@@ -253,10 +233,6 @@
    }
   ],
   "CAN": [
-   {
-    "key": "ctrain-station",
-    "name": "Canyon Meadows"
-   },
    {
     "key": "big-park",
     "name": null
@@ -333,10 +309,6 @@
   "CHK": [],
   "CHN": [],
   "CHR": [
-   {
-    "key": "ctrain-station",
-    "name": "Sirocco"
-   },
    {
     "key": "big-park",
     "name": "Strathcona Ravine"
@@ -426,10 +398,6 @@
    {
     "key": "hill",
     "name": null
-   },
-   {
-    "key": "creek",
-    "name": "West Nose Creek"
    }
   ],
   "COV": [
@@ -458,10 +426,6 @@
   ],
   "CRA": [
    {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
     "name": null
    },
@@ -474,10 +438,6 @@
    {
     "key": "hill",
     "name": null
-   },
-   {
-    "key": "creek",
-    "name": "Bow River"
    },
    {
     "key": "school",
@@ -512,10 +472,6 @@
   ],
   "DAL": [
    {
-    "key": "ctrain-station",
-    "name": "Dalhousie"
-   },
-   {
     "key": "big-park",
     "name": null
    },
@@ -526,15 +482,11 @@
   ],
   "DDG": [
    {
-    "key": "ctrain-station",
-    "name": "Quarry Park"
-   },
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
+    "name": null
+   },
+   {
+    "key": "school",
     "name": null
    }
   ],
@@ -550,45 +502,19 @@
     "name": null
    },
    {
-    "key": "creek",
-    "name": null
-   },
-   {
     "key": "big-park",
     "name": "Griffith Woods"
    }
   ],
-  "DNC": [
-   {
-    "key": "ctrain-station",
-    "name": "6 Street Southwest"
-   }
-  ],
+  "DNC": [],
   "DNE": [
-   {
-    "key": "ctrain-station",
-    "name": "City Hall/Bow Valley College"
-   },
-   {
-    "key": "creek",
-    "name": "Elbow River"
-   },
    {
     "key": "big-park",
     "name": "The Confluence Historic Site & Parkland"
    }
   ],
-  "DNW": [
-   {
-    "key": "ctrain-station",
-    "name": "Downtown West–Kerby"
-   }
-  ],
+  "DNW": [],
   "DOV": [
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
    {
     "key": "big-park",
     "name": "Valleyview Park"
@@ -646,10 +572,6 @@
   ],
   "EPK": [
    {
-    "key": "creek",
-    "name": "Elbow River"
-   },
-   {
     "key": "big-park",
     "name": "Britannia Slopes"
    },
@@ -669,10 +591,6 @@
    }
   ],
   "ERL": [
-   {
-    "key": "ctrain-station",
-    "name": "Erlton/Stampede"
-   },
    {
     "key": "big-park",
     "name": "Lindsay Park"
@@ -815,7 +733,7 @@
    },
    {
     "key": "big-park",
-    "name": "Harvest Hills Park"
+    "name": null
    },
    {
     "key": "school",
@@ -829,10 +747,6 @@
    }
   ],
   "HAY": [
-   {
-    "key": "ctrain-station",
-    "name": "Heritage"
-   },
    {
     "key": "school",
     "name": null
@@ -854,16 +768,16 @@
   ],
   "HIL": [
    {
-    "key": "ctrain-station",
-    "name": "Sunnyside"
-   },
-   {
     "key": "hill",
     "name": null
    },
    {
-    "key": "creek",
-    "name": "Bow River"
+    "key": "big-park",
+    "name": "Riley Park"
+   },
+   {
+    "key": "school",
+    "name": null
    }
   ],
   "HIW": [
@@ -879,10 +793,6 @@
    }
   ],
   "HOU": [
-   {
-    "key": "ctrain-station",
-    "name": "Lions Park"
-   },
    {
     "key": "hill",
     "name": "Grasshopper Hill"
@@ -906,10 +816,6 @@
   ],
   "HSN": [
    {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
     "name": "Haskayne Legacy Park"
    }
@@ -931,16 +837,12 @@
   "HUX": [],
   "ING": [
    {
-    "key": "ctrain-station",
-    "name": "Inglewood / Ramsay"
-   },
-   {
-    "key": "creek",
-    "name": null
-   },
-   {
     "key": "big-park",
     "name": "Inglewood Bird Sanctuary and Nature Centre"
+   },
+   {
+    "key": "school",
+    "name": null
    }
   ],
   "KCA": [
@@ -983,10 +885,6 @@
   ],
   "LEB": [],
   "LEG": [
-   {
-    "key": "creek",
-    "name": "Pine Creek"
-   },
    {
     "key": "big-park",
     "name": null
@@ -1064,10 +962,6 @@
   "MAN": [],
   "MCK": [
    {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
     "name": null
    },
@@ -1113,10 +1007,6 @@
   ],
   "MIS": [
    {
-    "key": "creek",
-    "name": "Elbow River"
-   },
-   {
     "key": "school",
     "name": null
    }
@@ -1132,10 +1022,6 @@
    }
   ],
   "MON": [
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
    {
     "key": "big-park",
     "name": null
@@ -1191,20 +1077,12 @@
   ],
   "MRL": [
    {
-    "key": "ctrain-station",
-    "name": "Marlborough"
-   },
-   {
     "key": "school",
     "name": null
    }
   ],
   "MRN": [],
   "MRT": [
-   {
-    "key": "ctrain-station",
-    "name": "Saddletowne"
-   },
    {
     "key": "pond",
     "name": "Taracove Lake"
@@ -1263,16 +1141,12 @@
   ],
   "OGD": [
    {
-    "key": "ctrain-station",
-    "name": "Lynnwood/Millican"
-   },
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
     "name": "Beaverdam Flats Feeder"
+   },
+   {
+    "key": "school",
+    "name": null
    }
   ],
   "OPH": [
@@ -1313,10 +1187,6 @@
   ],
   "PCK": [
    {
-    "key": "creek",
-    "name": "Pine Creek"
-   },
-   {
     "key": "big-park",
     "name": null
    }
@@ -1342,10 +1212,6 @@
    }
   ],
   "PKD": [
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
    {
     "key": "school",
     "name": null
@@ -1376,10 +1242,6 @@
    }
   ],
   "POI": [
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
    {
     "key": "big-park",
     "name": null
@@ -1412,10 +1274,6 @@
   "QPK": [],
   "RAM": [
    {
-    "key": "ctrain-station",
-    "name": "Inglewood / Ramsay"
-   },
-   {
     "key": "school",
     "name": null
    }
@@ -1431,10 +1289,6 @@
    }
   ],
   "RCK": [
-   {
-    "key": "ctrain-station",
-    "name": "Westbrook"
-   },
    {
     "key": "school",
     "name": null
@@ -1488,16 +1342,12 @@
   ],
   "RIV": [
    {
-    "key": "ctrain-station",
-    "name": "Quarry Park"
-   },
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
     "name": "Carburn Park"
+   },
+   {
+    "key": "school",
+    "name": null
    }
   ],
   "RMT": [
@@ -1528,10 +1378,6 @@
   ],
   "ROY": [
    {
-    "key": "ctrain-station",
-    "name": "Tuscany"
-   },
-   {
     "key": "big-park",
     "name": null
    },
@@ -1552,10 +1398,6 @@
    }
   ],
   "RUN": [
-   {
-    "key": "ctrain-station",
-    "name": "Rundle"
-   },
    {
     "key": "school",
     "name": null
@@ -1579,15 +1421,15 @@
   ],
   "SAD": [
    {
-    "key": "ctrain-station",
-    "name": "Saddletowne"
-   },
-   {
     "key": "hill",
     "name": null
    },
    {
     "key": "big-park",
+    "name": null
+   },
+   {
+    "key": "school",
     "name": null
    }
   ],
@@ -1609,15 +1451,11 @@
   ],
   "SCE": [
    {
-    "key": "ctrain-station",
-    "name": "Crowfoot"
-   },
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
+    "name": null
+   },
+   {
+    "key": "school",
     "name": null
    }
   ],
@@ -1651,19 +1489,11 @@
     "name": null
    },
    {
-    "key": "creek",
-    "name": "West Nose Creek"
-   },
-   {
     "key": "big-park",
     "name": null
    }
   ],
   "SHG": [
-   {
-    "key": "ctrain-station",
-    "name": "Westbrook"
-   },
    {
     "key": "school",
     "name": null
@@ -1671,24 +1501,19 @@
   ],
   "SHN": [
    {
-    "key": "ctrain-station",
-    "name": "Shawnessy"
-   },
-   {
     "key": "pond",
     "name": "Priddis Slough"
    },
    {
     "key": "big-park",
     "name": null
-   }
-  ],
-  "SHS": [
+   },
    {
-    "key": "ctrain-station",
-    "name": "Fish Creek–Lacombe"
+    "key": "school",
+    "name": null
    }
   ],
+  "SHS": [],
   "SHW": [
    {
     "key": "pond",
@@ -1705,23 +1530,19 @@
   ],
   "SIG": [
    {
-    "key": "ctrain-station",
-    "name": "Sirocco"
-   },
-   {
     "key": "hill",
     "name": null
    },
    {
     "key": "big-park",
     "name": "Battalion Park"
+   },
+   {
+    "key": "school",
+    "name": null
    }
   ],
   "SIL": [
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
    {
     "key": "big-park",
     "name": "Bowmont Park"
@@ -1739,10 +1560,6 @@
   ],
   "SNA": [
    {
-    "key": "ctrain-station",
-    "name": "Sunalta"
-   },
-   {
     "key": "school",
     "name": null
    }
@@ -1755,10 +1572,6 @@
   ],
   "SOM": [
    {
-    "key": "ctrain-station",
-    "name": "Somerset–Bridlewood"
-   },
-   {
     "key": "pond",
     "name": null
    },
@@ -1769,10 +1582,6 @@
   ],
   "SOV": [
    {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
     "name": "Slater Park"
    },
@@ -1782,10 +1591,6 @@
    }
   ],
   "SOW": [
-   {
-    "key": "ctrain-station",
-    "name": "Southland"
-   },
    {
     "key": "school",
     "name": null
@@ -1813,15 +1618,11 @@
   ],
   "SSD": [
    {
-    "key": "ctrain-station",
-    "name": "Sunnyside"
-   },
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
+    "name": null
+   },
+   {
+    "key": "school",
     "name": null
    }
   ],
@@ -1851,10 +1652,6 @@
    }
   ],
   "SVO": [
-   {
-    "key": "creek",
-    "name": null
-   },
    {
     "key": "school",
     "name": null
@@ -1904,16 +1701,16 @@
   ],
   "TUS": [
    {
-    "key": "ctrain-station",
-    "name": "Tuscany"
-   },
-   {
     "key": "pond",
     "name": "Two Toed Pond"
    },
    {
     "key": "creek",
     "name": "Twelve Mile Coulee Creek"
+   },
+   {
+    "key": "big-park",
+    "name": null
    }
   ],
   "TUX": [
@@ -1948,12 +1745,7 @@
     "name": null
    }
   ],
-  "UOC": [
-   {
-    "key": "ctrain-station",
-    "name": "University"
-   }
-  ],
+  "UOC": [],
   "VAL": [
    {
     "key": "pond",
@@ -1966,16 +1758,12 @@
   ],
   "VAR": [
    {
-    "key": "ctrain-station",
-    "name": "Dalhousie"
-   },
-   {
-    "key": "creek",
-    "name": "Bow River"
-   },
-   {
     "key": "big-park",
     "name": "Dale Hodges Park"
+   },
+   {
+    "key": "school",
+    "name": null
    }
   ],
   "VIS": [
@@ -2010,19 +1798,11 @@
   ],
   "WGT": [
    {
-    "key": "ctrain-station",
-    "name": "45 Street"
-   },
-   {
     "key": "school",
     "name": null
    }
   ],
   "WHI": [
-   {
-    "key": "ctrain-station",
-    "name": "Whitehorn"
-   },
    {
     "key": "big-park",
     "name": null
@@ -2036,10 +1816,6 @@
    {
     "key": "hill",
     "name": "Grasshopper Hill"
-   },
-   {
-    "key": "creek",
-    "name": "Bow River"
    },
    {
     "key": "school",

@@ -10,13 +10,17 @@ Features are symbolic: presence only, not real size or position (the island draw
 spare lots of its stored plan).
 
 Rules (all distances in metres, local flat projection):
-  ctrain-station  a CTrain station inside the community or within 150 m of its boundary
+  ctrain-station  a CTrain station inside the community or within 150 m of its boundary, only when
+                  the island has no real track (plans with CTrain track draw the line and its
+                  stations at their real position, island_plans.py)
   pond            a lake/pond of at least 2 ha within 250 m, and the island shows little real water
                   (fewer than 20 water tiles; real water inside the boundary is already drawn, §7.8)
   hill            a named hill/peak within 300 m, a park named ...Hill/Ridge/Bluff/Coulee/Escarpment
                   overlapping the community, or a community name containing hill/heights/ridge/mount/crest
-  creek           a river, stream or canal running at least 250 m inside the community
-  big-park        a park or nature reserve overlapping the community by at least 6 ha
+  creek           a river, stream or canal running at least 250 m inside the community, only when the
+                  island shows little real water (fewer than 20 water tiles, as for ponds)
+  big-park        a park or nature reserve overlapping the community by at least 6 ha (not the
+                  park already named as the hill)
   school          a school inside the community (no name shown)
 
 Run: python3 -I supabase/data/build_features.py [--cache <file.json>]
@@ -36,6 +40,8 @@ ROOT = HERE.parent.parent
 PLANS = ROOT / 'frontend' / 'public' / 'islands'
 OUT = HERE / 'community_features.json'
 OVERRIDE = HERE / 'community_features_override.csv'
+# Operating Red/Blue stations only (OSM also maps planned Green Line stations).
+OPEN_STATIONS = set(json.loads((HERE / 'calgary_ctrain.json').read_text())['stations'])
 
 FEATURES = ['ctrain-station', 'pond', 'hill', 'creek', 'big-park', 'school']  # priority order
 MAX_FEATURES = 3
@@ -239,9 +245,17 @@ def along(line, step=25.0):
             yield (ax + (bx - ax) * k / n, ay + (by - ay) * k / n), math.hypot(bx - ax, by - ay) / n
 
 
-def water_tiles(code):
+def plan_of(code):
     p = PLANS / f'{code}.json'
-    return len(json.loads(p.read_text())['water']) // 2 if p.exists() else 0
+    return json.loads(p.read_text()) if p.exists() else {}
+
+
+def water_tiles(code):
+    return len(plan_of(code).get('water', [])) // 2
+
+
+def has_track(code):
+    return bool(plan_of(code).get('rail'))
 
 
 def suggest(code, name, ring, layers):
@@ -252,8 +266,8 @@ def suggest(code, name, ring, layers):
     def near(p, m):
         return overlaps((p[0], p[1], p[0], p[1]), grow(b, m)) and dist_to_ring(p, ring) <= m
 
-    st = [n for p, n in stations if near(p, 150)]
-    if st:
+    st = [n for p, n in stations if near(p, 150) and n in OPEN_STATIONS]
+    if st and not has_track(code):
         found['ctrain-station'] = st[0]
 
     if water_tiles(code) < 20:
@@ -285,7 +299,7 @@ def suggest(code, name, ring, layers):
         found['hill'] = None
 
     best_river = None
-    for line, lb, n in rivers:
+    for line, lb, n in (rivers if water_tiles(code) < 20 else []):
         if not overlaps(lb, b):
             continue
         length = sum(d for p, d in along(line) if inside(p, ring))
@@ -294,7 +308,7 @@ def suggest(code, name, ring, layers):
     if best_river:
         found['creek'] = best_river[1]
 
-    big = [(a, n) for a, n in park_overlap if a >= 60000]
+    big = [(a, n) for a, n in park_overlap if a >= 60000 and not (n and n == found.get('hill'))]
     if big:
         found['big-park'] = big[0][1]
 
