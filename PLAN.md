@@ -420,8 +420,8 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Handoff**
   - **Code:** `frontend/scripts/world_map.py` → `frontend/public/worldmap/calgary.json` (223 residential outlines in metres, Douglas–Peucker 20 m, label points; 60 KB). Migration `20261122120000_gamecore_world_map.sql` (`gamecore.world_map`, RPC `gamecore_world_map`), tests `supabase/tests/database/gamecore_world_map.test.sql` (8). Frontend `frontend/src/modules/world-map/` (`WorldMap` Canvas component, `geometry.ts`, `draw.ts`, `mapText.ts`, tests); island-view exports `MOOD_PALETTES` and `IslandHud` got a `right` slot (🗺 button). The old community list picker is gone (`CommunityPicker` deleted); "Just look around first" opens the map.
   - **Rendering:** grounds and outlines drawn with a world transform from cached `Path2D`s; icons in screen space; icon count = min(level density × km², how many 15 px cells fit) → zoom-dependent detail; unsettled = dashed grey + a faint cloud only where there is room. Pan/pinch/wheel with refs and rAF (no React state per frame); tap = movement under 8 px → hit test → animated zoom + info card.
-  - **Card:** visit any community with a snapshot (level > 0 or residents); unsettled → "Invite a friend from <name>" (M12 invite, message "Do you live in <name>? … Be its first resident").
-  - **Not tested / known gaps:** a real phone; crown for the weekly #1 waits for M11; rivers, CTrain, landmarks are Art Pass; communities without a snapshot (no residents) cannot be visited from the map (their island would be empty).
+  - **Card:** visit any community (the map lists every community with its id; view only, its Community News readable; "👀 Visiting <name> · Back home" bar; Since yesterday only at home); unsettled → also "Invite a friend from <name>" (M12 invite, message "Do you live in <name>? … Be its first resident").
+  - **Not tested / known gaps:** a real phone; crown for the weekly #1 waits for M11; rivers, CTrain, landmarks are Art Pass; an unsettled community's island is mostly empty when visited (by design).
 
 
 ### M11 — Ranking & Share ⬜

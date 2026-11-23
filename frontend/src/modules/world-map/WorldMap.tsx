@@ -316,7 +316,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose }: Props) {
                 ✕
               </button>
             </div>
-            {selStatus && (selStatus.level > 0 || selStatus.residents > 0) && (
+            {selStatus && (
               <button
                 type="button"
                 onClick={() => onEnter(selStatus.id)}

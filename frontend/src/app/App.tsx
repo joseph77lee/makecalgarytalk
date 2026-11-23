@@ -95,7 +95,7 @@ function LiveApp() {
         landGrew: server.changes.land_grew,
       })
     : null;
-  const panelOpen = !!server && changesPanelOpen(server.changes, server.community.vitality, changesSeen);
+  const panelOpen = !!server?.me?.member && changesPanelOpen(server.changes, server.community.vitality, changesSeen);
   // Welcome card right after the first counted check-in (§5.1), once per community.
   const showWelcome =
     status === 'ready' &&
@@ -158,6 +158,18 @@ function LiveApp() {
                 sleepyName={server.community.vitality !== null && vitalityMood(server.community.vitality) === 'sleepy' ? server.community.name : null}
               >
                 <ResidencyChip />
+                {!server.me?.member && myCommunityId && (
+                  <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-slate-800/85 py-1.5 pl-3 pr-1.5 text-xs text-white shadow-sm backdrop-blur">
+                    <span>👀 Visiting {server.community.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => void useDailyActions.getState().reload()}
+                      className="rounded-full bg-white px-2.5 py-1 font-semibold text-slate-800"
+                    >
+                      Back home
+                    </button>
+                  </div>
+                )}
               </StreakBar>
               <ActionBar />
               {server.me?.member && !showWelcome && (
@@ -178,7 +190,10 @@ function LiveApp() {
                   onInvite={invite}
                 />
               ) : (
-                <ChangesPanel changes={server.changes} vitality={server.community.vitality} seen={changesSeen} onSeen={markChangesSeen} />
+                // Only in my own community (visiting elsewhere must not use up today's panel).
+                server.me?.member && (
+                  <ChangesPanel changes={server.changes} vitality={server.community.vitality} seen={changesSeen} onSeen={markChangesSeen} />
+                )
               )}
             </>
           )}

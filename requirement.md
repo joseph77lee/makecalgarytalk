@@ -334,6 +334,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - **Zoom-dependent detail**: at city zoom show a few representative icons per community; when zoomed in show more
   - Render with **Canvas** (thousands of small icons) for phone performance; SVG is acceptable for prototypes
 - **Interaction**: tap a community → smooth zoom to it + info card (name, level, mood, residents) → "Enter island"; tap an unsettled community → **"Invite a friend from this community"** (pre-filled message)
+  - **Any community can be visited** (view only), settled or not, including its Community News (reading, thanks and reports; posting only in your own community). A "Visiting <community> · Back home" bar returns to your own community; the "What changed since yesterday" panel only shows in your own community
 - **Art Pass / later enhancements** (target design):
   - **Animated Bow and Elbow rivers** (flowing water), Glenmore Reservoir, major parks (Nose Hill, Fish Creek)
   - **CTrain lines with moving trains** along the real Red and Blue line routes (decorative animation, not a live schedule)
@@ -795,7 +796,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > ```
 
 ### 2026-11-22 — v1.29
-**Changed:** 5.1: the first visit goes example → nickname → find my community; the World Map opens from "Just look around first" and the 🗺 Calgary button (not as a first-visit step). 9: levels defined by built buildings; shapes as a static file, levels in one request; residential communities only.
+**Changed:** 5.1: the first visit goes example → nickname → find my community; the World Map opens from "Just look around first" and the 🗺 Calgary button (not as a first-visit step). 9: levels defined by built buildings; shapes as a static file, levels in one request; residential communities only; any community can be visited (view only) with its newspaper, with a "Back home" bar.
 
 **Why:** User decision for M10 (2026-11-22): keep the first visit short; levels need an exact definition.
 
