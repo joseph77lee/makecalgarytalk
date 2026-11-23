@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.31 |
+| Document version | v1.32 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-22 |
+| Last updated | 2026-11-23 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -765,7 +765,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Mini villager | Ambient voxel character showing the community's mood; never represents or impersonates a real player |
 | Avatar | The user's own controllable character in their community's island (tap/click to move) |
 | Destination event | Avatar movement expressed as "move to tile (x, y)"; local-only in the MVP, broadcastable for real-time presence later |
-| Island / diorama | The floating voxel island in the real shape of one community; its land grows inside the visible outline with cumulative Verified Residents |
+| Island / diorama | The floating voxel island in the real shape of one community; its land grows inside the visible outline with cumulative Verified Residents. **Internal term only: player-facing text says "community"** (e.g. "Visit this community", "Back to my community", "Community size") |
 | Feature library | Reusable signature blocks (lake, creek, hill, park, etc.) assigned to communities for identity |
 | Petition | Residents' request to add a feature-library block to their island; operator decides monthly |
 | Action replay | Mini villagers re-enacting real actions residents took today, with a system speech bubble |
@@ -800,6 +800,14 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.32
+**Changed:** 23 Glossary, Island / diorama: "island" is an internal term; player-facing text says "community".
+
+**Why:** User decision (2026-11-23): players think of their community, not an island; "Visit the island" / "Island size" felt off.
+
+**Previous:**
+- 23: `| Island / diorama | The floating voxel island in the real shape of one community; its land grows inside the visible outline with cumulative Verified Residents |`
 
 ### 2026-11-22 — v1.31
 **Changed:** 12.1: ranking shown in a 🏆 sheet on the World Map with last week (final) and this week so far; shared ranks for equal scores; two-decimal scores; "N more residents to enter the ranking"; Monday announcement in "Since yesterday"; the crown marks last week's #1. 12.2: cards made on the phone and shared as images; one site-wide link preview (per-community previews later); random surprises later. 7.4: "recovered" defined.

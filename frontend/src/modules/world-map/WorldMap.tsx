@@ -363,7 +363,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
                 onClick={() => onEnter(selStatus.id)}
                 className="mt-3 w-full rounded-2xl bg-indigo-500 py-2.5 text-sm font-semibold text-white active:scale-[0.98]"
               >
-                {sel.c.code === myCode ? 'Back to my island' : 'Visit the island'}
+                {sel.c.code === myCode ? 'Back to my community' : 'Visit this community'}
               </button>
             )}
             {(!selStatus || selStatus.level === 0) && sel.c.code !== myCode && (

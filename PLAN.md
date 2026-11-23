@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.56 |
+| Plan version | v1.57 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-22 |
-| Based on | `requirement.md` v1.31 |
+| Last updated | 2026-11-23 |
+| Based on | `requirement.md` v1.32 |
 | Current module | M11 Ranking & Share (🟨 Ready for playtest) |
 
 ---
@@ -514,6 +514,14 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-23 — v1.57
+**Changed:** "Based on" → `requirement.md` v1.32 (player-facing text says "community", not "island"); the wording fix ships on the M11 branch.
+
+**Why:** User decision during the M11 review (2026-11-23).
+
+**Previous:**
+- Header: `| Plan version | v1.56 |`, `| Last updated | 2026-11-22 |`, `| Based on | \`requirement.md\` v1.31 |`
 
 ### 2026-11-22 — v1.56
 **Changed:** M11 items ticked; status 🟨 with Handoff.
