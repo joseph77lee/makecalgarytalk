@@ -256,22 +256,22 @@ describe('signature features (feature library, requirement.md §7.9)', () => {
     f.forEach((o, i) => expect([o.x, o.z]).toEqual([lots[i].x + lots[i].w / 2, lots[i].z + lots[i].d / 2]));
   });
 
-  it('are faint on future land from day one (stage 0) and solid once their land has risen', () => {
-    const early = features(buildIslandLayout(MAH, stateWith({ landStage: 0 }), three));
-    expect(early).toHaveLength(3);
-    expect(early.every((o) => 'faint' in o && o.faint && o.stage === 0)).toBe(true);
+  it('appear only when their land has risen, keeping their lot meanwhile (requirement.md v1.34)', () => {
+    expect(features(buildIslandLayout(MAH, stateWith({ landStage: 0 }), three))).toHaveLength(0);
+    const mid = features(buildIslandLayout(MAH, stateWith({ landStage: 2 }), three));
+    expect(mid.map((o) => o.id)).toEqual(['feature:ctrain-station', 'feature:hill']); // spare-1, spare-2 (stage 2)
     const late = features(buildIslandLayout(MAH, stateWith({ landStage: 5 }), three));
-    expect(late.every((o) => 'faint' in o && !o.faint && o.stage >= 2)).toBe(true);
+    expect(late).toHaveLength(3);
+    // the third feature stays on spare-3 even though it showed up later
+    const lot = MAH.lots['spare-3'];
+    expect(late[2]).toMatchObject({ x: lot.x + lot.w / 2, z: lot.z + lot.d / 2 });
   });
 
-  it('a solid feature blocks its lot; a faint one is not on the land at all', () => {
+  it('a shown feature blocks its lot; a free spare lot stays walkable', () => {
     const l = buildIslandLayout(MAH, stateWith({ landStage: 5 }), three);
     const walk = new Set(l.walkable.map(tileKey));
     expect(lotTiles(MAH.lots['spare-1']).some((t) => walk.has(tileKey(t)))).toBe(false);
-    expect(lotTiles(MAH.lots['spare-4']).every((t) => walk.has(tileKey(t)))).toBe(true); // no feature there
-    const early = buildIslandLayout(MAH, stateWith({ landStage: 0 }), three);
-    const land = new Set(early.tiles.map(tileKey));
-    expect(lotTiles(MAH.lots['spare-1']).some((t) => land.has(tileKey(t)))).toBe(false);
+    expect(lotTiles(MAH.lots['spare-4']).every((t) => walk.has(tileKey(t)))).toBe(true);
   });
 
   it('unknown buildings take only the spare lots features left free', () => {
@@ -285,6 +285,6 @@ describe('signature features (feature library, requirement.md §7.9)', () => {
 
   it('come from the community data by default (Mahogany: big park, school)', () => {
     expect(featuresFor('MAH').map((f) => f.key)).toEqual(['big-park', 'school']);
-    expect(features(buildIslandLayout(MAH, stateWith({ landStage: 0 }))).map((o) => 'featureKey' in o && o.featureKey)).toEqual(['big-park', 'school']);
+    expect(features(buildIslandLayout(MAH, stateWith({ landStage: 5 }))).map((o) => 'featureKey' in o && o.featureKey)).toEqual(['big-park', 'school']);
   });
 });

@@ -529,14 +529,87 @@ export const FEATURE_MODELS: Record<FeatureKey, Builder> = {
   school,
 };
 
-/** Faint features stand on the future-land mist (its top is at y = -0.3). */
-const MIST_TOP = -0.3;
-
-/** A signature feature: solid on land, see-through on the mist while its land is still to come. */
+/** A signature feature on its spare lot. */
 export function feature(item: ObjectOf<'feature'>, ctx: BuildCtx): BoxPart[] {
-  const parts = FEATURE_MODELS[item.featureKey]({ w: item.w, d: item.d, level: 1 }, ctx);
-  if (!item.faint) return parts;
-  return parts.map((b) => ({ ...b, layer: 'ghost', p: [b.p[0], b.p[1] + MIST_TOP, b.p[2]] }));
+  return FEATURE_MODELS[item.featureKey]({ w: item.w, d: item.d, level: 1 }, ctx);
+}
+
+// --- CTrain (requirement.md §7.9) -----------------------------------------------------
+
+const BALLAST = '#c9c2b8';
+const SLEEPER = '#9b7a5c';
+const RAIL = '#7d838c';
+const DECK = '#b8a48c';
+
+/**
+ * A stretch of track along the smoothed line: ballast, two sleepers and two rails, rotated to the
+ * stretch's direction (slightly longer so neighbouring stretches join without gaps).
+ */
+export function track(item: ObjectOf<'track'>): BoxPart[] {
+  const len = Math.hypot(item.dx, item.dz);
+  if (len < 1e-6) return [];
+  const ang = Math.atan2(item.dx, item.dz); // rotation about y; boxes are long along z
+  const r: [number, number, number] = [0, ang, 0];
+  const mx = item.dx / 2;
+  const mz = item.dz / 2;
+  const ux = item.dx / len;
+  const uz = item.dz / len;
+  const px = uz; // perpendicular (right of travel)
+  const pz = -ux;
+  const L = len + 0.06;
+  const parts: BoxPart[] = [box('solid', mx, 0, mz, 0.6, 0.03, L, BALLAST, r)];
+  for (const k of [0.25, 0.75]) parts.push(box('solid', item.dx * k, 0.03, item.dz * k, 0.52, 0.03, 0.09, SLEEPER, r));
+  for (const off of [-0.14, 0.14]) parts.push(box('solid', mx + px * off, 0.06, mz + pz * off, 0.05, 0.04, L, RAIL, r));
+  return parts;
+}
+
+/** A track tile that needs more than the line: a rail bridge deck over water, or crossing planks on a path. */
+export function rail(item: ObjectOf<'rail'>): BoxPart[] {
+  const parts: BoxPart[] = [];
+  if (item.overWater) {
+    parts.push(box('solid', 0, -0.05, 0, 0.92, 0.06, 0.92, DECK));
+    for (const [ox, oz] of [[-0.38, -0.38], [0.38, -0.38], [-0.38, 0.38], [0.38, 0.38]]) parts.push(box('solid', ox, -0.35, oz, 0.08, 0.3, 0.08, '#8a8f99'));
+  }
+  if (item.crossing) parts.push(box('solid', 0, 0.035, 0, 0.7, 0.03, 0.7, '#d8c3a0'));
+  return parts;
+}
+
+/** A station platform beside the track: concrete platform, a shelter with a line-coloured roof, a sign. */
+export function station(item: ObjectOf<'station'>): BoxPart[] {
+  const long = item.along === 'x';
+  const L = (long ? item.w : item.d) - 0.15;
+  const roof = item.lines.length > 1 ? '#8b6fc4' : item.lines[0] === 'Blue' ? '#3f7fd6' : '#d94a4a';
+  const xz = (a: number, c: number): [number, number] => (long ? [a, c] : [c, a]);
+  const sz = (a: number, c: number): [number, number] => (long ? [a, c] : [c, a]);
+  const part = (a: number, y: number, c: number, la: number, h: number, lc: number, col: string, layer: 'solid' | 'glow' = 'solid') => {
+    const [x, z] = xz(a, c);
+    const [w, d] = sz(la, lc);
+    return box(layer, x, y, z, w, h, d, col);
+  };
+  return [
+    part(0, 0, 0, L, 0.16, 0.82, '#e7dcc8'),
+    part(0, 0.16, 0.36, L, 0.02, 0.06, '#f2c94c'), // yellow safety line... on the track side below
+    part(0, 0.16, -0.32, L * 0.6, 0.48, 0.04, '#b3d8ec'),
+    part(-L * 0.3, 0.16, -0.12, 0.05, 0.5, 0.05, '#5d6470'),
+    part(L * 0.3, 0.16, -0.12, 0.05, 0.5, 0.05, '#5d6470'),
+    part(0, 0.66, -0.15, L * 0.68, 0.06, 0.48, roof),
+    part(L / 2 - 0.12, 0.16, 0.1, 0.05, 0.62, 0.05, '#5d6470'),
+    part(L / 2 - 0.12, 0.66, 0.1, 0.05, 0.16, 0.3, '#ffffff'),
+    part(-L * 0.15, 0.16, 0.05, 0.3, 0.1, 0.12, WOOD), // bench
+    part(L * 0.1, 0.6, -0.15, 0.12, 0.05, 0.12, WARM_LIGHT, 'glow'),
+  ];
+}
+
+/** A small signpost at the island edge where the track leaves (label: next station). */
+export function railEnd(item: ObjectOf<'rail-end'>): BoxPart[] {
+  // stands beside the track, on the side away from the travel direction
+  const sx = item.dir.z !== 0 ? 0.42 : 0;
+  const sz = item.dir.x !== 0 ? 0.42 : 0;
+  return [
+    box('solid', sx, 0, sz, 0.05, 0.55, 0.05, '#5d6470'),
+    box('solid', sx, 0.45, sz, item.dir.x !== 0 ? 0.04 : 0.26, 0.16, item.dir.x !== 0 ? 0.26 : 0.04, '#ffffff'),
+    box('solid', sx, 0.45, sz, item.dir.x !== 0 ? 0.05 : 0.08, 0.16, item.dir.x !== 0 ? 0.08 : 0.05, '#d94a4a'),
+  ];
 }
 
 /** A locked (or ready) building: its model as a translucent ghost on its lot. */

@@ -2,7 +2,8 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState, type ReactNode } from 'react';
 import type { PlacedObject } from '../layout';
-import { FEATURE_INFO, featureLabel } from '../plan/features';
+import { featureLabel } from '../plan/features';
+import { lineColour } from '../plan/ctrain';
 import { useIslandUi } from '../uiStore';
 import { useHtmlPortal } from './htmlPortal';
 import { BUBBLE_Z, LABEL_Z, remainingText } from './labelText';
@@ -168,26 +169,36 @@ export function IslandLabels({ objects, houseBubbles, communityName, selectedHou
                 )}
               </Overlay>
             );
-          case 'feature': {
-            // Signature feature (§7.9): at most 3 per community, so a solid one always shows its
-            // name (it is the community's identity); a faint one shows its emoji until zoomed in.
-            const f = { key: o.featureKey, name: o.name };
-            const label = featureLabel(f);
+          case 'feature':
+            // Signature feature (§7.9): at most 3 per community, so its name always shows (phones
+            // rarely reach the detailed zoom on big islands).
             return (
-              <Overlay key={o.id} x={o.x} y={o.faint ? 0.75 : 1.45} z={o.z}>
-                {!detailed && !o.faint ? (
-                  <span className="block max-w-32 truncate whitespace-nowrap rounded-full bg-white/85 px-1.5 py-px text-[10px] font-semibold text-sky-900 shadow-sm">{label}</span>
-                ) : detailed ? (
-                  <div className={`whitespace-nowrap rounded-lg px-2 py-0.5 text-center text-[10px] leading-tight shadow-sm ${o.faint ? 'bg-white/60 text-slate-500' : 'bg-sky-50/90 text-sky-900'}`}>
-                    <div className="max-w-40 truncate font-semibold">{label}</div>
-                    {o.faint && <div>Appears as the community grows</div>}
-                  </div>
-                ) : (
-                  <span className={`rounded-full px-1.5 py-px text-[10px] shadow-sm ${o.faint ? 'bg-white/50' : 'bg-white/85'}`}>{FEATURE_INFO[f.key].emoji}</span>
-                )}
+              <Overlay key={o.id} x={o.x} y={1.45} z={o.z}>
+                <span className="block max-w-32 truncate whitespace-nowrap rounded-full bg-white/85 px-1.5 py-px text-[10px] font-semibold text-sky-900 shadow-sm">
+                  {featureLabel({ key: o.featureKey, name: o.name })}
+                </span>
               </Overlay>
             );
-          }
+          case 'station':
+            return (
+              <Overlay key={o.id} x={o.x} y={1.35} z={o.z}>
+                <span className="flex max-w-40 items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-1.5 py-px text-[10px] font-bold text-slate-800 shadow-sm">
+                  {o.lines.map((l) => (
+                    <span key={l} className="h-2 w-2 shrink-0 rounded-full" style={{ background: lineColour(l) }} />
+                  ))}
+                  <span className="truncate">🚉 {o.name}</span>
+                </span>
+              </Overlay>
+            );
+          case 'rail-end':
+            // Where the track leaves the island: the next station along the line (§7.9).
+            return (
+              <Overlay key={o.id} x={o.x} y={0.95} z={o.z}>
+                <span className="block max-w-36 truncate whitespace-nowrap rounded-md bg-slate-800/75 px-1.5 py-px text-[10px] font-semibold text-white shadow-sm">
+                  Next: {o.next} ›
+                </span>
+              </Overlay>
+            );
           case 'construction-site':
             return (
               <Overlay key={o.id} x={o.x} y={1.55} z={o.z}>

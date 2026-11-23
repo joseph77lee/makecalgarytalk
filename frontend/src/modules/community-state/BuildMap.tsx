@@ -1,5 +1,5 @@
 import { projectIcon, type ServerCommunityState } from '../daily-actions';
-import { BUILDING_TREE, remainingText, type BuildingView } from '../island-view';
+import { BUILDING_TREE, remainingText, type BuildingView, type UpcomingIdentity } from '../island-view';
 import { completionPercent, groupByStage, isBuilt } from './buildMapModel';
 import { InviteChip } from './InviteChip';
 import { landGoalText } from './streakText';
@@ -14,10 +14,12 @@ interface Props {
   onInvite?: () => void;
   /** Active residents whose houses cannot be drawn (all lots taken, §7.2). */
   extraResidents?: number;
+  /** Signature features and CTrain stations that appear with the next land (§7.9). */
+  upcoming?: UpcomingIdentity | null;
 }
 
 /** Village build map (requirement.md §7.6a): read-only view of the server's tree state. */
-export function BuildMap({ community, streakDays, buildings, onClose, onShowExample, onInvite, extraResidents = 0 }: Props) {
+export function BuildMap({ community, streakDays, buildings, onClose, onShowExample, onInvite, extraResidents = 0, upcoming = null }: Props) {
   const percent = completionPercent(buildings);
   const tiers = BUILDING_TREE.landTiers;
   const goal = landGoalText(community.next_land_residents);
@@ -63,6 +65,11 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
               <p className="mt-1 text-xs text-sky-800">
                 🏝 {goal}
                 {onInvite && <InviteChip onClick={onInvite} />}
+              </p>
+            )}
+            {upcoming && (
+              <p className="mt-1 text-xs text-sky-800">
+                Coming at {upcomingThreshold(upcoming.landStage)} neighbours: <span className="font-semibold">{upcoming.labels.join(', ')}</span>
               </p>
             )}
             <button
@@ -138,4 +145,10 @@ function StatusChip({ b }: { b: BuildingView }) {
         ? ['✨ Ready', 'bg-emerald-50 text-emerald-700']
         : ['🔒 Locked', 'bg-slate-200 text-slate-500'];
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}>{text}</span>;
+}
+
+/** "11" for the land stage that opens at 11 cumulative residents. */
+function upcomingThreshold(landStage: number): string {
+  const t = BUILDING_TREE.landTiers[landStage];
+  return t ? String(Math.max(1, t.minResidents)) : '';
 }

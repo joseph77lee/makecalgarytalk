@@ -63,13 +63,13 @@ describe('feature data (supabase/data/community_features.json)', () => {
 });
 
 describe('feature models', () => {
-  const item = (featureKey: (typeof FEATURE_KEYS)[number], faint: boolean): ObjectOf<'feature'> => ({
-    assetKey: 'feature', id: 'f', x: 0, z: 0, stage: 0, w: 2, d: 2, featureKey, name: null, faint,
+  const item = (featureKey: (typeof FEATURE_KEYS)[number]): ObjectOf<'feature'> => ({
+    assetKey: 'feature', id: 'f', x: 0, z: 0, stage: 0, w: 2, d: 2, featureKey, name: null,
   });
 
   it.each(FEATURE_KEYS.map((k) => [k]))('%s stays inside its 2×2 lot in every mood', (key) => {
     for (const mood of ['lively', 'normal', 'sleepy'] as const) {
-      const parts = feature(item(key, false), { mood, palette: MOOD_PALETTES[mood] });
+      const parts = feature(item(key), { mood, palette: MOOD_PALETTES[mood] });
       expect(parts.length).toBeGreaterThan(4);
       for (const p of parts) {
         expect(Math.abs(p.p[0]) + p.s[0] / 2, `${key} x`).toBeLessThanOrEqual(1.01);
@@ -77,14 +77,5 @@ describe('feature models', () => {
         expect(p.p[1] - p.s[1] / 2, `${key} y`).toBeGreaterThanOrEqual(-0.001);
       }
     }
-  });
-
-  it('faint features are see-through and sit on the future-land mist', () => {
-    const ctx = { mood: 'normal' as const, palette: MOOD_PALETTES.normal };
-    const solid = feature(item('hill', false), ctx);
-    const faint = feature(item('hill', true), ctx);
-    expect(faint.every((p) => p.layer === 'ghost')).toBe(true);
-    expect(faint.map((p) => p.c)).toEqual(solid.map((p) => p.c)); // keeps its colours
-    expect(Math.min(...faint.map((p) => p.p[1] - p.s[1] / 2))).toBeCloseTo(-0.3, 5);
   });
 });

@@ -16,5 +16,6 @@ export { decodePlan, walkableTiles, type IslandPlan } from './plan/islandPlan';
 export { BUILDING_TREE, buildingSpec, landStageForResidents, type BuildingSpec } from './plan/buildingTree';
 export { MAX_MINI_VILLAGERS } from './types';
 export { finishedExampleState } from './example';
+export { upcomingIdentity, type UpcomingIdentity } from './plan/upcoming';
 export { remainingText } from './scene/labelText';
 export type { BuildingStatus, BuildingView, CommunityViewState, Remaining, ResidentHouse, SpeechBubble } from './types';

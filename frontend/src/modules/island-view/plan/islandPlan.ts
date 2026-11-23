@@ -17,6 +17,25 @@ export interface LotRect extends Tile {
   d: number;
 }
 
+/** One CTrain track run across the island, tiles in track order (4-connected). */
+export interface RailRun {
+  line: string;
+  tiles: Tile[];
+}
+/** A CTrain station platform beside the track, at the real station's position. */
+export interface StationLot {
+  name: string;
+  lines: string[];
+  rect: LotRect;
+}
+/** Where the track leaves the island: the next station beyond it, and the outward direction. */
+export interface RailEnd {
+  line: string;
+  next: string;
+  tile: Tile;
+  dir: Tile;
+}
+
 export interface IslandPlan {
   code: string;
   name: string;
@@ -31,6 +50,10 @@ export interface IslandPlan {
   water: Tile[];
   /** Path tiles that cross water (also listed in `paths`). */
   bridges: Tile[];
+  /** CTrain track (walkable level crossings, never built on), stations and track ends (plan v3). */
+  rail: RailRun[];
+  stations: StationLot[];
+  railEnds: RailEnd[];
   /** Cumulative DRY land per stage (the first two may be a little larger next to central water). */
   tiers: number[];
   /**
@@ -66,7 +89,7 @@ export function decodePlan(raw: unknown): IslandPlan {
     throw new Error(`Invalid island plan: ${what}`);
   };
   if (!isObj(raw)) return fail('not an object');
-  if (raw.v !== 2) fail(`unsupported version ${String(raw.v)}`);
+  if (raw.v !== 2 && raw.v !== 3) fail(`unsupported version ${String(raw.v)}`);
   if (typeof raw.code !== 'string' || typeof raw.name !== 'string') fail('code/name');
   if (!isIntArray(raw.tiles, 3)) fail('tiles');
   if (!isIntArray(raw.paths, 2) || !isIntArray(raw.houses, 2) || !isIntArray(raw.trees, 2)) fail('paths/houses/trees');
@@ -87,6 +110,29 @@ export function decodePlan(raw: unknown): IslandPlan {
     lots[k] = { x, z, w, d };
   }
   for (const k of Object.keys(BUILDING_TREE.lots)) if (!lots[k]) fail(`missing lot ${k}`);
+  // v3 adds the CTrain; v2 plans (communities without track) have none.
+  const rail: RailRun[] = [];
+  const stations: StationLot[] = [];
+  const railEnds: RailEnd[] = [];
+  if (raw.v === 3) {
+    if (!Array.isArray(raw.rail) || !Array.isArray(raw.stations) || !Array.isArray(raw.railEnds)) fail('rail/stations/railEnds');
+    for (const r of raw.rail as Obj[]) {
+      if (!isObj(r) || typeof r.line !== 'string' || !isIntArray(r.tiles, 2)) fail('rail run');
+      rail.push({ line: r.line as string, tiles: pairs(r.tiles as number[]) });
+    }
+    for (const st of raw.stations as Obj[]) {
+      const rc = st?.rect;
+      if (!isObj(st) || typeof st.name !== 'string' || !Array.isArray(st.lines) || !isIntArray(rc, 4) || (rc as number[]).length !== 4) fail('station');
+      const [x, z, w, d] = rc as number[];
+      stations.push({ name: st.name as string, lines: (st.lines as unknown[]).map(String), rect: { x, z, w, d } });
+    }
+    for (const e of raw.railEnds as Obj[]) {
+      if (!isObj(e) || typeof e.line !== 'string' || typeof e.next !== 'string' || !isIntArray(e.tile, 2) || !isIntArray(e.dir, 2)) fail('rail end');
+      const [tx, tz] = e.tile as number[];
+      const [dx, dz] = e.dir as number[];
+      railEnds.push({ line: e.line as string, next: e.next as string, tile: { x: tx, z: tz }, dir: { x: dx, z: dz } });
+    }
+  }
   return {
     code: raw.code as string,
     name: raw.name as string,
@@ -97,6 +143,9 @@ export function decodePlan(raw: unknown): IslandPlan {
     trees: pairs(raw.trees as number[]),
     water: pairs(raw.water as number[]),
     bridges: pairs(raw.bridges as number[]),
+    rail,
+    stations,
+    railEnds,
     tiers: raw.tiers as number[],
     cameraAzimuth: raw.cameraAzimuth as number,
   };
@@ -152,6 +201,8 @@ export function walkableTiles(plan: IslandPlan, landStage: number, houses: numbe
   else for (const k of houses) blocked.add(k);
   plan.trees.filter(on).forEach((t) => blocked.add(tileKey(t)));
   plan.water.forEach((t) => blocked.add(tileKey(t)));
+  // Station platforms block once on land; the track itself is walkable (level crossings).
+  for (const st of plan.stations) lotTiles(st.rect).filter(on).forEach((t) => blocked.add(tileKey(t)));
   const out: Tile[] = [];
   const seen = new Set(PLAZA.map(tileKey));
   const queue = [...PLAZA];
