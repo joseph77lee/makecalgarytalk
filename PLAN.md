@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.54 |
+| Plan version | v1.55 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-22 |
-| Based on | `requirement.md` v1.30 |
-| Current module | M11 Ranking & Share (next; M10 ✅ Done) |
+| Based on | `requirement.md` v1.31 |
+| Current module | M11 Ranking & Share (in progress; M10 ✅ Done) |
 
 ---
 
@@ -50,7 +50,7 @@
 | M9 | Community News | BE + FE | | M8 | ✅ |
 | M15 | Community Posts | FE + BE | | M9 | ✅ |
 | M10 | World Map | FE (2D) + BE | | M5 | ✅ |
-| M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |
+| M11 | Ranking & Share | BE + FE | | M5, M10 | 🟦 |
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ⬜ |
 | M14 | Launch Readiness | All | | All above | ⬜ |
@@ -426,16 +426,19 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** a real phone; crown for the weekly #1 waits for M11; rivers, CTrain, landmarks are Art Pass; an unsettled community's island is mostly empty when visited (by design).
 
 
-### M11 — Ranking & Share ⬜
+### M11 — Ranking & Share 🟦
 **Goal:** Competition and shareable moments.
 - **In scope**
-  - [ ] weekly ranking (per-1,000 formula, min 5 active verified residents, Monday reset Calgary time)
-  - [ ] TOP 10 + my community
-  - [ ] share card images (weekly result, building completed, revival) always including community name
-  - [ ] #1 flag on World Map
+  - [ ] weekly ranking (per-1,000 formula, min 5 active verified residents, Monday reset Calgary time); last week fixed on Monday, this week so far cached (`requirement.md` v1.31 §12.1)
+  - [ ] TOP 10 + my community in a 🏆 sheet on the World Map; "N more residents to enter the ranking"
+  - [ ] share card images made on the phone (weekly result, building completed, revival) always including community name; share sheet or save (§12.2)
+  - [ ] Monday announcement of last week's result in "Since yesterday"
+  - [ ] Community Revival effect (cheering, flowers) when Sleepy → recovered (§7.4)
+  - [ ] crown on last week's #1 on the World Map
+  - [ ] site-wide link preview image (Open Graph)
 - **Definition of Done**
-  - [ ] ranking math tested
-  - [ ] share card renders correctly on phones and social previews
+  - [ ] ranking math tested (week boundary at Calgary midnight, 5-resident rule, small population, ties, moves)
+  - [ ] share card renders correctly on phones; the link preview shows the site image
 
 ### M12 — Invites ✅
 **Goal:** Built-in acquisition.
@@ -505,6 +508,28 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-22 — v1.55
+**Changed:** "Based on" → `requirement.md` v1.31. M11 🟦 in progress; scope detailed (cards on the phone, 🏆 sheet on the World Map, Monday announcement, revival effect, crown = last week's #1, site link preview); DoD "social previews" → the site-wide preview image.
+
+**Why:** M11 started; user decisions 2026-11-22.
+
+**Previous:**
+- Header: `| Plan version | v1.54 |`, `| Based on | `requirement.md` v1.30 |`, `| Current module | M11 Ranking & Share (next; M10 ✅ Done) |`
+- Overview: `| M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |`
+- M11:
+```
+### M11 — Ranking & Share ⬜
+**Goal:** Competition and shareable moments.
+- **In scope**
+  - [ ] weekly ranking (per-1,000 formula, min 5 active verified residents, Monday reset Calgary time)
+  - [ ] TOP 10 + my community
+  - [ ] share card images (weekly result, building completed, revival) always including community name
+  - [ ] #1 flag on World Map
+- **Definition of Done**
+  - [ ] ranking math tested
+  - [ ] share card renders correctly on phones and social previews
+```
 
 ### 2026-11-22 — v1.54
 **Changed:** M10 ✅ Done; current module → M11.
