@@ -11,7 +11,7 @@ The site itself, **makecalgarytalk.com**, is the game.
 🚧 **Pre-MVP.** Development has started (module M0 Foundation, see `PLAN.md`).
 
 - The MVP builds the 3D island entirely from **simple coloured boxes with react-three-fiber (three.js)** (no detailed art) to validate the core loop quickly. Because the target style is voxel, the box version already looks close to the final look.
-- Detailed voxel models, props and animations come later in the **Art Pass**.
+- Detailed voxel models, props and animations come in the **Art Pass**, before the deploy and playtest (see `PLAN.md`).
 - A ~100-line three.js proof of concept (floating island, box trees/houses, wandering villagers, speech bubbles, tap-to-move avatar, construction progress, island growth) confirmed the approach is feasible.
 
 ## Documents
@@ -114,7 +114,7 @@ CI (`.github/workflows/ci.yml`) runs all of the above on every push.
 
 `requirement.md` changes over time. **Never edit requirements without logging the change.**
 
-1. Add a new entry at the top of the Change Log (§24) with date, version, what changed, why, and the previous text verbatim
+1. Add a new entry at the top of [`changelog/requirement.md`](./changelog/requirement.md) with date, version, what changed, why, and the previous text verbatim (plan changes: [`changelog/plan.md`](./changelog/plan.md))
 2. Then update the body
 3. Bump the document version and last-updated date
 

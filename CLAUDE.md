@@ -44,7 +44,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 ### Source of truth
 - `requirement.md` is the source of truth for what to build.
 - **Never change requirements silently.** If a requirement must change:
-  1. Add a Change Log entry at the top of `requirement.md` §24 (date, version, Changed, Why, Previous text verbatim)
+  1. Add a changelog entry at the top of `changelog/requirement.md` (date, version, Changed, Why, Previous text verbatim)
   2. Then update the body
   3. Bump the version and last-updated date
 - Get the user's approval before any requirement change.
@@ -90,7 +90,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 - When a module reaches 🟨 Ready for playtest, update its status in `PLAN.md` and tell the user.
 - `PLAN.md` has **no time estimates**. Do not add schedules or durations; use the checklists to track completeness.
 - If a bug belongs to a finished module, mark it 🔁 Reopened, fix it there, and log it.
-- Plan changes follow the same rule as requirements: Change Log entry first (with previous text), then edit.
+- Plan changes follow the same rule as requirements: an entry at the top of `changelog/plan.md` first (with previous text), then edit `PLAN.md`.
 
 ### Branches & merging
 - **Never commit directly to `main`.** `main` only contains work the user has checked together with Claude Code.
@@ -127,8 +127,8 @@ Each `PLAN.md` module maps to a code module with clear boundaries, so a problem 
 Each module is usually worked on in a **new session** with no memory of earlier ones. Before doing anything, rebuild context from the repository:
 1. `git status`, `git branch -a` — which branch you are on, uncommitted work, an unfinished module/fix branch
 2. `git log --oneline --graph -20 main` (and the current branch if it is not `main`) — what was done recently
-3. `PLAN.md`: the header (current module, plan version), the **newest Change Log entries**, and the **Handoff** notes of finished modules the current module depends on
-4. `requirement.md` §24 Change Log (newest entries) and the sections the current module touches
+3. `PLAN.md`: the header (current module, plan version) and the **Handoff** notes of finished modules the current module depends on; the **top 2–3 entries** of `changelog/plan.md` (read the beginning of the file only)
+4. The **top 2–3 entries** of `changelog/requirement.md` (beginning of the file only) and the `requirement.md` sections the current module touches
 5. This file's Mistake Log
 6. Local environment: Docker Desktop running, `supabase status` (ports 554xx), `frontend/.env.local` present; run the tests once to confirm a green starting point
 7. Tell the user in a few lines what you found (last finished module, current module, anything unfinished) before starting
