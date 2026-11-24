@@ -47,7 +47,7 @@ describe('models', () => {
   it('sleepy trees carry snow, others do not', () => {
     const t: ObjectOf<'tree'> = { assetKey: 'tree', id: 't', x: 0, z: 0, stage: 0, variant: 0 };
     const snow = (mood: 'lively' | 'sleepy') => tree(t, ctx(mood)).filter((p) => p.c === '#f6f8fb');
-    expect(snow('sleepy')).toHaveLength(1);
+    expect(snow('sleepy').length).toBeGreaterThan(0);
     expect(snow('lively')).toHaveLength(0);
   });
 
@@ -131,6 +131,14 @@ describe('models', () => {
       assetKey: 'construction-site', id: 'c', x: 0, z: 0, stage: 0, w: 3, d: 2, facing: 0, variant: 0, buildingKey: 'frozen-pond', title: 'T', progress, level: 1,
     });
     expect(constructionSite(site(0.6)).length).toBeGreaterThan(constructionSite(site(0.2)).length);
+    for (const [w, d] of [[1, 1], [2, 2], [3, 2], [2, 3], [3, 3]]) {
+      for (const progress of [0.2, 0.8]) {
+        for (const p of constructionSite({ ...site(progress), w, d })) {
+          expect(Math.abs(p.p[0]) + p.s[0] / 2, `${w}x${d} x`).toBeLessThanOrEqual(w / 2 + 0.01);
+          expect(Math.abs(p.p[2]) + p.s[2] / 2, `${w}x${d} z`).toBeLessThanOrEqual(d / 2 + 0.01);
+        }
+      }
+    }
   });
 
   it('reserved plots mark Main Street in blue and future buildings in orange', () => {

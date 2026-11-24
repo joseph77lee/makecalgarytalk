@@ -260,9 +260,9 @@ export function communityHall(seed: number): BoxPart[] {
 // --- Props (one tile) ------------------------------------------------------------------
 
 /** Leafy tree with a bumpy voxel canopy. */
-export function leafyTree(seed: number): BoxPart[] {
-  const leaf = pick(ART.leaf, rnd(seed, 16));
-  const parts: BoxPart[] = [vb(-0.6, 0, -0.6, 0.6, 4.5, 0.6, ART.trunk), vb(-3.5, 4, -3.5, 3.5, 8.5, 3.5, leaf), vb(-2.5, 8.5, -2.5, 2.5, 10, 2.5, shade(leaf, 0.08))];
+export function leafyTree(seed: number, leafColour?: string, trunkColour: string = ART.trunk): BoxPart[] {
+  const leaf = leafColour ?? pick(ART.leaf, rnd(seed, 16));
+  const parts: BoxPart[] = [vb(-0.6, 0, -0.6, 0.6, 4.5, 0.6, trunkColour), vb(-3.5, 4, -3.5, 3.5, 8.5, 3.5, leaf), vb(-2.5, 8.5, -2.5, 2.5, 10, 2.5, shade(leaf, 0.08))];
   for (let i = 0; i < 6; i++) {
     const x = Math.floor(rnd(seed, i, 1) * 6) - 3;
     const z = Math.floor(rnd(seed, i, 2) * 6) - 3;
@@ -273,8 +273,8 @@ export function leafyTree(seed: number): BoxPart[] {
 }
 
 /** Spruce (very Calgary): stacked tiers narrowing to the top. */
-export function spruce(seed: number): BoxPart[] {
-  const c = pick(ART.spruce, rnd(seed, 17));
+export function spruce(seed: number, colour?: string): BoxPart[] {
+  const c = colour ?? pick(ART.spruce, rnd(seed, 17));
   return [
     vb(-0.5, 0, -0.5, 0.5, 2.5, 0.5, ART.trunk),
     vb(-3.5, 2, -3.5, 3.5, 4.5, 3.5, c),

@@ -10,8 +10,8 @@ import { ACCENTS, type MoodPalette, type VitalityMood } from '../mood';
 import { asGhost, box, translate, type BoxPart } from './boxes';
 import { BUILDING_VOXELS, placeholderModel } from './voxel/buildings';
 import { FEATURE_VOXELS, catenaryPole, crossingSign, railEndSignParts, stationPlatformParts } from './voxel/features';
-import { shade } from './voxel/voxel';
-import { lampPost } from './voxel/samples';
+import { shade, vb } from './voxel/voxel';
+import { lampPost, leafyTree, spruce } from './voxel/samples';
 import { vturn } from './voxel/voxel';
 
 export interface BuildCtx {
@@ -25,7 +25,6 @@ const DOOR = '#a77b5a';
 const DARK_WINDOW = '#64748b';
 const WARM_LIGHT = '#ffd98a';
 const SNOW = '#f6f8fb';
-const STONE = '#c9c2b8';
 const GOLD = '#f2c94c';
 const SILHOUETTE = '#c9c3e6';
 
@@ -62,24 +61,20 @@ export function boxHouse(item: Pick<ObjectOf<'house'>, 'colorIndex' | 'activeTod
 }
 
 
+/**
+ * An island tree (Art Pass voxel): leafy trees in the mood's leaf colours, one in three a spruce;
+ * the sleepy (winter evening) mood puts snow on the tops.
+ */
 export function tree(item: ObjectOf<'tree'>, { palette, mood }: BuildCtx): BoxPart[] {
-  const leaves = palette.leaves[item.variant % 2];
-  const k = mood === 'sleepy' ? 0.85 : 1;
-  const parts: BoxPart[] = [box('solid', 0, 0, 0, 0.14, 0.32, 0.14, palette.trunk)];
-  let top: number;
-  if (item.variant === 0) {
-    parts.push(box('solid', 0, 0.3, 0, 0.62 * k, 0.5 * k, 0.62 * k, leaves));
-    parts.push(box('solid', 0, 0.3 + 0.5 * k, 0, 0.4 * k, 0.3 * k, 0.4 * k, leaves));
-    top = 0.3 + 0.8 * k;
-  } else if (item.variant === 1) {
-    parts.push(box('solid', 0, 0.3, 0, 0.48 * k, 0.75 * k, 0.48 * k, leaves));
-    parts.push(box('solid', 0, 0.3 + 0.75 * k, 0, 0.3 * k, 0.28 * k, 0.3 * k, leaves));
-    top = 0.3 + 1.03 * k;
-  } else {
-    parts.push(box('solid', 0, 0.3, 0, 0.7 * k, 0.55 * k, 0.7 * k, leaves));
-    top = 0.3 + 0.55 * k;
+  const seed = Math.round(item.x * 131 + item.z * 977);
+  const sleepy = mood === 'sleepy';
+  if (item.variant === 2) {
+    const parts = spruce(seed, sleepy ? '#4f8a6b' : undefined);
+    if (sleepy) parts.push(vb(-2.7, 7, -2.7, 2.7, 7.4, 2.7, SNOW), vb(-1.9, 9.5, -1.9, 1.9, 9.9, 1.9, SNOW), vb(-1.1, 11.5, -1.1, 1.1, 11.9, 1.1, SNOW));
+    return parts;
   }
-  if (mood === 'sleepy') parts.push(box('solid', 0, top, 0, 0.34, 0.07, 0.34, SNOW));
+  const parts = leafyTree(seed, palette.leaves[item.variant % 2], palette.trunk);
+  if (sleepy) parts.push(vb(-2.5, 10, -2.5, 2.5, 10.5, 2.5, SNOW), vb(-3.5, 8.5, -3.5, -1, 8.9, 3.5, SNOW));
   return parts;
 }
 
@@ -122,30 +117,61 @@ export function reservedPlot(item: ObjectOf<'reserved-plot'>): BoxPart[] {
   return parts;
 }
 
+/**
+ * A construction site (Art Pass voxel): a dirt pad, an orange-and-white safety fence with a gate,
+ * and scaffolding. Before half progress: piles of bricks, lumber and sand, a wheelbarrow and cones;
+ * from half progress the building's frame rises inside the scaffold. Big lots get a tower crane.
+ */
 export function constructionSite(item: ObjectOf<'construction-site'>): BoxPart[] {
-  const { w, d } = item;
-  const pole = '#e0a96d';
-  const hx = w / 2 - 0.35;
-  const hz = d / 2 - 0.35;
-  const parts: BoxPart[] = [
-    box('solid', 0, 0, 0, w - 0.2, 0.03, d - 0.2, '#d9c7a5'),
-    box('solid', 0, 0.03, 0, w - 0.7, 0.12, d - 0.7, STONE),
-    box('solid', w / 2 - 0.22, 0.03, d / 2 - 0.22, 0.12, 0.2, 0.12, '#f39a52'),
-  ];
-  for (const [x, z] of [[-hx, -hz], [hx, -hz], [-hx, hz], [hx, hz]]) parts.push(box('solid', x, 0.03, z, 0.06, 1.05, 0.06, pole));
-  for (const y of [0.5, 1.02]) {
-    parts.push(box('solid', 0, y, -hz, hx * 2, 0.05, 0.06, pole), box('solid', 0, y, hz, hx * 2, 0.05, 0.06, pole));
-    parts.push(box('solid', -hx, y, 0, 0.06, 0.05, hz * 2, pole), box('solid', hx, y, 0, 0.06, 0.05, hz * 2, pole));
+  const hx = item.w * 6 - 0.6;
+  const hz = item.d * 6 - 0.6;
+  const parts: BoxPart[] = [vb(-hx, 0, -hz, hx, 0.35, hz, '#c9a77c'), vb(-hx + 1, 0.35, -hz + 1, hx - 1, 0.45, hz - 1, '#b8946a')];
+  // safety fence with alternating panels and a gap (gate) at the front
+  for (let x = -hx; x < hx - 0.1; x += 2) {
+    const c = Math.round((x + hx) / 2) % 2 ? '#f39a52' : '#ffffff';
+    const x1 = Math.min(x + 2, hx);
+    if (Math.abs(x + 1) > 2) parts.push(vb(x, 0.35, hz - 0.3, x1, 2.6, hz, c));
+    parts.push(vb(x, 0.35, -hz, x1, 2.6, -hz + 0.3, c));
+  }
+  for (let z = -hz; z < hz - 0.1; z += 2) {
+    const c = Math.round((z + hz) / 2) % 2 ? '#f39a52' : '#ffffff';
+    const z1 = Math.min(z + 2, hz);
+    parts.push(vb(-hx, 0.35, z, -hx + 0.3, 2.6, z1, c), vb(hx - 0.3, 0.35, z, hx, 2.6, z1, c));
+  }
+  // scaffolding around the middle
+  const sx = Math.min(hx - 3, 9);
+  const sz = Math.min(hz - 3, 9);
+  const pipe = '#c9cdd3';
+  const levels = item.progress >= 0.5 ? 3 : 2;
+  for (const [x, z] of [[-sx, -sz], [sx, -sz], [-sx, sz], [sx, sz], [0, -sz], [0, sz]]) parts.push(vb(x - 0.3, 0.45, z - 0.3, x + 0.3, 0.45 + levels * 3.4, z + 0.3, pipe));
+  for (let l = 1; l <= levels; l++) {
+    const y = 0.45 + l * 3.4;
+    parts.push(vb(-sx, y - 0.3, -sz - 0.6, sx, y, -sz + 0.6, '#b98b5e'), vb(-sx, y - 0.3, sz - 0.6, sx, y, sz + 0.6, '#b98b5e'));
+    parts.push(vb(-sx - 0.2, y - 0.2, -sz, -sx + 0.2, y, sz, pipe), vb(sx - 0.2, y - 0.2, -sz, sx + 0.2, y, sz, pipe));
   }
   if (item.progress >= 0.5) {
-    const beam = '#b98b5e';
-    const ix = hx - 0.17;
-    const iz = hz - 0.17;
-    for (const [x, z] of [[-ix, -iz], [ix, -iz], [-ix, iz], [ix, iz]]) parts.push(box('solid', x, 0.15, z, 0.1, 0.75, 0.1, beam));
-    parts.push(box('solid', 0, 0.9, 0, ix * 2 + 0.1, 0.08, iz * 2 + 0.1, beam));
-    parts.push(box('solid', 0, 0.15, -iz, ix * 2, 0.38, 0.06, WALL));
+    // the frame rises with progress: corner posts, a floor and part of the walls
+    const h = 2 + Math.round((item.progress - 0.5) * 2 * 6);
+    const fx = sx - 1.5;
+    const fz = sz - 1.5;
+    parts.push(vb(-fx, 0.45, -fz, fx, 1.2, fz, '#cfc9bd'));
+    for (const [x, z] of [[-fx, -fz], [fx, -fz], [-fx, fz], [fx, fz]]) parts.push(vb(x - 0.5, 1.2, z - 0.5, x + 0.5, 1.2 + h, z + 0.5, '#a67b55'));
+    parts.push(vb(-fx, 1.2, -fz, fx, 1.2 + h * 0.6, -fz + 0.8, '#efe2c2'), vb(-fx, 1.2 + h, -fz - 0.3, fx, 1.8 + h, fz + 0.3, '#a67b55'));
   } else {
-    parts.push(box('solid', -0.2, 0.15, -0.15, 0.4, 0.14, 0.3, '#c8a27a'), box('solid', 0.25, 0.15, 0.2, 0.3, 0.2, 0.3, '#b9b2a6'));
+    parts.push(vb(-sx + 1, 0.45, -sz + 1, -sx + 4, 2.4, -sz + 3.4, '#c4694f'), vb(-sx + 1.3, 2.4, -sz + 1.3, -sx + 3.7, 3, -sz + 3.1, '#d98a6a')); // bricks
+    if (item.w >= 2 && item.d >= 2) {
+      parts.push(vb(1, 0.45, -2, 7, 1.4, 0, '#d6b07a'), vb(1, 1.4, -1.8, 7, 2.2, -0.2, '#c49a64')); // lumber
+      parts.push(vb(-3, 0.45, 2, 1, 1.6, 5, '#e6cf9a'), vb(-2.2, 1.6, 2.8, 0.2, 2.4, 4.2, '#e6cf9a')); // sand
+      parts.push(vb(3, 0.45, 3, 5.6, 1.6, 4.6, '#5b8fd6'), vb(5.6, 0.8, 3.6, 7.4, 1, 4, '#5d6470')); // wheelbarrow
+    }
+  }
+  for (const x of [-2.5, 2.5]) parts.push(vb(x - 0.6, 0.35, hz + 0.3 - 1.5, x + 0.6, 0.6, hz + 0.3 - 0.3, '#f39a52'), vb(x - 0.3, 0.6, hz - 1.2, x + 0.3, 2, hz - 0.6, '#f39a52'));
+  if (item.w >= 3 && item.d >= 3) {
+    // small tower crane in the back corner
+    const cx = -hx + 2.5;
+    const cz = -hz + 2.5;
+    parts.push(vb(cx - 0.8, 0.45, cz - 0.8, cx + 0.8, 20, cz + 0.8, '#f2c14e'), vb(cx - 0.8, 20, cz - 0.6, cx + 16, 21, cz + 0.6, '#f2c14e'), vb(cx - 2.4, 20, cz - 0.8, cx - 0.8, 22.4, cz + 0.8, '#7d838c'));
+    parts.push(vb(cx + 10, 13, cz - 0.1, cx + 10.2, 20, cz + 0.1, '#5d6470'), vb(cx + 9.4, 12, cz - 0.6, cx + 10.8, 13, cz + 0.6, '#5d6470'));
   }
   return parts;
 }
