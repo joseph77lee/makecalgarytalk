@@ -12,6 +12,31 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.68
+**Changed:** M19 Art Pass → 🟨 Ready for playtest: scope filled in with what was built (voxel houses per community type, public buildings, features and CTrain, construction sites, trees, one voxel person, street props, island life, ground detail, gallery), Definition of Done ticked except the user check, Handoff note added. Header "Current module" updated. "Based on" → `requirement.md` v1.39 (avatar name always shown, "My house" marker). M20 scope adds "snow settles on roofs, trees and ground" (carried over from M19). After launch: the Art Pass leftovers line drops "(decided when M19 is planned)" (styled World Map, avatar customization, walk-up-and-tap actions stay after launch); the palette item marks the palette as set in M19 (lighting still M20).
+
+**Why:** M19 work finished on `module/m19-art-pass`; waiting for the user's playtest.
+
+**Previous:**
+- Header: `| Plan version | v1.67 |`, `| Current module | M19 Art Pass (next; scope to be planned with the user), then M20 |` (Based on was already bumped to v1.39 in eb04d0c)
+- Module table: `| M19 | Art Pass | FE (R3F) | | M14 | ⬜ |`
+- M19 (verbatim):
+  > ### M19 — Art Pass ⬜
+  > **Goal:** Every community looks worth playing and feels **busy** before anyone sees it (`requirement.md` v1.38 §19.0, §22.2, §22.6). Built **before M16** (deploy and playtest).
+  > - **In scope** (to be planned with the user before work starts)
+  >   - [ ] prettier voxel communities: island ground, buildings of the tree, houses, people (avatar, mini villagers) and props, through the existing asset keys (§20.4: no game-logic changes)
+  >   - [ ] busier communities: more life on the island (props, activity, villagers) without fake players (§7.3)
+  >   - **Priority: looks first** (operator decision 2026-11-24): detail and amounts are chosen for the best look. Performance work is limited to changes that keep the look identical (e.g. merging touching voxels into one box); slow phones are covered by the M14 low-quality mode; one real-phone check before the launch (M16). Rendering cost depends on each player's phone and the island's content, not on the number of players.
+  >   - [ ] the details — which assets, style, how they are made, phone performance budget — are decided together first
+  > - **Definition of Done** (to be completed when the scope is planned)
+  >   - [ ] phone performance stays within §20.3a
+  >   - [ ] user has looked at it
+- After launch, Phase 2 (verbatim):
+  > - [ ] Art Pass items not taken into M19 (decided when M19 is planned): styled World Map (animated Bow/Elbow rivers, moving CTrain trains on the map, Calgary landmark buildings, transitions), avatar customization, walk-up-and-tap actions
+- Open numbers (verbatim):
+  > - [ ] Pastel palette and lighting values — needed for M19/M20
+- M20 In scope: no snow-on-roofs item.
+
 ### 2026-11-24 — v1.67
 **Changed:** M19: added the "looks first" priority note (best look first; only look-preserving performance changes; M14 low-quality mode as the safety net; one real-phone check before launch in M16).
 
