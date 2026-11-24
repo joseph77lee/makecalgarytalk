@@ -1,4 +1,5 @@
 import { box, type BoxPart } from '../assets/boxes';
+import { shade } from '../assets/voxel/voxel';
 import type { IslandTile, Tile } from '../layout';
 import type { MoodPalette } from '../mood';
 
@@ -29,14 +30,35 @@ export function terrainParts(tiles: Pick<IslandTile, 'x' | 'z' | 'kind'>[], land
         parts.push(box('solid', t.x + 0.5, 0, t.z + 0.92, 1, 0.12, 0.05, '#8a6343'));
       }
     } else {
-      const colour = t.kind === 'path' ? palette.path[odd] : palette.grass[odd];
-      parts.push(box('solid', t.x + 0.5, -TILE_H, t.z + 0.5, 1, TILE_H, 1, colour));
+      // Art Pass ground detail: slight colour variation per tile, grass tufts, stepping stones on paths.
+      const base = t.kind === 'path' ? palette.path[odd] : palette.grass[odd];
+      parts.push(box('solid', t.x + 0.5, -TILE_H, t.z + 0.5, 1, TILE_H, 1, shade(base, (jag(t.x, t.z) - 0.5) * 0.07)));
+      const r = jag(t.z * 7 + 3, t.x * 5 + 1);
+      if (t.kind === 'path') {
+        if (r < 0.55) {
+          const ox = (jag(t.x + 11, t.z) - 0.5) * 0.4;
+          const oz = (jag(t.x, t.z + 13) - 0.5) * 0.4;
+          parts.push(box('solid', t.x + 0.5 + ox, 0, t.z + 0.5 + oz, 0.3, 0.025, 0.24, shade(palette.path[0], -0.12)));
+          if (r < 0.25) parts.push(box('solid', t.x + 0.5 - ox * 0.8, 0, t.z + 0.5 - oz * 0.8, 0.2, 0.02, 0.18, shade(palette.path[1], -0.08)));
+        }
+      } else if (r < 0.4) {
+        const tufts = r < 0.15 ? 2 : 1;
+        for (let i = 0; i < tufts; i++) {
+          const ox = (jag(t.x + 17 + i * 5, t.z) - 0.5) * 0.8;
+          const oz = (jag(t.x, t.z + 19 + i * 7) - 0.5) * 0.8;
+          parts.push(box('solid', t.x + 0.5 + ox, 0, t.z + 0.5 + oz, 0.07, 0.07, 0.07, shade(palette.grass[1], -0.18)));
+          parts.push(box('solid', t.x + 0.5 + ox + 0.05, 0, t.z + 0.5 + oz - 0.03, 0.05, 0.05, 0.05, shade(palette.grass[0], -0.1)));
+        }
+      }
     }
     const edge = landKeys === null || !isLand(t.x + 1, t.z) || !isLand(t.x - 1, t.z) || !isLand(t.x, t.z + 1) || !isLand(t.x, t.z - 1);
     if (edge) {
       const rock = 0.7 + jag(t.x, t.z) * 1.0;
-      parts.push(box('solid', t.x + 0.5, -TILE_H - DIRT_H, t.z + 0.5, 1, DIRT_H, 1, palette.dirtTop));
-      parts.push(box('solid', t.x + 0.5, -TILE_H - DIRT_H - rock, t.z + 0.5, 1, rock, 1, palette.dirtBottom));
+      // a thin darker lip under the grass, the soil, a band, then rock (layered like the reference)
+      parts.push(box('solid', t.x + 0.5, -TILE_H - 0.06, t.z + 0.5, 1, 0.06, 1, shade(palette.dirtTop, 0.08)));
+      parts.push(box('solid', t.x + 0.5, -TILE_H - DIRT_H, t.z + 0.5, 1, DIRT_H - 0.06, 1, palette.dirtTop));
+      parts.push(box('solid', t.x + 0.5, -TILE_H - DIRT_H - 0.12, t.z + 0.5, 1, 0.12, 1, shade(palette.dirtBottom, 0.1)));
+      parts.push(box('solid', t.x + 0.5, -TILE_H - DIRT_H - 0.12 - rock, t.z + 0.5, 1, rock, 1, shade(palette.dirtBottom, (jag(t.z, t.x) - 0.5) * 0.08)));
     }
   }
   return parts;

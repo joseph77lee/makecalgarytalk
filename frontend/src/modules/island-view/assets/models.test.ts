@@ -162,9 +162,13 @@ describe('terrain', () => {
       { x: 0, z: 0, kind: 'grass' as const },
       { x: 1, z: 0, kind: 'path' as const },
     ];
+    // full-size boxes only: one top tile per tile, four dirt layers under each edge tile
+    const full = (parts: ReturnType<typeof terrainParts>) => parts.filter((p) => p.s[0] === 1 && p.s[2] === 1);
     const parts = terrainParts(tiles, new Set(['0,0', '1,0']), MOOD_PALETTES.normal);
-    expect(parts).toHaveLength(2 + 2 * 2); // both are edge tiles
-    expect(terrainParts(tiles, null, MOOD_PALETTES.normal)).toHaveLength(6);
+    expect(full(parts)).toHaveLength(2 + 2 * 4); // both are edge tiles
+    expect(full(terrainParts(tiles, null, MOOD_PALETTES.normal))).toHaveLength(10);
+    // the detail (tufts, stones) stays on top of its own tile
+    for (const p of parts.filter((q) => q.s[0] < 1)) expect(p.p[1]).toBeGreaterThanOrEqual(0);
   });
 
   it('future land is a faint mist layer', () => {
