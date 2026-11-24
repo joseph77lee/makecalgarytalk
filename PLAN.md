@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Based on | `requirement.md` v1.39 |
-| Current module | M19 Art Pass 🔁 Reopened (visual polish, `fix/m19-visual-polish`), then M20 |
+| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |
 
 ---
 
@@ -54,7 +54,7 @@
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
-| M19 | Art Pass | FE (R3F) | | M14 | 🔁 |
+| M19 | Art Pass | FE (R3F) | | M14 | ✅ |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ⬜ |
 | M16 | Deploy & Playtest | All + operator accounts | | M20 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
@@ -516,7 +516,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Launch steps:** `docs/launch.md` lists every operator step (Supabase project in Canada Central, link + `db push`, auth settings, Cloudflare Pages env vars, Turnstile, Google OAuth, email routing, adding an operator, deletion requests, Pro before public launch).
   - **Legal text** is a template-based first version written from what the game actually stores; professional review once revenue starts (§18). If the Supabase region is not Canada, update the Privacy Policy.
 
-### M19 — Art Pass 🔁
+### M19 — Art Pass ✅
 **Goal:** Every community looks worth playing and feels **busy** before anyone sees it (`requirement.md` v1.39 §19.0, §22.2, §22.6). Built **before M16** (deploy and playtest).
 - **In scope** (planned with the user 2026-11-24: own code-built voxel assets, warm pastel colours matching `docs/references/`)
   - [x] the details decided together: own voxel assets (12 voxels per tile) first, buy or redo only if the user does not like them; downtown = towers, other communities = a mix of house types; warm pastel palette
@@ -533,7 +533,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] everything drawn through the existing asset keys (§20.4), no game-logic changes; all repeated boxes instanced (§20.3a)
   - [x] checked on screen (desktop and 390 px phone viewport): Mahogany (suburb), Beltline (downtown), finished-example buildings, features and CTrain in the gallery, labels on/off
   - [ ] real-phone performance — deferred to the one real-phone check in M16 (looks-first decision)
-  - [x] user has looked at it (confirmed 2026-11-24)
+  - [x] user has looked at it (confirmed 2026-11-24; visual polish confirmed 2026-11-24)
 - **Handoff**
   - **Code:** voxel kit in `island-view/assets/voxel/` — `voxel.ts` (`V = 12`, `vb`, `vturn` quarter turns 0=+z 1=+x 2=−z 3=−x, `gableRoof`, `hipRoof`, `windowZ/X`, `shade`), `samples.ts` (`ART` palette and every sample model), `houses.ts` (`houseStyleFor(code)`: downtown set DNC, DNE, DNW, EAU, CHN, BLN; Centre sector from the community CSV → inner; others → suburb; `HOUSE_MIX`), `buildings.ts` (`BUILDING_VOXELS`, `BUILDING_VARIANTS`; authored at the canonical lot, turned lots swap w/d), `features.ts` (features + CTrain parts). `assets/VoxelPerson.tsx` (`PERSON_SCALE = 0.72`) is shared by `avatar/Avatar.tsx` and `MiniVillagers`. `models.ts` maps asset keys to these; `registry.ts` adds `feature`, `rail`, `track`, `station`, `rail-end`, `prop`.
   - **Layout:** objects now carry `facing` and `variant` (`Look`); design = `hashString(\`${code}:${key}\`)`, colours picked by `variant % n` (hash picks collided). `houseFacing` / `lotFacing` / `platformFacing` exported from `layout.ts`. House objects carry `houseType` and `height`; labels and tap boxes follow the height. Street props: `assetKey 'prop'`, non-blocking, ≤ `MAX_PROPS = 70`.
