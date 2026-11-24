@@ -93,13 +93,13 @@ export type PlacedObject =
   | (Base & Footprint & Look & { assetKey: 'silhouette'; buildingKey: string; title: string; ready: boolean; remaining: Remaining | null })
   | (Base & Footprint & { assetKey: 'reserved-plot'; lotKind: string })
   /** A signature feature (requirement.md §7.9) on a spare lot; appears when its land has risen. */
-  | (Base & Footprint & { assetKey: 'feature'; featureKey: FeatureKey; name: string | null })
+  | (Base & Footprint & Look & { assetKey: 'feature'; featureKey: FeatureKey; name: string | null })
   /** One CTrain track tile under the line: drawn only as a rail bridge (over water) or a level crossing (path). */
   | (Base & { assetKey: 'rail'; links: RailLinks; overWater: boolean; crossing: boolean })
   /** A stretch of CTrain track between two smoothed points (world coordinates; the object sits at the first). */
-  | (Base & { assetKey: 'track'; dx: number; dz: number })
+  | (Base & { assetKey: 'track'; dx: number; dz: number; /** An overhead-wire pole stands at this stretch. */ pole: boolean })
   /** A CTrain station platform beside the track (real position). */
-  | (Base & Footprint & { assetKey: 'station'; name: string; lines: string[]; along: 'x' | 'z' })
+  | (Base & Footprint & Look & { assetKey: 'station'; name: string; lines: string[]; along: 'x' | 'z' })
   /** Sign where the track leaves the island: the next station beyond. */
   | (Base & { assetKey: 'rail-end'; next: string; dir: Tile })
   | (Base &
@@ -223,7 +223,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
     if (spec.kind === 'spare' && featureQueue.length > 0) {
       const f = featureQueue.shift() as CommunityFeature;
       if (onLand) {
-        objects.push({ ...base, id: `feature:${f.key}`, assetKey: 'feature', featureKey: f.key, name: f.name });
+        objects.push({ ...base, facing: lotFacing(rect, pathKeys, false), variant: hashString(`${plan.code}:${f.key}`), id: `feature:${f.key}`, assetKey: 'feature', featureKey: f.key, name: f.name });
         usedLots.push(lotKey);
         rTiles.forEach((t) => occupied.add(tileKey(t)));
       }
@@ -359,7 +359,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       const b = line[i];
       const st = Math.max(tileStage(a), tileStage(b));
       if (st > landStage) continue;
-      objects.push({ assetKey: 'track', id: `track:${run.line}:${tileKey(run.tiles[0])}:${i}`, x: a.x, z: a.z, stage: st, dx: b.x - a.x, dz: b.z - a.z });
+      objects.push({ assetKey: 'track', id: `track:${run.line}:${tileKey(run.tiles[0])}:${i}`, x: a.x, z: a.z, stage: st, dx: b.x - a.x, dz: b.z - a.z, pole: i % 3 === 1 });
     }
   }
   for (const e of plan.railEnds) link(e.tile, { x: e.tile.x + e.dir.x, z: e.tile.z + e.dir.z });
@@ -386,6 +386,8 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       name: st.name,
       lines: st.lines,
       along: st.rect.w >= st.rect.d ? 'x' : 'z',
+      facing: platformFacing(st.rect, links),
+      variant: hashString(`${plan.code}:${st.name}`),
     });
   });
   for (const e of plan.railEnds) {
@@ -525,6 +527,16 @@ export function lotFacing(rect: LotRect, pathKeys: Set<string>, entrance: boolea
     }
   }
   return best;
+}
+
+/** A platform's safety edge faces the track: the long side that has track tiles next to it. */
+export function platformFacing(rect: LotRect, railTiles: { has: (k: string) => boolean }): number {
+  if (rect.w >= rect.d) {
+    for (let i = 0; i < rect.w; i++) if (railTiles.has(tileKey({ x: rect.x + i, z: rect.z + rect.d }))) return 0;
+    return 2;
+  }
+  for (let j = 0; j < rect.d; j++) if (railTiles.has(tileKey({ x: rect.x + rect.w, z: rect.z + j }))) return 1;
+  return 3;
 }
 
 /** Directions in `facing` order: +z, +x, −z, −x. */

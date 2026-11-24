@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { ObjectOf } from '../layout';
 import { MOOD_PALETTES } from '../mood';
 import { feature } from '../assets/models';
+import { FEATURE_VARIANTS } from '../assets/voxel/features';
 import { BUILDING_TREE } from './buildingTree';
 import { FEATURE_INFO, FEATURE_KEYS, MAX_FEATURES, allFeatureCodes, decodeFeatures, featureLabel, featuresFor } from './features';
 
@@ -62,20 +63,31 @@ describe('feature data (supabase/data/community_features.json)', () => {
   });
 });
 
-describe('feature models', () => {
-  const item = (featureKey: (typeof FEATURE_KEYS)[number]): ObjectOf<'feature'> => ({
-    assetKey: 'feature', id: 'f', x: 0, z: 0, stage: 0, w: 2, d: 2, featureKey, name: null,
+describe('feature models (Art Pass)', () => {
+  const item = (featureKey: (typeof FEATURE_KEYS)[number], facing: number, variant: number): ObjectOf<'feature'> => ({
+    assetKey: 'feature', id: 'f', x: 0, z: 0, stage: 0, w: 2, d: 2, facing, variant, featureKey, name: null,
   });
 
-  it.each(FEATURE_KEYS.map((k) => [k]))('%s stays inside its 2×2 lot in every mood', (key) => {
+  it.each(FEATURE_KEYS.map((k) => [k]))('%s: every design stays inside its 2×2 lot in every facing and mood', (key) => {
     for (const mood of ['lively', 'normal', 'sleepy'] as const) {
-      const parts = feature(item(key), { mood, palette: MOOD_PALETTES[mood] });
-      expect(parts.length).toBeGreaterThan(4);
-      for (const p of parts) {
-        expect(Math.abs(p.p[0]) + p.s[0] / 2, `${key} x`).toBeLessThanOrEqual(1.01);
-        expect(Math.abs(p.p[2]) + p.s[2] / 2, `${key} z`).toBeLessThanOrEqual(1.01);
-        expect(p.p[1] - p.s[1] / 2, `${key} y`).toBeGreaterThanOrEqual(-0.001);
+      for (let facing = 0; facing < 4; facing++) {
+        for (let variant = 0; variant < FEATURE_VARIANTS[key]; variant++) {
+          const parts = feature(item(key, facing, variant), { mood, palette: MOOD_PALETTES[mood] });
+          expect(parts.length).toBeGreaterThan(8);
+          for (const p of parts) {
+            expect(Math.abs(p.p[0]) + p.s[0] / 2, `${key} f${facing} v${variant} x`).toBeLessThanOrEqual(1.01);
+            expect(Math.abs(p.p[2]) + p.s[2] / 2, `${key} f${facing} v${variant} z`).toBeLessThanOrEqual(1.01);
+            expect(p.p[1] - p.s[1] / 2, `${key} y`).toBeGreaterThanOrEqual(-0.001);
+          }
+        }
       }
+    }
+  });
+
+  it('designs differ per community (variant)', () => {
+    for (const key of FEATURE_KEYS) {
+      const ctx = { mood: 'normal' as const, palette: MOOD_PALETTES.normal };
+      expect(JSON.stringify(feature(item(key, 0, 0), ctx)), key).not.toBe(JSON.stringify(feature(item(key, 0, 1), ctx)));
     }
   });
 });

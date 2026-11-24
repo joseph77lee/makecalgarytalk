@@ -3,7 +3,9 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useState } from 'react';
 import type { OrthographicCamera as OrthoCam } from 'three';
 import { translate, type BoxPart } from '../assets/boxes';
-import { boxHouse } from '../assets/models';
+import { boxHouse, rail, track } from '../assets/models';
+import { FEATURE_VOXELS, ctrainCarParts, stationPlatformParts } from '../assets/voxel/features';
+import { MOOD_PALETTES } from '../mood';
 import {
   ART,
   apartment,
@@ -34,7 +36,7 @@ import {
   townhouses,
   twoStoreyGarage,
 } from '../assets/voxel/samples';
-import { rnd, shade, vb, vmove } from '../assets/voxel/voxel';
+import { rnd, shade, vb, vmove, vturn } from '../assets/voxel/voxel';
 import { BoxBatch } from '../scene/BoxBatch';
 import { GalleryLife } from './GalleryLife';
 
@@ -56,6 +58,8 @@ const VIEWS = {
   Wildlife: { target: [1.5, 6.3], zoom: 150 },
   Balloon: { target: [-9, -8], zoom: 75, y: 9 },
   Clouds: { target: [3, -0.5], zoom: 70, y: 4 },
+  Features: { target: [12, -1], zoom: 85 },
+  CTrain: { target: [12.5, 6.5], zoom: 120 },
 } as const;
 type ViewName = keyof typeof VIEWS;
 
@@ -166,6 +170,8 @@ export function AssetGallery() {
       { label: '', at: [0, 7.5], parts: lampPost() },
       { label: '', at: [-4, 7.5], parts: lampPost() },
       { label: '', at: [4, 7.5], parts: lampPost() },
+      ...featureSamples(),
+      ...ctrainSamples(),
     ];
     return { ground: groundParts(), items };
   }, []);
@@ -236,13 +242,37 @@ export function AssetGallery() {
   );
 }
 
+const CTX = { mood: 'normal' as const, palette: MOOD_PALETTES.normal };
+
+/** All signature feature blocks, two designs each (variant 0 and 1), on 2×2 lots. */
+function featureSamples(): Item[] {
+  const keys = ['pond', 'hill', 'creek', 'big-park', 'school', 'ctrain-station'] as const;
+  const names: Record<(typeof keys)[number], string> = { pond: 'Pond', hill: 'Hill', creek: 'Creek', 'big-park': 'Big park', school: 'School', 'ctrain-station': 'Station (symbolic)' };
+  return keys.flatMap((k, i) =>
+    [0, 1].map((v) => ({ label: v === 0 ? names[k] : '', at: [10 + v * 3, -5 + i * 2.2] as [number, number], parts: FEATURE_VOXELS[k](v, CTX) })),
+  );
+}
+
+/** CTrain set: a straight track with poles and a level crossing, a station platform and a 3-car train. */
+function ctrainSamples(): Item[] {
+  const items: Item[] = [];
+  for (let i = 0; i < 6; i++) items.push({ label: '', at: [9.5 + i, 8.5], parts: track({ assetKey: 'track', id: 't', x: 0, z: 0, stage: 0, dx: 1, dz: 0, pole: i % 3 === 1 }) });
+  items.push({ label: 'Level crossing', at: [12.5, 8.5], parts: rail({ assetKey: 'rail', id: 'r', x: 0, z: 0, stage: 0, links: { px: true, nx: true, pz: false, nz: false }, overWater: false, crossing: true }) });
+  items.push({ label: 'Station platform', at: [11, 7.5], parts: stationPlatformParts(['Red'], 2, 0) });
+  items.push({ label: '', at: [14, 7.5], parts: stationPlatformParts(['Blue'], 2, 1) });
+  items.push({ label: 'CTrain', at: [10.5, 8.5], parts: vmove(vturn(ctrainCarParts(true, false), 1), 0, 1.1, 0) });
+  items.push({ label: '', at: [11.4, 8.5], parts: vmove(vturn(ctrainCarParts(false, false), 1), 0, 1.1, 0) });
+  items.push({ label: '', at: [12.3, 8.5], parts: vmove(vturn(ctrainCarParts(false, true), 1), 0, 1.1, 0) });
+  return items;
+}
+
 /** Height of the model's top (label position). */
 const topOf = (parts: BoxPart[]) => (parts.length === 0 ? 0.6 : Math.max(...parts.map((b) => b.p[1] + b.s[1] / 2)));
 
 /** A grass platform with a stone path, slight colour noise per tile, grass tufts and flowers. */
 function groundParts(): BoxPart[] {
   const parts: BoxPart[] = [];
-  for (let x = -9; x < 9; x++) {
+  for (let x = -9; x < 16; x++) {
     for (let z = -6; z < 12; z++) {
       const path = z === 0 || z === 7;
       const base = path ? ART.path[(x + z) & 1] : ART.grass[(x + z) & 1];
@@ -260,7 +290,7 @@ function groundParts(): BoxPart[] {
     }
   }
   // dirt sides of the platform
-  for (let x = -9; x < 9; x++) parts.push({ layer: 'solid', p: [x + 0.5, -1.25, 11.5], s: [1, 1.5, 1], c: x % 2 ? '#9b7653' : '#8d6b4b' });
-  for (let z = -6; z < 12; z++) parts.push({ layer: 'solid', p: [8.5, -1.25, z + 0.5], s: [1, 1.5, 1], c: z % 2 ? '#8d6b4b' : '#9b7653' });
+  for (let x = -9; x < 16; x++) parts.push({ layer: 'solid', p: [x + 0.5, -1.25, 11.5], s: [1, 1.5, 1], c: x % 2 ? '#9b7653' : '#8d6b4b' });
+  for (let z = -6; z < 12; z++) parts.push({ layer: 'solid', p: [15.5, -1.25, z + 0.5], s: [1, 1.5, 1], c: z % 2 ? '#8d6b4b' : '#9b7653' });
   return parts;
 }
