@@ -45,6 +45,12 @@ describe('Art Pass samples stay inside their footprint and on the ground', () =>
     ['spruce', S.spruce],
     ['person', (s) => S.person(s)],
     ['car', (s) => S.car(s)],
+    ['flowerBed', S.flowerBed],
+    ['wildFlowers', S.wildFlowers],
+    ['partyBalloons', S.partyBalloons],
+    ['deer', (s) => S.deer(s % 2 === 0)],
+    ['jackrabbit', (s) => S.jackrabbit(s % 2 === 0)],
+    ['cougar', () => S.cougar()],
   ];
   it.each(oneTile)('%s fits one tile for many seeds', (_name, make) => {
     for (let seed = 0; seed < 30; seed++) {
@@ -70,5 +76,16 @@ describe('Art Pass samples stay inside their footprint and on the ground', () =>
   it('houses vary with the seed (different colours across seeds)', () => {
     const roofs = new Set(Array.from({ length: 20 }, (_, s) => S.bungalow(s * 7 + 1)[2].c));
     expect(roofs.size).toBeGreaterThan(3);
+  });
+});
+
+describe('sky samples', () => {
+  it('clouds, balloon and plane are built and vary or stay generic', () => {
+    expect(S.cloud(1).length).toBeGreaterThan(4);
+    expect(S.cloud(1)).not.toEqual(S.cloud(2));
+    expect(S.hotAirBalloon(1).length).toBeGreaterThan(50);
+    // the plane carries no text or logo parts: only a few livery colours
+    expect(new Set(S.airplane().map((p) => p.c)).size).toBeLessThanOrEqual(8);
+    expect(S.birdBody().length + S.birdWing().length).toBeGreaterThan(2);
   });
 });

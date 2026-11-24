@@ -13,6 +13,9 @@ import {
   communityHall,
   condoTower,
   fence,
+  flowerBed,
+  partyBalloons,
+  wildFlowers,
   infill,
   lampPost,
   leafyTree,
@@ -26,6 +29,7 @@ import {
 } from '../assets/voxel/samples';
 import { rnd, shade, vb } from '../assets/voxel/voxel';
 import { BoxBatch } from '../scene/BoxBatch';
+import { GalleryLife } from './GalleryLife';
 
 interface Item {
   label: string;
@@ -41,6 +45,8 @@ const VIEWS = {
   Downtown: { target: [-1.5, 3], zoom: 70 },
   'Community hall': { target: [6, -3.5], zoom: 150 },
   'Street & people': { target: [1, 5.5], zoom: 110 },
+  'Sky & wildlife': { target: [-3, -2], zoom: 24 },
+  Wildlife: { target: [1.5, 6.3], zoom: 150 },
 } as const;
 type ViewName = keyof typeof VIEWS;
 
@@ -98,6 +104,12 @@ export function AssetGallery() {
       { label: '', at: [-5.5, 6.5], parts: person(3) },
       { label: '', at: [-4.5, 6.5], parts: person(4) },
       { label: '', at: [-3.5, 6.5], parts: person(5, ART.shirts[1]) },
+      { label: 'Flowers', at: [-1.5, 3.5], parts: flowerBed(1) },
+      { label: '', at: [5.5, 6.5], parts: flowerBed(4) },
+      { label: '', at: [4.5, 3.5], parts: wildFlowers(2) },
+      { label: '', at: [5.5, -1.5], parts: wildFlowers(5) },
+      { label: 'Party balloons', at: [-6.9, -3.9], parts: partyBalloons(3) },
+      { label: 'Wildlife →', at: [-2.5, 5.5], parts: [] },
     ];
     return { ground: groundParts(), items };
   }, []);
@@ -141,6 +153,7 @@ export function AssetGallery() {
           shadow-camera-far={120}
         />
         <ViewRig view={view} />
+        <GalleryLife />
         <BoxBatch parts={parts} />
         {items
           .filter((i) => i.label)
@@ -155,7 +168,7 @@ export function AssetGallery() {
 }
 
 /** Height of the model's top (label position). */
-const topOf = (parts: BoxPart[]) => Math.max(...parts.map((b) => b.p[1] + b.s[1] / 2));
+const topOf = (parts: BoxPart[]) => (parts.length === 0 ? 0.6 : Math.max(...parts.map((b) => b.p[1] + b.s[1] / 2)));
 
 /** A grass platform with a stone path, slight colour noise per tile, grass tufts and flowers. */
 function groundParts(): BoxPart[] {

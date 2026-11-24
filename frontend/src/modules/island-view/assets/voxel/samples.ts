@@ -337,3 +337,160 @@ export function person(seed: number, shirt?: string): BoxPart[] {
 }
 
 export { vmove };
+
+// --- Sky (Art Pass samples, 2026-11-24) -----------------------------------------------------
+
+/** A fluffy voxel cloud (about three tiles wide), centred on the origin at y = 0. */
+export function cloud(seed: number): BoxPart[] {
+  const parts: BoxPart[] = [vb(-14, 0, -6, 14, 4, 6, '#ffffff')];
+  for (let i = 0; i < 7; i++) {
+    const x = -12 + Math.floor(rnd(seed, i, 1) * 20);
+    const w = 5 + Math.floor(rnd(seed, i, 2) * 6);
+    const h = 2 + Math.floor(rnd(seed, i, 3) * 4);
+    parts.push(vb(x, 4, -4, x + w, 4 + h, 4, i % 2 ? '#ffffff' : '#f4f7fb'));
+  }
+  return parts;
+}
+
+/** Bird body (wings are separate so they can flap), facing +x. */
+export function birdBody(): BoxPart[] {
+  return [vb(-1, 0, -0.5, 1, 1, 0.5, '#3b4260'), vb(1, 0.3, -0.4, 1.8, 1.1, 0.4, '#3b4260'), vb(1.8, 0.5, -0.15, 2.3, 0.8, 0.15, '#f2a43a')];
+}
+/** One wing, attached at z = 0 and reaching towards +z (mirror for the other side). */
+export function birdWing(): BoxPart[] {
+  return [vb(-0.6, 0.6, 0, 0.8, 0.9, 2.4, '#4a5270')];
+}
+
+/** Hot-air balloon with a striped stepped envelope and a basket (about 3 tiles tall). */
+export function hotAirBalloon(seed: number): BoxPart[] {
+  const stripes = [pick(['#e46a5c', '#5b8fd6', '#9c97e6'], rnd(seed, 30)), '#f2c14e', '#f7f3ea', pick(['#6fbf8a', '#e07f5b'], rnd(seed, 31))];
+  const parts: BoxPart[] = [vb(-1.5, 0, -1.5, 1.5, 2, 1.5, '#a7825f'), vb(-1.7, 2, -1.7, 1.7, 2.3, 1.7, '#7d5a3f')];
+  for (const [x, z] of [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]]) parts.push(vb(x - 0.1, 2.3, z - 0.1, x + 0.1, 7, z + 0.1, '#6b5a4a'));
+  const radii = [2, 3.5, 4.5, 5.2, 5.6, 5.6, 5.3, 4.8, 4, 3, 1.6];
+  radii.forEach((r, i) => {
+    const y = 7 + i * 1.8;
+    const n = 8;
+    for (let k = 0; k < n; k++) {
+      // vertical stripes: each slice is drawn as bands around the square ring
+      const c = stripes[k % stripes.length];
+      const a0 = -r + (2 * r * k) / n;
+      const a1 = -r + (2 * r * (k + 1)) / n;
+      parts.push(vb(a0, y, r - 0.9, a1, y + 1.8, r, c), vb(a0, y, -r, a1, y + 1.8, -r + 0.9, stripes[(k + 2) % stripes.length]));
+      parts.push(vb(r - 0.9, y, a0, r, y + 1.8, a1, stripes[(k + 1) % stripes.length]), vb(-r, y, a0, -r + 0.9, y + 1.8, a1, stripes[(k + 3) % stripes.length]));
+    }
+  });
+  return parts;
+}
+
+/** A small passenger jet (generic livery, no airline branding), nose towards +x. */
+export function airplane(): BoxPart[] {
+  return [
+    vb(-9, 0, -1.2, 9, 2.4, 1.2, '#f4f6f8'),
+    vb(9, 0.3, -0.9, 11, 2.1, 0.9, '#e9edf1'),
+    vb(11, 0.7, -0.5, 12, 1.7, 0.5, '#dfe5ea'),
+    vb(-9, 0.8, -1.25, 9, 1.2, 1.25, '#d9605a'),
+    ...Array.from({ length: 8 }, (_, i) => vb(-7 + i * 2, 1.4, 1.2, -6.2 + i * 2, 2, 1.3, '#4c80a8')),
+    vb(8.5, 1.4, -0.8, 10, 2.1, 0.8, '#3b4260'),
+    vb(-2, 0.4, -9, 2, 1, 9, '#e9edf1'),
+    vb(-1, -0.6, -5, 1.6, 0.4, -3.6, '#cfd6dd'),
+    vb(-1, -0.6, 3.6, 1.6, 0.4, 5, '#cfd6dd'),
+    vb(-9, 2.4, -0.3, -6.5, 7, 0.3, '#e9edf1'),
+    vb(-8.8, 5, -0.35, -7, 6.6, 0.35, '#d9605a'),
+    vb(-9, 1.6, -3.5, -7, 2, 3.5, '#e9edf1'),
+  ];
+}
+
+/** A bunch of party balloons on strings (e.g. tied to a house on a happy day). */
+export function partyBalloons(seed: number): BoxPart[] {
+  const colours = ['#e46a5c', '#f2c14e', '#5b8fd6', '#f08bb3', '#6fbf8a'];
+  const parts: BoxPart[] = [];
+  for (let i = 0; i < 4; i++) {
+    const x = -1.5 + i * 1.1;
+    const top = 8 + Math.floor(rnd(seed, i, 5) * 3);
+    parts.push(vb(x - 0.05, 0, -0.05, x + 0.05, top, 0.05, '#9aa1ab'));
+    parts.push(vb(x - 0.8, top, -0.8, x + 0.8, top + 2, 0.8, colours[(i + Math.floor(rnd(seed, 6) * 5)) % 5]));
+    parts.push(vb(x - 0.5, top + 2, -0.5, x + 0.5, top + 2.4, 0.5, colours[(i + Math.floor(rnd(seed, 6) * 5)) % 5]));
+  }
+  return parts;
+}
+
+// --- Flowers ---------------------------------------------------------------------------
+
+/** A flower bed with a wooden edge and mixed tulips / daisies. */
+export function flowerBed(seed: number): BoxPart[] {
+  const colours = ['#e46a5c', '#f2c14e', '#f08bb3', '#a77bd1', '#ffffff', '#f39a52'];
+  const parts: BoxPart[] = [vb(-4.5, 0, -2.5, 4.5, 0.8, 2.5, ART.wood), vb(-4, 0, -2, 4, 0.9, 2, '#7a5a3c')];
+  for (let x = -3.5; x <= 3.5; x += 1.4) {
+    for (let z = -1.4; z <= 1.4; z += 1.4) {
+      const c = colours[Math.floor(rnd(seed, x * 10, z * 10) * colours.length)];
+      const h = 1.8 + rnd(seed, x, z) * 1.2;
+      parts.push(vb(x - 0.12, 0.9, z - 0.12, x + 0.12, 0.9 + h, z + 0.12, '#5f9a4a'), vb(x - 0.45, 0.9 + h, z - 0.45, x + 0.45, 1.6 + h, z + 0.45, c));
+    }
+  }
+  return parts;
+}
+
+/** Wild flowers scattered on grass (no bed). */
+export function wildFlowers(seed: number): BoxPart[] {
+  const colours = ['#f2c14e', '#ffffff', '#a77bd1', '#f08bb3', '#5b8fd6'];
+  const parts: BoxPart[] = [];
+  for (let i = 0; i < 9; i++) {
+    const x = -5 + rnd(seed, i, 1) * 10;
+    const z = -5 + rnd(seed, i, 2) * 10;
+    parts.push(vb(x - 0.1, 0, z - 0.1, x + 0.1, 1.2, z + 0.1, '#5f9a4a'), vb(x - 0.4, 1.2, z - 0.4, x + 0.4, 1.7, z + 0.4, colours[i % colours.length]));
+  }
+  return parts;
+}
+
+// --- Wildlife (occasional visitors in Calgary communities) ------------------------------------
+
+/** Mule deer, facing +x; `buck` adds antlers. */
+export function deer(buck: boolean): BoxPart[] {
+  const coat = '#a77b55';
+  const parts: BoxPart[] = [
+    vb(-2.5, 3, -1, 2, 5.2, 1, coat),
+    ...[[-2, -0.8], [-2, 0.4], [1.4, -0.8], [1.4, 0.4]].map(([x, z]) => vb(x, 0, z, x + 0.5, 3, z + 0.5, shade(coat, -0.15))),
+    vb(1.6, 4.6, -0.6, 2.8, 7, 0.6, coat),
+    vb(2.4, 6.4, -0.7, 4.2, 7.8, 0.7, coat),
+    vb(4.2, 6.6, -0.4, 4.8, 7.4, 0.4, '#3a2a20'),
+    vb(2.6, 7.8, -1.3, 3.2, 8.6, -0.5, coat),
+    vb(2.6, 7.8, 0.5, 3.2, 8.6, 1.3, coat),
+    vb(-3, 4.4, -0.4, -2.5, 5.6, 0.4, '#f4efe6'),
+    vb(-3.1, 5, -0.3, -2.9, 5.8, 0.3, '#2f2a26'),
+  ];
+  if (buck) {
+    for (const z of [-0.6, 0.6]) parts.push(vb(2.8, 7.8, z - 0.12, 3, 10, z + 0.12, '#d8c4a0'), vb(2.2, 9, z - 0.12, 3.8, 9.2, z + 0.12, '#d8c4a0'), vb(3.6, 9.2, z - 0.12, 3.8, 10.2, z + 0.12, '#d8c4a0'));
+  }
+  return parts;
+}
+
+/** White-tailed jackrabbit (common in Calgary), facing +x. Winter coat when `winter`. */
+export function jackrabbit(winter: boolean): BoxPart[] {
+  const fur = winter ? '#f2f2ee' : '#b39478';
+  return [
+    vb(-1.2, 0.4, -0.6, 0.8, 1.8, 0.6, fur),
+    vb(-1.2, 0, -0.7, -0.2, 0.6, 0.7, shade(fur, -0.1)),
+    vb(0.4, 0, -0.4, 0.8, 0.6, 0.4, shade(fur, -0.1)),
+    vb(0.6, 1.4, -0.45, 1.6, 2.4, 0.45, fur),
+    vb(0.8, 2.4, -0.35, 1.1, 4.2, -0.1, fur),
+    vb(0.8, 2.4, 0.1, 1.1, 4.2, 0.35, fur),
+    vb(1.5, 1.9, -0.15, 1.65, 2.1, 0.15, '#2f2a26'),
+    vb(-1.6, 1, -0.3, -1.2, 1.6, 0.3, '#ffffff'),
+  ];
+}
+
+/** Cougar, facing +x, long low body and a long tail. */
+export function cougar(): BoxPart[] {
+  const coat = '#c9a26f';
+  return [
+    vb(-3, 2, -0.9, 2.2, 3.8, 0.9, coat),
+    ...[[-2.6, -0.8], [-2.6, 0.3], [1.5, -0.8], [1.5, 0.3]].map(([x, z]) => vb(x, 0, z, x + 0.6, 2.2, z + 0.5, shade(coat, -0.12))),
+    vb(2, 2.8, -0.75, 3.6, 4.4, 0.75, coat),
+    vb(3.6, 3, -0.45, 4.2, 3.8, 0.45, '#e9d8bd'),
+    vb(4.1, 3.4, -0.15, 4.3, 3.6, 0.15, '#3a2a20'),
+    vb(2.4, 4.4, -0.7, 2.8, 4.9, -0.3, coat),
+    vb(2.4, 4.4, 0.3, 2.8, 4.9, 0.7, coat),
+    vb(-6, 1.8, -0.25, -3, 2.4, 0.25, coat),
+    vb(-6.6, 1.8, -0.3, -6, 2.6, 0.3, '#5a4636'),
+  ];
+}
