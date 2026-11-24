@@ -5,7 +5,7 @@
 | Plan version | v1.67 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
-| Based on | `requirement.md` v1.38 |
+| Based on | `requirement.md` v1.39 |
 | Current module | M19 Art Pass (next; scope to be planned with the user), then M20 |
 
 ---

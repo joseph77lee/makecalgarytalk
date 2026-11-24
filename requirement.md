@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.38 |
+| Document version | v1.39 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Status | Initial draft for starting MVP development |
@@ -160,7 +160,7 @@ Goal: moving never punishes the person who moves or the residents who stay.
 - **Settled**: the community's **Welcome sign** (first building of the tree, 7.6) is built → fog clears on the World Map; the first resident (the community's **first Verified Resident**) gets the "Founding Resident" badge. A first resident can build it on their first day
 
 ### 7.2 Resident houses
-- One house per Verified Resident. **Tapping a house** shows whose it is: "<nickname>'s house", active today or not, and the Founding Resident badge if they have it. No name tags floating over houses; **my own house always has a small marker**, and the labels toggle can show every house's name at once
+- One house per Verified Resident. **Tapping a house** shows whose it is: "<nickname>'s house", active today or not, and the Founding Resident badge if they have it. No name tags floating over houses; **my own house always has a small "My house" marker**, and the labels toggle can show every house's name at once
 - Residents active today: **warm window lights** (no chimney smoke: with many houses it would look like factories)
 - Residents not active today: lights off
 - **Each resident keeps a fixed house lot** in their community: given once, the first free lot in the stored lot plan (lots ordered by land stage, then plan order, so growing the island never moves a house). It stays theirs while their house is archived, unless all lots are taken: then the lots of archived residents go to new residents, and a returning resident gets a free lot. If even active residents exceed the lots, extra houses are not drawn and the village shows "+N more residents". Moving gives a lot in the new community. Lots are assigned while building the shared state (no extra request)
@@ -362,7 +362,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Pastel colours, flat-shaded voxel/box objects**, soft shadows
 - Contents: buildings of the tree (7.6) and their construction sites, locked-building silhouettes, resident houses, mini villagers, signature features (7.9), Main Street shops (22.4, Phase 4)
 - Speech bubbles and name labels are **HTML overlays** positioned over 3D objects (crisp text, Korean/English supported)
-  - A **labels toggle** shows or hides all island overlays (speech bubbles, name tags, construction progress, locked-building hints) so the scene can be viewed without clutter. On by default; the choice is remembered on the device
+  - A **labels toggle** shows or hides all island overlays (speech bubbles, name tags, construction progress, locked-building hints) so the scene can be viewed without clutter. On by default; the choice is remembered on the device. My own avatar's name tag and my house marker always stay visible, so I can find myself
   - Mini villagers stroll slowly, each with its own pace and resting habits (not in lockstep)
 - On entry, show **"What changed since yesterday"** (construction progress, new residents, trees planted, etc.)
 - Show community streak status, remaining conditions for the next unlock, and the next island growth goal

@@ -97,7 +97,7 @@ function HouseMarks({
           o.mine && !selected && (
             <Overlay key={`${o.id}:mine`} x={o.x} y={o.height + 0.25} z={o.z}>
               <span className="whitespace-nowrap rounded-full bg-orange-500 px-1.5 py-px text-[10px] font-bold text-white shadow" title="My house">
-                🏠 Me
+                🏠 My house
               </span>
             </Overlay>
           ),

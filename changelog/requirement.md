@@ -12,6 +12,17 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.39
+**Changed:** 7.2 my own house's marker reads "My house". 10.1 labels toggle: my own avatar's name tag and my house marker always stay visible; the toggle hides everything else.
+
+**Why:** Operator feedback (2026-11-24): with labels off, the "Me" marker sat on the house while my avatar had nothing, so "me" pointed at the wrong thing. My avatar now always carries my name, and the house says "My house".
+
+**Previous:**
+- 10.1 (verbatim):
+  > - A **labels toggle** shows or hides all island overlays (speech bubbles, name tags, construction progress, locked-building hints) so the scene can be viewed without clutter. On by default; the choice is remembered on the device
+- 7.2 (verbatim):
+  > - One house per Verified Resident. **Tapping a house** shows whose it is: "<nickname>'s house", active today or not, and the Founding Resident badge if they have it. No name tags floating over houses; **my own house always has a small marker**, and the labels toggle can show every house's name at once
+
 ### 2026-11-24 — v1.38
 **Changed:** New 10.4 Living community: real Calgary weather (rain, snow, wind, overcast) and time of day (real sun direction and shadows, dawn/dusk, lamps and windows at night) shown on the islands, before launch. 19.3 effects updated; 22.6 adds step 6a and the Art Pass aims at busier communities too; 22.2 notes that day/night and weather also moved before launch. §24 now points to `changelog/requirement.md` (this file); the "How to update" rules point here.
 

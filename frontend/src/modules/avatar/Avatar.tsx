@@ -2,7 +2,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import type { Group } from 'three';
-import { VoxelPerson, clearCameraFocus, setCameraFocus, useHtmlPortal, useIslandWalkable, useShowIslandLabels, type Tile } from '../island-view';
+import { VoxelPerson, clearCameraFocus, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
 import { useAvatarStore } from './avatarStore';
 import { stepCandidates } from './keyboard';
 import { usePressedKeys } from './usePressedKeys';
@@ -23,7 +23,6 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
   // Hair and skin follow the nickname, so my villager keeps its look.
   const nickSeed = useMemo(() => [...nickname].reduce((h, ch) => Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0, 2166136261), [nickname]);
   const { walkable, walkableKeys } = useIslandWalkable();
-  const showLabels = useShowIslandLabels();
   const portal = useHtmlPortal();
   const walker = useRef<AvatarWalker | null>(null);
   walker.current ??= new AvatarWalker(SPAWN);
@@ -113,13 +112,12 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
         <group ref={body}>
           <VoxelPerson seed={nickSeed} shirt={shirtColor} />
         </group>
-        {showLabels && (
-          <Html portal={portal} position={[0, 1.05, 0]} center zIndexRange={[28, 21]} style={{ pointerEvents: 'none' }}>
-            <span className="whitespace-nowrap rounded-full bg-orange-500 px-2 py-px text-[10px] font-bold text-white shadow-sm">
-              {nickname}
-            </span>
-          </Html>
-        )}
+        {/* My own name always shows (even with labels off), so I can find myself on screen. */}
+        <Html portal={portal} position={[0, 1.05, 0]} center zIndexRange={[28, 21]} style={{ pointerEvents: 'none' }}>
+          <span className="whitespace-nowrap rounded-full bg-orange-500 px-2 py-px text-[10px] font-bold text-white shadow-sm">
+            {nickname}
+          </span>
+        </Html>
       </group>
       <group ref={marker} visible={false}>
         {[
