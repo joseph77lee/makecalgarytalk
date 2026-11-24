@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.66 |
+| Plan version | v1.67 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Based on | `requirement.md` v1.38 |
@@ -521,6 +521,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **In scope** (to be planned with the user before work starts)
   - [ ] prettier voxel communities: island ground, buildings of the tree, houses, people (avatar, mini villagers) and props, through the existing asset keys (§20.4: no game-logic changes)
   - [ ] busier communities: more life on the island (props, activity, villagers) without fake players (§7.3)
+  - **Priority: looks first** (operator decision 2026-11-24): detail and amounts are chosen for the best look. Performance work is limited to changes that keep the look identical (e.g. merging touching voxels into one box); slow phones are covered by the M14 low-quality mode; one real-phone check before the launch (M16). Rendering cost depends on each player's phone and the island's content, not on the number of players.
   - [ ] the details — which assets, style, how they are made, phone performance budget — are decided together first
 - **Definition of Done** (to be completed when the scope is planned)
   - [ ] phone performance stays within §20.3a

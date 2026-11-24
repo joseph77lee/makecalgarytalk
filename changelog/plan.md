@@ -12,6 +12,15 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.67
+**Changed:** M19: added the "looks first" priority note (best look first; only look-preserving performance changes; M14 low-quality mode as the safety net; one real-phone check before launch in M16).
+
+**Why:** Operator decision (2026-11-24) after reviewing the box counts of the style samples (a new house ≈ 3–4× the old one; a cloud ≈ 700 boxes; a full island ≈ 13–15k boxes vs ≈ 3–4k today).
+
+**Previous:**
+- Header: `| Plan version | v1.66 |`
+- M19 In scope: no priority note.
+
 ### 2026-11-24 — v1.66
 **Changed:** Before opening: M19 Art Pass now also aims at busier communities; new **M20 Weather & Time of Day** (real Calgary weather and the sun's real direction, lamps at night) between M19 and M16. "After MVP" replaced by **"After launch — checklist for the user to review"** listing every post-launch item (M17, M18, Phase 2, Phase 3, Phase 4, expansion, open numbers). The Change Log moved out of PLAN.md into `changelog/plan.md` (this file); rule 6 points here. "Based on" → `requirement.md` v1.38.
 
