@@ -7,8 +7,21 @@ import type { BoxPart } from '../boxes';
 import { gableRoof, hipRoof, pick, rnd, shade, vb, vmove, windowX, windowZ } from './voxel';
 
 export const ART = {
-  walls: ['#efe2c2', '#e8d6ad', '#cddab8', '#d3e3ec', '#f3d8c2', '#f2eee6', '#d9cfe8'],
-  roofs: ['#e07f5b', '#9c97e6', '#3b4260', '#6f9a64', '#7f8a99', '#a06e4d', '#d9605a'],
+  // Warm pastel palette (operator choice 2026-11-24).
+  walls: ['#f6e7c8', '#f3dcc0', '#f7e3b5', '#eef0d8', '#f4d6cc', '#faf1e4', '#e9dccb', '#e4ecdc'],
+  roofs: [
+    '#ef9b7f', // coral
+    '#f2b48a', // apricot
+    '#e9c46a', // butter
+    '#a8c69a', // sage
+    '#e3a1a6', // dusty rose
+    '#b9a6e2', // lavender
+    '#9fd0bd', // mint
+    '#d98366', // terracotta
+    '#c79a76', // warm brown
+    '#93b8db', // soft sky
+    '#8f9bc0', // muted denim
+  ],
   trim: '#f7f3ea',
   door: '#8b5a3c',
   glass: '#6aa8cf',
@@ -172,6 +185,8 @@ export function officeTower(seed: number): BoxPart[] {
   for (let x = -7; x <= 7; x += 2) parts.push(vb(x - 0.2, 5, 8, x + 0.2, 40, 8.3, shade(glass, 0.35)));
   for (let z = -7; z <= 7; z += 2) parts.push(vb(8, 5, z - 0.2, 8.3, 40, z + 0.2, shade(glass, 0.35)));
   for (let y = 9; y < 40; y += 4) parts.push(vb(-8, y, 8, 8, y + 0.3, 8.2, shade(glass, -0.15)), vb(8, y, -8, 8.2, y + 0.3, 8, shade(glass, -0.15)));
+  // window bands between the floor lines (they light up at night)
+  for (let y = 6; y < 39; y += 4) parts.push(vb(-7.6, y + 0.8, 8, 7.6, y + 2.6, 8.12, ART.glassDark), vb(8, y + 0.8, -7.6, 8.12, y + 2.6, 7.6, ART.glassDark));
   return parts;
 }
 
@@ -572,4 +587,83 @@ export function gooseFlyingBody(): BoxPart[] {
 /** One goose wing, attached at z = 0 and reaching towards +z. */
 export function gooseWing(): BoxPart[] {
   return [vb(-1.2, 0.8, 0, 0.6, 1.1, 3.2, '#7d6a58'), vb(-1.2, 0.8, 3.2, 0.2, 1.1, 4.2, '#4a3f35')];
+}
+
+// --- More downtown (2026-11-24) -----------------------------------------------------------
+
+/** Window bands on the +z and +x faces every `step` voxels (lit at night in the gallery). */
+function floorWindows(half: number, y0: number, y1: number, step: number, inset = 1): BoxPart[] {
+  const out: BoxPart[] = [];
+  for (let y = y0; y + 1.6 <= y1; y += step) {
+    out.push(vb(-half + inset, y, half, half - inset, y + 1.6, half + 0.25, ART.glass));
+    out.push(vb(half, y, -half + inset, half + 0.25, y + 1.6, half - inset, ART.glass));
+  }
+  return out;
+}
+
+/** Observation tower inspired by Calgary's skyline (no names or logos): slim shaft, glass pod, beacon. */
+export function observationTower(): BoxPart[] {
+  const shaft = '#efe6d6';
+  const parts: BoxPart[] = [vb(-9, 0, -9, 9, 1, 9, ART.concrete), vb(-6, 1, -6, 6, 6, 6, '#f2dcc4'), ...floorWindows(6, 2, 6, 3)];
+  for (let i = 0; i < 6; i++) {
+    const w = 3.2 - i * 0.25;
+    parts.push(vb(-w, 6 + i * 8, -w, w, 14 + i * 8, w, i % 2 ? shaft : shade(shaft, -0.05)));
+  }
+  parts.push(
+    vb(-5.5, 54, -5.5, 5.5, 55, 5.5, shade(shaft, -0.1)),
+    vb(-5, 55, -5, 5, 58, 5, '#8fc0d8'),
+    vb(-5.5, 58, -5.5, 5.5, 59, 5.5, shade(shaft, -0.1)),
+    vb(-4, 59, -4, 4, 61, 4, '#e8705a'),
+    vb(-1, 61, -1, 1, 64, 1, '#e8705a'),
+    vb(-0.3, 64, -0.3, 0.3, 69, 0.3, '#9aa1ab'),
+    vb(-0.6, 69, -0.6, 0.6, 70, 0.6, '#ffe7a3', 'glow'),
+  );
+  return parts;
+}
+
+/** Modern crescent-shaped glass tower (curved front), with floor lines. */
+export function crescentTower(): BoxPart[] {
+  const glass = '#9fcadc';
+  const parts: BoxPart[] = [vb(-11, 0, -11, 11, 4, 11, ART.concrete), vb(-11, 1, 11, 11, 3.5, 11.3, ART.glass)];
+  for (let x = -10; x < 10; x++) {
+    const t = (x + 0.5) / 10;
+    const back = -8 + t * t * 6; // curved: the middle sits further back
+    const front = back + 7;
+    const h = 46 - Math.abs(t) * 6;
+    parts.push(vb(x, 4, back, x + 1, h, front, x % 2 ? glass : shade(glass, 0.06)));
+    for (let y = 7; y < h; y += 3) parts.push(vb(x, y, front, x + 1, y + 1.6, front + 0.25, ART.glass));
+  }
+  parts.push(vb(-4, 46, -4, 4, 48, 1, '#a9b0b9'));
+  return parts;
+}
+
+/** Stepped art-deco tower: warm stone, vertical piers, setbacks, a gold crown. */
+export function artDecoTower(): BoxPart[] {
+  const stone = '#ead7b8';
+  const parts: BoxPart[] = [vb(-10, 0, -10, 10, 18, 10, stone), ...floorWindows(10, 3, 18, 3, 1.5)];
+  parts.push(vb(-7.5, 18, -7.5, 7.5, 32, 7.5, shade(stone, 0.04)), ...floorWindows(7.5, 20, 32, 3, 1.5));
+  parts.push(vb(-5, 32, -5, 5, 40, 5, stone), ...floorWindows(5, 33, 40, 3, 1));
+  for (const x of [-9, -5, -1, 3, 7]) parts.push(vb(x, 1, 10, x + 1, 18, 10.6, shade(stone, -0.1)));
+  for (const z of [-9, -5, -1, 3, 7]) parts.push(vb(10, 1, z, 10.6, 18, z + 1, shade(stone, -0.1)));
+  parts.push(vb(-3, 40, -3, 3, 43, 3, '#e3b85a'), vb(-1.5, 43, -1.5, 1.5, 46, 1.5, '#e3b85a'), vb(-0.4, 46, -0.4, 0.4, 50, 0.4, '#e3b85a'));
+  return parts;
+}
+
+/** Hotel mid-rise: peach stucco, balconies, a blank sign board and a rooftop pool. */
+export function hotel(): BoxPart[] {
+  const wall = '#f3cdb3';
+  const parts: BoxPart[] = [vb(-10, 0, -8, 10, 4, 8, ART.concrete), vb(-10, 1, 8, 10, 3.6, 8.3, ART.glass), vb(-9, 4, -7, 9, 24, 7, wall)];
+  for (let y = 6; y < 24; y += 3) {
+    for (let x = -8; x <= 6; x += 3.5) parts.push(vb(x, y, 7, x + 2, y + 1.6, 7.25, ART.glass), vb(x - 0.3, y - 0.3, 7, x + 2.3, y, 8.2, ART.trim));
+    parts.push(vb(9, y, -6, 9.25, y + 1.6, 6, ART.glass));
+  }
+  parts.push(
+    vb(-9.5, 24, -7.5, 9.5, 25, 7.5, shade(wall, -0.12)),
+    vb(-6, 25, -5, 2, 25.4, 3, '#7fd0e6'),
+    vb(-6.5, 25, -5.5, 2.5, 25.6, -5, ART.trim),
+    vb(3, 25, -4, 8, 27, 2, '#d8cfc2'),
+    vb(-6, 20, 7.3, 6, 23, 7.6, ART.trim), // blank sign board
+    vb(-5.5, 20.4, 7.5, 5.5, 22.6, 7.7, '#e46a5c'),
+  );
+  return parts;
 }

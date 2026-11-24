@@ -6,6 +6,7 @@ import { translate, type BoxPart } from '../assets/boxes';
 import { house } from '../assets/models';
 import {
   ART,
+  artDecoTower,
   bench,
   brickMidrise,
   bungalow,
@@ -13,8 +14,11 @@ import {
   cloud,
   communityHall,
   condoTower,
+  crescentTower,
   fence,
   flowerBed,
+  hotel,
+  observationTower,
   partyBalloons,
   wildFlowers,
   infill,
@@ -43,7 +47,7 @@ interface Item {
 const VIEWS = {
   All: { target: [0, 0.5], zoom: 42 },
   Houses: { target: [-3, -3.5], zoom: 120 },
-  Downtown: { target: [-1.5, 3], zoom: 70 },
+  Downtown: { target: [-0.5, 5.5], zoom: 48 },
   'Community hall': { target: [6, -3.5], zoom: 150 },
   'Street & people': { target: [1, 5.5], zoom: 110 },
   'Sky & wildlife': { target: [-3, -2], zoom: 24 },
@@ -73,9 +77,44 @@ function ViewRig({ view }: { view: ViewName }) {
   return null;
 }
 
+/** Time-of-day looks (the M20 preview): sun direction and colour, ambient light, sky. */
+const TIMES = {
+  Dawn: { sun: [-28, 12, 14], sunColor: '#ffbf98', sunI: 1.7, sky: '#ffe0d0', ground: '#b4a8d6', ambI: 1.15, bg: 'linear-gradient(to bottom, #a9a7e0 0%, #f2c3c6 55%, #ffe0c2 100%)', night: false },
+  Morning: { sun: [-22, 20, 20], sunColor: '#fff0d8', sunI: 2.0, sky: '#fff4e6', ground: '#cfd2ea', ambI: 1.1, bg: 'linear-gradient(to bottom, #c4e1ff 0%, #e6f1ff 55%, #fff1df 100%)', night: false },
+  Noon: { sun: [-6, 34, 10], sunColor: '#ffffff', sunI: 2.4, sky: '#ffffff', ground: '#d9d2ea', ambI: 1.2, bg: 'linear-gradient(to bottom, #c9e0f7 0%, #e6f0fb 60%, #f1eefb 100%)', night: false },
+  Sunset: { sun: [26, 13, 16], sunColor: '#ffa868', sunI: 2.0, sky: '#ffd8ac', ground: '#a98fc4', ambI: 1.1, bg: 'linear-gradient(to bottom, #7d78c8 0%, #ee9bb2 45%, #ffb47c 75%, #ffd79c 100%)', night: false },
+  Night: { sun: [14, 30, -12], sunColor: '#a9bcff', sunI: 0.45, sky: '#4a5a8f', ground: '#1d2236', ambI: 0.5, bg: 'radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 32% 8%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 58% 14%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 78% 22%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 88% 6%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 22% 30%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 66% 32%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 45% 26%, #fff 50%, transparent 51%), linear-gradient(to bottom, #0f1636 0%, #24305e 60%, #3b3f73 100%)', night: true },
+} as const;
+type TimeName = keyof typeof TIMES;
+
+const WINDOW_COLOURS = new Set<string>([ART.glass, ART.glassDark, '#a9d3ea']);
+const LAMP = '#ffe7a3';
+
+/**
+ * Day/night version of the parts: at night about 70% of windows glow warm (the rest stay dark),
+ * lamps glow and throw a soft warm pool on the ground; by day lamp heads are off.
+ */
+function forTime(parts: BoxPart[], night: boolean): BoxPart[] {
+  const out: BoxPart[] = [];
+  for (const b of parts) {
+    if (WINDOW_COLOURS.has(b.c) && night) {
+      const lit = rnd(Math.round(b.p[0] * 97), Math.round(b.p[1] * 89), Math.round(b.p[2] * 83)) < 0.7;
+      out.push(lit ? { ...b, layer: 'glow', c: rnd(Math.round(b.p[0] * 31), Math.round(b.p[2] * 37), 5) < 0.5 ? '#ffd98a' : '#ffe6b3' } : { ...b, c: '#2b3550' });
+    } else if (b.layer === 'glow' && b.c === LAMP) {
+      if (night) {
+        out.push(b);
+        if (b.s[1] > 0.1) out.push({ layer: 'mist', p: [b.p[0], 0.02, b.p[2]], s: [1.6, 0.02, 1.6], c: '#ffd27a' }, { layer: 'mist', p: [b.p[0], 0.03, b.p[2]], s: [0.9, 0.02, 0.9], c: '#ffe2a0' });
+      } else out.push({ ...b, layer: 'solid', c: '#f1ece0' });
+    } else out.push(b);
+  }
+  return out;
+}
+
 /** Art Pass step 1 (M19): voxel style samples for review, at `?gallery`. Not part of the game. */
 export function AssetGallery() {
   const [view, setView] = useState<ViewName>('All');
+  const [time, setTime] = useState<TimeName>('Noon');
+  const t = TIMES[time];
   const { ground, items } = useMemo(() => {
     const items: Item[] = [
       { label: 'Bungalow', at: [-7.5, -4.5], parts: bungalow(1) },
@@ -116,17 +155,36 @@ export function AssetGallery() {
       { label: 'Wildlife →', at: [-2.5, 5.5], parts: [] },
       { label: 'Clouds (still copy)', at: [4.5, -1.5], parts: vmove(cloud(5), 0, 40, 0) },
       { label: '', at: [1.5, 0.5], parts: vmove(cloud(8), 0, 46, 0) },
+      { label: 'Observation tower', at: [-6, 9.5], parts: observationTower() },
+      { label: 'Crescent tower', at: [-2, 9.5], parts: crescentTower() },
+      { label: 'Art-deco tower', at: [2, 9.5], parts: artDecoTower() },
+      { label: 'Hotel', at: [6, 9.5], parts: hotel() },
+      { label: '', at: [0, 7.5], parts: lampPost() },
+      { label: '', at: [-4, 7.5], parts: lampPost() },
+      { label: '', at: [4, 7.5], parts: lampPost() },
     ];
     return { ground: groundParts(), items };
   }, []);
 
-  const parts = useMemo(() => [...ground, ...items.flatMap((i) => translate(i.parts, i.at[0], i.at[1]))], [ground, items]);
+  const parts = useMemo(() => forTime([...ground, ...items.flatMap((i) => translate(i.parts, i.at[0], i.at[1]))], t.night), [ground, items, t.night]);
 
   return (
-    <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #c9e0f7 0%, #e6f0fb 60%, #f1eefb 100%)' }}>
+    <div className="absolute inset-0 transition-[background] duration-700" style={{ background: t.bg }}>
       <div className="pointer-events-none absolute left-3 top-3 z-10 rounded-2xl bg-white/85 px-3 py-2 text-xs text-slate-700 shadow">
         <div className="font-bold">Art Pass · style samples (M19)</div>
         <div>Drag to rotate, scroll/pinch to zoom. Not in the game yet.</div>
+      </div>
+      <div className="absolute right-3 top-3 z-10 flex gap-1 rounded-full bg-white/85 p-1 shadow">
+        {(Object.keys(TIMES) as TimeName[]).map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => setTime(n)}
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${n === time ? 'bg-amber-400 text-white' : 'text-slate-700'}`}
+          >
+            {{ Dawn: '🌅', Morning: '🌤️', Noon: '☀️', Sunset: '🌇', Night: '🌙' }[n]} {n}
+          </button>
+        ))}
       </div>
       <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 flex-wrap justify-center gap-1.5">
         {(Object.keys(VIEWS) as ViewName[]).map((v) => (
@@ -143,18 +201,19 @@ export function AssetGallery() {
       <Canvas flat shadows dpr={[1, 2]} gl={{ antialias: true }}>
         <OrthographicCamera makeDefault position={[22, 24, 22]} zoom={42} near={0.1} far={400} />
         <OrbitControls makeDefault target={[0, 0, 0.5]} enablePan minZoom={15} maxZoom={200} />
-        <hemisphereLight args={['#ffffff', '#d9d2ea', 1.2]} />
+        <hemisphereLight args={[t.sky, t.ground, t.ambI]} />
         <directionalLight
-          position={[-14, 30, 20]}
-          intensity={2.3}
+          position={t.sun as unknown as [number, number, number]}
+          color={t.sunColor}
+          intensity={t.sunI}
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0004}
           shadow-normalBias={0.02}
-          shadow-camera-left={-16}
-          shadow-camera-right={16}
-          shadow-camera-top={16}
-          shadow-camera-bottom={-16}
+          shadow-camera-left={-20}
+          shadow-camera-right={20}
+          shadow-camera-top={20}
+          shadow-camera-bottom={-20}
           shadow-camera-near={1}
           shadow-camera-far={120}
         />
@@ -180,8 +239,8 @@ const topOf = (parts: BoxPart[]) => (parts.length === 0 ? 0.6 : Math.max(...part
 function groundParts(): BoxPart[] {
   const parts: BoxPart[] = [];
   for (let x = -9; x < 9; x++) {
-    for (let z = -6; z < 8; z++) {
-      const path = z === 0 || z === -1 ? z === 0 : false;
+    for (let z = -6; z < 12; z++) {
+      const path = z === 0 || z === 7;
       const base = path ? ART.path[(x + z) & 1] : ART.grass[(x + z) & 1];
       const c = shade(base, (rnd(x, z, 1) - 0.5) * 0.08);
       parts.push({ layer: 'solid', p: [x + 0.5, -0.25, z + 0.5], s: [1, 0.5, 1], c });
@@ -197,7 +256,7 @@ function groundParts(): BoxPart[] {
     }
   }
   // dirt sides of the platform
-  for (let x = -9; x < 9; x++) parts.push({ layer: 'solid', p: [x + 0.5, -1.25, 7.5], s: [1, 1.5, 1], c: x % 2 ? '#9b7653' : '#8d6b4b' });
-  for (let z = -6; z < 8; z++) parts.push({ layer: 'solid', p: [8.5, -1.25, z + 0.5], s: [1, 1.5, 1], c: z % 2 ? '#8d6b4b' : '#9b7653' });
+  for (let x = -9; x < 9; x++) parts.push({ layer: 'solid', p: [x + 0.5, -1.25, 11.5], s: [1, 1.5, 1], c: x % 2 ? '#9b7653' : '#8d6b4b' });
+  for (let z = -6; z < 12; z++) parts.push({ layer: 'solid', p: [8.5, -1.25, z + 0.5], s: [1, 1.5, 1], c: z % 2 ? '#8d6b4b' : '#9b7653' });
   return parts;
 }
