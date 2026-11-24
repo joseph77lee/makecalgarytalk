@@ -361,24 +361,46 @@ export function birdWing(): BoxPart[] {
   return [vb(-0.6, 0.6, 0, 0.8, 0.9, 2.4, '#4a5270')];
 }
 
-/** Hot-air balloon with a striped stepped envelope and a basket (about 3 tiles tall). */
+/**
+ * Hot-air balloon like the reference (docs/references/reference-ballon.png): a round voxel envelope
+ * in a patchwork of colours (only the shell voxels are drawn), narrowing into a neck over a wicker
+ * basket, with a cloth banner hanging below (about 3 tiles tall).
+ */
 export function hotAirBalloon(seed: number): BoxPart[] {
-  const stripes = [pick(['#e46a5c', '#5b8fd6', '#9c97e6'], rnd(seed, 30)), '#f2c14e', '#f7f3ea', pick(['#6fbf8a', '#e07f5b'], rnd(seed, 31))];
-  const parts: BoxPart[] = [vb(-1.5, 0, -1.5, 1.5, 2, 1.5, '#a7825f'), vb(-1.7, 2, -1.7, 1.7, 2.3, 1.7, '#7d5a3f')];
-  for (const [x, z] of [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]]) parts.push(vb(x - 0.1, 2.3, z - 0.1, x + 0.1, 7, z + 0.1, '#6b5a4a'));
-  const radii = [2, 3.5, 4.5, 5.2, 5.6, 5.6, 5.3, 4.8, 4, 3, 1.6];
-  radii.forEach((r, i) => {
-    const y = 7 + i * 1.8;
-    const n = 8;
-    for (let k = 0; k < n; k++) {
-      // vertical stripes: each slice is drawn as bands around the square ring
-      const c = stripes[k % stripes.length];
-      const a0 = -r + (2 * r * k) / n;
-      const a1 = -r + (2 * r * (k + 1)) / n;
-      parts.push(vb(a0, y, r - 0.9, a1, y + 1.8, r, c), vb(a0, y, -r, a1, y + 1.8, -r + 0.9, stripes[(k + 2) % stripes.length]));
-      parts.push(vb(r - 0.9, y, a0, r, y + 1.8, a1, stripes[(k + 1) % stripes.length]), vb(-r, y, a0, -r + 0.9, y + 1.8, a1, stripes[(k + 3) % stripes.length]));
+  const palettes = [
+    ['#d9534f', '#f2c14e', '#3fa7a0', '#f4ead5'],
+    ['#5b8fd6', '#f2c14e', '#f4ead5', '#e46a5c'],
+    ['#a77bd1', '#6fbf8a', '#f2c14e', '#f4ead5'],
+  ];
+  const pal = pick(palettes, rnd(seed, 30));
+  const parts: BoxPart[] = [
+    vb(-1.5, 0, -1.5, 1.5, 2, 1.5, '#b08a5c'),
+    vb(-1.7, 2, -1.7, 1.7, 2.4, 1.7, '#7d5a3f'),
+    vb(-1.2, 1, 1.5, 1.2, 1.4, 1.6, '#8f6c48'),
+  ];
+  for (const [x, z] of [[-1.2, -1.2], [1.2, -1.2], [-1.2, 1.2], [1.2, 1.2]]) parts.push(vb(x - 0.1, 2.4, z - 0.1, x + 0.1, 7, z + 0.1, '#5a4636'));
+  // banner hanging from the basket
+  parts.push(vb(-0.1, -6, 1.6, 0.1, 0, 1.8, '#9aa1ab'), vb(-1.1, -5.5, 1.7, 1.1, -0.5, 1.9, '#f4ead5'), vb(-1.1, -5.9, 1.7, 1.1, -5.5, 1.9, '#d9534f'));
+  // envelope: an elongated voxel sphere (radius 6, 1.3x taller), centre at y = 15
+  const R = 6;
+  const cy = 15;
+  for (let y = -8; y <= 8; y++) {
+    const ny = y / (R * 1.3);
+    const ring = R * Math.sqrt(Math.max(0, 1 - ny * ny)) * (y < 0 ? 0.85 + 0.15 * (1 + ny) : 1);
+    if (ring < 0.8) continue;
+    for (let x = -R; x < R; x++) {
+      for (let z = -R; z < R; z++) {
+        const d = Math.hypot(x + 0.5, z + 0.5);
+        if (d > ring || d < ring - 1.6) continue; // shell only
+        const sector = Math.floor(((Math.atan2(z + 0.5, x + 0.5) + Math.PI) / (2 * Math.PI)) * 8);
+        const band = Math.floor((y + 8) / 3);
+        const c = pal[(sector + band) % pal.length];
+        parts.push(vb(x, cy + y, z, x + 1, cy + y + 1, z + 1, (x + y + z) % 3 === 0 ? shade(c, -0.06) : c));
+      }
     }
-  });
+  }
+  // neck down to the basket ropes
+  parts.push(vb(-1.5, 7, -1.5, 1.5, 7.6, 1.5, '#5a4636'));
   return parts;
 }
 

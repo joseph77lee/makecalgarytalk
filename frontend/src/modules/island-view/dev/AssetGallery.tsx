@@ -47,6 +47,7 @@ const VIEWS = {
   'Street & people': { target: [1, 5.5], zoom: 110 },
   'Sky & wildlife': { target: [-3, -2], zoom: 24 },
   Wildlife: { target: [1.5, 6.3], zoom: 150 },
+  Balloon: { target: [-9, -8], zoom: 75, y: 9 },
 } as const;
 type ViewName = keyof typeof VIEWS;
 
@@ -59,9 +60,10 @@ function ViewRig({ view }: { view: ViewName }) {
     if (!orbit) return;
     const cam = camera as OrthoCam;
     const v = VIEWS[view];
+    const ty = 'y' in v ? v.y : 0.5;
     const d = [cam.position.x - orbit.target.x, cam.position.y - orbit.target.y, cam.position.z - orbit.target.z];
-    orbit.target.set(v.target[0], 0.5, v.target[1]);
-    cam.position.set(v.target[0] + d[0], 0.5 + d[1], v.target[1] + d[2]);
+    orbit.target.set(v.target[0], ty, v.target[1]);
+    cam.position.set(v.target[0] + d[0], ty + d[1], v.target[1] + d[2]);
     cam.zoom = v.zoom;
     cam.updateProjectionMatrix();
     orbit.update();
