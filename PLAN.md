@@ -567,7 +567,7 @@ M0 ─┬─ M1 ── M2 ─┐
 ---
 
 ## After MVP (not planned in detail yet)
-Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moderation, Profile & Ranks, Speech Bubbles, Requests, 5 Vitality moods, feature upgrades. Plan them after MVP playtest data.
+Phase 2 modules (from `requirement.md` §22.2): Resident Board + moderation, Profile & Ranks (avatar growth), Speech Bubbles, Requests, 5 Vitality moods, feature upgrades. Plan them after MVP playtest data. (The Art Pass moved before the deploy: M19.)
 
 Phase 4: local business shops on **Main Street lots** (open after the Community hall; operator-approved messages; `requirement.md` §22.4). The lots are already reserved in the stored lot plans (M1 🔁).
 
@@ -589,6 +589,7 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 **Why:** Operator decisions (2026-11-24).
 
 **Previous:**
+- After MVP: `Phase 2 modules (from \`requirement.md\` §22.2): Art Pass, Resident Board + moderation, Profile & Ranks, Speech Bubbles, Requests, 5 Vitality moods, feature upgrades. Plan them after MVP playtest data.`
 - Header: `| Plan version | v1.64 |`, `| Based on | \`requirement.md\` v1.36 |`
 - M16 items (verbatim):
   >   - [ ] **family/friends playtest**, focused on **one pilot community** (e.g. Mahogany) so neighbours actually meet (`requirement.md` v1.36 §22.7)
