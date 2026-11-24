@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.69 |
+| Plan version | v1.70 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Based on | `requirement.md` v1.39 |
-| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |
+| Current module | M19 Art Pass 🔁 Reopened (walking animation, `fix/m19-walk-animation`), then M20 |
 
 ---
 
@@ -54,7 +54,7 @@
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
-| M19 | Art Pass | FE (R3F) | | M14 | ✅ |
+| M19 | Art Pass | FE (R3F) | | M14 | 🔁 |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ⬜ |
 | M16 | Deploy & Playtest | All + operator accounts | | M20 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
@@ -516,7 +516,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Launch steps:** `docs/launch.md` lists every operator step (Supabase project in Canada Central, link + `db push`, auth settings, Cloudflare Pages env vars, Turnstile, Google OAuth, email routing, adding an operator, deletion requests, Pro before public launch).
   - **Legal text** is a template-based first version written from what the game actually stores; professional review once revenue starts (§18). If the Supabase region is not Canada, update the Privacy Policy.
 
-### M19 — Art Pass ✅
+### M19 — Art Pass 🔁
 **Goal:** Every community looks worth playing and feels **busy** before anyone sees it (`requirement.md` v1.39 §19.0, §22.2, §22.6). Built **before M16** (deploy and playtest).
 - **In scope** (planned with the user 2026-11-24: own code-built voxel assets, warm pastel colours matching `docs/references/`)
   - [x] the details decided together: own voxel assets (12 voxels per tile) first, buy or redo only if the user does not like them; downtown = towers, other communities = a mix of house types; warm pastel palette
@@ -526,6 +526,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] construction sites (fence, scaffold, materials, frame rising with progress, crane on big lots) and voxel island trees (snow when sleepy)
   - [x] people: avatar and mini villagers are one voxel person at the same size; my avatar's name always shows, my house says "My house" (requirement v1.39)
   - [x] busier communities without fake players (§7.3): street props (benches, flower beds, cars, mailboxes) and island life (clouds beside the island, birds, Canada geese, planes — more often in NE — hot-air balloon, visiting deer, jackrabbits, rare cougars)
+  - [x] people and animals move like they walk (operator request 2026-11-24): avatar and villagers swing arms and legs (sit, cheer, hammer too); deer walk and sometimes bound, cougars stalk low and sometimes dash, jackrabbits hop, geese waddle; resting deer and geese graze
   - [x] island ground: grass/path colour variation, grass tufts, stepping stones, layered soil edge
   - [x] asset gallery `?gallery` with times of day (dawn, morning, noon, sunset, night)
   - **Priority: looks first** (operator decision 2026-11-24): detail and amounts are chosen for the best look. Performance work is limited to changes that keep the look identical (e.g. merging touching voxels into one box); slow phones are covered by the M14 low-quality mode; one real-phone check before the launch (M16). Rendering cost depends on each player's phone and the island's content, not on the number of players.
@@ -541,6 +542,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Ground:** `scene/terrainParts.ts` — kept calm like the reference: faint checker (palette pairs differ < 5 luminance), grass clumps about two voxels wide on ~12 % of grass, stepping stones on ~20 % of path tiles, no specks smaller than a voxel, 4-layer edge soil. Construction sites: low soft fence (≤ 2 voxels), orange only on the gate cones, scaffold shape = `variant % 3`.
   - **Tests:** `voxel.test.ts`, `houses.test.ts`, `lifePlan.test.ts`; `models.test.ts` (every design × facing fits its lot, designs differ, construction fits all lot sizes), `features.test.ts`, `ctrain.test.ts` (every platform faces its track), street-prop case in `layout.test.ts`. 828 frontend tests.
   - **Not tested / known gaps:** real phone (a full island ≈ 13–15k instanced boxes vs ≈ 3–4k before; 120 fps in desktop Chrome at a 390 px viewport, which says nothing about phones) — check in M16, fall back to look-preserving voxel merging if needed; snow on roofs and night windows/lamps in the game wait for M20 (the gallery already previews the night look); animals and props do not avoid the avatar; World Map unchanged.
+  - **Walking animation:** `assets/voxel/rigs.ts` splits a model into a body and parts turning at their joints (`personRig`: head, armL/R, legL/R; `animalRig`: legs `fl fr bl br` or `hind front` / `legL legR`, head, tail; left = −z, animals face +x). `assets/voxel/gaits.ts` holds pure, tested pose functions (`personPose`, `animalPose`, `ANIMAL_STYLE` with walk/run/stalk/hop/waddle and strides, `advancePhase` by distance so feet do not slide). `assets/RigView.tsx` draws a rig and calls a pose callback each frame; `VoxelPerson` (props `motion`, `headTilt`) and `VoxelAnimal` (`motion` = speed + running) read a motion ref the caller writes in its own `useFrame`. Cost: a person is 6 instanced meshes instead of 2 (≤ 21 people ≈ 126 small meshes), an animal 5–7.
   - **Gotchas:** the gallery camera always zooms to the centre, so it has view preset buttons; never give files in one folder names that differ only in case.
 
 ### M20 — Weather & Time of Day ⬜

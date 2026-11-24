@@ -6,7 +6,10 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, type ReactNode } from 'react';
 import type { Group } from 'three';
 import type { BoxPart } from '../assets/boxes';
-import { airplane, birdBody, birdWing, cloud, cougar, deer, gooseFlyingBody, gooseStanding, gooseWing, hotAirBalloon, jackrabbit } from '../assets/voxel/samples';
+import { VoxelAnimal, type AnimalMotion } from '../assets/VoxelAnimal';
+import { VoxelPerson, type PersonMotion } from '../assets/VoxelPerson';
+import type { AnimalKind } from '../assets/voxel/rigs';
+import { airplane, birdBody, birdWing, cloud, gooseFlyingBody, gooseWing, hotAirBalloon } from '../assets/voxel/samples';
 import { BoxBatch } from '../scene/BoxBatch';
 
 function Batch({ parts, shadow = true }: { parts: BoxPart[]; shadow?: boolean }) {
@@ -22,19 +25,42 @@ function Mover({ move, children }: { move: (t: number, g: Group) => void; childr
   return <group ref={ref}>{children}</group>;
 }
 
+/** A walking animal sample: `move` places it and writes its motion every frame. */
+function Walker({ kind, seed, move }: { kind: AnimalKind; seed: number; move: (t: number, g: Group, m: AnimalMotion) => void }) {
+  const ref = useRef<Group>(null);
+  const motion = useRef<AnimalMotion>({ speed: 0, running: false });
+  useFrame(({ clock }) => {
+    if (ref.current) move(clock.elapsedTime, ref.current, motion.current);
+  });
+  return (
+    <group ref={ref}>
+      <VoxelAnimal kind={kind} motion={motion} seed={seed} />
+    </group>
+  );
+}
+
+/** A walking person sample (same figure as the avatar and villagers): arms and legs swing. */
+function PersonWalker({ seed, shirt, move }: { seed: number; shirt: string; move: (t: number, g: Group, m: PersonMotion) => void }) {
+  const ref = useRef<Group>(null);
+  const motion = useRef<PersonMotion>({ speed: 0 });
+  useFrame(({ clock }) => {
+    if (ref.current) move(clock.elapsedTime, ref.current, motion.current);
+  });
+  return (
+    <group ref={ref}>
+      <VoxelPerson seed={seed} shirt={shirt} motion={motion} />
+    </group>
+  );
+}
+
 export function GalleryLife() {
   const clouds = useMemo(() => [cloud(1), cloud(2), cloud(3)], []);
   const body = useMemo(() => birdBody(), []);
   const wing = useMemo(() => birdWing(), []);
   const balloon = useMemo(() => hotAirBalloon(2), []);
   const plane = useMemo(() => airplane(), []);
-  const buck = useMemo(() => deer(true), []);
-  const doe = useMemo(() => deer(false), []);
-  const rabbit = useMemo(() => jackrabbit(false), []);
-  const cat = useMemo(() => cougar(), []);
   const gBody = useMemo(() => gooseFlyingBody(), []);
   const gWing = useMemo(() => gooseWing(), []);
-  const goose = useMemo(() => gooseStanding(), []);
 
   return (
     <>
@@ -117,16 +143,18 @@ export function GalleryLife() {
 
       {/* Two geese walking on the grass. */}
       {[0, 1].map((i) => (
-        <Mover
+        <Walker
           key={`gs${i}`}
-          move={(t, g) => {
+          kind="goose"
+          seed={i}
+          move={(t, g, m) => {
             const s = Math.sin(t * 0.3 + i * 2);
+            const v = Math.cos(t * 0.3 + i * 2);
             g.position.set(-1.2 + s * 1.0 + i * 0.9, 0, 4.7 + i * 0.6);
-            g.rotation.y = Math.cos(t * 0.3 + i * 2) >= 0 ? 0 : Math.PI;
+            g.rotation.y = v >= 0 ? 0 : Math.PI;
+            m.speed = Math.abs(v) * 0.3;
           }}
-        >
-          <Batch parts={goose} />
-        </Mover>
+        />
       ))}
 
       {/* Hot-air balloon bobbing and drifting slowly. */}
@@ -148,36 +176,59 @@ export function GalleryLife() {
         </group>
       </Mover>
 
-      {/* Wildlife: two deer grazing back and forth, a hopping jackrabbit, a prowling cougar. */}
-      {[buck, doe].map((d, i) => (
-        <Mover
-          key={i}
-          move={(t, g) => {
-            const s = Math.sin(t * 0.25 + i * 1.7);
-            g.position.set(0.5 + s * 1.6 + i * 1.2, 0, 5.4 + i * 0.9);
-            g.rotation.y = Math.cos(t * 0.25 + i * 1.7) >= 0 ? 0 : Math.PI;
+      {/* Two people walking back and forth (one strolls, one walks briskly), pausing at each end. */}
+      {[0, 1].map((i) => (
+        <PersonWalker
+          key={`p${i}`}
+          seed={i * 7 + 3}
+          shirt={i ? '#ff8a5c' : '#7bb6e8'}
+          move={(t, g, m) => {
+            const w = i ? 0.5 : 0.22;
+            const v = Math.cos(t * w + i);
+            const walking = Math.abs(v) > 0.15;
+            g.position.set(2.6 + Math.sin(t * w + i) * 1.6, 0, 3.4 + i * 0.9);
+            g.rotation.y = v >= 0 ? Math.PI / 2 : -Math.PI / 2;
+            m.speed = walking ? Math.abs(v) * 1.6 * w : 0; // the real pace, so feet do not slide
           }}
-        >
-          <Batch parts={d} />
-        </Mover>
+        />
       ))}
-      <Mover
-        move={(t, g) => {
-          const s = (t * 0.6) % 4;
-          g.position.set(-1.5 + s, Math.abs(Math.sin(t * 6)) * 0.18, 7.2);
+
+      {/* Wildlife: two deer grazing back and forth, a hopping jackrabbit, a prowling cougar. */}
+      {(['buck', 'deer'] as const).map((kind, i) => (
+        <Walker
+          key={kind}
+          kind={kind}
+          seed={i}
+          move={(t, g, m) => {
+            // the doe bounds every few seconds, the buck walks
+            const w = i === 1 ? 0.45 : 0.25;
+            const s = Math.sin(t * w + i * 1.7);
+            const v = Math.cos(t * w + i * 1.7);
+            g.position.set(0.5 + s * 1.6 + i * 1.2, 0, 5.4 + i * 0.9);
+            g.rotation.y = v >= 0 ? 0 : Math.PI;
+            m.speed = Math.abs(v) * 1.6 * w;
+            m.running = i === 1 && Math.abs(v) > 0.6;
+          }}
+        />
+      ))}
+      <Walker
+        kind="jackrabbit"
+        seed={2}
+        move={(t, g, m) => {
+          g.position.set(-1.5 + ((t * 0.6) % 4), 0, 7.2);
+          m.speed = 0.6;
         }}
-      >
-        <Batch parts={rabbit} />
-      </Mover>
-      <Mover
-        move={(t, g) => {
-          const s = Math.sin(t * 0.15);
-          g.position.set(3.4 + s * 1.2, 0, 7);
-          g.rotation.y = Math.cos(t * 0.15) >= 0 ? 0 : Math.PI;
+      />
+      <Walker
+        kind="cougar"
+        seed={3}
+        move={(t, g, m) => {
+          const v = Math.cos(t * 0.15);
+          g.position.set(3.4 + Math.sin(t * 0.15) * 1.2, 0, 7);
+          g.rotation.y = v >= 0 ? 0 : Math.PI;
+          m.speed = Math.abs(v) * 0.18;
         }}
-      >
-        <Batch parts={cat} />
-      </Mover>
+      />
     </>
   );
 }

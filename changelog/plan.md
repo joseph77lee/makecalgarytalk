@@ -12,6 +12,18 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.70
+**Changed:** M19 Art Pass 🔁 Reopened for walking animation (`fix/m19-walk-animation`): new In-scope item "people and animals move like they walk" (avatar and villagers swing arms and legs, sit, cheer, hammer; deer walk and sometimes bound, cougars stalk and sometimes dash, jackrabbits hop, geese waddle; resting deer and geese graze); Handoff note gains the rig/gait code.
+
+**Why:** Operator request (2026-11-24): residents and animals slid around without moving their arms and legs.
+
+**Previous:**
+- Header: `| Plan version | v1.69 |`, `| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |`
+- Module table: `| M19 | Art Pass | FE (R3F) | | M14 | ✅ |`
+- M19 title: `### M19 — Art Pass ✅`
+- M19 In scope: no walking-animation item.
+- M19 Handoff: no rig/gait note.
+
 ### 2026-11-24 — v1.69
 **Changed:** M19 Art Pass 🔁 Reopened for a visual polish (`fix/m19-visual-polish`): calmer construction sites (low cream/pale-terracotta fence, orange only on the gate cones, three scaffold shapes per community), calmer ground (checker contrast halved in every mood palette, no per-tile colour jitter, fewer but bigger grass clumps, fewer stepping stones), clouds tucked against the real island edges (left, right, under the front cliff) instead of floating far away. Handoff note updated.
 
