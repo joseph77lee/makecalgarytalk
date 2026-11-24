@@ -3,9 +3,10 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useState } from 'react';
 import type { OrthographicCamera as OrthoCam } from 'three';
 import { translate, type BoxPart } from '../assets/boxes';
-import { house } from '../assets/models';
+import { boxHouse } from '../assets/models';
 import {
   ART,
+  apartment,
   artDecoTower,
   bench,
   brickMidrise,
@@ -24,6 +25,7 @@ import {
   infill,
   lampPost,
   leafyTree,
+  loft,
   mailbox,
   officeTower,
   person,
@@ -122,12 +124,14 @@ export function AssetGallery() {
       { label: 'Semi-detached', at: [-3.5, -4.5], parts: semiDetached(3) },
       { label: 'Townhouses', at: [-1.5, -4.5], parts: townhouses(4) },
       { label: 'Infill', at: [0.5, -4.5], parts: infill(5) },
-      { label: 'Now (M1 box house)', at: [2.5, -4.5], parts: house({ assetKey: 'house', id: 'h', houseId: 'h', x: 0, z: 0, stage: 0, nickname: '', activeToday: true, colorIndex: 2, founding: false, mine: false }) },
+      { label: 'Now (M1 box house)', at: [2.5, -4.5], parts: boxHouse({ activeToday: true, colorIndex: 2 }) },
       { label: '', at: [-7.5, -2.5], parts: bungalow(11) },
       { label: '', at: [-5.5, -2.5], parts: twoStoreyGarage(13) },
       { label: '', at: [-3.5, -2.5], parts: semiDetached(17) },
       { label: '', at: [-1.5, -2.5], parts: townhouses(19) },
       { label: '', at: [0.5, -2.5], parts: infill(22) },
+      { label: 'Apartment (downtown lot)', at: [2.5, -2.5], parts: apartment(3) },
+      { label: 'Loft (downtown lot)', at: [3.5, -4.5], parts: loft(2) },
       { label: 'Community hall', at: [6, -3.5], parts: communityHall(1) },
       { label: 'Office tower', at: [-6, 3], parts: officeTower(1) },
       { label: 'Condo tower', at: [-2, 3], parts: condoTower(1) },

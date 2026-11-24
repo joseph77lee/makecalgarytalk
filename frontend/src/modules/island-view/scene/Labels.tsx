@@ -95,14 +95,14 @@ function HouseMarks({
         const selected = o.houseId === selectedHouseId && o.nickname;
         return [
           o.mine && !selected && (
-            <Overlay key={`${o.id}:mine`} x={o.x} y={1.2} z={o.z}>
+            <Overlay key={`${o.id}:mine`} x={o.x} y={o.height + 0.25} z={o.z}>
               <span className="whitespace-nowrap rounded-full bg-orange-500 px-1.5 py-px text-[10px] font-bold text-white shadow" title="My house">
                 🏠 Me
               </span>
             </Overlay>
           ),
           selected && (
-            <Overlay key={`${o.id}:info`} x={o.x} y={1.3} z={o.z} front>
+            <Overlay key={`${o.id}:info`} x={o.x} y={o.height + 0.35} z={o.z} front>
               <HouseInfo nickname={o.nickname} activeToday={o.activeToday} founding={o.founding} mine={o.mine} />
             </Overlay>
           ),
@@ -140,12 +140,12 @@ export function IslandLabels({ objects, houseBubbles, communityName, selectedHou
             if (o.houseId === selectedHouseId) return null;
             return [
               bubble && (
-                <Overlay key={`${o.id}:bubble`} x={o.x} y={1.75} z={o.z} front>
+                <Overlay key={`${o.id}:bubble`} x={o.x} y={o.height + 0.75} z={o.z} front>
                   <SpeechBubbleLabel text={bubble} />
                 </Overlay>
               ),
               showNames && o.nickname && !o.mine && (
-              <Overlay key={o.id} x={o.x} y={1.15} z={o.z}>
+              <Overlay key={o.id} x={o.x} y={o.height + 0.2} z={o.z}>
                 <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-white/85 px-1.5 py-px text-[10px] font-semibold text-slate-700 shadow-sm">
                     <span className={`h-1.5 w-1.5 rounded-full ${o.activeToday ? 'bg-amber-400' : 'bg-slate-300'}`} />
                   {o.nickname}

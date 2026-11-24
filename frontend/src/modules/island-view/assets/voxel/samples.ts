@@ -667,3 +667,36 @@ export function hotel(): BoxPart[] {
   );
   return parts;
 }
+
+// --- Downtown homes that fit one house lot (2026-11-24) -------------------------------------
+
+/** Small apartment block (5–7 storeys) with balconies, for downtown house lots. */
+export function apartment(seed: number): BoxPart[] {
+  const wall = pick(['#f3dcc0', '#eef0d8', '#f6e7c8', '#f4d6cc', '#e9dccb'], rnd(seed, 40));
+  const floors = 5 + Math.floor(rnd(seed, 41) * 3);
+  const top = 1 + floors * 3;
+  const parts: BoxPart[] = [vb(-5, 0, -5, 5, 1, 5, ART.concrete), vb(-5, 1, -5, 5, top, 5, wall)];
+  for (let f = 0; f < floors; f++) {
+    const y = 2 + f * 3;
+    parts.push(vb(-4, y, 5, -0.5, y + 1.6, 5.25, ART.glass), vb(0.5, y, 5, 4, y + 1.6, 5.25, ART.glass));
+    parts.push(vb(5, y, -4, 5.25, y + 1.6, -0.5, ART.glass), vb(5, y, 0.5, 5.25, y + 1.6, 4, ART.glass));
+    if (f > 0) parts.push(vb(-4.3, y - 0.4, 5, 4.3, y, 6.2, ART.trim), vb(-4.3, y, 5.9, 4.3, y + 0.8, 6.2, '#cfe3ee'));
+  }
+  parts.push(vb(-1, 1, 5, 1, 1.9, 5.3, ART.door), vb(-5.4, top, -5.4, 5.4, top + 0.7, 5.4, shade(wall, -0.12)), vb(-2, top + 0.7, -3, 2, top + 2.2, 1, '#a9b0b9'));
+  return parts;
+}
+
+/** Brick loft (3–4 storeys) with big windows and a rooftop garden, for downtown house lots. */
+export function loft(seed: number): BoxPart[] {
+  const brick = pick(['#c4694f', '#b8785a', '#c98a6a'], rnd(seed, 42));
+  const floors = 3 + Math.floor(rnd(seed, 43) * 2);
+  const top = 1 + floors * 3.2;
+  const parts: BoxPart[] = [vb(-5, 0, -4.5, 5, top, 4.5, brick), vb(-5.4, top, -4.9, 5.4, top + 0.8, 4.9, '#efe2c2')];
+  for (let f = 0; f < floors; f++) {
+    const y = 1.6 + f * 3.2;
+    for (const x of [-3.8, -0.9, 2]) parts.push(...windowZ(x, x + 1.8, y, y + 2, 4.5, f === 0 && x === -0.9 ? ART.door : ART.glass, '#efe2c2'));
+    parts.push(...windowX(-3, 0, y, y + 2, 5, ART.glass, '#efe2c2'));
+  }
+  parts.push(vb(-4, top + 0.8, -3.5, 0, top + 1.6, 0, '#7a5a3c'), vb(-3.6, top + 1.6, -3.1, -0.4, top + 2.4, -0.4, pick(ART.leaf, rnd(seed, 44))));
+  return parts;
+}

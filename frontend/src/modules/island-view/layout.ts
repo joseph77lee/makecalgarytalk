@@ -7,6 +7,7 @@
  * (§7.6): a construction site while a new building goes up, else the last built one (with a
  * small scaffold while it is upgraded in place), else a silhouette.
  */
+import { houseHeight, houseStyleFor, houseTypeFor, type HouseType } from './assets/voxel/houses';
 import { vitalityMood, type VitalityMood } from './mood';
 import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
 import { featuresFor, type CommunityFeature, type FeatureKey } from './plan/features';
@@ -60,7 +61,21 @@ interface Footprint {
 }
 
 export type PlacedObject =
-  | (Base & { assetKey: 'house'; houseId: string; nickname: string; activeToday: boolean; colorIndex: number; founding: boolean; mine: boolean })
+  | (Base & {
+      assetKey: 'house';
+      houseId: string;
+      nickname: string;
+      activeToday: boolean;
+      colorIndex: number;
+      founding: boolean;
+      mine: boolean;
+      /** Art Pass house type for this community (requirement.md §7.2, §19). */
+      houseType: HouseType;
+      /** Front towards +z (0), +x (1), −z (2) or −x (3): the nearest path, else open land. */
+      facing: number;
+      /** Height of the house in tiles (labels and taps). */
+      height: number;
+    })
   | (Base & { assetKey: 'tree'; variant: number })
   | (Base & { assetKey: 'lamp' })
   | (Base & { assetKey: 'flowers'; variant: number })
@@ -365,6 +380,10 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
 
   // Houses: each resident's fixed lot (slot); data without slots fills the lots in slot order.
   const lotOrder = houseLotOrder(plan);
+  const style = houseStyleFor(plan.code);
+  const lotKeys = new Set(plan.houses.map(tileKey));
+  const plantedTreeKeys = new Set(plan.trees.map(tileKey));
+  const blockedForDoor = (k: string) => lotKeys.has(k) || plantedTreeKeys.has(k) || waterKeys.has(k) || occupied.has(k);
   const houseTiles: string[] = [];
   let offLand = 0;
   state.houses.forEach((h, i) => {
@@ -374,6 +393,8 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       return;
     }
     houseTiles.push(tileKey(t));
+    const colorIndex = hashString(h.id);
+    const houseType = houseTypeFor(style, colorIndex);
     objects.push({
       assetKey: 'house',
       id: `house:${h.id}`,
@@ -383,9 +404,12 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       stage: stageOf(t),
       nickname: h.nickname,
       activeToday: h.activeToday,
-      colorIndex: hashString(h.id),
+      colorIndex,
       founding: h.founding === true,
       mine: h.mine === true,
+      houseType,
+      facing: houseFacing(t, pathKeys, (k) => landKeys.has(k) && !blockedForDoor(k)),
+      height: houseHeight(houseType),
     });
     occupied.add(tileKey(t));
   });
@@ -448,6 +472,27 @@ export function smoothTrack(tiles: Tile[]): { x: number; z: number }[] {
     }
     return { x: x / (2 * r + 1), z: z / (2 * r + 1) };
   });
+}
+
+/** Directions in `facing` order: +z, +x, −z, −x. */
+const FACING_DIRS: Tile[] = [
+  { x: 0, z: 1 },
+  { x: 1, z: 0 },
+  { x: 0, z: -1 },
+  { x: -1, z: 0 },
+];
+
+/**
+ * Which way a house faces: towards a path or plaza tile next to it, else towards open land next
+ * to it, else towards the plaza (the island centre). Ties keep the `facing` order.
+ */
+export function houseFacing(t: Tile, pathKeys: Set<string>, isOpen: (k: string) => boolean): number {
+  const keyAt = (i: number) => tileKey({ x: t.x + FACING_DIRS[i].x, z: t.z + FACING_DIRS[i].z });
+  for (let i = 0; i < 4; i++) if (pathKeys.has(keyAt(i))) return i;
+  for (let i = 0; i < 4; i++) if (isOpen(keyAt(i))) return i;
+  const cx = -(t.x + 0.5);
+  const cz = -(t.z + 0.5);
+  return Math.abs(cz) >= Math.abs(cx) ? (cz >= 0 ? 0 : 2) : cx >= 0 ? 1 : 3;
 }
 
 /** Built level and upgrade info: a building at level N under construction is built at N − 1. */

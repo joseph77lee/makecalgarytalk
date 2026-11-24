@@ -21,6 +21,9 @@ const houseItem = (activeToday: boolean): ObjectOf<'house'> => ({
   colorIndex: 0,
   founding: false,
   mine: false,
+  houseType: 'bungalow',
+  facing: 0,
+  height: 0.9,
 });
 
 describe('box helpers', () => {
@@ -36,7 +39,7 @@ describe('box helpers', () => {
 
 describe('models', () => {
   it('active houses have lit windows; inactive houses have none (requirement.md §7.2)', () => {
-    expect(house(houseItem(true)).filter((p) => p.layer === 'glow')).toHaveLength(3);
+    expect(house(houseItem(true)).filter((p) => p.layer === 'glow').length).toBeGreaterThanOrEqual(3);
     expect(house(houseItem(false)).filter((p) => p.layer === 'glow')).toHaveLength(0);
   });
 

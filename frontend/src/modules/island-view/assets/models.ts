@@ -6,6 +6,7 @@
  */
 import type { BuildingObject, ObjectOf } from '../layout';
 import type { FeatureKey } from '../plan/features';
+import { houseParts } from './voxel/houses';
 import { ACCENTS, type MoodPalette, type VitalityMood } from '../mood';
 import { asGhost, box, type BoxPart } from './boxes';
 
@@ -41,7 +42,13 @@ function levelMarkers(level: number, w: number, d: number): BoxPart[] {
 
 // --- Small things ----------------------------------------------------------------
 
+/** A resident's house (Art Pass): its type, colours and facing come from the layout (requirement.md §7.2). */
 export function house(item: ObjectOf<'house'>): BoxPart[] {
+  return houseParts(item.houseType, item.colorIndex, item.facing, item.activeToday);
+}
+
+/** The M1 box house (kept for comparison in the asset gallery). */
+export function boxHouse(item: Pick<ObjectOf<'house'>, 'colorIndex' | 'activeToday'>): BoxPart[] {
   const roof = ACCENTS[item.colorIndex % ACCENTS.length];
   const win = item.activeToday ? 'glow' : 'solid';
   const winColour = item.activeToday ? WARM_LIGHT : DARK_WINDOW;
