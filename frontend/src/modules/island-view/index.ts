@@ -8,6 +8,7 @@ export { captureIsland } from './scene/capture';
 export { IslandHud } from './scene/IslandHud';
 export { IslandDevPanel } from './dev/IslandDevPanel';
 export { AssetGallery } from './dev/AssetGallery';
+export { VoxelPerson, PERSON_SCALE } from './assets/VoxelPerson';
 export { useMockCommunityStore } from './mockStore';
 export { parseCommunityViewState, type ParseResult } from './parseState';
 export { MOOD_PALETTES, vitalityMood, type VitalityMood } from './mood';

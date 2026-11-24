@@ -700,3 +700,16 @@ export function loft(seed: number): BoxPart[] {
   parts.push(vb(-4, top + 0.8, -3.5, 0, top + 1.6, 0, '#7a5a3c'), vb(-3.6, top + 1.6, -3.1, -0.4, top + 2.4, -0.4, pick(ART.leaf, rnd(seed, 44))));
   return parts;
 }
+
+/** Neck height of the voxel person, in voxels (the head turns around it). */
+export const PERSON_NECK = 6.6;
+
+/** The voxel person split into body and head (head moved down so it pivots at the neck). */
+export function personSplit(seed: number, shirt?: string): { body: BoxPart[]; head: BoxPart[] } {
+  const all = person(seed, shirt);
+  const isHead = (b: BoxPart) => b.p[1] * 12 >= PERSON_NECK && Math.abs(b.p[0]) * 12 < 1.7;
+  return {
+    body: all.filter((b) => !isHead(b)),
+    head: all.filter(isHead).map((b) => ({ ...b, p: [b.p[0], b.p[1] - PERSON_NECK / 12, b.p[2]] as [number, number, number] })),
+  };
+}

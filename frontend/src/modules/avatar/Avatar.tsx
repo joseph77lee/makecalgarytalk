@@ -1,8 +1,8 @@
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { Group } from 'three';
-import { clearCameraFocus, setCameraFocus, useHtmlPortal, useIslandWalkable, useShowIslandLabels, type Tile } from '../island-view';
+import { VoxelPerson, clearCameraFocus, setCameraFocus, useHtmlPortal, useIslandWalkable, useShowIslandLabels, type Tile } from '../island-view';
 import { useAvatarStore } from './avatarStore';
 import { stepCandidates } from './keyboard';
 import { usePressedKeys } from './usePressedKeys';
@@ -20,6 +20,8 @@ interface Props {
 
 /** The player's avatar: box character, name label, tap/click/keyboard movement (requirement.md §10.2). */
 export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
+  // Hair and skin follow the nickname, so my villager keeps its look.
+  const nickSeed = useMemo(() => [...nickname].reduce((h, ch) => Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0, 2166136261), [nickname]);
   const { walkable, walkableKeys } = useIslandWalkable();
   const showLabels = useShowIslandLabels();
   const portal = useHtmlPortal();
@@ -109,31 +111,7 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
     <>
       <group ref={group} position={[SPAWN.x + 0.5, 0, SPAWN.z + 0.5]}>
         <group ref={body}>
-          <mesh position={[0, 0.06, 0]} castShadow>
-            <boxGeometry args={[0.26, 0.12, 0.2]} />
-            <meshStandardMaterial color="#3f4a5c" roughness={0.95} />
-          </mesh>
-          <mesh position={[0, 0.27, 0]} castShadow>
-            <boxGeometry args={[0.3, 0.3, 0.22]} />
-            <meshStandardMaterial color={shirtColor} roughness={0.95} />
-          </mesh>
-          <mesh position={[0, 0.56, 0]} castShadow>
-            <boxGeometry args={[0.27, 0.27, 0.27]} />
-            <meshStandardMaterial color="#f5d3b5" roughness={0.95} />
-          </mesh>
-          <mesh position={[0, 0.72, 0]} castShadow>
-            <boxGeometry args={[0.3, 0.08, 0.3]} />
-            <meshStandardMaterial color="#4f5d75" roughness={0.95} />
-          </mesh>
-          {/* eyes face the walking direction (+z) */}
-          <mesh position={[-0.06, 0.58, 0.137]}>
-            <boxGeometry args={[0.04, 0.05, 0.01]} />
-            <meshBasicMaterial color="#334155" />
-          </mesh>
-          <mesh position={[0.06, 0.58, 0.137]}>
-            <boxGeometry args={[0.04, 0.05, 0.01]} />
-            <meshBasicMaterial color="#334155" />
-          </mesh>
+          <VoxelPerson seed={nickSeed} shirt={shirtColor} />
         </group>
         {showLabels && (
           <Html portal={portal} position={[0, 1.05, 0]} center zIndexRange={[28, 21]} style={{ pointerEvents: 'none' }}>

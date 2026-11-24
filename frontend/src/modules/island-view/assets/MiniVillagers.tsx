@@ -1,7 +1,7 @@
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
-import type { Group, Mesh } from 'three';
+import type { Group } from 'three';
 import type { Tile } from '../layout';
 import { ACCENTS } from '../mood';
 import { useIslandCtx, useSceneFx } from '../scene/islandContext';
@@ -10,6 +10,7 @@ import type { ItemsProps } from './BoxAsset';
 import { villagerPersonality } from './villagerPersonality';
 import { useIslandUi } from '../uiStore';
 import { SpeechBubbleLabel } from '../scene/Labels';
+import { VoxelPerson } from './VoxelPerson';
 import { BUBBLE_Z } from '../scene/labelText';
 import { useHtmlPortal } from '../scene/htmlPortal';
 
@@ -46,7 +47,7 @@ const STEPS: Tile[] = [
 function MiniVillager({ index, startTile, colorIndex }: { index: number; startTile: Tile; colorIndex: number }) {
   const { palette, mood, walkableKeys, villagerBubbles } = useIslandCtx();
   const group = useRef<Group>(null);
-  const head = useRef<Mesh>(null);
+  const head = useRef<Group>(null);
   const body = useRef<Group>(null);
   const sim = useRef({ from: startTile, to: startTile, t: 1, pause: 0, rng: mulberry32(index * 7919 + 17) });
   const me = useRef(villagerPersonality(index)).current;
@@ -108,14 +109,7 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
   return (
     <group ref={group} position={[startTile.x + 0.5, 0, startTile.z + 0.5]}>
       <group ref={body}>
-        <mesh position={[0, 0.16, 0]} castShadow>
-          <boxGeometry args={[0.22, 0.26, 0.16]} />
-          <meshStandardMaterial color={ACCENTS[colorIndex % ACCENTS.length]} roughness={0.95} />
-        </mesh>
-        <mesh ref={head} position={[0, 0.4, 0]} castShadow>
-          <boxGeometry args={[0.2, 0.2, 0.2]} />
-          <meshStandardMaterial color="#f5d3b5" roughness={0.95} />
-        </mesh>
+        <VoxelPerson seed={index * 7 + 3} shirt={ACCENTS[colorIndex % ACCENTS.length]} headRef={head} />
       </group>
       {bubble && (
         <Html portal={portal} position={[0, 0.85, 0]} center zIndexRange={BUBBLE_Z} style={{ pointerEvents: 'none' }}>
