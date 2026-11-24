@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { buildIslandLayout, buildingSiteTile, tileKey, type BuildingObject, type PlacedObject } from './layout';
+import { MAX_PROPS, buildIslandLayout, buildingSiteTile, tileKey, type BuildingObject, type PlacedObject } from './layout';
 import mock from './mockCommunityState.json';
 import { parseCommunityViewState } from './parseState';
 import { featuresFor, type CommunityFeature } from './plan/features';
@@ -286,5 +286,20 @@ describe('signature features (feature library, requirement.md §7.9)', () => {
   it('come from the community data by default (Mahogany: big park, school)', () => {
     expect(featuresFor('MAH').map((f) => f.key)).toEqual(['big-park', 'school']);
     expect(features(buildIslandLayout(MAH, stateWith({ landStage: 5 }))).map((o) => 'featureKey' in o && o.featureKey)).toEqual(['big-park', 'school']);
+  });
+});
+
+describe('street props (M19 busier communities)', () => {
+  it('stay on free grass, never block walking, and are capped', () => {
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, houses: residents(40) }), []);
+    const props = l.objects.filter((o) => o.assetKey === 'prop');
+    expect(props.length).toBeGreaterThan(5);
+    expect(props.length).toBeLessThanOrEqual(MAX_PROPS);
+    const blocked = new Set([...MAH.paths, ...MAH.water, ...MAH.houses].map(tileKey));
+    for (const o of props) expect(blocked.has(tileKey({ x: Math.floor(o.x), z: Math.floor(o.z) })), o.id).toBe(false);
+    const without = buildIslandLayout(MAH, stateWith({ landStage: 5, houses: residents(40) }), []);
+    expect(l.walkable.length).toBe(without.walkable.length);
+    const walk = new Set(l.walkable.map(tileKey));
+    expect(props.some((o) => walk.has(tileKey({ x: Math.floor(o.x), z: Math.floor(o.z) })))).toBe(true);
   });
 });

@@ -12,6 +12,7 @@ import { useRanking, weeklyAnnouncement, weeklyCardTitle } from '../modules/rank
 import { ShareCardDialog, type ShareCard } from '../modules/share-cards';
 import { WorldMap } from '../modules/world-map';
 import {
+  AssetGallery,
   IslandDevPanel,
   IslandHud,
   IslandView,
@@ -31,7 +32,11 @@ const mockMode = params.has('mock');
 /** `?admin` shows the operator dashboard (operators only, checked by the server). */
 const adminMode = params.has('admin');
 
+/** `?gallery` shows the Art Pass style samples (M19), no sign-in needed. */
+const galleryMode = params.has('gallery');
+
 export function App() {
+  if (galleryMode) return <AssetGallery />;
   return mockMode ? <MockApp /> : <IdentityGate />;
 }
 

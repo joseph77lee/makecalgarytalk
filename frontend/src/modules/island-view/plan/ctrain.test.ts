@@ -113,3 +113,25 @@ describe('upcomingIdentity (build map preview)', () => {
     expect(u.landStage).toBe(2);
   });
 });
+
+describe('station platforms face the track (Art Pass)', () => {
+  it('on every stored plan, the side a platform faces has track tiles next to it', async () => {
+    const { readdirSync } = await import('node:fs');
+    const { platformFacing } = await import('../layout');
+    for (const f of readdirSync(DIR).filter((n) => n.endsWith('.json'))) {
+      const plan = decodePlan(JSON.parse(readFileSync(join(DIR, f), 'utf8')));
+      if (plan.stations.length === 0) continue;
+      const rail = new Set(plan.rail.flatMap((r) => r.tiles.map((t) => `${t.x},${t.z}`)));
+      for (const st of plan.stations) {
+        const r = st.rect;
+        const facing = platformFacing(r, rail);
+        const side: { x: number; z: number }[] = [];
+        if (facing === 0) for (let i = 0; i < r.w; i++) side.push({ x: r.x + i, z: r.z + r.d });
+        if (facing === 2) for (let i = 0; i < r.w; i++) side.push({ x: r.x + i, z: r.z - 1 });
+        if (facing === 1) for (let j = 0; j < r.d; j++) side.push({ x: r.x + r.w, z: r.z + j });
+        if (facing === 3) for (let j = 0; j < r.d; j++) side.push({ x: r.x - 1, z: r.z + j });
+        expect(side.some((t) => rail.has(`${t.x},${t.z}`)), `${plan.code} ${st.name}`).toBe(true);
+      }
+    }
+  });
+});

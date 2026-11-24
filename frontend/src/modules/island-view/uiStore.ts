@@ -31,6 +31,3 @@ export const useIslandUi = create<IslandUi>((set) => ({
     set({ showLabels: show });
   },
 }));
-
-/** Whether island overlays (labels, bubbles) are shown; for overlays drawn by other modules. */
-export const useShowIslandLabels = (): boolean => useIslandUi((u) => u.showLabels);

@@ -7,6 +7,7 @@
  * (§7.6): a construction site while a new building goes up, else the last built one (with a
  * small scaffold while it is upgraded in place), else a silhouette.
  */
+import { houseHeight, houseStyleFor, houseTypeFor, type HouseType } from './assets/voxel/houses';
 import { vitalityMood, type VitalityMood } from './mood';
 import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
 import { featuresFor, type CommunityFeature, type FeatureKey } from './plan/features';
@@ -40,6 +41,7 @@ export const FIXED_ASSET_KEYS = [
   'track',
   'station',
   'rail-end',
+  'prop',
 ] as const;
 export type FixedAssetKey = (typeof FIXED_ASSET_KEYS)[number];
 /** `building.<key>` draws a built building of the tree (or the placeholder for unknown keys). */
@@ -59,28 +61,53 @@ interface Footprint {
   d: number;
 }
 
+/** Art Pass look of a tree building on its lot: which way it faces and which design it uses. */
+interface Look {
+  /** Front towards +z (0), +x (1), −z (2) or −x (3); odd only for lots turned from their canonical shape. */
+  facing: number;
+  /** Design choice, fixed per community and building (hash of both). */
+  variant: number;
+}
+
 export type PlacedObject =
-  | (Base & { assetKey: 'house'; houseId: string; nickname: string; activeToday: boolean; colorIndex: number; founding: boolean; mine: boolean })
+  | (Base & {
+      assetKey: 'house';
+      houseId: string;
+      nickname: string;
+      activeToday: boolean;
+      colorIndex: number;
+      founding: boolean;
+      mine: boolean;
+      /** Art Pass house type for this community (requirement.md §7.2, §19). */
+      houseType: HouseType;
+      /** Front towards +z (0), +x (1), −z (2) or −x (3): the nearest path, else open land. */
+      facing: number;
+      /** Height of the house in tiles (labels and taps). */
+      height: number;
+    })
   | (Base & { assetKey: 'tree'; variant: number })
   | (Base & { assetKey: 'lamp' })
   | (Base & { assetKey: 'flowers'; variant: number })
   | (Base & { assetKey: 'snow-pile'; variant: number })
   | (Base & { assetKey: 'mini-villager'; index: number; startTile: Tile; colorIndex: number })
-  | (Base & Footprint & { assetKey: 'construction-site'; buildingKey: string; title: string; progress: number; level: number })
-  | (Base & Footprint & { assetKey: 'silhouette'; buildingKey: string; title: string; ready: boolean; remaining: Remaining | null })
+  | (Base & Footprint & Look & { assetKey: 'construction-site'; buildingKey: string; title: string; progress: number; level: number })
+  | (Base & Footprint & Look & { assetKey: 'silhouette'; buildingKey: string; title: string; ready: boolean; remaining: Remaining | null })
   | (Base & Footprint & { assetKey: 'reserved-plot'; lotKind: string })
   /** A signature feature (requirement.md §7.9) on a spare lot; appears when its land has risen. */
-  | (Base & Footprint & { assetKey: 'feature'; featureKey: FeatureKey; name: string | null })
+  | (Base & Footprint & Look & { assetKey: 'feature'; featureKey: FeatureKey; name: string | null })
   /** One CTrain track tile under the line: drawn only as a rail bridge (over water) or a level crossing (path). */
   | (Base & { assetKey: 'rail'; links: RailLinks; overWater: boolean; crossing: boolean })
   /** A stretch of CTrain track between two smoothed points (world coordinates; the object sits at the first). */
-  | (Base & { assetKey: 'track'; dx: number; dz: number })
+  | (Base & { assetKey: 'track'; dx: number; dz: number; /** An overhead-wire pole stands at this stretch. */ pole: boolean })
   /** A CTrain station platform beside the track (real position). */
-  | (Base & Footprint & { assetKey: 'station'; name: string; lines: string[]; along: 'x' | 'z' })
+  | (Base & Footprint & Look & { assetKey: 'station'; name: string; lines: string[]; along: 'x' | 'z' })
+  /** A street prop on free grass (never blocks walking): bench, flower bed, parked car or mailbox. */
+  | (Base & { assetKey: 'prop'; kind: PropKind; facing: number; seed: number })
   /** Sign where the track leaves the island: the next station beyond. */
   | (Base & { assetKey: 'rail-end'; next: string; dir: Tile })
   | (Base &
-      Footprint & {
+      Footprint &
+      Look & {
         assetKey: `building.${string}`;
         buildingKey: string;
         title: string;
@@ -93,6 +120,11 @@ export type PlacedObject =
 
 export type ObjectOf<K extends PlacedObject['assetKey']> = Extract<PlacedObject, { assetKey: K }>;
 export type BuildingObject = Extract<PlacedObject, { assetKey: `building.${string}` }>;
+
+export type PropKind = 'bench' | 'flowers' | 'car' | 'mailbox';
+
+/** At most this many street props per island (busy, not cluttered). */
+export const MAX_PROPS = 70;
 
 export interface RailLinks {
   /** +x, -x, +z, -z neighbours connected by rails. */
@@ -199,7 +231,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
     if (spec.kind === 'spare' && featureQueue.length > 0) {
       const f = featureQueue.shift() as CommunityFeature;
       if (onLand) {
-        objects.push({ ...base, id: `feature:${f.key}`, assetKey: 'feature', featureKey: f.key, name: f.name });
+        objects.push({ ...base, facing: lotFacing(rect, pathKeys, false), variant: hashString(`${plan.code}:${f.key}`), id: `feature:${f.key}`, assetKey: 'feature', featureKey: f.key, name: f.name });
         usedLots.push(lotKey);
         rTiles.forEach((t) => occupied.add(tileKey(t)));
       }
@@ -225,6 +257,8 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
     if (!shown) continue;
     usedLots.push(lotKey);
     if (spec.kind !== 'entrance') rTiles.forEach((t) => occupied.add(tileKey(t)));
+    const facing = lotFacing(rect, pathKeys, spec.kind === 'entrance');
+    const variant = (key: string) => hashString(`${plan.code}:${key}`);
     const buildingIdx = views.findIndex((v) => v?.status === 'building' && v.level === 1);
     let builtIdx = -1;
     views.forEach((v, i) => {
@@ -233,13 +267,15 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
     });
     if (buildingIdx >= 0) {
       const v = views[buildingIdx] as BuildingView;
-      objects.push({ ...base, id: `lot:${lotKey}`, assetKey: 'construction-site', buildingKey: v.key, title: v.title, progress: v.progress, level: v.level });
+      objects.push({ ...base, facing, variant: variant(v.key), id: `lot:${lotKey}`, assetKey: 'construction-site', buildingKey: v.key, title: v.title, progress: v.progress, level: v.level });
     } else if (builtIdx >= 0) {
       const v = views[builtIdx] as BuildingView;
       const nextSpec = chain[builtIdx + 1];
       const nextView = nextSpec ? byKey.get(nextSpec.key) : undefined;
       objects.push({
         ...base,
+        facing,
+        variant: variant(v.key),
         id: `lot:${lotKey}`,
         assetKey: `building.${v.key}`,
         buildingKey: v.key,
@@ -252,6 +288,8 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       const v = views[0];
       objects.push({
         ...base,
+        facing,
+        variant: variant(first.key),
         id: `lot:${lotKey}`,
         assetKey: 'silhouette',
         buildingKey: first.key,
@@ -272,7 +310,14 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       hiddenUnknown++;
       continue;
     }
-    const base = { ...centreOf(spare.rect), w: spare.rect.w, d: spare.rect.d, stage: BUILDING_TREE.lots[spare.key].landStage };
+    const base = {
+      ...centreOf(spare.rect),
+      w: spare.rect.w,
+      d: spare.rect.d,
+      stage: BUILDING_TREE.lots[spare.key].landStage,
+      facing: lotFacing(spare.rect, pathKeys, false),
+      variant: hashString(`${plan.code}:${b.key}`),
+    };
     usedLots.push(spare.key);
     lotTiles(spare.rect).forEach((t) => occupied.add(tileKey(t)));
     objects.push(
@@ -322,7 +367,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       const b = line[i];
       const st = Math.max(tileStage(a), tileStage(b));
       if (st > landStage) continue;
-      objects.push({ assetKey: 'track', id: `track:${run.line}:${tileKey(run.tiles[0])}:${i}`, x: a.x, z: a.z, stage: st, dx: b.x - a.x, dz: b.z - a.z });
+      objects.push({ assetKey: 'track', id: `track:${run.line}:${tileKey(run.tiles[0])}:${i}`, x: a.x, z: a.z, stage: st, dx: b.x - a.x, dz: b.z - a.z, pole: i % 3 === 1 });
     }
   }
   for (const e of plan.railEnds) link(e.tile, { x: e.tile.x + e.dir.x, z: e.tile.z + e.dir.z });
@@ -349,6 +394,8 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       name: st.name,
       lines: st.lines,
       along: st.rect.w >= st.rect.d ? 'x' : 'z',
+      facing: platformFacing(st.rect, links),
+      variant: hashString(`${plan.code}:${st.name}`),
     });
   });
   for (const e of plan.railEnds) {
@@ -365,6 +412,10 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
 
   // Houses: each resident's fixed lot (slot); data without slots fills the lots in slot order.
   const lotOrder = houseLotOrder(plan);
+  const style = houseStyleFor(plan.code);
+  const lotKeys = new Set(plan.houses.map(tileKey));
+  const plantedTreeKeys = new Set(plan.trees.map(tileKey));
+  const blockedForDoor = (k: string) => lotKeys.has(k) || plantedTreeKeys.has(k) || waterKeys.has(k) || occupied.has(k);
   const houseTiles: string[] = [];
   let offLand = 0;
   state.houses.forEach((h, i) => {
@@ -374,6 +425,8 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       return;
     }
     houseTiles.push(tileKey(t));
+    const colorIndex = hashString(h.id);
+    const houseType = houseTypeFor(style, colorIndex);
     objects.push({
       assetKey: 'house',
       id: `house:${h.id}`,
@@ -383,9 +436,12 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
       stage: stageOf(t),
       nickname: h.nickname,
       activeToday: h.activeToday,
-      colorIndex: hashString(h.id),
+      colorIndex,
       founding: h.founding === true,
       mine: h.mine === true,
+      houseType,
+      facing: houseFacing(t, pathKeys, (k) => landKeys.has(k) && !blockedForDoor(k)),
+      height: houseHeight(houseType),
     });
     occupied.add(tileKey(t));
   });
@@ -394,6 +450,32 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
   for (const t of plan.trees.filter(on)) {
     objects.push({ assetKey: 'tree', id: `tree:${tileKey(t)}`, x: t.x + 0.5, z: t.z + 0.5, stage: stageOf(t), variant: Math.floor(hash01(t.x, t.z, 3) * 3) });
     occupied.add(tileKey(t));
+  }
+
+  // Street props (Art Pass, "busier communities"): benches along paths, flower beds near the plaza
+  // and paths, parked cars and mailboxes beside houses. Decoration only: they never block walking.
+  const houseKeys = new Set(houseTiles);
+  let props = 0;
+  for (const t of land) {
+    if (props >= MAX_PROPS) break;
+    const k = tileKey(t);
+    if (pathKeys.has(k) || waterKeys.has(k) || occupied.has(k) || houseLotKeys.has(k)) continue;
+    const near = (keys: Set<string>) => N4.findIndex((d) => keys.has(tileKey({ x: t.x + d.x, z: t.z + d.z })));
+    const pathSide = near(pathKeys);
+    const houseSide = near(houseKeys);
+    const r = hash01(t.x, t.z, 11);
+    const plazaNear = Math.hypot(t.x + 0.5, t.z + 0.5) < 5;
+    let kind: PropKind | null = null;
+    if (houseSide >= 0 && r < 0.14) kind = style === 'downtown' || r < 0.08 ? 'car' : 'mailbox';
+    else if (pathSide >= 0 && r < 0.1) kind = 'bench';
+    else if ((pathSide >= 0 && r < 0.17) || (plazaNear && r < 0.35)) kind = 'flowers';
+    if (!kind) continue;
+    const towards = kind === 'bench' ? pathSide : houseSide >= 0 ? houseSide : pathSide;
+    // N4 order is +x, −x, +z, −z; facing order is +z, +x, −z, −x
+    const facing = towards < 0 ? 0 : [1, 3, 0, 2][towards];
+    objects.push({ assetKey: 'prop', id: `prop:${k}`, x: t.x + 0.5, z: t.z + 0.5, stage: t.stage, kind, facing, seed: hashString(k) });
+    occupied.add(k);
+    props++;
   }
 
   // Mood decorations on free grass (never blocking).
@@ -448,6 +530,68 @@ export function smoothTrack(tiles: Tile[]): { x: number; z: number }[] {
     }
     return { x: x / (2 * r + 1), z: z / (2 * r + 1) };
   });
+}
+
+/**
+ * Which way a building faces on its lot: the side with the most path or plaza tiles next to it.
+ * A non-square lot only turns in ways that keep its shape (wide along x → +z or −z). The entrance
+ * (welcome sign, arch) faces away from the plaza, along the road out. Ties face the plaza.
+ */
+export function lotFacing(rect: LotRect, pathKeys: Set<string>, entrance: boolean): number {
+  const cx = rect.x + rect.w / 2;
+  const cz = rect.z + rect.d / 2;
+  const towardsPlaza = Math.abs(cz) >= Math.abs(cx) ? (cz <= 0 ? 0 : 2) : cx <= 0 ? 1 : 3;
+  if (entrance) return (towardsPlaza + 2) % 4;
+  const allowed = rect.w === rect.d ? [0, 1, 2, 3] : rect.w > rect.d ? [0, 2] : [1, 3];
+  const sideTiles = (f: number): Tile[] => {
+    const out: Tile[] = [];
+    if (f === 0) for (let i = 0; i < rect.w; i++) out.push({ x: rect.x + i, z: rect.z + rect.d });
+    if (f === 2) for (let i = 0; i < rect.w; i++) out.push({ x: rect.x + i, z: rect.z - 1 });
+    if (f === 1) for (let j = 0; j < rect.d; j++) out.push({ x: rect.x + rect.w, z: rect.z + j });
+    if (f === 3) for (let j = 0; j < rect.d; j++) out.push({ x: rect.x - 1, z: rect.z + j });
+    return out;
+  };
+  let best = allowed.includes(towardsPlaza) ? towardsPlaza : allowed[0];
+  let bestScore = -1;
+  for (const f of allowed) {
+    const score = sideTiles(f).filter((t) => pathKeys.has(tileKey(t))).length + (f === towardsPlaza ? 0.5 : 0);
+    if (score > bestScore) {
+      bestScore = score;
+      best = f;
+    }
+  }
+  return best;
+}
+
+/** A platform's safety edge faces the track: the long side that has track tiles next to it. */
+export function platformFacing(rect: LotRect, railTiles: { has: (k: string) => boolean }): number {
+  if (rect.w >= rect.d) {
+    for (let i = 0; i < rect.w; i++) if (railTiles.has(tileKey({ x: rect.x + i, z: rect.z + rect.d }))) return 0;
+    return 2;
+  }
+  for (let j = 0; j < rect.d; j++) if (railTiles.has(tileKey({ x: rect.x + rect.w, z: rect.z + j }))) return 1;
+  return 3;
+}
+
+/** Directions in `facing` order: +z, +x, −z, −x. */
+const FACING_DIRS: Tile[] = [
+  { x: 0, z: 1 },
+  { x: 1, z: 0 },
+  { x: 0, z: -1 },
+  { x: -1, z: 0 },
+];
+
+/**
+ * Which way a house faces: towards a path or plaza tile next to it, else towards open land next
+ * to it, else towards the plaza (the island centre). Ties keep the `facing` order.
+ */
+export function houseFacing(t: Tile, pathKeys: Set<string>, isOpen: (k: string) => boolean): number {
+  const keyAt = (i: number) => tileKey({ x: t.x + FACING_DIRS[i].x, z: t.z + FACING_DIRS[i].z });
+  for (let i = 0; i < 4; i++) if (pathKeys.has(keyAt(i))) return i;
+  for (let i = 0; i < 4; i++) if (isOpen(keyAt(i))) return i;
+  const cx = -(t.x + 0.5);
+  const cz = -(t.z + 0.5);
+  return Math.abs(cz) >= Math.abs(cx) ? (cz >= 0 ? 0 : 2) : cx >= 0 ? 1 : 3;
 }
 
 /** Built level and upgrade info: a building at level N under construction is built at N − 1. */

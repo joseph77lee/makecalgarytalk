@@ -5,9 +5,14 @@
  * of them per asset key without touching game logic (§20.4).
  */
 import type { BuildingObject, ObjectOf } from '../layout';
-import type { FeatureKey } from '../plan/features';
+import { houseParts } from './voxel/houses';
 import { ACCENTS, type MoodPalette, type VitalityMood } from '../mood';
-import { asGhost, box, type BoxPart } from './boxes';
+import { asGhost, box, translate, type BoxPart } from './boxes';
+import { BUILDING_VOXELS, placeholderModel } from './voxel/buildings';
+import { FEATURE_VOXELS, catenaryPole, crossingSign, railEndSignParts, stationPlatformParts } from './voxel/features';
+import { shade, vb } from './voxel/voxel';
+import { bench as benchModel, car as carModel, flowerBed as flowerBedModel, lampPost, leafyTree, mailbox as mailboxModel, spruce } from './voxel/samples';
+import { vturn } from './voxel/voxel';
 
 export interface BuildCtx {
   palette: MoodPalette;
@@ -20,18 +25,9 @@ const DOOR = '#a77b5a';
 const DARK_WINDOW = '#64748b';
 const WARM_LIGHT = '#ffd98a';
 const SNOW = '#f6f8fb';
-const ICE = '#d4ecf7';
-const STONE = '#c9c2b8';
 const GOLD = '#f2c94c';
 const SILHOUETTE = '#c9c3e6';
 
-/** Scale parts made for a 2×2 lot to another footprint. */
-function fit(parts: BoxPart[], w: number, d: number): BoxPart[] {
-  const sx = w / 2;
-  const sz = d / 2;
-  const sy = Math.min(sx, sz);
-  return parts.map((b) => ({ ...b, p: [b.p[0] * sx, b.p[1] * sy, b.p[2] * sz], s: [b.s[0] * sx, b.s[1] * sy, b.s[2] * sz] }));
-}
 
 /** Upgrades (level 2+) add one gold marker per level at the front corner (max 4). */
 function levelMarkers(level: number, w: number, d: number): BoxPart[] {
@@ -41,7 +37,13 @@ function levelMarkers(level: number, w: number, d: number): BoxPart[] {
 
 // --- Small things ----------------------------------------------------------------
 
+/** A resident's house (Art Pass): its type, colours and facing come from the layout (requirement.md §7.2). */
 export function house(item: ObjectOf<'house'>): BoxPart[] {
+  return houseParts(item.houseType, item.colorIndex, item.facing, item.activeToday);
+}
+
+/** The M1 box house (kept for comparison in the asset gallery). */
+export function boxHouse(item: Pick<ObjectOf<'house'>, 'colorIndex' | 'activeToday'>): BoxPart[] {
   const roof = ACCENTS[item.colorIndex % ACCENTS.length];
   const win = item.activeToday ? 'glow' : 'solid';
   const winColour = item.activeToday ? WARM_LIGHT : DARK_WINDOW;
@@ -59,29 +61,26 @@ export function house(item: ObjectOf<'house'>): BoxPart[] {
 }
 
 
+/**
+ * An island tree (Art Pass voxel): leafy trees in the mood's leaf colours, one in three a spruce;
+ * the sleepy (winter evening) mood puts snow on the tops.
+ */
 export function tree(item: ObjectOf<'tree'>, { palette, mood }: BuildCtx): BoxPart[] {
-  const leaves = palette.leaves[item.variant % 2];
-  const k = mood === 'sleepy' ? 0.85 : 1;
-  const parts: BoxPart[] = [box('solid', 0, 0, 0, 0.14, 0.32, 0.14, palette.trunk)];
-  let top: number;
-  if (item.variant === 0) {
-    parts.push(box('solid', 0, 0.3, 0, 0.62 * k, 0.5 * k, 0.62 * k, leaves));
-    parts.push(box('solid', 0, 0.3 + 0.5 * k, 0, 0.4 * k, 0.3 * k, 0.4 * k, leaves));
-    top = 0.3 + 0.8 * k;
-  } else if (item.variant === 1) {
-    parts.push(box('solid', 0, 0.3, 0, 0.48 * k, 0.75 * k, 0.48 * k, leaves));
-    parts.push(box('solid', 0, 0.3 + 0.75 * k, 0, 0.3 * k, 0.28 * k, 0.3 * k, leaves));
-    top = 0.3 + 1.03 * k;
-  } else {
-    parts.push(box('solid', 0, 0.3, 0, 0.7 * k, 0.55 * k, 0.7 * k, leaves));
-    top = 0.3 + 0.55 * k;
+  const seed = Math.round(item.x * 131 + item.z * 977);
+  const sleepy = mood === 'sleepy';
+  if (item.variant === 2) {
+    const parts = spruce(seed, sleepy ? '#4f8a6b' : undefined);
+    if (sleepy) parts.push(vb(-2.7, 7, -2.7, 2.7, 7.4, 2.7, SNOW), vb(-1.9, 9.5, -1.9, 1.9, 9.9, 1.9, SNOW), vb(-1.1, 11.5, -1.1, 1.1, 11.9, 1.1, SNOW));
+    return parts;
   }
-  if (mood === 'sleepy') parts.push(box('solid', 0, top, 0, 0.34, 0.07, 0.34, SNOW));
+  const parts = leafyTree(seed, palette.leaves[item.variant % 2], palette.trunk);
+  if (sleepy) parts.push(vb(-2.5, 10, -2.5, 2.5, 10.5, 2.5, SNOW), vb(-3.5, 8.5, -3.5, -1, 8.9, 3.5, SNOW));
   return parts;
 }
 
+/** A pathway light (voxel lamp post) at the tile's corner. */
 export function lamp(): BoxPart[] {
-  return [box('solid', 0.38, 0, 0.38, 0.07, 0.85, 0.07, '#5d6470'), box('glow', 0.38, 0.85, 0.38, 0.16, 0.14, 0.16, '#ffe7a3')];
+  return translate(lampPost(), 0.38, 0.38);
 }
 
 const FLOWER_SPOTS = [
@@ -118,249 +117,67 @@ export function reservedPlot(item: ObjectOf<'reserved-plot'>): BoxPart[] {
   return parts;
 }
 
+/**
+ * A construction site (Art Pass voxel): a dirt pad, an orange-and-white safety fence with a gate,
+ * and scaffolding. Before half progress: piles of bricks, lumber and sand, a wheelbarrow and cones;
+ * from half progress the building's frame rises inside the scaffold. Big lots get a tower crane.
+ */
 export function constructionSite(item: ObjectOf<'construction-site'>): BoxPart[] {
-  const { w, d } = item;
-  const pole = '#e0a96d';
-  const hx = w / 2 - 0.35;
-  const hz = d / 2 - 0.35;
-  const parts: BoxPart[] = [
-    box('solid', 0, 0, 0, w - 0.2, 0.03, d - 0.2, '#d9c7a5'),
-    box('solid', 0, 0.03, 0, w - 0.7, 0.12, d - 0.7, STONE),
-    box('solid', w / 2 - 0.22, 0.03, d / 2 - 0.22, 0.12, 0.2, 0.12, '#f39a52'),
-  ];
-  for (const [x, z] of [[-hx, -hz], [hx, -hz], [-hx, hz], [hx, hz]]) parts.push(box('solid', x, 0.03, z, 0.06, 1.05, 0.06, pole));
-  for (const y of [0.5, 1.02]) {
-    parts.push(box('solid', 0, y, -hz, hx * 2, 0.05, 0.06, pole), box('solid', 0, y, hz, hx * 2, 0.05, 0.06, pole));
-    parts.push(box('solid', -hx, y, 0, 0.06, 0.05, hz * 2, pole), box('solid', hx, y, 0, 0.06, 0.05, hz * 2, pole));
+  const hx = item.w * 6 - 0.6;
+  const hz = item.d * 6 - 0.6;
+  const parts: BoxPart[] = [vb(-hx, 0, -hz, hx, 0.35, hz, '#c9a77c'), vb(-hx + 1, 0.35, -hz + 1, hx - 1, 0.45, hz - 1, '#b8946a')];
+  // safety fence with alternating panels and a gap (gate) at the front
+  for (let x = -hx; x < hx - 0.1; x += 2) {
+    const c = Math.round((x + hx) / 2) % 2 ? '#f39a52' : '#ffffff';
+    const x1 = Math.min(x + 2, hx);
+    if (Math.abs(x + 1) > 2) parts.push(vb(x, 0.35, hz - 0.3, x1, 2.6, hz, c));
+    parts.push(vb(x, 0.35, -hz, x1, 2.6, -hz + 0.3, c));
+  }
+  for (let z = -hz; z < hz - 0.1; z += 2) {
+    const c = Math.round((z + hz) / 2) % 2 ? '#f39a52' : '#ffffff';
+    const z1 = Math.min(z + 2, hz);
+    parts.push(vb(-hx, 0.35, z, -hx + 0.3, 2.6, z1, c), vb(hx - 0.3, 0.35, z, hx, 2.6, z1, c));
+  }
+  // scaffolding around the middle
+  const sx = Math.min(hx - 3, 9);
+  const sz = Math.min(hz - 3, 9);
+  const pipe = '#c9cdd3';
+  const levels = item.progress >= 0.5 ? 3 : 2;
+  for (const [x, z] of [[-sx, -sz], [sx, -sz], [-sx, sz], [sx, sz], [0, -sz], [0, sz]]) parts.push(vb(x - 0.3, 0.45, z - 0.3, x + 0.3, 0.45 + levels * 3.4, z + 0.3, pipe));
+  for (let l = 1; l <= levels; l++) {
+    const y = 0.45 + l * 3.4;
+    parts.push(vb(-sx, y - 0.3, -sz - 0.6, sx, y, -sz + 0.6, '#b98b5e'), vb(-sx, y - 0.3, sz - 0.6, sx, y, sz + 0.6, '#b98b5e'));
+    parts.push(vb(-sx - 0.2, y - 0.2, -sz, -sx + 0.2, y, sz, pipe), vb(sx - 0.2, y - 0.2, -sz, sx + 0.2, y, sz, pipe));
   }
   if (item.progress >= 0.5) {
-    const beam = '#b98b5e';
-    const ix = hx - 0.17;
-    const iz = hz - 0.17;
-    for (const [x, z] of [[-ix, -iz], [ix, -iz], [-ix, iz], [ix, iz]]) parts.push(box('solid', x, 0.15, z, 0.1, 0.75, 0.1, beam));
-    parts.push(box('solid', 0, 0.9, 0, ix * 2 + 0.1, 0.08, iz * 2 + 0.1, beam));
-    parts.push(box('solid', 0, 0.15, -iz, ix * 2, 0.38, 0.06, WALL));
+    // the frame rises with progress: corner posts, a floor and part of the walls
+    const h = 2 + Math.round((item.progress - 0.5) * 2 * 6);
+    const fx = sx - 1.5;
+    const fz = sz - 1.5;
+    parts.push(vb(-fx, 0.45, -fz, fx, 1.2, fz, '#cfc9bd'));
+    for (const [x, z] of [[-fx, -fz], [fx, -fz], [-fx, fz], [fx, fz]]) parts.push(vb(x - 0.5, 1.2, z - 0.5, x + 0.5, 1.2 + h, z + 0.5, '#a67b55'));
+    parts.push(vb(-fx, 1.2, -fz, fx, 1.2 + h * 0.6, -fz + 0.8, '#efe2c2'), vb(-fx, 1.2 + h, -fz - 0.3, fx, 1.8 + h, fz + 0.3, '#a67b55'));
   } else {
-    parts.push(box('solid', -0.2, 0.15, -0.15, 0.4, 0.14, 0.3, '#c8a27a'), box('solid', 0.25, 0.15, 0.2, 0.3, 0.2, 0.3, '#b9b2a6'));
+    parts.push(vb(-sx + 1, 0.45, -sz + 1, -sx + 4, 2.4, -sz + 3.4, '#c4694f'), vb(-sx + 1.3, 2.4, -sz + 1.3, -sx + 3.7, 3, -sz + 3.1, '#d98a6a')); // bricks
+    if (item.w >= 2 && item.d >= 2) {
+      parts.push(vb(1, 0.45, -2, 7, 1.4, 0, '#d6b07a'), vb(1, 1.4, -1.8, 7, 2.2, -0.2, '#c49a64')); // lumber
+      parts.push(vb(-3, 0.45, 2, 1, 1.6, 5, '#e6cf9a'), vb(-2.2, 1.6, 2.8, 0.2, 2.4, 4.2, '#e6cf9a')); // sand
+      parts.push(vb(3, 0.45, 3, 5.6, 1.6, 4.6, '#5b8fd6'), vb(5.6, 0.8, 3.6, 7.4, 1, 4, '#5d6470')); // wheelbarrow
+    }
+  }
+  for (const x of [-2.5, 2.5]) parts.push(vb(x - 0.6, 0.35, hz + 0.3 - 1.5, x + 0.6, 0.6, hz + 0.3 - 0.3, '#f39a52'), vb(x - 0.3, 0.6, hz - 1.2, x + 0.3, 2, hz - 0.6, '#f39a52'));
+  if (item.w >= 3 && item.d >= 3) {
+    // small tower crane in the back corner
+    const cx = -hx + 2.5;
+    const cz = -hz + 2.5;
+    parts.push(vb(cx - 0.8, 0.45, cz - 0.8, cx + 0.8, 20, cz + 0.8, '#f2c14e'), vb(cx - 0.8, 20, cz - 0.6, cx + 16, 21, cz + 0.6, '#f2c14e'), vb(cx - 2.4, 20, cz - 0.8, cx - 0.8, 22.4, cz + 0.8, '#7d838c'));
+    parts.push(vb(cx + 10, 13, cz - 0.1, cx + 10.2, 20, cz + 0.1, '#5d6470'), vb(cx + 9.4, 12, cz - 0.6, cx + 10.8, 13, cz + 0.6, '#5d6470'));
   }
   return parts;
 }
 
 // --- Buildings of the tree -------------------------------------------------------------
 
-type Spec = { w: number; d: number; level: number };
-type Builder = (s: Spec, ctx: BuildCtx) => BoxPart[];
-
-const welcomeSign: Builder = () => [
-  box('solid', -0.38, 0, 0.3, 0.08, 0.95, 0.08, WOOD),
-  box('solid', 0.38, 0, 0.3, 0.08, 0.95, 0.08, WOOD),
-  box('solid', 0, 0.55, 0.3, 0.9, 0.36, 0.07, '#fff6e3'),
-  box('solid', 0, 0.91, 0.3, 0.98, 0.07, 0.1, WOOD),
-];
-
-const gatewayArch: Builder = () => [
-  box('solid', -0.42, 0, 0.3, 0.14, 1.45, 0.14, '#8a6a52'),
-  box('solid', 0.42, 0, 0.3, 0.14, 1.45, 0.14, '#8a6a52'),
-  box('solid', 0, 1.45, 0.3, 1.12, 0.14, 0.2, '#8a6a52'),
-  box('solid', 0, 1.0, 0.3, 0.8, 0.32, 0.08, '#fff6e3'),
-  box('glow', -0.42, 1.59, 0.3, 0.12, 0.12, 0.12, WARM_LIGHT),
-  box('glow', 0.42, 1.59, 0.3, 0.12, 0.12, 0.12, WARM_LIGHT),
-];
-
-const firePit: Builder = ({ w, d }) => {
-  const parts: BoxPart[] = [box('solid', 0, 0, 0, w - 0.6, 0.03, d - 0.6, '#d9cdb5')];
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
-    parts.push(box('solid', Math.cos(a) * 0.38, 0.03, Math.sin(a) * 0.38, 0.16, 0.12, 0.16, STONE));
-  }
-  parts.push(box('solid', 0, 0.05, 0, 0.36, 0.08, 0.1, '#8a6343', [0, 0.6, 0]), box('solid', 0, 0.05, 0, 0.36, 0.08, 0.1, '#8a6343', [0, -0.6, 0]));
-  parts.push(box('glow', 0, 0.12, 0, 0.22, 0.24, 0.22, '#ffb054'), box('glow', 0, 0.3, 0, 0.12, 0.16, 0.12, '#ffe27a'));
-  for (const [x, z, r] of [[-0.95, 0, 0], [0.95, 0, 0], [0, -0.95, Math.PI / 2]] as const) {
-    parts.push(box('solid', x, 0, z, 0.24, 0.16, 0.8, WOOD, [0, r, 0]));
-  }
-  return parts;
-};
-
-const warmingHut: Builder = ({ w, d }) => [
-  box('solid', 0, 0, 0, w - 0.5, 0.03, d - 0.5, '#d9cdb5'),
-  box('solid', -0.2, 0, -0.2, 1.5, 0.75, 1.3, '#c7926b'),
-  box('solid', -0.2, 0.75, -0.2, 1.7, 0.16, 1.5, '#8f5f45'),
-  box('solid', -0.2, 0.91, -0.2, 1.2, 0.16, 1.0, '#8f5f45'),
-  box('solid', 0.25, 0.85, -0.5, 0.16, 0.5, 0.16, STONE),
-  box('solid', 0.1, 0, 0.46, 0.28, 0.45, 0.03, DOOR),
-  box('glow', -0.45, 0.3, 0.46, 0.22, 0.18, 0.02, WARM_LIGHT),
-  box('glow', 0.56, 0.3, -0.2, 0.02, 0.18, 0.24, WARM_LIGHT),
-  // community board beside the hut
-  box('solid', 0.95, 0, 0.95, 0.06, 0.7, 0.06, WOOD),
-  box('solid', 1.21, 0, 0.95, 0.06, 0.7, 0.06, WOOD),
-  box('solid', 1.08, 0.38, 0.95, 0.42, 0.3, 0.05, '#fff6e3'),
-];
-
-const communityHall: Builder = ({ w, d }) => {
-  const roof = '#8ec5ea';
-  const base: BoxPart[] = [
-    box('solid', 0, 0, 0, 1.7, 0.9, 1.4, '#f3e6cf'),
-    box('solid', 0, 0.9, 0, 1.9, 0.16, 1.6, roof),
-    box('solid', 0, 1.06, 0, 1.4, 0.16, 1.1, roof),
-    box('solid', 0, 1.22, 0, 0.8, 0.14, 0.6, roof),
-    box('solid', 0, 0, 0.71, 0.34, 0.48, 0.03, DOOR),
-    box('solid', 0, 0.56, 0.715, 0.7, 0.2, 0.03, '#fff6e3'),
-    ...[-0.6, -0.35, 0.35, 0.6].map((x) => box('glow', x, 0.3, 0.715, 0.16, 0.2, 0.02, WARM_LIGHT)),
-    ...[-0.4, 0, 0.4].map((z) => box('glow', 0.855, 0.3, z, 0.02, 0.2, 0.16, WARM_LIGHT)),
-    box('solid', -0.7, 1.06, -0.5, 0.04, 0.6, 0.04, '#8a8f99'),
-    box('solid', -0.6, 1.46, -0.5, 0.18, 0.12, 0.02, ACCENTS[0]),
-  ];
-  return fit(base, w, d);
-};
-
-const frozenPond: Builder = ({ w, d }) => [
-  box('solid', 0, 0, 0, w - 0.3, 0.05, d - 0.3, SNOW),
-  box('solid', 0, 0.01, 0, w - 0.7, 0.06, d - 0.6, ICE),
-  box('solid', 0.3, 0.02, -0.1, w - 1.4, 0.06, d - 0.4, ICE),
-  box('solid', -0.6, 0.07, 0.1, 0.5, 0.01, 0.04, '#b3d8ec'),
-  box('solid', 0.5, 0.07, -0.2, 0.04, 0.01, 0.4, '#b3d8ec'),
-];
-
-function rink({ w, d }: Spec, extra: BoxPart[]): BoxPart[] {
-  const iw = w - 0.4;
-  const id = d - 0.4;
-  return [
-    box('solid', 0, 0, 0, iw, 0.05, id, ICE),
-    box('solid', 0, 0, -id / 2, iw + 0.1, 0.14, 0.06, '#ffffff'),
-    box('solid', 0, 0, id / 2, iw + 0.1, 0.14, 0.06, '#ffffff'),
-    box('solid', -iw / 2, 0, 0, 0.06, 0.14, id, '#ffffff'),
-    box('solid', iw / 2, 0, 0, 0.06, 0.14, id, '#ffffff'),
-    box('solid', -0.4, 0.05, 0.1, 0.6, 0.01, 0.04, '#b3d8ec'),
-    ...extra,
-  ];
-}
-
-const skatingRink: Builder = (s) => rink(s, []);
-
-const hockeyRink: Builder = (s) => {
-  const iw = s.w - 0.4;
-  const id = s.d - 0.4;
-  return rink(s, [
-    box('solid', 0, 0.05, 0, 0.04, 0.01, id - 0.1, '#e57373'),
-    box('solid', -iw / 2 + 0.25, 0.05, 0, 0.12, 0.2, 0.36, '#e57373'),
-    box('solid', iw / 2 - 0.25, 0.05, 0, 0.12, 0.2, 0.36, '#e57373'),
-    ...[[-iw / 2, -id / 2], [iw / 2, -id / 2], [-iw / 2, id / 2], [iw / 2, id / 2]].flatMap(([x, z]) => [
-      box('solid', x, 0.14, z, 0.05, 0.85, 0.05, '#5d6470'),
-      box('glow', x, 0.99, z, 0.14, 0.1, 0.14, '#ffe7a3'),
-    ]),
-    box('solid', 0, 0, id / 2 + 0.12, iw * 0.6, 0.18, 0.16, '#9aa5b1'),
-  ]);
-};
-
-const playground: Builder = ({ w, d }) => {
-  const post = '#e9a46a';
-  return fit(
-    [
-      box('solid', 0, 0, 0, 1.8, 0.04, 1.8, '#f1dfb6'),
-      box('solid', -0.75, 0.04, -0.45, 0.07, 0.9, 0.07, post),
-      box('solid', 0.15, 0.04, -0.45, 0.07, 0.9, 0.07, post),
-      box('solid', -0.3, 0.94, -0.45, 1.0, 0.07, 0.07, post),
-      box('solid', -0.52, 0.42, -0.45, 0.02, 0.52, 0.02, '#8a8f99'),
-      box('solid', -0.08, 0.42, -0.45, 0.02, 0.52, 0.02, '#8a8f99'),
-      box('solid', -0.52, 0.38, -0.45, 0.2, 0.04, 0.12, ACCENTS[1]),
-      box('solid', -0.08, 0.38, -0.45, 0.2, 0.04, 0.12, ACCENTS[2]),
-      box('solid', 0.5, 0.04, 0.35, 0.42, 0.62, 0.42, ACCENTS[0]),
-      box('solid', 0.5, 0.66, 0.35, 0.48, 0.06, 0.48, '#fff6e3'),
-      box('solid', 0.5, 0.05, -0.12, 0.3, 0.05, 0.85, ACCENTS[4], [0.62, 0, 0]),
-      box('solid', -0.45, 0.04, 0.45, 0.1, 0.16, 0.1, post),
-      box('solid', -0.45, 0.2, 0.45, 0.9, 0.05, 0.12, ACCENTS[3], [0, 0, 0.12]),
-    ],
-    w,
-    d,
-  );
-};
-
-const sleddingHill: Builder = ({ w, d }) =>
-  fit(
-    [
-      box('solid', 0, 0, 0, 1.8, 0.2, 1.8, SNOW),
-      box('solid', -0.2, 0.2, -0.2, 1.3, 0.2, 1.3, SNOW),
-      box('solid', -0.4, 0.4, -0.4, 0.8, 0.2, 0.8, SNOW),
-      box('solid', -0.5, 0.6, -0.5, 0.4, 0.14, 0.4, SNOW),
-      box('solid', 0.55, 0.2, 0.5, 0.22, 0.05, 0.36, '#e57373'),
-      box('solid', 0.55, 0.25, 0.5, 0.12, 0.16, 0.1, ACCENTS[2]),
-      box('solid', 0.55, 0.41, 0.5, 0.1, 0.1, 0.1, '#f5d3b5'),
-    ],
-    w,
-    d,
-  );
-
-const dogPark: Builder = ({ w, d }, { palette }) => {
-  const hx = w / 2 - 0.08;
-  const hz = d / 2 - 0.08;
-  return [
-    box('solid', 0, 0, 0, w - 0.1, 0.03, d - 0.1, palette.grass[0]),
-    box('solid', 0, 0, -hz, w - 0.1, 0.22, 0.04, WOOD),
-    box('solid', -hx, 0, 0, 0.04, 0.22, d - 0.1, WOOD),
-    box('solid', hx, 0, 0, 0.04, 0.22, d - 0.1, WOOD),
-    box('solid', -0.35, 0, d / 2 - 0.08, w - 1.0, 0.22, 0.04, WOOD),
-    box('solid', -0.45, 0.03, -0.45, 0.4, 0.3, 0.36, '#d9a066'),
-    box('solid', -0.45, 0.33, -0.45, 0.46, 0.1, 0.42, ACCENTS[0]),
-    box('solid', 0.3, 0.03, 0.2, 0.26, 0.12, 0.1, '#8a6343'),
-    box('solid', 0.45, 0.07, 0.2, 0.1, 0.1, 0.1, '#8a6343'),
-    box('solid', -0.1, 0.03, 0.5, 0.22, 0.1, 0.09, '#f5f0e6'),
-    box('solid', 0.02, 0.06, 0.5, 0.08, 0.08, 0.08, '#f5f0e6'),
-    box('solid', 0.5, 0.03, -0.5, 0.1, 0.08, 0.1, '#f2c94c'),
-  ];
-};
-
-const communityGarden: Builder = ({ w, d }, { palette }) => {
-  const parts: BoxPart[] = [box('solid', 0, 0, 0, w - 0.2, 0.03, d - 0.2, palette.path[0])];
-  const beds = [[-0.45, -0.45], [0.45, -0.45], [-0.45, 0.45], [0.45, 0.45]];
-  beds.forEach(([x, z], i) => {
-    parts.push(box('solid', x, 0.03, z, 0.7, 0.12, 0.7, WOOD), box('solid', x, 0.15, z, 0.6, 0.03, 0.6, '#7a5a3c'));
-    for (const dx of [-0.17, 0.17]) parts.push(box('solid', x + dx, 0.18, z, 0.14, 0.14, 0.5, i % 2 ? '#7cc46a' : ACCENTS[(i + 4) % ACCENTS.length]));
-  });
-  return parts;
-};
-
-const neighbourhoodPark: Builder = ({ w, d }, { palette }) =>
-  fit(
-    [
-      box('solid', 0, 0, 0, 1.9, 0.05, 1.9, palette.leaves[1]),
-      box('solid', 0.35, 0.05, 0.35, 0.8, 0.04, 0.6, '#8ec5ea'),
-      box('solid', 0.35, 0.05, 0.35, 0.92, 0.02, 0.72, '#d9cdb5'),
-      box('solid', -0.45, 0.05, 0.55, 0.5, 0.06, 0.16, '#b88a64'),
-      box('solid', -0.45, 0.11, 0.48, 0.5, 0.16, 0.04, '#b88a64'),
-      box('solid', -0.5, 0.05, -0.45, 0.12, 0.3, 0.12, palette.trunk),
-      box('solid', -0.5, 0.33, -0.45, 0.56, 0.5, 0.56, palette.leaves[0]),
-      box('solid', 0.45, 0.05, -0.5, 0.1, 0.26, 0.1, palette.trunk),
-      box('solid', 0.45, 0.29, -0.5, 0.44, 0.6, 0.44, palette.leaves[0]),
-      box('solid', 0.0, 0.05, -0.1, 0.5, 0.04, 0.4, '#f4978e'),
-      ...[-0.1, 0.1, 0.0].map((x, i) => box('solid', x - 0.1, 0.05, -0.05 + i * 0.12, 0.1, 0.1, 0.1, ACCENTS[i])),
-    ],
-    w,
-    d,
-  );
-
-/** Generic model for buildings the client does not know yet (requirement.md §7.6b, §20.4). */
-const placeholder: Builder = ({ w, d }) => [
-  box('solid', 0, 0, 0, w - 0.3, 0.03, d - 0.3, '#d9cdb5'),
-  box('solid', 0, 0, 0, Math.min(1.2, w - 0.6), 0.7, Math.min(1.2, d - 0.6), '#e7dcc8'),
-  box('solid', 0, 0.7, 0, Math.min(1.4, w - 0.4), 0.14, Math.min(1.4, d - 0.4), '#b8a9e8'),
-  box('solid', 0, 0.3, Math.min(1.2, d - 0.6) / 2 + 0.01, 0.5, 0.22, 0.03, '#fff6e3'),
-];
-
-export const BUILDING_MODELS: Record<string, Builder> = {
-  'welcome-sign': welcomeSign,
-  'gateway-arch': gatewayArch,
-  'fire-pit': firePit,
-  'warming-hut': warmingHut,
-  'community-hall': communityHall,
-  'frozen-pond': frozenPond,
-  'skating-rink': skatingRink,
-  'hockey-rink': hockeyRink,
-  playground,
-  'sledding-hill': sleddingHill,
-  'dog-park': dogPark,
-  'community-garden': communityGarden,
-  'neighbourhood-park': neighbourhoodPark,
-};
 
 /** Small scaffold at the back corner while a built building is upgraded in place. */
 function upgradeScaffold(w: number, d: number): BoxPart[] {
@@ -376,174 +193,46 @@ function upgradeScaffold(w: number, d: number): BoxPart[] {
   ];
 }
 
+/**
+ * The Art Pass model of a tree building (placeholder for unknown keys), turned to its facing.
+ * Models are written for the lot's canonical size; a turned lot (e.g. 2×3 instead of 3×2) comes
+ * with an odd facing from the layout, so the turn also fits the model to the lot.
+ */
+function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx): BoxPart[] {
+  const make = BUILDING_VOXELS[key];
+  if (!make) return placeholderModel({ w, d, level, variant }, ctx);
+  const turned = facing % 2 === 1;
+  return vturn(make({ w: turned ? d : w, d: turned ? w : d, level, variant }, ctx), facing);
+}
+
 /** A built building of the tree (placeholder for unknown keys), with upgrade markers. */
 export function building(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
-  const make = BUILDING_MODELS[item.buildingKey] ?? placeholder;
-  return [...make(item, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
+  return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
 }
 
-// --- Signature features (feature library, requirement.md §7.9) ------------------------
-// Symbolic blocks on a spare lot (2×2), not the real size or position.
+// --- Signature features and CTrain (Art Pass models in voxel/features.ts) ------------------
 
-const WATER = '#8ec5ea';
-const WATER_DEEP = '#6fb1de';
-const SAND = '#eadcb8';
-const REED = '#7fae5b';
-
-const pond: Builder = ({ w, d }, { mood }) => {
-  const water = mood === 'sleepy' ? ICE : WATER;
-  return fit(
-    [
-      box('solid', 0, 0, 0, 1.85, 0.04, 1.7, SAND),
-      box('solid', 0.05, 0.02, 0.05, 1.5, 0.05, 1.3, water),
-      box('solid', -0.2, 0.025, -0.15, 0.9, 0.05, 0.7, mood === 'sleepy' ? '#c3e1f0' : WATER_DEEP),
-      ...[[-0.78, 0.55], [-0.68, 0.68], [0.75, -0.62]].map(([x, z]) => box('solid', x, 0.04, z, 0.06, 0.3, 0.06, REED)),
-      // a duck (and its head)
-      box('solid', 0.35, 0.07, 0.3, 0.16, 0.08, 0.1, '#ffffff'),
-      box('solid', 0.42, 0.13, 0.3, 0.07, 0.07, 0.07, '#ffffff'),
-      box('solid', 0.47, 0.14, 0.3, 0.05, 0.03, 0.04, '#f2a43a'),
-      // a little wooden dock
-      box('solid', -0.6, 0.06, 0.62, 0.36, 0.04, 0.32, WOOD),
-    ],
-    w,
-    d,
-  );
-};
-
-const creek: Builder = ({ w, d }, { palette, mood }) => {
-  const water = mood === 'sleepy' ? ICE : WATER;
-  return fit(
-    [
-      box('solid', 0, 0, 0, 1.9, 0.03, 1.9, palette.grass[1]),
-      // a winding stream across the lot
-      box('solid', -0.6, 0.02, -0.55, 0.7, 0.04, 0.32, water),
-      box('solid', -0.15, 0.02, -0.25, 0.32, 0.04, 0.6, water),
-      box('solid', 0.25, 0.02, 0.15, 0.6, 0.04, 0.32, water),
-      box('solid', 0.62, 0.02, 0.55, 0.32, 0.04, 0.5, water),
-      ...[[-0.85, -0.3], [0.1, -0.55], [0.55, -0.05], [0.25, 0.6]].map(([x, z]) => box('solid', x, 0.03, z, 0.14, 0.08, 0.12, STONE)),
-      // footbridge
-      box('solid', -0.15, 0.06, -0.25, 0.56, 0.05, 0.22, WOOD),
-      box('solid', -0.15, 0.11, -0.36, 0.56, 0.1, 0.03, WOOD),
-      box('solid', -0.15, 0.11, -0.14, 0.56, 0.1, 0.03, WOOD),
-      box('solid', 0.75, 0.03, -0.7, 0.08, 0.26, 0.08, REED),
-    ],
-    w,
-    d,
-  );
-};
-
-const hill: Builder = ({ w, d }, { palette, mood }) => {
-  const g = mood === 'sleepy' ? SNOW : palette.grass[0];
-  const top = mood === 'sleepy' ? SNOW : palette.leaves[1];
-  return fit(
-    [
-      box('solid', 0, 0, 0, 1.9, 0.22, 1.9, g),
-      box('solid', 0.1, 0.22, 0.05, 1.45, 0.24, 1.4, g),
-      box('solid', 0.2, 0.46, 0.1, 1.0, 0.24, 0.95, top),
-      box('solid', 0.25, 0.7, 0.15, 0.55, 0.18, 0.5, top),
-      // stepping stones up the front and a flag on top
-      ...[0.82, 0.62].map((z, i) => box('solid', -0.5 + i * 0.1, 0.22 + i * 0.24, z - 0.1, 0.22, 0.04, 0.16, STONE)),
-      box('solid', 0.25, 0.88, 0.15, 0.04, 0.55, 0.04, '#8a8f99'),
-      box('solid', 0.36, 1.25, 0.15, 0.2, 0.13, 0.02, ACCENTS[0]),
-    ],
-    w,
-    d,
-  );
-};
-
-const bigPark: Builder = ({ w, d }, { palette, mood }) => {
-  const leaves = palette.leaves;
-  const parts: BoxPart[] = [
-    box('solid', 0, 0, 0, 1.92, 0.04, 1.92, palette.grass[0]),
-    box('solid', 0.05, 0.04, 0.2, 1.7, 0.02, 0.22, palette.path[0]),
-  ];
-  // three tall trees (bigger than island trees) and a picnic table
-  for (const [x, z, h, v] of [[-0.55, -0.5, 1.1, 0], [0.4, -0.6, 0.9, 1], [0.6, 0.65, 1.0, 0]] as const) {
-    parts.push(box('solid', x, 0.04, z, 0.14, 0.4, 0.14, palette.trunk));
-    parts.push(box('solid', x, 0.4, z, 0.62, h * 0.6, 0.62, leaves[v]));
-    parts.push(box('solid', x, 0.4 + h * 0.6, z, 0.4, h * 0.3, 0.4, leaves[v]));
-    if (mood === 'sleepy') parts.push(box('solid', x, 0.4 + h * 0.9, z, 0.3, 0.06, 0.3, SNOW));
-  }
-  parts.push(
-    box('solid', -0.45, 0.04, 0.62, 0.5, 0.05, 0.3, WOOD),
-    box('solid', -0.45, 0.24, 0.62, 0.5, 0.04, 0.3, '#b88a64'),
-    box('solid', -0.45, 0.04, 0.62, 0.06, 0.2, 0.06, WOOD),
-  );
-  return fit(parts, w, d);
-};
-
-const ctrainStation: Builder = ({ w, d }) => {
-  const rail = '#8a8f99';
-  return fit(
-    [
-      box('solid', 0, 0, 0, 1.9, 0.03, 1.9, '#d9cdb5'),
-      // track
-      box('solid', 0, 0.03, -0.45, 1.95, 0.03, 0.5, '#b9b2a6'),
-      box('solid', 0, 0.06, -0.57, 1.95, 0.03, 0.04, rail),
-      box('solid', 0, 0.06, -0.33, 1.95, 0.03, 0.04, rail),
-      // a red-and-white CTrain car
-      box('solid', -0.1, 0.09, -0.45, 1.3, 0.42, 0.42, '#f4f4f4'),
-      box('solid', -0.1, 0.09, -0.45, 1.32, 0.12, 0.44, '#d94a4a'),
-      ...[-0.55, -0.25, 0.05, 0.35].map((x) => box('glow', x, 0.32, -0.23, 0.18, 0.13, 0.02, '#cfe8f7')),
-      box('solid', -0.1, 0.51, -0.45, 0.04, 0.16, 0.04, '#5d6470'),
-      // platform with a shelter and a sign
-      box('solid', 0, 0.03, 0.25, 1.9, 0.14, 0.7, '#e7dcc8'),
-      box('solid', 0, 0.17, 0.52, 0.9, 0.5, 0.05, '#b3d8ec'),
-      box('solid', -0.45, 0.17, 0.4, 0.05, 0.55, 0.05, '#5d6470'),
-      box('solid', 0.45, 0.17, 0.4, 0.05, 0.55, 0.05, '#5d6470'),
-      box('solid', 0, 0.72, 0.38, 1.05, 0.06, 0.42, '#d94a4a'),
-      box('solid', 0.78, 0.17, 0.25, 0.05, 0.6, 0.05, '#5d6470'),
-      box('solid', 0.78, 0.66, 0.25, 0.3, 0.16, 0.04, '#ffffff'),
-    ],
-    w,
-    d,
-  );
-};
-
-const school: Builder = ({ w, d }, { palette }) =>
-  fit(
-    [
-      box('solid', 0, 0, 0, 1.9, 0.03, 1.9, palette.path[0]),
-      box('solid', -0.25, 0.03, -0.25, 1.3, 0.62, 0.9, '#f0d9b5'),
-      box('solid', -0.25, 0.65, -0.25, 1.42, 0.12, 1.02, '#d9776a'),
-      box('solid', -0.25, 0.77, -0.25, 0.5, 0.22, 0.4, '#d9776a'),
-      box('solid', -0.25, 0.82, -0.04, 0.2, 0.2, 0.02, '#ffffff'),
-      box('solid', -0.25, 0.03, 0.21, 0.26, 0.36, 0.03, DOOR),
-      ...[-0.7, -0.5, 0.0, 0.2].map((x) => box('glow', x, 0.35, 0.21, 0.14, 0.14, 0.02, WARM_LIGHT)),
-      // flag pole and a small field with a goal
-      box('solid', 0.75, 0.03, -0.7, 0.04, 0.95, 0.04, '#8a8f99'),
-      box('solid', 0.86, 0.85, -0.7, 0.2, 0.12, 0.02, '#e05a5a'),
-      box('solid', 0.3, 0.03, 0.62, 1.1, 0.02, 0.55, '#9fd08a'),
-      box('solid', 0.8, 0.05, 0.62, 0.04, 0.26, 0.4, '#ffffff'),
-    ],
-    w,
-    d,
-  );
-
-export const FEATURE_MODELS: Record<FeatureKey, Builder> = {
-  'ctrain-station': ctrainStation,
-  pond,
-  hill,
-  creek,
-  'big-park': bigPark,
-  school,
-};
-
-/** A signature feature on its spare lot. */
+/** A signature feature on its spare lot: the community's design, facing the path. */
 export function feature(item: ObjectOf<'feature'>, ctx: BuildCtx): BoxPart[] {
-  return FEATURE_MODELS[item.featureKey]({ w: item.w, d: item.d, level: 1 }, ctx);
+  return vturn(FEATURE_VOXELS[item.featureKey](item.variant, ctx), item.facing);
 }
 
-// --- CTrain (requirement.md §7.9) -----------------------------------------------------
-
-const BALLAST = '#c9c2b8';
-const SLEEPER = '#9b7a5c';
+const BALLAST = '#cbbfae';
+const SLEEPER = '#8f6a4c';
 const RAIL = '#7d838c';
 const DECK = '#b8a48c';
 
+/** Rotate parts about the y axis by `a` radians (three.js convention), keeping their own rotation. */
+function rotY(parts: BoxPart[], a: number): BoxPart[] {
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  return parts.map((b) => ({ ...b, p: [b.p[0] * c + b.p[2] * s, b.p[1], -b.p[0] * s + b.p[2] * c], r: [b.r?.[0] ?? 0, (b.r?.[1] ?? 0) + a, b.r?.[2] ?? 0] }));
+}
+
 /**
- * A stretch of track along the smoothed line: ballast, two sleepers and two rails, rotated to the
- * stretch's direction (slightly longer so neighbouring stretches join without gaps).
+ * A stretch of track along the smoothed line: ballast with sloped edges, three sleepers and two
+ * rails, rotated to the stretch's direction (slightly longer so stretches join without gaps). Every
+ * few stretches an overhead-wire pole stands beside the line.
  */
 export function track(item: ObjectOf<'track'>): BoxPart[] {
   const len = Math.hypot(item.dx, item.dz);
@@ -557,63 +246,57 @@ export function track(item: ObjectOf<'track'>): BoxPart[] {
   const px = uz; // perpendicular (right of travel)
   const pz = -ux;
   const L = len + 0.06;
-  const parts: BoxPart[] = [box('solid', mx, 0, mz, 0.6, 0.03, L, BALLAST, r)];
-  for (const k of [0.25, 0.75]) parts.push(box('solid', item.dx * k, 0.03, item.dz * k, 0.52, 0.03, 0.09, SLEEPER, r));
-  for (const off of [-0.14, 0.14]) parts.push(box('solid', mx + px * off, 0.06, mz + pz * off, 0.05, 0.04, L, RAIL, r));
+  const parts: BoxPart[] = [box('solid', mx, 0, mz, 0.66, 0.025, L, shade(BALLAST, -0.06), r), box('solid', mx, 0.02, mz, 0.56, 0.02, L, BALLAST, r)];
+  for (const k of [0.17, 0.5, 0.83]) parts.push(box('solid', item.dx * k, 0.04, item.dz * k, 0.5, 0.03, 0.08, SLEEPER, r));
+  for (const off of [-0.13, 0.13]) parts.push(box('solid', mx + px * off, 0.07, mz + pz * off, 0.045, 0.045, L, RAIL, r));
+  if (item.pole) {
+    // pole on the right of the line, arm reaching over it
+    const pole = rotY(catenaryPole(), Math.atan2(pz, -px));
+    parts.push(...translate(pole, px * 0.42, pz * 0.42));
+  }
   return parts;
 }
 
-/** A track tile that needs more than the line: a rail bridge deck over water, or crossing planks on a path. */
+/** A track tile that needs more than the line: a rail bridge over water, or a level crossing on a path. */
 export function rail(item: ObjectOf<'rail'>): BoxPart[] {
   const parts: BoxPart[] = [];
+  const alongX = item.links.px || item.links.nx;
   if (item.overWater) {
-    parts.push(box('solid', 0, -0.05, 0, 0.92, 0.06, 0.92, DECK));
-    for (const [ox, oz] of [[-0.38, -0.38], [0.38, -0.38], [-0.38, 0.38], [0.38, 0.38]]) parts.push(box('solid', ox, -0.35, oz, 0.08, 0.3, 0.08, '#8a8f99'));
+    parts.push(box('solid', 0, -0.06, 0, 0.94, 0.07, 0.94, DECK));
+    for (const [ox, oz] of [[-0.4, -0.4], [0.4, -0.4], [-0.4, 0.4], [0.4, 0.4]]) parts.push(box('solid', ox, -0.45, oz, 0.09, 0.4, 0.09, '#8a8f99'));
+    // side railings along the track
+    for (const side of [-0.44, 0.44]) parts.push(alongX ? box('solid', 0, 0.01, side, 0.94, 0.12, 0.04, '#a9b0b9') : box('solid', side, 0.01, 0, 0.04, 0.12, 0.94, '#a9b0b9'));
   }
-  if (item.crossing) parts.push(box('solid', 0, 0.035, 0, 0.7, 0.03, 0.7, '#d8c3a0'));
+  if (item.crossing) {
+    parts.push(box('solid', 0, 0.045, 0, 0.72, 0.03, 0.72, '#d8c3a0'));
+    // crossing signs at two opposite corners
+    parts.push(...translate(crossingSign(), 0.42, 0.42), ...translate(crossingSign(), -0.42, -0.42));
+  }
   return parts;
 }
 
-/** A station platform beside the track: concrete platform, a shelter with a line-coloured roof, a sign. */
+/** A station platform beside the track (safety edge towards the track, layout `facing`). */
 export function station(item: ObjectOf<'station'>): BoxPart[] {
-  const long = item.along === 'x';
-  const L = (long ? item.w : item.d) - 0.15;
-  const roof = item.lines.length > 1 ? '#8b6fc4' : item.lines[0] === 'Blue' ? '#3f7fd6' : '#d94a4a';
-  const xz = (a: number, c: number): [number, number] => (long ? [a, c] : [c, a]);
-  const sz = (a: number, c: number): [number, number] => (long ? [a, c] : [c, a]);
-  const part = (a: number, y: number, c: number, la: number, h: number, lc: number, col: string, layer: 'solid' | 'glow' = 'solid') => {
-    const [x, z] = xz(a, c);
-    const [w, d] = sz(la, lc);
-    return box(layer, x, y, z, w, h, d, col);
-  };
-  return [
-    part(0, 0, 0, L, 0.16, 0.82, '#e7dcc8'),
-    part(0, 0.16, 0.36, L, 0.02, 0.06, '#f2c94c'), // yellow safety line... on the track side below
-    part(0, 0.16, -0.32, L * 0.6, 0.48, 0.04, '#b3d8ec'),
-    part(-L * 0.3, 0.16, -0.12, 0.05, 0.5, 0.05, '#5d6470'),
-    part(L * 0.3, 0.16, -0.12, 0.05, 0.5, 0.05, '#5d6470'),
-    part(0, 0.66, -0.15, L * 0.68, 0.06, 0.48, roof),
-    part(L / 2 - 0.12, 0.16, 0.1, 0.05, 0.62, 0.05, '#5d6470'),
-    part(L / 2 - 0.12, 0.66, 0.1, 0.05, 0.16, 0.3, '#ffffff'),
-    part(-L * 0.15, 0.16, 0.05, 0.3, 0.1, 0.12, WOOD), // bench
-    part(L * 0.1, 0.6, -0.15, 0.12, 0.05, 0.12, WARM_LIGHT, 'glow'),
-  ];
+  return vturn(stationPlatformParts(item.lines, Math.max(item.w, item.d), item.variant), item.facing);
 }
 
-/** A small signpost at the island edge where the track leaves (label: next station). */
+/** The "next station" sign beside the track where it leaves the island, facing back inland. */
 export function railEnd(item: ObjectOf<'rail-end'>): BoxPart[] {
-  // stands beside the track, on the side away from the travel direction
   const sx = item.dir.z !== 0 ? 0.42 : 0;
   const sz = item.dir.x !== 0 ? 0.42 : 0;
-  return [
-    box('solid', sx, 0, sz, 0.05, 0.55, 0.05, '#5d6470'),
-    box('solid', sx, 0.45, sz, item.dir.x !== 0 ? 0.04 : 0.26, 0.16, item.dir.x !== 0 ? 0.26 : 0.04, '#ffffff'),
-    box('solid', sx, 0.45, sz, item.dir.x !== 0 ? 0.05 : 0.08, 0.16, item.dir.x !== 0 ? 0.08 : 0.05, '#d94a4a'),
-  ];
+  // board faces against the travel direction (towards the island)
+  const facing = item.dir.z > 0 ? 2 : item.dir.z < 0 ? 0 : item.dir.x > 0 ? 3 : 1;
+  return translate(vturn(railEndSignParts(), facing), sx, sz);
+}
+
+/** A street prop (bench, flower bed, parked car, mailbox), turned to face its path or house. */
+export function prop(item: ObjectOf<'prop'>): BoxPart[] {
+  const parts =
+    item.kind === 'bench' ? benchModel() : item.kind === 'flowers' ? flowerBedModel(item.seed) : item.kind === 'car' ? carModel(item.seed, item.seed % 5 === 0) : mailboxModel();
+  return vturn(parts, item.facing);
 }
 
 /** A locked (or ready) building: its model as a translucent ghost on its lot. */
 export function silhouette(item: ObjectOf<'silhouette'>, ctx: BuildCtx): BoxPart[] {
-  const make = BUILDING_MODELS[item.buildingKey] ?? placeholder;
-  return asGhost(make({ w: item.w, d: item.d, level: 1 }, ctx), SILHOUETTE);
+  return asGhost(treeModel(item.buildingKey, item.w, item.d, 1, item.variant, item.facing, ctx), SILHOUETTE);
 }

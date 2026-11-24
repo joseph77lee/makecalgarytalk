@@ -9,7 +9,7 @@ import type { BuildingObject, FixedAssetKey, ObjectOf } from '../layout';
 import { boxAsset, type ItemsProps } from './BoxAsset';
 import { HouseAsset } from './HouseAsset';
 import { MiniVillagers } from './MiniVillagers';
-import { building, constructionSite, feature, flowers, lamp, rail, railEnd, reservedPlot, silhouette, snowPile, station, track, tree } from './models';
+import { building, constructionSite, feature, flowers, lamp, prop, rail, railEnd, reservedPlot, silhouette, snowPile, station, track, tree } from './models';
 
 export const ASSET_REGISTRY: { [K in FixedAssetKey]: ComponentType<ItemsProps<ObjectOf<K>>> } = {
   house: HouseAsset,
@@ -26,6 +26,7 @@ export const ASSET_REGISTRY: { [K in FixedAssetKey]: ComponentType<ItemsProps<Ob
   track: boxAsset(track),
   station: boxAsset(station),
   'rail-end': boxAsset(railEnd),
+  prop: boxAsset(prop),
 };
 
 export const BuildingAsset: ComponentType<ItemsProps<BuildingObject>> = boxAsset(building);

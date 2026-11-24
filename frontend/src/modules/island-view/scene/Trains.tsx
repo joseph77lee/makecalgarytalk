@@ -7,6 +7,8 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import type { Group } from 'three';
 import type { RailRoute } from '../layout';
+import { ctrainCarParts } from '../assets/voxel/features';
+import { BoxBatch } from './BoxBatch';
 import { trainPath, type TrainPath } from './trainPath';
 
 const SPEED = 2.4; // tiles per second
@@ -76,7 +78,7 @@ function Train({ path, seed }: { path: TrainPath; seed: number }) {
       }
       const p = path.at(d);
       g.visible = true;
-      g.position.set(p.x, 0.1, p.z);
+      g.position.set(p.x, 0.09, p.z);
       g.rotation.y = p.heading;
     }
   });
@@ -92,33 +94,8 @@ function Train({ path, seed }: { path: TrainPath; seed: number }) {
   );
 }
 
-/** One car, built along +z (heading 0): white body, red band, lit windows, dark roof. */
+/** One CTrain car (Art Pass voxel model, built along +z): front car with headlights, last car with tail lights. */
 function TrainCar({ front, back }: { front: boolean; back: boolean }) {
-  const L = CAR_LENGTH;
-  return (
-    <group>
-      <mesh position={[0, 0.2, 0]} castShadow>
-        <boxGeometry args={[0.36, 0.34, L]} />
-        <meshStandardMaterial color="#f4f4f4" roughness={0.9} />
-      </mesh>
-      <mesh position={[0, 0.1, 0]}>
-        <boxGeometry args={[0.37, 0.1, L + 0.005]} />
-        <meshStandardMaterial color="#d94a4a" roughness={0.9} />
-      </mesh>
-      <mesh position={[0, 0.27, 0]}>
-        <boxGeometry args={[0.37, 0.1, L * 0.82]} />
-        <meshBasicMaterial color="#cfe8f7" toneMapped={false} />
-      </mesh>
-      <mesh position={[0, 0.39, 0]}>
-        <boxGeometry args={[0.3, 0.04, L * 0.9]} />
-        <meshStandardMaterial color="#5d6470" roughness={1} />
-      </mesh>
-      {(front || back) && (
-        <mesh position={[0, 0.24, (front ? 1 : -1) * (L / 2 + 0.01)]}>
-          <boxGeometry args={[0.26, 0.12, 0.02]} />
-          <meshBasicMaterial color={front ? '#ffe7a3' : '#e05a5a'} toneMapped={false} />
-        </mesh>
-      )}
-    </group>
-  );
+  const parts = useMemo(() => ctrainCarParts(front, back), [front, back]);
+  return <BoxBatch parts={parts} receiveShadow={false} />;
 }

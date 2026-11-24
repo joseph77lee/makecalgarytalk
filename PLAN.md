@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.66 |
+| Plan version | v1.68 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
-| Based on | `requirement.md` v1.38 |
-| Current module | M19 Art Pass (next; scope to be planned with the user), then M20 |
+| Based on | `requirement.md` v1.39 |
+| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |
 
 ---
 
@@ -54,7 +54,7 @@
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
-| M19 | Art Pass | FE (R3F) | | M14 | ⬜ |
+| M19 | Art Pass | FE (R3F) | | M14 | ✅ |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ⬜ |
 | M16 | Deploy & Playtest | All + operator accounts | | M20 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
@@ -516,20 +516,38 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Launch steps:** `docs/launch.md` lists every operator step (Supabase project in Canada Central, link + `db push`, auth settings, Cloudflare Pages env vars, Turnstile, Google OAuth, email routing, adding an operator, deletion requests, Pro before public launch).
   - **Legal text** is a template-based first version written from what the game actually stores; professional review once revenue starts (§18). If the Supabase region is not Canada, update the Privacy Policy.
 
-### M19 — Art Pass ⬜
-**Goal:** Every community looks worth playing and feels **busy** before anyone sees it (`requirement.md` v1.38 §19.0, §22.2, §22.6). Built **before M16** (deploy and playtest).
-- **In scope** (to be planned with the user before work starts)
-  - [ ] prettier voxel communities: island ground, buildings of the tree, houses, people (avatar, mini villagers) and props, through the existing asset keys (§20.4: no game-logic changes)
-  - [ ] busier communities: more life on the island (props, activity, villagers) without fake players (§7.3)
-  - [ ] the details — which assets, style, how they are made, phone performance budget — are decided together first
-- **Definition of Done** (to be completed when the scope is planned)
-  - [ ] phone performance stays within §20.3a
-  - [ ] user has looked at it
+### M19 — Art Pass ✅
+**Goal:** Every community looks worth playing and feels **busy** before anyone sees it (`requirement.md` v1.39 §19.0, §22.2, §22.6). Built **before M16** (deploy and playtest).
+- **In scope** (planned with the user 2026-11-24: own code-built voxel assets, warm pastel colours matching `docs/references/`)
+  - [x] the details decided together: own voxel assets (12 voxels per tile) first, buy or redo only if the user does not like them; downtown = towers, other communities = a mix of house types; warm pastel palette
+  - [x] houses: 7 types (bungalow, 2-storey with garage, semi-detached, townhouses, infill, apartment, loft) mixed per community type (downtown / inner city / suburb), 11 roof and 8 wall colours, facing the path, lit windows when active today
+  - [x] buildings of the tree: voxel models for every building, 2–3 designs per building chosen per community, facing the path; voxel pathway lamps
+  - [x] feature blocks (pond, hill, creek, big park, school, symbolic station; 2 designs each) and CTrain (voxel car, platforms facing the track, overhead-wire poles, crossing signs, bridge railings)
+  - [x] construction sites (fence, scaffold, materials, frame rising with progress, crane on big lots) and voxel island trees (snow when sleepy)
+  - [x] people: avatar and mini villagers are one voxel person at the same size; my avatar's name always shows, my house says "My house" (requirement v1.39)
+  - [x] busier communities without fake players (§7.3): street props (benches, flower beds, cars, mailboxes) and island life (clouds beside the island, birds, Canada geese, planes — more often in NE — hot-air balloon, visiting deer, jackrabbits, rare cougars)
+  - [x] island ground: grass/path colour variation, grass tufts, stepping stones, layered soil edge
+  - [x] asset gallery `?gallery` with times of day (dawn, morning, noon, sunset, night)
+  - **Priority: looks first** (operator decision 2026-11-24): detail and amounts are chosen for the best look. Performance work is limited to changes that keep the look identical (e.g. merging touching voxels into one box); slow phones are covered by the M14 low-quality mode; one real-phone check before the launch (M16). Rendering cost depends on each player's phone and the island's content, not on the number of players.
+- **Definition of Done**
+  - [x] everything drawn through the existing asset keys (§20.4), no game-logic changes; all repeated boxes instanced (§20.3a)
+  - [x] checked on screen (desktop and 390 px phone viewport): Mahogany (suburb), Beltline (downtown), finished-example buildings, features and CTrain in the gallery, labels on/off
+  - [ ] real-phone performance — deferred to the one real-phone check in M16 (looks-first decision)
+  - [x] user has looked at it (confirmed 2026-11-24)
+- **Handoff**
+  - **Code:** voxel kit in `island-view/assets/voxel/` — `voxel.ts` (`V = 12`, `vb`, `vturn` quarter turns 0=+z 1=+x 2=−z 3=−x, `gableRoof`, `hipRoof`, `windowZ/X`, `shade`), `samples.ts` (`ART` palette and every sample model), `houses.ts` (`houseStyleFor(code)`: downtown set DNC, DNE, DNW, EAU, CHN, BLN; Centre sector from the community CSV → inner; others → suburb; `HOUSE_MIX`), `buildings.ts` (`BUILDING_VOXELS`, `BUILDING_VARIANTS`; authored at the canonical lot, turned lots swap w/d), `features.ts` (features + CTrain parts). `assets/VoxelPerson.tsx` (`PERSON_SCALE = 0.72`) is shared by `avatar/Avatar.tsx` and `MiniVillagers`. `models.ts` maps asset keys to these; `registry.ts` adds `feature`, `rail`, `track`, `station`, `rail-end`, `prop`.
+  - **Layout:** objects now carry `facing` and `variant` (`Look`); design = `hashString(\`${code}:${key}\`)`, colours picked by `variant % n` (hash picks collided). `houseFacing` / `lotFacing` / `platformFacing` exported from `layout.ts`. House objects carry `houseType` and `height`; labels and tap boxes follow the height. Street props: `assetKey 'prop'`, non-blocking, ≤ `MAX_PROPS = 70`.
+  - **Island life:** `scene/IslandLife.tsx` + `scene/lifePlan.ts` (`lifePlan(code, features, hasWater, rand)`, random per session): plane every 22 s in NE vs 75 s elsewhere; geese only with water; deer with park/hill/creek or water; cougar 8 % with park/hill/creek; balloon 35 %. Clouds drift beside the island, never over it (they hid houses). All movement in `useFrame` with refs.
+  - **Ground:** `scene/terrainParts.ts` — per-tile colour jitter, tufts on ~40 % of grass, stepping stones on ~55 % of path tiles, 4-layer edge soil.
+  - **Tests:** `voxel.test.ts`, `houses.test.ts`, `lifePlan.test.ts`; `models.test.ts` (every design × facing fits its lot, designs differ, construction fits all lot sizes), `features.test.ts`, `ctrain.test.ts` (every platform faces its track), street-prop case in `layout.test.ts`. 828 frontend tests.
+  - **Not tested / known gaps:** real phone (a full island ≈ 13–15k instanced boxes vs ≈ 3–4k before; 120 fps in desktop Chrome at a 390 px viewport, which says nothing about phones) — check in M16, fall back to look-preserving voxel merging if needed; snow on roofs and night windows/lamps in the game wait for M20 (the gallery already previews the night look); animals and props do not avoid the avatar; World Map unchanged.
+  - **Gotchas:** the gallery camera always zooms to the centre, so it has view preset buttons; never give files in one folder names that differ only in case.
 
 ### M20 — Weather & Time of Day ⬜
 **Goal:** Each community shows the real Calgary weather and the time of day (`requirement.md` v1.38 §10.4). Built after M19, **before M16**.
 - **In scope** (details planned with the user before work starts)
   - [ ] real weather from the server (city-wide, cached, free public source): rain, snow, wind, overcast
+  - [ ] snow settles on roofs, trees and ground while it snows (carried over from M19)
   - [ ] time of day: light from the sun's real direction (moving shadows), dawn/dusk tints, night sky, street lamps and windows lit at night
   - [ ] no time-zone math in the client (§7.5): the server sends the instant / sun data
   - [ ] effects within the phone budget (§20.3a), reduced further in low-quality mode
@@ -587,7 +605,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - [ ] M18 Community Association Partnership — contact associations once a community reaches a player threshold; notices in the newspaper (§22.7a.2)
 
 **Phase 2** (§22.2)
-- [ ] Art Pass items not taken into M19 (decided when M19 is planned): styled World Map (animated Bow/Elbow rivers, moving CTrain trains on the map, Calgary landmark buildings, transitions), avatar customization, walk-up-and-tap actions
+- [ ] Art Pass items not taken into M19: styled World Map (animated Bow/Elbow rivers, moving CTrain trains on the map, Calgary landmark buildings, transitions), avatar customization, walk-up-and-tap actions
 - [ ] Activity-based signature feature upgrades (e.g. Mahogany's lake → boat dock → lakeside trail, §7.9)
 - [ ] Resident board + report moderation screen (list, hide/restore, suspend users, §21)
 - [ ] Profile & ranks, avatar growth (rank = level, cosmetic rewards, badge collection, Me tab, §13)
@@ -615,7 +633,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - [ ] Apartments/condos (multi-resident buildings) for very large communities
 
 **Open numbers and wording** (§22.8; starting values, tune with data)
-- [ ] Pastel palette and lighting values — needed for M19/M20
+- [ ] Pastel palette and lighting values — palette set in M19 (`ART` in `voxel/samples.ts`); lighting values in M20
 - [ ] Island shape parameters and lot plan tuning
 - [ ] Building tree numbers (conditions, stage multipliers)
 - [ ] Vitality smoothing (rise/fall speed)

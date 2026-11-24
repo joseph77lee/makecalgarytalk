@@ -17,6 +17,8 @@ import { IslandContext, useSceneFx, type IslandCtx } from './islandContext';
 import { IslandLabels } from './Labels';
 import { futureLandParts, terrainParts } from './terrainParts';
 import { Trains } from './Trains';
+import { IslandLife } from './IslandLife';
+import { featuresFor } from '../plan/features';
 
 const GROWTH_SECONDS = 1.4;
 /** A tapped house's bubble closes by itself after this. */
@@ -144,7 +146,7 @@ function IslandScene({
     () =>
       shown.flatMap((o): { kind: 'house' | 'building'; id: string; box: Box3 }[] => {
         if (o.assetKey === 'house' && o.nickname)
-          return [{ kind: 'house', id: o.houseId, box: new Box3(new Vector3(o.x - 0.45, 0, o.z - 0.45), new Vector3(o.x + 0.45, 0.95, o.z + 0.45)) }];
+          return [{ kind: 'house', id: o.houseId, box: new Box3(new Vector3(o.x - 0.45, 0, o.z - 0.45), new Vector3(o.x + 0.45, o.height, o.z + 0.45)) }];
         if (onBuildingTap && 'buildingKey' in o && 'w' in o)
           return [{ kind: 'building', id: o.buildingKey, box: new Box3(new Vector3(o.x - o.w / 2, 0, o.z - o.d / 2), new Vector3(o.x + o.w / 2, 1.6, o.z + o.d / 2)) }];
         return [];
@@ -212,6 +214,7 @@ function IslandScene({
       {(onTileTap || houseBoxes.length > 0) && <TapPlane radius={outlineRadius} isLand={(t) => stageOf(t) <= settled} onTileTap={tap} />}
       <ObjectsLayer objects={shown} />
       <Trains routes={layout.railRoutes} landStage={settled} />
+      <IslandLife code={plan.code} features={featuresFor(plan.code).map((f) => f.key)} hasWater={plan.water.length > 0} radius={layout.landRadius} />
       <BloomBurst layout={layout} />
       <IslandLabels
         objects={shown}
