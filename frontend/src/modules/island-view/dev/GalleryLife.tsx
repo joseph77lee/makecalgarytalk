@@ -6,7 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, type ReactNode } from 'react';
 import type { Group } from 'three';
 import type { BoxPart } from '../assets/boxes';
-import { airplane, birdBody, birdWing, cloud, cougar, deer, hotAirBalloon, jackrabbit } from '../assets/voxel/samples';
+import { airplane, birdBody, birdWing, cloud, cougar, deer, gooseFlyingBody, gooseStanding, gooseWing, hotAirBalloon, jackrabbit } from '../assets/voxel/samples';
 import { BoxBatch } from '../scene/BoxBatch';
 
 function Batch({ parts, shadow = true }: { parts: BoxPart[]; shadow?: boolean }) {
@@ -32,6 +32,9 @@ export function GalleryLife() {
   const doe = useMemo(() => deer(false), []);
   const rabbit = useMemo(() => jackrabbit(false), []);
   const cat = useMemo(() => cougar(), []);
+  const gBody = useMemo(() => gooseFlyingBody(), []);
+  const gWing = useMemo(() => gooseWing(), []);
+  const goose = useMemo(() => gooseStanding(), []);
 
   return (
     <>
@@ -75,6 +78,54 @@ export function GalleryLife() {
               <Batch parts={wing} shadow={false} />
             </group>
           </group>
+        </Mover>
+      ))}
+
+      {/* Canada geese flying across in a V (every 20 s), wings flapping slowly. */}
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+        const rank = Math.ceil(i / 2);
+        const side = i === 0 ? 0 : i % 2 ? 1 : -1;
+        return (
+          <Mover
+            key={`g${i}`}
+            move={(t, g) => {
+              const k = (t % 20) / 20;
+              g.position.set(-30 + k * 60 - rank * 1.1, 11 + rank * 0.1, -4 + side * rank * 0.9);
+              g.visible = k < 0.97;
+              const flap = Math.sin(t * 4 + i * 0.6) * 0.5;
+              const [l, r] = g.children[1].children as Group[];
+              if (l && r) {
+                l.rotation.x = flap;
+                r.rotation.x = -flap;
+              }
+            }}
+          >
+            <group scale={0.9}>
+              <Batch parts={gBody} shadow={false} />
+            </group>
+            <group scale={0.9}>
+              <group>
+                <Batch parts={gWing} shadow={false} />
+              </group>
+              <group scale={[1, 1, -1]}>
+                <Batch parts={gWing} shadow={false} />
+              </group>
+            </group>
+          </Mover>
+        );
+      })}
+
+      {/* Two geese walking on the grass. */}
+      {[0, 1].map((i) => (
+        <Mover
+          key={`gs${i}`}
+          move={(t, g) => {
+            const s = Math.sin(t * 0.3 + i * 2);
+            g.position.set(-1.2 + s * 1.0 + i * 0.9, 0, 4.7 + i * 0.6);
+            g.rotation.y = Math.cos(t * 0.3 + i * 2) >= 0 ? 0 : Math.PI;
+          }}
+        >
+          <Batch parts={goose} />
         </Mover>
       ))}
 

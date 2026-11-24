@@ -340,14 +340,35 @@ export { vmove };
 
 // --- Sky (Art Pass samples, 2026-11-24) -----------------------------------------------------
 
-/** A fluffy voxel cloud (about three tiles wide), centred on the origin at y = 0. */
+/**
+ * A puffy voxel cloud like the reference (docs/references/reference-cloud.jpeg): a few overlapping
+ * rounded lobes filled with small voxels; only voxels on the surface are drawn. White on top,
+ * a soft grey underside. Centred on the origin, about 2–3 tiles wide.
+ */
 export function cloud(seed: number): BoxPart[] {
-  const parts: BoxPart[] = [vb(-14, 0, -6, 14, 4, 6, '#ffffff')];
-  for (let i = 0; i < 7; i++) {
-    const x = -12 + Math.floor(rnd(seed, i, 1) * 20);
-    const w = 5 + Math.floor(rnd(seed, i, 2) * 6);
-    const h = 2 + Math.floor(rnd(seed, i, 3) * 4);
-    parts.push(vb(x, 4, -4, x + w, 4 + h, 4, i % 2 ? '#ffffff' : '#f4f7fb'));
+  const lobes: [number, number, number, number, number][] = []; // cx, cy, cz, rx, ry (rz = ry * 1.1)
+  const n = 2 + Math.floor(rnd(seed, 1) * 3);
+  const width = 22 + Math.floor(rnd(seed, 2) * 12);
+  for (let i = 0; i < n; i++) {
+    const cx = -width / 2 + 6 + (i * (width - 12)) / Math.max(1, n - 1);
+    const big = i === Math.floor(n / 2);
+    const ry = big ? 5 + rnd(seed, i, 3) * 2 : 3 + rnd(seed, i, 4) * 2;
+    lobes.push([cx, ry * 0.8, (rnd(seed, i, 5) - 0.5) * 3, ry * 1.5, ry]);
+  }
+  const inside = (x: number, y: number, z: number) =>
+    y >= 0 && lobes.some(([cx, cy, cz, rx, ry]) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 + ((z - cz) / (ry * 1.1)) ** 2 <= 1);
+  const parts: BoxPart[] = [];
+  const X = Math.ceil(width / 2) + 4;
+  for (let x = -X; x <= X; x++) {
+    for (let y = 0; y <= 12; y++) {
+      for (let z = -9; z <= 9; z++) {
+        const c = [x + 0.5, y + 0.5, z + 0.5] as const;
+        if (!inside(...c)) continue;
+        const surface = !inside(c[0] + 1, c[1], c[2]) || !inside(c[0] - 1, c[1], c[2]) || !inside(c[0], c[1] + 1, c[2]) || !inside(c[0], c[1] - 1, c[2]) || !inside(c[0], c[1], c[2] + 1) || !inside(c[0], c[1], c[2] - 1);
+        if (!surface) continue;
+        parts.push(vb(x, y, z, x + 1, y + 1, z + 1, y <= 1 ? '#dfe5ee' : y <= 2 ? '#eef2f7' : '#ffffff'));
+      }
+    }
   }
   return parts;
 }
@@ -367,10 +388,12 @@ export function birdWing(): BoxPart[] {
  * basket, with a cloth banner hanging below (about 3 tiles tall).
  */
 export function hotAirBalloon(seed: number): BoxPart[] {
+  // Bright, saturated patchwork like the reference (red, yellow, teal, cream; blue in one set).
+  // Weighted like the reference: mostly red, yellow and teal, a little cream.
   const palettes = [
-    ['#d9534f', '#f2c14e', '#3fa7a0', '#f4ead5'],
-    ['#5b8fd6', '#f2c14e', '#f4ead5', '#e46a5c'],
-    ['#a77bd1', '#6fbf8a', '#f2c14e', '#f4ead5'],
+    ['#ff4545', '#ff4545', '#ffcc2e', '#ffcc2e', '#16bfb0', '#16bfb0', '#fff3dc'],
+    ['#ff4545', '#ff4545', '#ffcc2e', '#ffcc2e', '#3d8bfd', '#3d8bfd', '#fff3dc'],
+    ['#ff4545', '#ff7a2e', '#ffcc2e', '#ffcc2e', '#16bfb0', '#16bfb0', '#fff3dc'],
   ];
   const pal = pick(palettes, rnd(seed, 30));
   const parts: BoxPart[] = [
@@ -392,10 +415,11 @@ export function hotAirBalloon(seed: number): BoxPart[] {
       for (let z = -R; z < R; z++) {
         const d = Math.hypot(x + 0.5, z + 0.5);
         if (d > ring || d < ring - 1.6) continue; // shell only
+        // chunky patches: 8 gores around, bands of 3 voxels, a random colour per patch
         const sector = Math.floor(((Math.atan2(z + 0.5, x + 0.5) + Math.PI) / (2 * Math.PI)) * 8);
         const band = Math.floor((y + 8) / 3);
-        const c = pal[(sector + band) % pal.length];
-        parts.push(vb(x, cy + y, z, x + 1, cy + y + 1, z + 1, (x + y + z) % 3 === 0 ? shade(c, -0.06) : c));
+        const c = pal[Math.floor(rnd(seed, sector * 7 + band, 9) * pal.length)];
+        parts.push(vb(x, cy + y, z, x + 1, cy + y + 1, z + 1, c));
       }
     }
   }
@@ -515,4 +539,37 @@ export function cougar(): BoxPart[] {
     vb(-6, 1.8, -0.25, -3, 2.4, 0.25, coat),
     vb(-6.6, 1.8, -0.3, -6, 2.6, 0.3, '#5a4636'),
   ];
+}
+
+/** Canada goose standing / walking on the grass, facing +x. */
+export function gooseStanding(): BoxPart[] {
+  return [
+    vb(-1.6, 1.4, -0.9, 1.2, 3, 0.9, '#9a8470'),
+    vb(-1.4, 2.6, -0.95, 0.8, 3.1, 0.95, '#7d6a58'), // folded wings
+    vb(-2.2, 2, -0.6, -1.6, 2.8, 0.6, '#2b2b2b'), // tail
+    vb(-1.9, 1.4, -0.5, -1.4, 2, 0.5, '#f4f1ea'), // white undertail
+    vb(0.6, 1.6, -0.7, 1.4, 2.6, 0.7, '#e6dccf'), // pale breast
+    vb(0.9, 3, -0.35, 1.5, 5.4, 0.35, '#1f1f1f'), // long black neck
+    vb(1.2, 5, -0.45, 2.4, 5.9, 0.45, '#1f1f1f'), // head
+    vb(1.3, 5, -0.5, 1.9, 5.7, 0.5, '#ffffff'), // white chinstrap
+    vb(2.4, 5.2, -0.15, 2.9, 5.5, 0.15, '#2b2b2b'), // bill
+    vb(-0.4, 0, -0.5, -0.1, 1.4, -0.2, '#2b2b2b'),
+    vb(-0.4, 0, 0.2, -0.1, 1.4, 0.5, '#2b2b2b'),
+  ];
+}
+
+/** Canada goose in flight (body and neck), facing +x; wings are separate so they can flap. */
+export function gooseFlyingBody(): BoxPart[] {
+  return [
+    vb(-1.8, 0, -0.7, 1, 1.2, 0.7, '#9a8470'),
+    vb(-2.4, 0.2, -0.5, -1.8, 0.9, 0.5, '#2b2b2b'),
+    vb(1, 0.3, -0.3, 2.8, 0.9, 0.3, '#1f1f1f'),
+    vb(2.8, 0.2, -0.4, 3.8, 1, 0.4, '#1f1f1f'),
+    vb(2.9, 0.2, -0.45, 3.4, 0.8, 0.45, '#ffffff'),
+    vb(3.8, 0.4, -0.12, 4.2, 0.7, 0.12, '#2b2b2b'),
+  ];
+}
+/** One goose wing, attached at z = 0 and reaching towards +z. */
+export function gooseWing(): BoxPart[] {
+  return [vb(-1.2, 0.8, 0, 0.6, 1.1, 3.2, '#7d6a58'), vb(-1.2, 0.8, 3.2, 0.2, 1.1, 4.2, '#4a3f35')];
 }

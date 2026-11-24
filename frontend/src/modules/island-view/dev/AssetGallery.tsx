@@ -10,6 +10,7 @@ import {
   brickMidrise,
   bungalow,
   car,
+  cloud,
   communityHall,
   condoTower,
   fence,
@@ -27,7 +28,7 @@ import {
   townhouses,
   twoStoreyGarage,
 } from '../assets/voxel/samples';
-import { rnd, shade, vb } from '../assets/voxel/voxel';
+import { rnd, shade, vb, vmove } from '../assets/voxel/voxel';
 import { BoxBatch } from '../scene/BoxBatch';
 import { GalleryLife } from './GalleryLife';
 
@@ -48,6 +49,7 @@ const VIEWS = {
   'Sky & wildlife': { target: [-3, -2], zoom: 24 },
   Wildlife: { target: [1.5, 6.3], zoom: 150 },
   Balloon: { target: [-9, -8], zoom: 75, y: 9 },
+  Clouds: { target: [3, -0.5], zoom: 70, y: 4 },
 } as const;
 type ViewName = keyof typeof VIEWS;
 
@@ -112,6 +114,8 @@ export function AssetGallery() {
       { label: '', at: [5.5, -1.5], parts: wildFlowers(5) },
       { label: 'Party balloons', at: [-6.9, -3.9], parts: partyBalloons(3) },
       { label: 'Wildlife →', at: [-2.5, 5.5], parts: [] },
+      { label: 'Clouds (still copy)', at: [4.5, -1.5], parts: vmove(cloud(5), 0, 40, 0) },
+      { label: '', at: [1.5, 0.5], parts: vmove(cloud(8), 0, 46, 0) },
     ];
     return { ground: groundParts(), items };
   }, []);
