@@ -16,6 +16,9 @@ import { lifePlan } from './lifePlan';
 import { BoxBatch } from './BoxBatch';
 import { useIslandCtx } from './islandContext';
 
+/** Peak cloud drift speed in tiles per second (slow, but visibly moving). */
+const CLOUD_SPEED = 0.3;
+
 function Batch({ parts, shadow = true }: { parts: BoxPart[]; shadow?: boolean }) {
   return <BoxBatch parts={parts} castShadow={shadow} receiveShadow={false} />;
 }
@@ -106,13 +109,17 @@ export function IslandLife({ code, features, hasWater, radius, extent, azimuth }
         <Mover
           key={`c${i}`}
           move={(t, g) => {
-            const sway = Math.sin(t * (0.05 - i * 0.007) + i * 2.1);
-            // a = across the screen, b = towards the camera; clouds stay wide on screen (long side across)
+            // Each cloud glides back and forth over its own stretch at about CLOUD_SPEED tiles a
+            // second (the period follows the stretch length) and bobs gently.
+            // a = across the screen, b = towards the camera; clouds stay wide on screen (long side across).
+            const reach = i === 0 ? extent.front * 0.35 : i === 1 ? extent.back * 0.35 : 1.6;
+            const sway = Math.sin((t * CLOUD_SPEED) / Math.max(reach, 1) + i * 2.1);
+            const bob = Math.sin(t * 0.45 + i * 1.7) * 0.12;
             const [a, b, y] =
-              i === 0 ? [-(extent.left + 2.2), sway * extent.front * 0.3, -1.2]
-              : i === 1 ? [extent.right + 2.2, sway * extent.back * 0.3, -0.4]
-              : [-extent.left * 0.55 + sway * 0.8, extent.front * 0.75 + 1.5, -2.6];
-            g.position.set(a * rx + b * fx, y, a * rz + b * fz);
+              i === 0 ? [-(extent.left + 2.2), sway * reach, -1.2]
+              : i === 1 ? [extent.right + 2.2, sway * reach, -0.4]
+              : [-extent.left * 0.55 - (1 + sway) * reach, extent.front * 0.75 + 1.5, -2.6]; // only away from the land
+            g.position.set(a * rx + b * fx, y + bob, a * rz + b * fz);
             g.rotation.y = azimuth;
           }}
         >
