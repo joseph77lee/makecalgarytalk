@@ -11,6 +11,7 @@ import type { Group } from 'three';
 import type { BoxPart } from '../assets/boxes';
 import { airplane, birdBody, birdWing, cloud, cougar, deer, gooseFlyingBody, gooseStanding, gooseWing, hotAirBalloon, jackrabbit } from '../assets/voxel/samples';
 import type { FeatureKey } from '../plan/features';
+import type { LandExtent } from './camera';
 import { lifePlan } from './lifePlan';
 import { BoxBatch } from './BoxBatch';
 import { useIslandCtx } from './islandContext';
@@ -69,7 +70,22 @@ function Wanderer({ parts, speed, hop, seed }: { parts: BoxPart[]; speed: number
   );
 }
 
-export function IslandLife({ code, features, hasWater, radius }: { code: string; features: FeatureKey[]; hasWater: boolean; radius: number }) {
+interface Props {
+  code: string;
+  features: FeatureKey[];
+  hasWater: boolean;
+  radius: number;
+  /** Where the land ends in each screen direction, and the camera orbit angle it was measured for. */
+  extent: LandExtent;
+  azimuth: number;
+}
+
+export function IslandLife({ code, features, hasWater, radius, extent, azimuth }: Props) {
+  // screen right and towards-the-camera directions on the ground
+  const rx = Math.cos(azimuth);
+  const rz = -Math.sin(azimuth);
+  const fx = Math.sin(azimuth);
+  const fz = Math.cos(azimuth);
   // Visitors are picked once per visit (a new chance every time the island is opened).
   const [plan] = useState(() => lifePlan(code, features, hasWater, Math.random));
   const clouds = useMemo(() => [cloud(1), cloud(2), cloud(3)], []);
@@ -84,14 +100,20 @@ export function IslandLife({ code, features, hasWater, radius }: { code: string;
   return (
     <>
       {clouds.map((c, i) => (
-        // Clouds float beside the island (never over it, so they never hide houses or labels).
+        // Clouds hug the island like it floats on them: tucked against the real left and right
+        // edges just below the ground, and one under the front cliff. They drift a little along
+        // the edge but never over the land, so they never hide houses or labels.
         <Mover
           key={`c${i}`}
           move={(t, g) => {
-            const along = ((t * 0.3 + i * span * 0.37) % span) - span / 2;
-            const off = radius + 6 + i * 2;
-            if (i === 1) g.position.set(off, 3 + i, along);
-            else g.position.set(along, 2 + i * 1.5, i === 0 ? -off : off);
+            const sway = Math.sin(t * (0.05 - i * 0.007) + i * 2.1);
+            // a = across the screen, b = towards the camera; clouds stay wide on screen (long side across)
+            const [a, b, y] =
+              i === 0 ? [-(extent.left + 2.2), sway * extent.front * 0.3, -1.2]
+              : i === 1 ? [extent.right + 2.2, sway * extent.back * 0.3, -0.4]
+              : [-extent.left * 0.55 + sway * 0.8, extent.front * 0.75 + 1.5, -2.6];
+            g.position.set(a * rx + b * fx, y, a * rz + b * fz);
+            g.rotation.y = azimuth;
           }}
         >
           <group scale={1.4}>

@@ -10,7 +10,7 @@ import { stageMap, type IslandPlan } from '../plan/islandPlan';
 import type { CommunityViewState } from '../types';
 import { BloomBurst } from './BloomBurst';
 import { BoxBatch } from './BoxBatch';
-import { ISLAND_AZIMUTH, northScreenAngle, viewFrame, zoomForFrame, type ViewFrame } from './camera';
+import { ISLAND_AZIMUTH, landExtent, northScreenAngle, viewFrame, zoomForFrame, type ViewFrame } from './camera';
 import { cameraFocus, followStrength } from './cameraFocus';
 import { opaqueBox, setIslandCapturer } from './capture';
 import { IslandContext, useSceneFx, type IslandCtx } from './islandContext';
@@ -185,6 +185,7 @@ function IslandScene({
   const az = ISLAND_AZIMUTH;
   const landFrame = useMemo(() => viewFrame(layout.tiles, az), [layout.tiles, az]);
   const wholeFrame = useMemo(() => viewFrame(plan.tiles, az), [plan, az]);
+  const extent = useMemo(() => landExtent(layout.tiles, az), [layout.tiles, az]);
 
   const finishGrowth = () => {
     setSettled(layout.landStage);
@@ -214,7 +215,7 @@ function IslandScene({
       {(onTileTap || houseBoxes.length > 0) && <TapPlane radius={outlineRadius} isLand={(t) => stageOf(t) <= settled} onTileTap={tap} />}
       <ObjectsLayer objects={shown} />
       <Trains routes={layout.railRoutes} landStage={settled} />
-      <IslandLife code={plan.code} features={featuresFor(plan.code).map((f) => f.key)} hasWater={plan.water.length > 0} radius={layout.landRadius} />
+      <IslandLife code={plan.code} features={featuresFor(plan.code).map((f) => f.key)} hasWater={plan.water.length > 0} radius={layout.landRadius} extent={extent} azimuth={az} />
       <BloomBurst layout={layout} />
       <IslandLabels
         objects={shown}

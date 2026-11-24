@@ -13,7 +13,7 @@ export function vitalityMood(vitality: number): VitalityMood {
 }
 
 export interface MoodPalette {
-  /** Two grass shades for the checkered look. */
+  /** Two grass shades for a faint checkered look (kept subtle so it never reads as a grid). */
   grass: [string, string];
   path: [string, string];
   /** Real water (lakes, ponds, creeks). */
@@ -34,8 +34,8 @@ export interface MoodPalette {
 
 export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
   lively: {
-    grass: ['#a8dc7c', '#9bd36f'],
-    path: ['#ecd9b0', '#e5cfa2'],
+    grass: ['#a8dc7c', '#a2d876'],
+    path: ['#ecd9b0', '#e9d4a9'],
     water: '#8ec5ea',
     dirtTop: '#9b7653',
     dirtBottom: '#7d5f45',
@@ -48,8 +48,8 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
     lampsLit: true,
   },
   normal: {
-    grass: ['#a3cf86', '#97c57a'],
-    path: ['#e3d3b4', '#dccaa8'],
+    grass: ['#a3cf86', '#9ecb81'],
+    path: ['#e3d3b4', '#dfceae'],
     water: '#9cc7e3',
     dirtTop: '#94735a',
     dirtBottom: '#78604c',
@@ -64,8 +64,8 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
   sleepy: {
     // "Cute sleepy" (requirement §7.4): a quiet snowy winter evening, pastel and soft, never
     // grey or dark. Fresh snow on the ground and trees, icy water, a lavender-pink dusk sky.
-    grass: ['#eef3f9', '#e4ebf4'],
-    path: ['#e8dcc8', '#e0d2bb'],
+    grass: ['#eef3f9', '#e9eff7'],
+    path: ['#e8dcc8', '#e4d7c2'],
     water: '#a6d2ef',
     dirtTop: '#9a7a62',
     dirtBottom: '#7f6550',

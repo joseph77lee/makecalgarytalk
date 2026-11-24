@@ -12,6 +12,18 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.69
+**Changed:** M19 Art Pass 🔁 Reopened for a visual polish (`fix/m19-visual-polish`): calmer construction sites (low cream/pale-terracotta fence, orange only on the gate cones, three scaffold shapes per community), calmer ground (checker contrast halved in every mood palette, no per-tile colour jitter, fewer but bigger grass clumps, fewer stepping stones), clouds tucked against the real island edges (left, right, under the front cliff) instead of floating far away. Handoff note updated.
+
+**Why:** Design review (2026-11-24): the striped fence and repeated scaffolds pulled the eye before houses and people, the grass checker and tiny tufts read as a grid with dot noise, and far-away clouds pulled the eye off the island.
+
+**Previous:**
+- Header: `| Plan version | v1.68 |`, `| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |`
+- Module table: `| M19 | Art Pass | FE (R3F) | | M14 | ✅ |`
+- M19 title: `### M19 — Art Pass ✅`
+- M19 Handoff, island life (verbatim): `Clouds drift beside the island, never over it (they hid houses).`
+- M19 Handoff, ground (verbatim): `- **Ground:** \`scene/terrainParts.ts\` — per-tile colour jitter, tufts on ~40 % of grass, stepping stones on ~55 % of path tiles, 4-layer edge soil.`
+
 ### 2026-11-24 — v1.68
 **Changed:** M19 Art Pass → 🟨 Ready for playtest: scope filled in with what was built (voxel houses per community type, public buildings, features and CTrain, construction sites, trees, one voxel person, street props, island life, ground detail, gallery), Definition of Done ticked except the user check, Handoff note added. Header "Current module" updated. "Based on" → `requirement.md` v1.39 (avatar name always shown, "My house" marker). M20 scope adds "snow settles on roofs, trees and ground" (carried over from M19). After launch: the Art Pass leftovers line drops "(decided when M19 is planned)" (styled World Map, avatar customization, walk-up-and-tap actions stay after launch); the palette item marks the palette as set in M19 (lighting still M20).
 

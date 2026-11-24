@@ -126,28 +126,42 @@ export function constructionSite(item: ObjectOf<'construction-site'>): BoxPart[]
   const hx = item.w * 6 - 0.6;
   const hz = item.d * 6 - 0.6;
   const parts: BoxPart[] = [vb(-hx, 0, -hz, hx, 0.35, hz, '#c9a77c'), vb(-hx + 1, 0.35, -hz + 1, hx - 1, 0.45, hz - 1, '#b8946a')];
-  // safety fence with alternating panels and a gap (gate) at the front
+  // Low, soft safety fence (cream and pale terracotta, gate at the front): the site reads as
+  // "in progress" without outshining the houses and people around it. Strong orange stays on
+  // the gate cones only.
+  const FENCE_TOP = 1.95;
   for (let x = -hx; x < hx - 0.1; x += 2) {
-    const c = Math.round((x + hx) / 2) % 2 ? '#f39a52' : '#ffffff';
+    const c = Math.round((x + hx) / 2) % 2 ? '#e6b896' : '#f1e7d6';
     const x1 = Math.min(x + 2, hx);
-    if (Math.abs(x + 1) > 2) parts.push(vb(x, 0.35, hz - 0.3, x1, 2.6, hz, c));
-    parts.push(vb(x, 0.35, -hz, x1, 2.6, -hz + 0.3, c));
+    if (Math.abs(x + 1) > 2) parts.push(vb(x, 0.35, hz - 0.3, x1, FENCE_TOP, hz, c));
+    parts.push(vb(x, 0.35, -hz, x1, FENCE_TOP, -hz + 0.3, c));
   }
   for (let z = -hz; z < hz - 0.1; z += 2) {
-    const c = Math.round((z + hz) / 2) % 2 ? '#f39a52' : '#ffffff';
+    const c = Math.round((z + hz) / 2) % 2 ? '#e6b896' : '#f1e7d6';
     const z1 = Math.min(z + 2, hz);
-    parts.push(vb(-hx, 0.35, z, -hx + 0.3, 2.6, z1, c), vb(hx - 0.3, 0.35, z, hx, 2.6, z1, c));
+    parts.push(vb(-hx, 0.35, z, -hx + 0.3, FENCE_TOP, z1, c), vb(hx - 0.3, 0.35, z, hx, FENCE_TOP, z1, c));
   }
-  // scaffolding around the middle
+  // Scaffolding around the middle, in one of three shapes per community (variant) so sites
+  // do not all look the same: both long sides, an L along the back and one side, or the back only.
   const sx = Math.min(hx - 3, 9);
   const sz = Math.min(hz - 3, 9);
   const pipe = '#c9cdd3';
-  const levels = item.progress >= 0.5 ? 3 : 2;
-  for (const [x, z] of [[-sx, -sz], [sx, -sz], [-sx, sz], [sx, sz], [0, -sz], [0, sz]]) parts.push(vb(x - 0.3, 0.45, z - 0.3, x + 0.3, 0.45 + levels * 3.4, z + 0.3, pipe));
+  const plank = '#b98b5e';
+  const shape = item.variant % 3;
+  const levels = item.progress >= 0.5 ? 3 : shape === 2 ? 1 : 2;
+  const top = 0.45 + levels * 3.4;
+  const posts: [number, number][] =
+    shape === 0 ? [[-sx, -sz], [sx, -sz], [-sx, sz], [sx, sz], [0, -sz], [0, sz]] : shape === 1 ? [[-sx, -sz], [sx, -sz], [-sx, sz], [0, -sz], [-sx, 0]] : [[-sx, -sz], [sx, -sz], [0, -sz]];
+  for (const [x, z] of posts) parts.push(vb(x - 0.3, 0.45, z - 0.3, x + 0.3, top, z + 0.3, pipe));
   for (let l = 1; l <= levels; l++) {
     const y = 0.45 + l * 3.4;
-    parts.push(vb(-sx, y - 0.3, -sz - 0.6, sx, y, -sz + 0.6, '#b98b5e'), vb(-sx, y - 0.3, sz - 0.6, sx, y, sz + 0.6, '#b98b5e'));
-    parts.push(vb(-sx - 0.2, y - 0.2, -sz, -sx + 0.2, y, sz, pipe), vb(sx - 0.2, y - 0.2, -sz, sx + 0.2, y, sz, pipe));
+    parts.push(vb(-sx, y - 0.3, -sz - 0.6, sx, y, -sz + 0.6, plank)); // back walkway (every shape)
+    if (shape === 0) {
+      parts.push(vb(-sx, y - 0.3, sz - 0.6, sx, y, sz + 0.6, plank));
+      parts.push(vb(-sx - 0.2, y - 0.2, -sz, -sx + 0.2, y, sz, pipe), vb(sx - 0.2, y - 0.2, -sz, sx + 0.2, y, sz, pipe));
+    } else if (shape === 1) {
+      parts.push(vb(-sx - 0.6, y - 0.3, -sz, -sx + 0.6, y, sz, plank)); // side walkway
+    }
   }
   if (item.progress >= 0.5) {
     // the frame rises with progress: corner posts, a floor and part of the walls

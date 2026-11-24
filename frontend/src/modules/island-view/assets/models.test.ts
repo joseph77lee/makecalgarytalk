@@ -133,12 +133,27 @@ describe('models', () => {
     expect(constructionSite(site(0.6)).length).toBeGreaterThan(constructionSite(site(0.2)).length);
     for (const [w, d] of [[1, 1], [2, 2], [3, 2], [2, 3], [3, 3]]) {
       for (const progress of [0.2, 0.8]) {
-        for (const p of constructionSite({ ...site(progress), w, d })) {
-          expect(Math.abs(p.p[0]) + p.s[0] / 2, `${w}x${d} x`).toBeLessThanOrEqual(w / 2 + 0.01);
-          expect(Math.abs(p.p[2]) + p.s[2] / 2, `${w}x${d} z`).toBeLessThanOrEqual(d / 2 + 0.01);
+        for (const variant of [0, 1, 2]) {
+          for (const p of constructionSite({ ...site(progress), w, d, variant })) {
+            expect(Math.abs(p.p[0]) + p.s[0] / 2, `${w}x${d} v${variant} x`).toBeLessThanOrEqual(w / 2 + 0.01);
+            expect(Math.abs(p.p[2]) + p.s[2] / 2, `${w}x${d} v${variant} z`).toBeLessThanOrEqual(d / 2 + 0.01);
+          }
         }
       }
     }
+  });
+
+  it('construction sites stay calm: a low soft fence, orange only on the gate, three scaffold shapes', () => {
+    const site = (variant: number): ObjectOf<'construction-site'> => ({
+      assetKey: 'construction-site', id: 'c', x: 0, z: 0, stage: 0, w: 2, d: 2, facing: 0, variant, buildingKey: 'frozen-pond', title: 'T', progress: 0.2, level: 1,
+    });
+    const fence = constructionSite(site(0)).filter((p) => p.c === '#e6b896' || p.c === '#f1e7d6');
+    expect(fence.length).toBeGreaterThan(0);
+    for (const p of fence) expect(p.p[1] + p.s[1] / 2).toBeLessThanOrEqual(2 / 12 + 0.001); // at most two voxels tall
+    expect(constructionSite(site(0)).filter((p) => p.c === '#f39a52')).toHaveLength(4); // two gate cones
+    expect(constructionSite(site(0)).some((p) => p.c === '#ffffff')).toBe(false);
+    const shapes = new Set([0, 1, 2].map((v) => JSON.stringify(constructionSite(site(v)))));
+    expect(shapes.size).toBe(3);
   });
 
   it('reserved plots mark Main Street in blue and future buildings in orange', () => {
@@ -169,6 +184,28 @@ describe('terrain', () => {
     expect(full(terrainParts(tiles, null, MOOD_PALETTES.normal))).toHaveLength(10);
     // the detail (tufts, stones) stays on top of its own tile
     for (const p of parts.filter((q) => q.s[0] < 1)) expect(p.p[1]).toBeGreaterThanOrEqual(0);
+  });
+
+  it('keeps the ground calm: faint checker, few readable clumps and stones', () => {
+    const lum = (hex: string) => {
+      const n = parseInt(hex.slice(1), 16);
+      return 0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
+    };
+    for (const palette of Object.values(MOOD_PALETTES)) {
+      expect(Math.abs(lum(palette.grass[0]) - lum(palette.grass[1]))).toBeLessThan(5);
+      expect(Math.abs(lum(palette.path[0]) - lum(palette.path[1]))).toBeLessThan(5);
+    }
+    const field = (kind: 'grass' | 'path') => {
+      const tiles = [];
+      for (let x = 0; x < 20; x++) for (let z = 0; z < 20; z++) tiles.push({ x, z, kind });
+      const land = new Set(tiles.map((t) => `${t.x},${t.z}`));
+      return terrainParts(tiles, land, MOOD_PALETTES.normal).filter((p) => p.s[0] < 1);
+    };
+    const clumps = field('grass').filter((p) => p.s[0] > 0.15);
+    expect(clumps.length / 400).toBeGreaterThan(0.05);
+    expect(clumps.length / 400).toBeLessThan(0.2);
+    for (const p of field('grass')) expect(p.s[0]).toBeGreaterThanOrEqual(1 / 12); // no sub-voxel specks
+    expect(field('path').length / 400).toBeLessThan(0.3);
   });
 
   it('future land is a faint mist layer', () => {
@@ -259,6 +296,21 @@ describe('island orientation (World Map)', () => {
     expect(right(0, -1)).toBeGreaterThan(0); // north → right
     expect(up(0, -1)).toBeGreaterThan(0); // north → up
   });
+  it('land extent follows the real edge in each screen direction (clouds tuck beside it)', async () => {
+    const { landExtent } = await import('../scene/camera');
+    // a long strip along +x from the origin: from a camera due south (azimuth 0), right = +x
+    const strip = Array.from({ length: 10 }, (_, i) => ({ x: i, z: 0 }));
+    const e = landExtent(strip, 0);
+    expect(e.right).toBe(10);
+    expect(e.left).toBe(0);
+    expect(e.front).toBe(1);
+    expect(e.back).toBe(0);
+    // the camera moved a quarter turn to the east (+x): the strip now runs towards the camera
+    const q = landExtent(strip, Math.PI / 2);
+    expect(q.front).toBeCloseTo(10);
+    expect(q.left).toBeCloseTo(1);
+  });
+
   it('north arrow angle follows the camera', async () => {
     const { ISLAND_AZIMUTH, northScreenAngle } = await import('../scene/camera');
     expect(northScreenAngle(0, -1)).toBeCloseTo(0); // looking north: north is up
