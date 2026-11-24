@@ -166,3 +166,5 @@ Each module is usually worked on in a **new session** with no memory of earlier 
 - 2026-11-22: the World Map's canvas draw loop read React state captured when its listeners were set up (stale statuses/selection) → loops and listeners set up once must read changing values through a ref
 - 2026-11-23: `git add <dir>` committed Python `__pycache__` files → check `git status` for generated files before committing a directory; bytecode is now in .gitignore
 - 2026-11-24: moved the island clouds and checked them only in still screenshots, so they ended up almost not moving → for anything animated, compare two screenshots a few seconds apart (or measure its speed) before calling it verified
+- 2026-11-24: started the walking-animation edits on `main` right after a merge (caught before committing) → create the module/fix branch before the first edit
+- 2026-11-24: a dev tab left open hot-loaded half-finished edits (a name used before it was declared), threw every frame and hung Vite → close the browser tab before multi-file edits and reopen it once the code type-checks

@@ -9,7 +9,10 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Group } from 'three';
 import type { BoxPart } from '../assets/boxes';
-import { airplane, birdBody, birdWing, cloud, cougar, deer, gooseFlyingBody, gooseStanding, gooseWing, hotAirBalloon, jackrabbit } from '../assets/voxel/samples';
+import { VoxelAnimal, type AnimalMotion } from '../assets/VoxelAnimal';
+import { ANIMAL_STYLE } from '../assets/voxel/gaits';
+import type { AnimalKind } from '../assets/voxel/rigs';
+import { airplane, birdBody, birdWing, cloud, gooseFlyingBody, gooseWing, hotAirBalloon } from '../assets/voxel/samples';
 import type { FeatureKey } from '../plan/features';
 import type { LandExtent } from './camera';
 import { lifePlan } from './lifePlan';
@@ -31,13 +34,18 @@ function Mover({ move, children }: { move: (t: number, g: Group) => void; childr
   return <group ref={ref}>{children}</group>;
 }
 
-/** An animal wandering slowly on walkable tiles of the risen land (model faces +x). */
-function Wanderer({ parts, speed, hop, seed }: { parts: BoxPart[]; speed: number; hop: boolean; seed: number }) {
+/**
+ * An animal wandering on walkable tiles of the risen land (model faces +x). Each step it may
+ * break into a run if its kind does (deer bound, cougars dash); its legs follow its gait.
+ */
+function Wanderer({ kind, speed, seed }: { kind: AnimalKind; speed: number; seed: number }) {
   const { walkable, walkableKeys } = useIslandCtx();
   const start = walkable[Math.floor(((seed * 9301 + 49297) % 233280) / 233280 * walkable.length)] ?? { x: 0, z: 0 };
-  const sim = useRef({ from: start, to: start, t: 1, pause: 1 + (seed % 3), rng: seed * 16807 });
+  const sim = useRef({ from: start, to: start, t: 1, pause: 1 + (seed % 3), rng: seed * 16807, running: false });
+  const motion = useRef<AnimalMotion>({ speed: 0, running: false });
+  const style = ANIMAL_STYLE[kind];
   const ref = useRef<Group>(null);
-  useFrame(({ clock }, rawDt) => {
+  useFrame((_, rawDt) => {
     const g = ref.current;
     if (!g) return;
     const dt = Math.min(rawDt, 0.1);
@@ -54,20 +62,26 @@ function Wanderer({ parts, speed, hop, seed }: { parts: BoxPart[]; speed: number
           s.from = s.to;
           s.to = opts[Math.floor(rnd() * opts.length)];
           s.t = 0;
+          // a run lasts a few tiles: keep running with a good chance, else maybe start one
+          s.running = style.run !== undefined && rnd() < (s.running ? 0.7 : style.run.chance);
         }
-        if (rnd() < 0.35) s.pause = 1 + rnd() * 4;
+        if (!s.running && rnd() < 0.35) s.pause = 1 + rnd() * 4;
       }
-    } else s.t = Math.min(1, s.t + dt * speed);
+    }
+    const pace = s.running && style.run ? speed * style.run.speedUp : speed;
+    const moving = s.t < 1;
+    if (moving) s.t = Math.min(1, s.t + dt * pace);
     const x = s.from.x + (s.to.x - s.from.x) * s.t + 0.5;
     const z = s.from.z + (s.to.z - s.from.z) * s.t + 0.5;
-    const moving = s.t < 1;
-    g.position.set(x, hop && moving ? Math.abs(Math.sin(clock.elapsedTime * 7 + seed)) * 0.12 : 0, z);
+    g.position.set(x, 0, z);
     if (moving) g.rotation.y = Math.atan2(s.to.x - s.from.x, s.to.z - s.from.z) - Math.PI / 2;
+    motion.current.speed = moving ? pace : 0;
+    motion.current.running = moving && s.running;
   });
   return (
     <group ref={ref}>
       <group scale={0.85}>
-        <Batch parts={parts} />
+        <VoxelAnimal kind={kind} motion={motion} seed={seed} />
       </group>
     </group>
   );
@@ -216,14 +230,14 @@ export function IslandLife({ code, features, hasWater, radius, extent, azimuth }
       )}
 
       {Array.from({ length: plan.rabbits }, (_, i) => (
-        <Wanderer key={`r${i}`} parts={jackrabbit(false)} speed={0.9} hop seed={11 + i} />
+        <Wanderer key={`r${i}`} kind="jackrabbit" speed={0.9} seed={11 + i} />
       ))}
       {Array.from({ length: plan.deer }, (_, i) => (
-        <Wanderer key={`d${i}`} parts={deer(i === 0)} speed={0.35} hop={false} seed={23 + i} />
+        <Wanderer key={`d${i}`} kind={i === 0 ? 'buck' : 'deer'} speed={0.35} seed={23 + i} />
       ))}
-      {plan.cougar && <Wanderer parts={cougar()} speed={0.3} hop={false} seed={37} />}
+      {plan.cougar && <Wanderer kind="cougar" speed={0.3} seed={37} />}
       {Array.from({ length: plan.geeseOnGround }, (_, i) => (
-        <Wanderer key={`gs${i}`} parts={gooseStanding()} speed={0.4} hop={false} seed={41 + i} />
+        <Wanderer key={`gs${i}`} kind="goose" speed={0.3} seed={41 + i} />
       ))}
     </>
   );

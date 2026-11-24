@@ -10,7 +10,7 @@ import type { ItemsProps } from './BoxAsset';
 import { villagerPersonality } from './villagerPersonality';
 import { useIslandUi } from '../uiStore';
 import { SpeechBubbleLabel } from '../scene/Labels';
-import { VoxelPerson } from './VoxelPerson';
+import { VoxelPerson, type PersonMotion } from './VoxelPerson';
 import { BUBBLE_Z } from '../scene/labelText';
 import { useHtmlPortal } from '../scene/htmlPortal';
 
@@ -47,7 +47,8 @@ const STEPS: Tile[] = [
 function MiniVillager({ index, startTile, colorIndex }: { index: number; startTile: Tile; colorIndex: number }) {
   const { palette, mood, walkableKeys, villagerBubbles } = useIslandCtx();
   const group = useRef<Group>(null);
-  const head = useRef<Group>(null);
+  const headTilt = useRef(0);
+  const motion = useRef<PersonMotion>({ speed: 0 });
   const body = useRef<Group>(null);
   const sim = useRef({ from: startTile, to: startTile, t: 1, pause: 0, rng: mulberry32(index * 7919 + 17) });
   const me = useRef(villagerPersonality(index)).current;
@@ -102,14 +103,19 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
 
     // Sleepy: heads down, sits when resting. Lively: looks up.
     const sitting = mood === 'sleepy' && !moving && !cheering;
-    if (head.current) head.current.rotation.x = mood === 'sleepy' && !cheering ? 0.45 : mood === 'lively' ? -0.12 : 0;
-    if (body.current) body.current.position.y = sitting ? -0.08 : 0;
+    headTilt.current = mood === 'sleepy' && !cheering ? 0.45 : mood === 'lively' ? -0.12 : 0;
+    if (body.current) body.current.position.y = sitting ? -0.16 : 0;
+    // arms and legs follow: walking pace, sitting, or both arms up when the community cheers
+    const m = motion.current;
+    m.speed = moving ? palette.villagerSpeed * me.speedFactor : 0;
+    m.sit = sitting;
+    m.cheer = cheering;
   });
 
   return (
     <group ref={group} position={[startTile.x + 0.5, 0, startTile.z + 0.5]}>
       <group ref={body}>
-        <VoxelPerson seed={index * 7 + 3} shirt={ACCENTS[colorIndex % ACCENTS.length]} headRef={head} />
+        <VoxelPerson seed={index * 7 + 3} shirt={ACCENTS[colorIndex % ACCENTS.length]} motion={motion} headTilt={headTilt} />
       </group>
       {bubble && (
         <Html portal={portal} position={[0, 0.85, 0]} center zIndexRange={BUBBLE_Z} style={{ pointerEvents: 'none' }}>

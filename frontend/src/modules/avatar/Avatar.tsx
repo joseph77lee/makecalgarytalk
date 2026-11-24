@@ -2,7 +2,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import type { Group } from 'three';
-import { VoxelPerson, clearCameraFocus, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
+import { VoxelPerson, type PersonMotion, clearCameraFocus, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
 import { useAvatarStore } from './avatarStore';
 import { stepCandidates } from './keyboard';
 import { usePressedKeys } from './usePressedKeys';
@@ -28,6 +28,7 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
   walker.current ??= new AvatarWalker(SPAWN);
   const group = useRef<Group>(null);
   const body = useRef<Group>(null);
+  const motion = useRef<PersonMotion>({ speed: 0 });
   const marker = useRef<Group>(null);
   const keys = usePressedKeys();
 
@@ -87,10 +88,10 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       g.rotation.y += diff * Math.min(1, dt * 14);
     }
-    if (body.current) {
-      body.current.rotation.z = f.moving ? Math.sin(time * 14) * 0.06 : 0;
-      body.current.rotation.x = working ? Math.max(0, Math.sin(time * 9)) * 0.35 : 0; // hammering bow
-    }
+    if (body.current) body.current.rotation.x = working ? Math.max(0, Math.sin(time * 9)) * 0.15 : 0; // hammering bow
+    // arms and legs follow the walk; while working the right arm swings the hammer
+    motion.current.speed = f.moving ? AVATAR_SPEED : 0;
+    motion.current.hammer = working;
     setCameraFocus(f.x, f.z);
 
     // Destination marker pulses while walking.
@@ -110,7 +111,7 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
     <>
       <group ref={group} position={[SPAWN.x + 0.5, 0, SPAWN.z + 0.5]}>
         <group ref={body}>
-          <VoxelPerson seed={nickSeed} shirt={shirtColor} />
+          <VoxelPerson seed={nickSeed} shirt={shirtColor} motion={motion} />
         </group>
         {/* My own name always shows (even with labels off), so I can find myself on screen. */}
         <Html portal={portal} position={[0, 1.05, 0]} center zIndexRange={[28, 21]} style={{ pointerEvents: 'none' }}>
