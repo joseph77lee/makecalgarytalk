@@ -56,6 +56,37 @@ export function viewFrame(tiles: { x: number; z: number }[], azimuth: number): V
   return { cx: r0 * rx + u0 * ux, cz: r0 * rz + u0 * uz, width: maxR - minR, height: (maxU - minU) * TILT + 2.5 };
 }
 
+/**
+ * How far the land reaches from the island origin in each screen direction for a camera orbit
+ * angle: `left` / `right` across the screen, `front` towards the camera, `back` away from it.
+ * Used to tuck clouds right beside the real edge (islands are not round).
+ */
+export interface LandExtent {
+  left: number;
+  right: number;
+  front: number;
+  back: number;
+}
+
+export function landExtent(tiles: { x: number; z: number }[], azimuth: number): LandExtent {
+  const rx = Math.cos(azimuth);
+  const rz = -Math.sin(azimuth);
+  const fx = Math.sin(azimuth);
+  const fz = Math.cos(azimuth);
+  const e = { left: 0, right: 0, front: 0, back: 0 };
+  for (const t of tiles) {
+    for (const [dx, dz] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+      const r = (t.x + dx) * rx + (t.z + dz) * rz;
+      const f = (t.x + dx) * fx + (t.z + dz) * fz;
+      e.right = Math.max(e.right, r);
+      e.left = Math.max(e.left, -r);
+      e.front = Math.max(e.front, f);
+      e.back = Math.max(e.back, -f);
+    }
+  }
+  return e;
+}
+
 /** Zoom (px per world unit) that fits a frame into the viewport with margins. */
 export function zoomForFrame(frame: ViewFrame, width: number, height: number): number {
   if (width <= 0 || height <= 0) return 1;

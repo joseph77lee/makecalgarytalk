@@ -30,25 +30,24 @@ export function terrainParts(tiles: Pick<IslandTile, 'x' | 'z' | 'kind'>[], land
         parts.push(box('solid', t.x + 0.5, 0, t.z + 0.92, 1, 0.12, 0.05, '#8a6343'));
       }
     } else {
-      // Art Pass ground detail: slight colour variation per tile, grass tufts, stepping stones on paths.
+      // Ground detail kept calm (like the reference): a faint checker, few but readable grass
+      // clumps and a few stepping stones, so buildings and paths stand out rather than dots.
       const base = t.kind === 'path' ? palette.path[odd] : palette.grass[odd];
-      parts.push(box('solid', t.x + 0.5, -TILE_H, t.z + 0.5, 1, TILE_H, 1, shade(base, (jag(t.x, t.z) - 0.5) * 0.07)));
+      parts.push(box('solid', t.x + 0.5, -TILE_H, t.z + 0.5, 1, TILE_H, 1, base));
       const r = jag(t.z * 7 + 3, t.x * 5 + 1);
       if (t.kind === 'path') {
-        if (r < 0.55) {
+        if (r < 0.2) {
           const ox = (jag(t.x + 11, t.z) - 0.5) * 0.4;
           const oz = (jag(t.x, t.z + 13) - 0.5) * 0.4;
-          parts.push(box('solid', t.x + 0.5 + ox, 0, t.z + 0.5 + oz, 0.3, 0.025, 0.24, shade(palette.path[0], -0.12)));
-          if (r < 0.25) parts.push(box('solid', t.x + 0.5 - ox * 0.8, 0, t.z + 0.5 - oz * 0.8, 0.2, 0.02, 0.18, shade(palette.path[1], -0.08)));
+          parts.push(box('solid', t.x + 0.5 + ox, 0, t.z + 0.5 + oz, 0.34, 0.03, 0.28, shade(palette.path[0], -0.08)));
         }
-      } else if (r < 0.4) {
-        const tufts = r < 0.15 ? 2 : 1;
-        for (let i = 0; i < tufts; i++) {
-          const ox = (jag(t.x + 17 + i * 5, t.z) - 0.5) * 0.8;
-          const oz = (jag(t.x, t.z + 19 + i * 7) - 0.5) * 0.8;
-          parts.push(box('solid', t.x + 0.5 + ox, 0, t.z + 0.5 + oz, 0.07, 0.07, 0.07, shade(palette.grass[1], -0.18)));
-          parts.push(box('solid', t.x + 0.5 + ox + 0.05, 0, t.z + 0.5 + oz - 0.03, 0.05, 0.05, 0.05, shade(palette.grass[0], -0.1)));
-        }
+      } else if (r < 0.12) {
+        // a grass clump about two voxels wide: one darker block with a lighter one beside it
+        const ox = (jag(t.x + 17, t.z) - 0.5) * 0.6;
+        const oz = (jag(t.x, t.z + 19) - 0.5) * 0.6;
+        const dark = shade(palette.grass[1], -0.12);
+        parts.push(box('solid', t.x + 0.5 + ox, 0, t.z + 0.5 + oz, 0.17, 0.12, 0.17, dark));
+        parts.push(box('solid', t.x + 0.5 + ox + 0.13, 0, t.z + 0.5 + oz + 0.04, 0.12, 0.08, 0.12, shade(palette.grass[0], -0.06)));
       }
     }
     const edge = landKeys === null || !isLand(t.x + 1, t.z) || !isLand(t.x - 1, t.z) || !isLand(t.x, t.z + 1) || !isLand(t.x, t.z - 1);

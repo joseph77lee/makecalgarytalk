@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.68 |
+| Plan version | v1.69 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Based on | `requirement.md` v1.39 |
@@ -533,12 +533,12 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] everything drawn through the existing asset keys (§20.4), no game-logic changes; all repeated boxes instanced (§20.3a)
   - [x] checked on screen (desktop and 390 px phone viewport): Mahogany (suburb), Beltline (downtown), finished-example buildings, features and CTrain in the gallery, labels on/off
   - [ ] real-phone performance — deferred to the one real-phone check in M16 (looks-first decision)
-  - [x] user has looked at it (confirmed 2026-11-24)
+  - [x] user has looked at it (confirmed 2026-11-24; visual polish confirmed 2026-11-24)
 - **Handoff**
   - **Code:** voxel kit in `island-view/assets/voxel/` — `voxel.ts` (`V = 12`, `vb`, `vturn` quarter turns 0=+z 1=+x 2=−z 3=−x, `gableRoof`, `hipRoof`, `windowZ/X`, `shade`), `samples.ts` (`ART` palette and every sample model), `houses.ts` (`houseStyleFor(code)`: downtown set DNC, DNE, DNW, EAU, CHN, BLN; Centre sector from the community CSV → inner; others → suburb; `HOUSE_MIX`), `buildings.ts` (`BUILDING_VOXELS`, `BUILDING_VARIANTS`; authored at the canonical lot, turned lots swap w/d), `features.ts` (features + CTrain parts). `assets/VoxelPerson.tsx` (`PERSON_SCALE = 0.72`) is shared by `avatar/Avatar.tsx` and `MiniVillagers`. `models.ts` maps asset keys to these; `registry.ts` adds `feature`, `rail`, `track`, `station`, `rail-end`, `prop`.
   - **Layout:** objects now carry `facing` and `variant` (`Look`); design = `hashString(\`${code}:${key}\`)`, colours picked by `variant % n` (hash picks collided). `houseFacing` / `lotFacing` / `platformFacing` exported from `layout.ts`. House objects carry `houseType` and `height`; labels and tap boxes follow the height. Street props: `assetKey 'prop'`, non-blocking, ≤ `MAX_PROPS = 70`.
-  - **Island life:** `scene/IslandLife.tsx` + `scene/lifePlan.ts` (`lifePlan(code, features, hasWater, rand)`, random per session): plane every 22 s in NE vs 75 s elsewhere; geese only with water; deer with park/hill/creek or water; cougar 8 % with park/hill/creek; balloon 35 %. Clouds drift beside the island, never over it (they hid houses). All movement in `useFrame` with refs.
-  - **Ground:** `scene/terrainParts.ts` — per-tile colour jitter, tufts on ~40 % of grass, stepping stones on ~55 % of path tiles, 4-layer edge soil.
+  - **Island life:** `scene/IslandLife.tsx` + `scene/lifePlan.ts` (`lifePlan(code, features, hasWater, rand)`, random per session): plane every 22 s in NE vs 75 s elsewhere; geese only with water; deer with park/hill/creek or water; cougar 8 % with park/hill/creek; balloon 35 %. Clouds are tucked against the real island edges (`landExtent` in `scene/camera.ts`: left, right, under the front cliff), below the ground, never over the land (they hid houses when over it, and pulled the eye away when far off). All movement in `useFrame` with refs.
+  - **Ground:** `scene/terrainParts.ts` — kept calm like the reference: faint checker (palette pairs differ < 5 luminance), grass clumps about two voxels wide on ~12 % of grass, stepping stones on ~20 % of path tiles, no specks smaller than a voxel, 4-layer edge soil. Construction sites: low soft fence (≤ 2 voxels), orange only on the gate cones, scaffold shape = `variant % 3`.
   - **Tests:** `voxel.test.ts`, `houses.test.ts`, `lifePlan.test.ts`; `models.test.ts` (every design × facing fits its lot, designs differ, construction fits all lot sizes), `features.test.ts`, `ctrain.test.ts` (every platform faces its track), street-prop case in `layout.test.ts`. 828 frontend tests.
   - **Not tested / known gaps:** real phone (a full island ≈ 13–15k instanced boxes vs ≈ 3–4k before; 120 fps in desktop Chrome at a 390 px viewport, which says nothing about phones) — check in M16, fall back to look-preserving voxel merging if needed; snow on roofs and night windows/lamps in the game wait for M20 (the gallery already previews the night look); animals and props do not avoid the avatar; World Map unchanged.
   - **Gotchas:** the gallery camera always zooms to the centre, so it has view preset buttons; never give files in one folder names that differ only in case.
