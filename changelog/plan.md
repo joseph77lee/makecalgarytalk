@@ -1,0 +1,890 @@
+# PLAN.md — Change Log
+
+History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026-11-24 to keep the plan small).
+
+> New entries go at the **top**. Format:
+> ```
+> ### YYYY-MM-DD — vX.Y
+> **Changed:** what changed
+> **Why:** why it changed
+> **Previous:** the old text, verbatim
+> ```
+> New sessions: read only the first few entries (the top of this file).
+
+
+### 2026-11-24 — v1.66
+**Changed:** Before opening: M19 Art Pass now also aims at busier communities; new **M20 Weather & Time of Day** (real Calgary weather and the sun's real direction, lamps at night) between M19 and M16. "After MVP" replaced by **"After launch — checklist for the user to review"** listing every post-launch item (M17, M18, Phase 2, Phase 3, Phase 4, expansion, open numbers). The Change Log moved out of PLAN.md into `changelog/plan.md` (this file); rule 6 points here. "Based on" → `requirement.md` v1.38.
+
+**Why:** Operator decision (2026-11-24): only Art Pass, weather and time of day go in before the opening; everything else as a list to review. Smaller PLAN.md for new sessions.
+
+**Previous:**
+- Header: `| Plan version | v1.65 |`, `| Based on | \`requirement.md\` v1.37 |`
+- M19 (verbatim):
+  > ### M19 — Art Pass ⬜
+  > **Goal:** Every community looks worth playing before anyone sees it (`requirement.md` v1.37 §19.0, §22.2, §22.6). Built **before M16** (deploy and playtest).
+  > - **In scope** (to be planned with the user before work starts)
+  >   - [ ] prettier buildings of the tree, houses, people (avatar, mini villagers) and props, through the existing asset keys (§20.4: no game-logic changes)
+- M16 dep (verbatim):
+  > | M16 | Deploy & Playtest | All + operator accounts | | M19 | ⬜ |
+- diagram (verbatim):
+  >     (all) ── M14 ── M19 ── M16 ── M17 ── M18
+- after mvp (verbatim):
+  > ## After MVP (not planned in detail yet)
+  > Phase 2 modules (from `requirement.md` §22.2): Resident Board + moderation, Profile & Ranks (avatar growth), Speech Bubbles, Requests, 5 Vitality moods, feature upgrades. Plan them after MVP playtest data. (The Art Pass moved before the deploy: M19.)
+  > 
+  > Phase 4: local business shops on **Main Street lots** (open after the Community hall; operator-approved messages; `requirement.md` §22.4). The lots are already reserved in the stored lot plans (M1 🔁).
+- header (verbatim):
+  > | Current module | M19 Art Pass (next; scope to be planned with the user) |
+- Rule 6: `6. This plan will change. Before changing it, add an entry at the top of the [Change Log](#change-log) (date, version, Changed, Why, Previous text verbatim), then edit the body.`
+- Change Log: all entries inline at the end of PLAN.md (now in this file, unchanged).
+
+### 2026-11-24 — v1.65
+**Changed:** New **M19 Art Pass** before M16 (scope to be planned with the user). M16: all communities open, public launch reveals the whole city; dashboard review also watches single-player communities. M17: both email and web push. M18: associations contacted once a community reaches a player threshold. Overview, diagram, current module updated. "Based on" → `requirement.md` v1.37.
+
+**Why:** Operator decisions (2026-11-24).
+
+**Previous:**
+- After MVP: `Phase 2 modules (from \`requirement.md\` §22.2): Art Pass, Resident Board + moderation, Profile & Ranks, Speech Bubbles, Requests, 5 Vitality moods, feature upgrades. Plan them after MVP playtest data.`
+- Header: `| Plan version | v1.64 |`, `| Based on | \`requirement.md\` v1.36 |`
+- M16 items (verbatim):
+  >   - [ ] **family/friends playtest**, focused on **one pilot community** (e.g. Mahogany) so neighbours actually meet (`requirement.md` v1.36 §22.7)
+  >   - [ ] read the dashboard after the playtest (first action %, D1, D7) and decide M17's channel (email digest or web push)
+- M17 scope (verbatim):
+  > ### M17 — Return Reminders ⬜
+  > **Goal:** Players are reminded when their community needs them (`requirement.md` v1.36 §22.7a.1).
+  > - **In scope** (details decided after M16's playtest data)
+  >   - [ ] one channel: **email digest** (opted-in players, §18) or **web push** (home-screen web app, iPhone included)
+- M17 limits (verbatim):
+  >   - [ ] at most one message a day, never at night (Calgary time), one-tap turn off
+- M18 scope (verbatim):
+  > **Goal:** The pilot community's association helps bring neighbours in; its notices appear in the community newspaper (`requirement.md` v1.36 §22.7a.2).
+  > - **In scope**
+  >   - [ ] operator contacts the pilot association: newsletter / social media mention; permission to show notices
+- overview (verbatim):
+  > | M16 | Deploy & Playtest | All + operator accounts | | M14 | ⬜ |
+- diagram (verbatim):
+  >     (all) ── M14 ── M16 ── M17 ── M18
+- header (verbatim):
+  > | Current module | M16 Deploy & Playtest (next; M14 ✅ Done) |
+
+### 2026-11-23 — v1.64
+**Changed:** Growth order after launch: M16 playtest focuses on one pilot community and ends with a dashboard review; new **M17 Return Reminders** (email digest or web push, chosen from the data) and **M18 Community Association Partnership** (newsletter mention + association notices as title/link in the newspaper). Overview and diagram updated. "Based on" → `requirement.md` v1.36.
+
+**Why:** User decision (2026-11-23): this order makes the site active — density first, then reminders, then associations as a distribution channel.
+
+**Previous:**
+- Header: `| Plan version | v1.63 |`, `| Based on | \`requirement.md\` v1.35 |`
+- M16: `  - [ ] **family/friends playtest**` (no pilot focus, no dashboard review item)
+- Overview: no M17/M18 rows; diagram `    (all) ── M14 ── M16`
+
+### 2026-11-23 — v1.63
+**Changed:** M14 split: **M14 Launch Prep** ✅ (everything built and checked locally) and new **M16 Deploy & Playtest** ⬜ (production deploy, Google OAuth, production tzdata, real low-end phone, family/friends playtest, Pro + Sentry before the public launch). References to "M14" for deploy-time checks in M0/M1/M6 now say M16; dependency diagram and overview updated.
+
+**Why:** The user wanted the finished launch-prep work on `main` now, while the account-dependent steps wait until the operator is ready. Splitting keeps the merge rule (merge only ✅ modules) intact.
+
+**Previous:**
+- Header: `| Plan version | v1.62 |`, `| Current module | M14 Launch Readiness (in progress) |`
+- Overview row: `| M14 | Launch Readiness | All | | All above | 🟦 |`; diagram `    (all) ── M14`
+- M0/M1/M6 texts: `(M14)`, `the M14 low-end phone pass`, `moved to M14`, `at deploy, M14`
+- M14 section (v1.62), verbatim:
+
+  > ### M14 — Launch Readiness 🟦
+  > **Goal:** Safe to show the public.
+  > - **In scope** (`requirement.md` v1.35 §17, §18, §20, §21, §22.7)
+  >   - [x] Terms of Use + Privacy Policy pages (13+, location statement) — plus Credits (OSM ODbL, City of Calgary OGL); linked from the first visit and the profile sheet
+  >   - [x] analytics (D1/D7, shares, invites) — own, in Supabase; operator dashboard at `?admin`
+  >   - [x] abnormal sign-up flags — verification spike flags on the dashboard (Turnstile and per-IP sign-in limits were already in place)
+  >   - [x] optional update-email opt-in (CASL)
+  >   - [ ] production deploy — config ready (`frontend/public/_headers`, `docs/launch.md`); waits for the operator's Supabase project and Cloudflare Pages setup
+  >   - [ ] Google OAuth client (production domain + local redirect); verify Google linking keeps progress and re-join with the same Google account restores the record (moved from M6; code in `frontend/src/modules/identity/`, see M6 Handoff)
+  >   - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6) — SQL check in `docs/launch.md` §2
+  >   - [ ] low-end phone performance pass — adaptive quality added (drei `PerformanceMonitor`: 1× pixel ratio, no shadows when frames drop); a real low-end phone check is still needed
+  >   - [ ] **family/friends playtest**
+  > - **Definition of Done**
+  >   - [ ] checklist complete
+  >   - [ ] playtest feedback triaged into modules or Phase 2
+  > - **Handoff (in progress)**
+  >   - **Server:** migrations `20261123130000_gamecore_residency_admin_interface.sql` (`gamecore.acted_between`, `residency.daily_verifications`), `20261123130050_identity_email_updates.sql` (`identity.email_updates`, RPC `identity_get_email_updates` / `identity_set_email_updates`, consent version `2026-11-23` — bump with `EMAIL_CONSENT_TEXT` in `identity/api.ts`), `20261123130100_analytics_admin.sql` (schemas `analytics`: `visits`, `community_views`, append-only `events` capped 50/player/day, RPC `analytics_visit` / `analytics_event`; `admin`: `operators`, spike rule, RPC `admin_dashboard`). New module prefixes `analytics`, `admin` in the health guardrail. Tests `analytics_admin.test.sql` (35). `seed.sql` makes the local dev user an operator.
+  >   - **Frontend:** modules `analytics/` (`track.visit/share/inviteVisit`, never throws; App records today's visit + community on screen, invite-link arrivals, card and invite shares) and `admin/` (`AdminDashboard`, `?admin`). `identity/EmailUpdatesSection` + `LegalLinks`; first-visit agreement line. Static pages `frontend/public/{terms,privacy,credits}.html` + `legal.css` (outside the app bundle).
+  >   - **Launch steps:** `docs/launch.md` lists every operator step (Supabase project in Canada Central, link + `db push`, auth settings, Cloudflare Pages env vars, Turnstile, Google OAuth, email routing, adding an operator, deletion requests, Pro before public launch).
+  >   - **Legal text** is a template-based first version written from what the game actually stores; professional review once revenue starts (§18). If the Supabase region is not Canada, update the Privacy Policy.
+
+### 2026-11-23 — v1.62
+**Changed:** M14 🟦 in progress: legal pages, own analytics + operator dashboard, spike flags, email opt-in done locally; deploy config and launch guide ready; adaptive quality for low-end phones; remaining items wait for the operator's accounts. "Based on" → `requirement.md` v1.35.
+
+**Why:** User decisions for M14 (2026-11-23).
+
+**Previous:**
+- Header: `| Plan version | v1.62 |`, `| Based on | \`requirement.md\` v1.34 |`, `| Current module | M14 Launch Readiness (next; M13 ✅ Done) |`
+- Overview row: `| M14 | Launch Readiness | All | | All above | ⬜ |`
+- M14 section (v1.61), verbatim:
+
+  > ### M14 — Launch Readiness ⬜
+  > **Goal:** Safe to show the public.
+  > - **In scope**
+  >   - [ ] Terms of Use + Privacy Policy pages (13+, location statement)
+  >   - [ ] analytics (D1/D7, shares, invites)
+  >   - [ ] abnormal sign-up flags
+  >   - [ ] optional update-email opt-in (CASL)
+  >   - [ ] production deploy
+  >   - [ ] Google OAuth client (production domain + local redirect); verify Google linking keeps progress and re-join with the same Google account restores the record (moved from M6; code in `frontend/src/modules/identity/`, see M6 Handoff)
+  >   - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6)
+  >   - [ ] low-end phone performance pass
+  >   - [ ] **family/friends playtest**
+  > - **Definition of Done**
+  >   - [ ] checklist complete
+  >   - [ ] playtest feedback triaged into modules or Phase 2
+
+### 2026-11-23 — v1.61
+**Changed:** M13 ✅ Done ("user has looked at it" ticked); current module → M14.
+
+**Why:** The user played M13 and confirmed it (2026-11-23); CI green.
+
+**Previous:**
+- Header: `| Plan version | v1.60 |`, `| Current module | M13 Feature Library (🟨 Ready for playtest) |`
+- Overview row: `| M13 | Feature Library | FE + data | | M1 | 🟨 |`; heading `### M13 — Feature Library 🟨`; DoD `  - [ ] user has looked at it`
+
+### 2026-11-23 — v1.60
+**Changed:** M13 scope extended after the user's review: CTrain on the islands (track, stations, train, next-station signs; 46 plans regenerated) and on the World Map; features appear with their land instead of faint previews; build map preview of the next land's features. Handoff rewritten. "Based on" → `requirement.md` v1.34.
+
+**Why:** User review of M13 (2026-11-23), all four recommendations approved.
+
+**Previous:**
+- Header: `| Plan version | v1.60 |`, `| Based on | \`requirement.md\` v1.33 |`
+- M13 section (v1.59), verbatim:
+
+  > ### M13 — Feature Library 🟨
+  > **Goal:** Each island feels like its community.
+  > - **In scope** (`requirement.md` v1.33 §7.9)
+  >   - [x] 6 feature blocks as box models: CTrain station, pond, hill, creek, big park, school (real water inside the boundary is already drawn since M1 🔁)
+  >   - [x] community → feature mapping for **all 223** residential communities: OpenStreetMap suggestions + operator CSV override, at most 3 each in priority order
+  >   - [x] features stand on the spare lots of the stored lot plan (M1 🔁); faint on future land from day one, solid once the land rises; labels with public place names
+  > - **Definition of Done**
+  >   - [x] communities show their features (203 of 223 have at least one; checked on screen: Varsity, Signal Hill, Bowness, Mahogany)
+  >   - [x] adding a feature = data change only (edit `community_features_override.csv`, rerun `build_features.py`)
+  >   - [ ] user has looked at it
+  > - **Handoff**
+  >   - **Data:** `supabase/data/build_features.py` (Python, standard library) queries OpenStreetMap through the Overpass API once (`--cache <file>` saves/reuses the answer) and writes `supabase/data/community_features.json` (`communities: { CODE: [{ key, name }] }`, priority order, ≤ 3). Only the derived mapping is stored, never OSM geometry; ODbL attribution is in the file's `about` (add it to the site credits in M14). `community_features_override.csv` (`code,action,feature,name`, action add/remove) is applied after the suggestions; operator additions always survive the cap. Rules are in the script's docstring (station ≤ 150 m, pond ≥ 2 ha within 250 m only if the plan has < 20 water tiles, hill from named peaks / hill-named parks / community names containing hill|heights|ridge|mount|crest, creek ≥ 250 m inside, big park ≥ 6 ha overlap, school inside).
+  >   - **Results (2026-11-23):** station 48, pond 31, hill 52, creek 50, big park 110, school 127; 19 communities have none (mostly small inner-city or brand-new ones: e.g. Bankview, Chinatown, Wolf Willow) — add them through the CSV if wanted. The "hill by community name" rule is symbolic (e.g. Hillhurst, Mount Pleasant).
+  >   - **Code:** `island-view/plan/features.ts` (`featuresFor(code)`, `FEATURE_INFO`, `featureLabel`, validation that throws listing every problem); `layout.ts` puts features on spare lots in plan order (spare-1 …), `assetKey: 'feature'` with `faint` (lot not on land yet → stage 0, see-through on the mist) or solid (blocks its lot, counted in `usedLots`); unknown-building placeholders get the spare lots left. `buildIslandLayout(plan, state, features = featuresFor(plan.code))` — tests pass `[]` to check behaviour without features. Models in `assets/models.ts` (`FEATURE_MODELS`, `feature()`; faint = ghost layer, own colours, lowered onto the mist), labels in `scene/Labels.tsx` (solid: name chip always, since phones rarely reach the detailed zoom; faint: emoji, plus "Appears as the community grows" when zoomed in).
+  >   - **Tests:** `plan/features.test.ts` (every plan has an entry, valid keys, ≤ 3, priority order, names ≤ 60 chars, ≥ 85% of communities have a feature, models inside the 2×2 lot in every mood, faint variant) and feature cases in `layout.test.ts` (spare-lot order, faint → solid, blocking, placeholders after features, Mahogany data).
+  >   - **Not tested / known gaps:** real phone; OSM data quality varies (unnamed parks show "Big park", some creeks have no name); features are not tappable (no info sheet); the faint→solid switch has no animation of its own (it appears with the risen land); Activity-based feature upgrades are Phase 2.
+
+### 2026-11-23 — v1.59
+**Changed:** M13 scope as decided (6 blocks, all 223 communities, faint from day one; DoD "launch communities" → communities, plus "user has looked at it"); items ticked; status 🟨 with Handoff. "Based on" → `requirement.md` v1.33.
+
+**Why:** User decisions for M13 (2026-11-23); implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.58 |`, `| Based on | \`requirement.md\` v1.32 |`, `| Current module | M13 Feature Library (next; M11 ✅ Done) |`
+- Overview row: `| M13 | Feature Library | FE + data | | M1 | ⬜ |`
+- M13 In scope: `  - [ ] a few feature blocks (lake, creek, hill, park) as box models — most important for communities whose real shape is close to a rectangle (e.g. Mahogany's lake)` / `  - [ ] community → feature mapping (OSM / City hydrology suggestion + CSV override) for launch communities` / `  - [ ] feature/landmark lots come from the stored lot plan (M1 🔁)`
+- M13 DoD: `  - [ ] launch communities show their features` / `  - [ ] adding a feature = data change only`
+
+### 2026-11-23 — v1.58
+**Changed:** M11 ✅ Done (DoD "user has played it" added and ticked; Handoff notes on demo data and wording); current module → M13.
+
+**Why:** The user played M11 and confirmed it (2026-11-23); CI green.
+
+**Previous:**
+- Header: `| Plan version | v1.57 |`, `| Current module | M11 Ranking & Share (🟨 Ready for playtest) |`
+- Overview row: `| M11 | Ranking & Share | BE + FE | | M5, M10 | 🟨 |`; heading `### M11 — Ranking & Share 🟨`
+
+### 2026-11-23 — v1.57
+**Changed:** "Based on" → `requirement.md` v1.32 (player-facing text says "community", not "island"); the wording fix ships on the M11 branch.
+
+**Why:** User decision during the M11 review (2026-11-23).
+
+**Previous:**
+- Header: `| Plan version | v1.56 |`, `| Last updated | 2026-11-22 |`, `| Based on | \`requirement.md\` v1.31 |`
+
+### 2026-11-22 — v1.56
+**Changed:** M11 items ticked; status 🟨 with Handoff.
+
+**Why:** M11 implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.55 |`, `| Current module | M11 Ranking & Share (in progress; M10 ✅ Done) |`
+- Overview: `| M11 | Ranking & Share | BE + FE | | M5, M10 | 🟦 |`
+- M11: `### M11 — Ranking & Share 🟦`; all checklist items were `- [ ]`; no Handoff
+
+### 2026-11-22 — v1.55
+**Changed:** "Based on" → `requirement.md` v1.31. M11 🟦 in progress; scope detailed (cards on the phone, 🏆 sheet on the World Map, Monday announcement, revival effect, crown = last week's #1, site link preview); DoD "social previews" → the site-wide preview image.
+
+**Why:** M11 started; user decisions 2026-11-22.
+
+**Previous:**
+- Header: `| Plan version | v1.54 |`, `| Based on | `requirement.md` v1.30 |`, `| Current module | M11 Ranking & Share (next; M10 ✅ Done) |`
+- Overview: `| M11 | Ranking & Share | BE + FE | | M5, M10 | ⬜ |`
+- M11:
+```
+### M11 — Ranking & Share ⬜
+**Goal:** Competition and shareable moments.
+- **In scope**
+  - [ ] weekly ranking (per-1,000 formula, min 5 active verified residents, Monday reset Calgary time)
+  - [ ] TOP 10 + my community
+  - [ ] share card images (weekly result, building completed, revival) always including community name
+  - [ ] #1 flag on World Map
+- **Definition of Done**
+  - [ ] ranking math tested
+  - [ ] share card renders correctly on phones and social previews
+```
+
+### 2026-11-22 — v1.54
+**Changed:** M10 ✅ Done; current module → M11.
+
+**Why:** The user played M10 and confirmed it (2026-11-22); CI green.
+
+**Previous:**
+- Header: `| Plan version | v1.53 |`, `| Current module | M10 World Map (🟨 Ready for playtest) |`
+- Overview: `| M10 | World Map | FE (2D) + BE | | M5 | 🟨 |`
+- M10: `### M10 — World Map 🟨`
+
+### 2026-11-22 — v1.53
+**Changed:** "Based on" → `requirement.md` v1.30. M10: new item "island keeps the map's orientation" (ticked) and a Handoff note; M1's per-community camera item marked as replaced.
+
+**Why:** User request 2026-11-22: islands should match the World Map's orientation.
+
+**Previous:**
+- Header: `| Plan version | v1.52 |`, `| Last updated | 2026-11-20 |`, `| Based on | `requirement.md` v1.29 |`
+- M10: no orientation item; Handoff without "Island orientation"
+- M1: `  - [x] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land`
+
+### 2026-11-22 — v1.52
+**Changed:** M10 items ticked; status 🟨 with Handoff.
+
+**Why:** M10 implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.51 |`
+- Header: `| Current module | M10 World Map (in progress; M15 ✅ Done) |`
+- Overview: `| M10 | World Map | FE (2D) + BE | | M5 | 🟦 |`
+- M10: `### M10 — World Map 🟦`
+- M10: all checklist items were `- [ ]`; no Handoff
+
+### 2026-11-22 — v1.51
+**Changed:** "Based on" → `requirement.md` v1.29. M10 🟦 in progress; invite uses M12; entry points and search added.
+
+**Why:** M10 started; user decision 2026-11-22.
+
+**Previous:**
+- Header: `| Plan version | v1.50 |`
+- Header: `| Based on | `requirement.md` v1.28 |`
+- Header: `| Current module | M10 World Map (next; M15 ✅ Done) |`
+- Overview: `| M10 | World Map | FE (2D) + BE | | M5 | ⬜ |`
+- M10: `### M10 — World Map ⬜`
+- M10: `  - [ ] empty community → invite prompt (link placeholder until M12). Animated rivers, CTrain and landmarks are Art Pass (`requirement.md` §9)`
+
+### 2026-11-22 — v1.50
+**Changed:** M15 ✅ Done (user confirmed). Header → M10 next.
+
+**Why:** User confirmed M15 2026-11-22.
+
+**Previous:**
+- Header: `| Plan version | v1.49 |`
+- Header: `| Current module | M15 Community Posts (🟨 Ready for playtest) |`
+- Overview: `| M15 | Community Posts | FE + BE | | M9 | 🟨 |`
+- M15: `### M15 — Community Posts 🟨`
+
+### 2026-11-20 — v1.49
+**Changed:** M15: post kinds centred on real community life (Safety, Local deals, Events, Lost & found, Free talk); reports limited to 3 a day, confirmed before sending, can be taken back, and exclude thanks (the reported post folds away for the reporter); operator restore.
+
+**Why:** User feedback 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.48 |`
+- M15: `  - [x] Verified Residents post in their own community once the Welcome sign is built: kind + up to 300 characters, 1 per Calgary day, no links/photos`
+- M15: `  - [x] reports (Verified 2 points, others 1; 3 points hide), operator report-block and hide (SQL)`
+
+### 2026-11-20 — v1.48
+**Changed:** M15 items ticked; status 🟨 with Handoff.
+
+**Why:** M15 implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.47 |`
+- Header: `| Current module | M15 Community Posts (in progress; M9 ✅ Done) |`
+- Overview: `| M15 | Community Posts | FE + BE | | M9 | 🟦 |`
+- M15: `### M15 — Community Posts 🟦`
+- M15: all checklist items were `- [ ]`; no Handoff
+
+### 2026-11-20 — v1.47
+**Changed:** "Based on" → `requirement.md` v1.28. M15 🟦 in progress with its detailed scope.
+
+**Why:** M15 started; user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.46 |`
+- Header: `| Based on | `requirement.md` v1.27 |`
+- Header: `| Current module | M15 Community Posts (next; M9 ✅ Done) |`
+- Overview: `| M15 | Community Posts | FE + BE | | M9 | ⬜ |`
+- M15 section:
+    ### M15 — Community Posts ⬜
+    **Goal:** Neighbours write the community's local news.
+    - **In scope** (details planned when the module starts; `requirement.md` §14)
+      - [ ] Verified Residents post short local news (events, deals, lost & found) shown in Community News
+      - [ ] spam guards: posting limits, filters (blocked words, phone/address patterns), reports with auto-hide, expiry, operator removal
+      - [ ] participation: posts credited by nickname, thanks, a badge
+    - **Definition of Done**
+      - [ ] only Verified Residents can post; abuse is limited and tested
+
+### 2026-11-20 — v1.46
+**Changed:** M9 ✅ Done (user confirmed). Header → M15 next.
+
+**Why:** User confirmed M9 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.45 |`
+- Header: `| Current module | M9 Community News (🟨 Ready for playtest) |`
+- Overview: `| M9 | Community News | BE + FE | | M8 | 🟨 |`
+- M9: `### M9 — Community News 🟨`
+
+### 2026-11-20 — v1.45
+**Changed:** M9 newspaper covers real community life (new neighbours, farewells, a Local news slot); game events stay in "Since yesterday". New module **M15 Community Posts** (resident-written local news, Verified Residents only) right after M9.
+
+**Why:** User decision 2026-11-20: Community News should report real community life; writing every community's news by hand does not scale, so residents write it.
+
+**Previous:**
+- Header: `| Plan version | v1.44 |`
+- M9: `  - [x] auto-generated daily newspaper from game events (templates)`
+- M9: `  - [x] newspaper reflects yesterday's real events with nicknames`
+- Overview: (no M15 row)
+- Order note: `**Order after M7 (user decision 2026-11-20):** M1 🔁 Sleepy mood fix → **M12 Invites** (before M8: bringing neighbours in is the core of the game) → M8 → M9 → M10 → M11 → M13 → M14.`
+
+### 2026-11-20 — v1.44
+**Changed:** M9 renamed "Village News" → "Community News"; UI wording uses "community" instead of "village".
+
+**Why:** User feedback 2026-11-20: Calgary calls each neighbourhood a community.
+
+**Previous:**
+- Header: `| Plan version | v1.43 |`
+- Header: `| Current module | M9 Village News (🟨 Ready for playtest) |`
+- Overview: `| M9 | Village News | BE + FE | | M8 | 🟨 |`
+- M9: `### M9 — Village News 🟨`
+
+### 2026-11-20 — v1.43
+**Changed:** M9 items ticked; status 🟨 with Handoff.
+
+**Why:** M9 implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.42 |`
+- Header: `| Current module | M9 Village News (in progress; M8 ✅ Done) |`
+- Overview: `| M9 | Village News | BE + FE | | M8 | 🟦 |`
+- M9: `### M9 — Village News 🟦`
+- M9: all checklist items were `- [ ]`; no Handoff
+
+### 2026-11-20 — v1.42
+**Changed:** "Based on" → `requirement.md` v1.27. M9 🟦 in progress; scope item for the daily stored edition and the locks.
+
+**Why:** M9 started; user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.41 |`
+- Header: `| Based on | `requirement.md` v1.26 |`
+- Header: `| Current module | M9 Village News (next; M8 ✅ Done) |`
+- Overview: `| M9 | Village News | BE + FE | | M8 | ⬜ |`
+- M9: `### M9 — Village News ⬜`
+- M9: (no item for the stored edition and locks)
+
+### 2026-11-20 — v1.41
+**Changed:** M8 ✅ Done (user checked it on their phone). Header → M9 next.
+
+**Why:** User confirmed M8 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.40 |`
+- Header: `| Current module | M8 Residents & Villagers (🟨 Ready for playtest) |`
+- Overview: `| M8 | Residents & Villagers | FE + BE | | M5, M7 | 🟨 |`
+- M8: `### M8 — Residents & Villagers 🟨`
+- M8: `  - [ ] performance OK on phone — waiting for the user's phone check`
+
+### 2026-11-20 — v1.40
+**Changed:** M8 items ticked except the DoD "performance OK on phone" (needs a real phone); status 🟨 with Handoff.
+
+**Why:** M8 implemented and verified locally (tests and screen checks).
+
+**Previous:**
+- Header: `| Plan version | v1.39 |`
+- Header: `| Current module | M8 Residents & Villagers (in progress; M12 ✅ Done) |`
+- Overview: `| M8 | Residents & Villagers | FE + BE | | M5, M7 | 🟦 |`
+- M8: `### M8 — Residents & Villagers 🟦`
+- M8: all checklist items were `- [ ]`; no Handoff
+
+### 2026-11-20 — v1.39
+**Changed:** "Based on" → `requirement.md` v1.26. M8 🟦 in progress; house items follow the new §7.2 (tap to see whose house, window lights only, fixed lots).
+
+**Why:** M8 started; user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.38 |`
+- Header: `| Based on | `requirement.md` v1.25 |`
+- Header: `| Current module | M8 Residents & Villagers (next; M12 ✅ Done) |`
+- Overview: `| M8 | Residents & Villagers | FE + BE | | M5, M7 | ⬜ |`
+- M8: `### M8 — Residents & Villagers ⬜`
+- M8: `  - [ ] one house per Verified Resident with name tag, lights on if active today, archived after 30 days`
+
+### 2026-11-20 — v1.38
+**Changed:** M12 ✅ Done (user confirmed). Header → M8 next.
+
+**Why:** User confirmed M12 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.37 |`
+- Header: `| Current module | M12 Invites (🟨 Ready for playtest) |`
+- Overview: `| M12 | Invites | FE + BE | | M6, M7 | 🟨 |`
+- M12: `### M12 — Invites 🟨`
+
+### 2026-11-20 — v1.37
+**Changed:** M12: floating Invite button with hide-for-the-day and a once-a-day nudge; invite chips are green buttons.
+
+**Why:** User feedback 2026-11-20: the underlined "Invite" was too small to notice; inviting must always be easy to see.
+
+**Previous:**
+- Header: `| Plan version | v1.36 |`
+- M12: (no floating Invite button item)
+
+### 2026-11-20 — v1.36
+**Changed:** M12 items ticked; status 🟨 with Handoff.
+
+**Why:** M12 implemented and verified locally (tests, two-browser screen check with simulated days).
+
+**Previous:**
+- Header: `| Plan version | v1.35 |`
+- Header: `| Current module | M12 Invites (in progress, moved before M8) |`
+- Overview: `| M12 | Invites | FE + BE | | M6, M7 | 🟦 |`
+- M12: `### M12 — Invites 🟦`
+- M12: all checklist items were `- [ ]`; no Handoff
+
+### 2026-11-20 — v1.35
+**Changed:** "Based on" → `requirement.md` v1.25. M12 🟦 in progress; scope items for the badge reward, invite landing, welcome card and invite entry points, first-visit copy.
+
+**Why:** M12 started (moved before M8); user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.34 |`
+- Header: `| Based on | `requirement.md` v1.24 |`
+- Header: `| Current module | M12 Invites (next, moved before M8; M1 🔁 Sleepy fix ✅ Done) |`
+- Overview: `| M12 | Invites | FE + BE | | M6, M7 | ⬜ |`
+- M12: `### M12 — Invites ⬜`
+- M12: `  - [ ] Founding Resident badge`
+
+### 2026-11-20 — v1.34
+**Changed:** M1 🔁 Sleepy fix ✅ Done (user confirmed on the phone). Header → M12 next.
+
+**Why:** User confirmed the Sleepy look 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.33 |`
+- Header: `| Current module | M1 🔁 Sleepy mood fix (🟨 Ready for review); then M12 Invites (moved before M8) |`
+- Overview: `| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🔁 |`
+- M1: `### M1 — Island View ⭐ 🔁`
+
+### 2026-11-20 — v1.33
+**Changed:** "Based on" → `requirement.md` v1.24. M1 🔁 Reopened for the Sleepy mood (renamed from Gloomy, warmer look, wake-up line); ready for review.
+
+**Why:** User decision 2026-11-20 after the phone test (newcomers saw a dull grey community).
+
+**Previous:**
+- Header: `| Plan version | v1.32 |`
+- Header: `| Based on | `requirement.md` v1.23 |`
+- Header: `| Current module | M1 🔁 Sleepy mood fix (next; M7 ✅ Done); then M12 Invites (moved before M8) |`
+- Overview: `| M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |`
+- M1: `### M1 — Island View ⭐ ✅`
+- M1: `  - [x] 3 Vitality moods (Lively / Normal / Gloomy) change colours and props`
+
+### 2026-11-20 — v1.32
+**Changed:** M7 ✅ Done (user confirmed on their phone). Order after M7: M1 🔁 Sleepy mood fix, then M12 Invites before M8.
+
+**Why:** User decisions 2026-11-20: the Gloomy look is too dark for a newcomer's first impression; bringing neighbours in is the core of the game, so invites come next.
+
+**Previous:**
+- Header: `| Plan version | v1.31 |`
+- Header: `| Current module | M7 Residency (🟨 Ready for playtest; waiting for the phone check) |`
+- Overview: `| M7 | Residency | FE + BE | | M6 | 🟨 |`
+- Overview: (no order note; modules in number order)
+- M7: `### M7 — Residency 🟨`
+- M7: `  - [ ] user verified their own community`
+
+### 2026-11-20 — v1.31
+**Changed:** M7 items ticked except the DoD "user verified their own community" (needs the user's phone); status 🟨 with Handoff.
+
+**Why:** M7 implemented and verified locally (tests and screen checks with simulated days).
+
+**Previous:**
+- Header: `| Plan version | v1.30 |`
+- Header: `| Current module | M7 Residency (in progress; M6 ✅ Done) |`
+- Overview: `| M7 | Residency | FE + BE | | M6 | 🟦 |`
+- M7: `### M7 — Residency 🟦`
+- M7: all checklist items were `- [ ]`; no Handoff
+
+### 2026-11-20 — v1.30
+**Changed:** "Based on" → `requirement.md` v1.23. M7 🟦 in progress; scope items for the candidate community and check limits, replacing the manual choice (resident records move to `residency`), and local phone testing over HTTPS.
+
+**Why:** M7 started; user decisions 2026-11-20.
+
+**Previous:**
+- Header: `| Plan version | v1.29 |`
+- Header: `| Based on | `requirement.md` v1.22 |`
+- Header: `| Current module | M7 Residency (next; M6 ✅ Done) |`
+- Overview: `| M7 | Residency | FE + BE | | M6 | ⬜ |`
+- M7: `### M7 — Residency ⬜`
+- M7: (no items for candidate community, replacing the manual choice, or phone testing)
+
+### 2026-11-20 — v1.29
+**Changed:** M6 ✅ Done (user confirmed). Real verification of Google linking / re-join and the DoD "linking Google keeps progress" moved to M14 (code stays in M6). Header → M7 next.
+
+**Why:** User decision 2026-11-20: the Google OAuth client has to be created for the production domain anyway, so verify both together at launch. The buttons stay hidden until `VITE_GOOGLE_LINKING=true`.
+
+**Previous:**
+- Header: `| Plan version | v1.28 |`
+- Header: `| Last updated | 2026-11-19 |`
+- Header: `| Current module | M6 Identity (🟨 Ready for playtest; Google linking awaits an OAuth client) |`
+- Overview: `| M6 | Identity | FE + BE | | M4 | 🟨 |`
+- M6: `### M6 — Identity 🟨`
+- M6: `  - [ ] optional Google linking — code done; verify with a real Google OAuth client`
+- M6: `  - [ ] re-join with same Google account restores record — code done (`signInWithOAuth`); verify with a real Google OAuth client`
+- M6: `  - [ ] linking Google keeps progress`
+- M14: no Google item
+
+### 2026-11-20 — v1.28
+**Changed:** M6 items ticked except Google linking / re-join and its DoD (code done, not verified); status 🟨 with Handoff.
+
+**Why:** M6 implemented and verified locally; Google needs an OAuth client the user creates.
+
+**Previous:**
+- Header: `| Plan version | v1.27 |`
+- Header: `| Current module | M6 Identity (in progress; M5 ✅ Done) |`
+- Overview: `| M6 | Identity | FE + BE | | M4 | 🟦 |`
+- M6: `### M6 — Identity 🟦`
+- M6: all checklist items were `- [ ]`
+
+### 2026-11-19 — v1.27
+**Changed:** "Based on" → `requirement.md` v1.22. M6: nickname on the first visit added to scope.
+
+**Why:** Sync with requirement v1.22 (user decision 2026-11-19). Google linking: code in M6, real verification once the user creates a Google OAuth client (the M6 DoD item stays open until then).
+
+**Previous:**
+- Header: `| Plan version | v1.26 |`
+- Header: `| Based on | `requirement.md` v1.21 |`
+- M6: (no nickname item)
+
+### 2026-11-19 — v1.26
+**Changed:** M5 → ✅ (user confirmed); M6 → 🟦 In progress.
+
+**Why:** User reviewed M5 and approved the merge (without the 3-real-days run, noted in the DoD).
+
+**Previous:**
+- Header: `| Plan version | v1.25 |`
+- Header: `| Current module | M5 Community State (🟨 Ready for playtest) |`
+- Overview: `| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | 🟨 |`
+- Overview: `| M6 | Identity | FE + BE | | M4 | ⬜ |`
+- M5: `### M5 — Community State ⭐ 🟨`
+- M6: `### M6 — Identity ⬜`
+- M5: `  - [ ] user has played across at least 3 real days`
+
+### 2026-11-19 — v1.25
+**Changed:** M6 in scope: "What changed since yesterday" seen once per account per Calgary day (server-side), replacing M5's per-browser flag.
+
+**Why:** User decision (2026-11-19): with real accounts the panel should follow the person, not the browser (today two accounts in one browser share the flag; one person on two devices sees it twice).
+
+**Previous:**
+- Header: `| Plan version | v1.24 |`
+- M6: (no item about the changes panel)
+
+### 2026-11-19 — v1.24
+**Changed:** M5 items ticked (except the 3-real-days playtest), status 🟨 with Handoff.
+
+**Why:** M5 implemented and verified with simulated days.
+
+**Previous:**
+- Header: `| Plan version | v1.23 |`
+- Header: `| Current module | M5 Community State (in progress; M3 ✅ Done) |`
+- Overview: `| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | 🟦 |`
+- M5: `### M5 — Community State ⭐ 🟦`
+- M5: six checklist items were `- [ ]`
+
+### 2026-11-19 — v1.23
+**Changed:** "Based on" → `requirement.md` v1.21 (Vitality formula, streak counting today). M5 → 🟦 In progress.
+
+**Why:** M5 started; sync with the requirement update.
+
+**Previous:**
+- Header: `| Plan version | v1.22 |`
+- Header: `| Based on | `requirement.md` v1.20 |`
+- Overview: `| M5 | Community State | BE + FE | ⭐ Core | M4, M1 🔁, M3 🔁 | ⬜ |`
+- M5: `### M5 — Community State ⭐ ⬜`
+
+### 2026-11-19 — v1.22
+**Changed:** M3 rework confirmed by the user → ✅; current module → M5.
+
+**Why:** User reviewed the rework and approved the merge.
+
+**Previous:**
+- Header: `| Plan version | v1.21 |`
+- Header: `| Current module | M3 🔁 Game Core rework (🟨 Ready for review); then M5 |`
+- Overview: `| M3 | Game Core | BE | ⭐ Core | M0 | 🟨 |`
+- M3: `### M3 — Game Core ⭐ 🟨 (rework)`
+- M3: `  - [ ] user has reviewed it` (rework DoD)
+
+### 2026-11-19 — v1.21
+**Changed:** M3 rework items ticked, status 🟨 with a rework Handoff (includes two island-view display fixes made on the M3 branch with the user's approval: upgrades in place and empty overlays).
+
+**Why:** Building tree on the server finished and verified.
+
+**Previous:**
+- Header: `| Plan version | v1.20 |`
+- Header: `| Current module | M3 🔁 Game Core rework (in progress; M1 ✅ Done); then M5 |`
+- Overview: `| M3 | Game Core | BE | ⭐ Core | M0 | 🔁 |`
+- M3: `### M3 — Game Core ⭐ 🔁`
+- M3: the seven rework checklist items were `- [ ]`
+
+### 2026-11-19 — v1.20
+**Changed:** "Based on" → `requirement.md` v1.20. M1 rework items for water, lot spread and hidden locks ticked; M1 back to 🟨 with Handoff additions.
+
+**Why:** Rework finished and verified.
+
+**Previous:**
+- Header: `| Based on | `requirement.md` v1.19 |`
+- M1: `- [ ] Real water from City Hydrology at its real position`
+- M1: `- [ ] Later-stage lots in newly grown outer land`
+- M1: `- [ ] Locked buildings not drawn on the island`
+- Header: `| Current module | M1 🔁 Island View rework (in progress: water, lot spread, hidden locks); then M3 🔁, then M5 |`
+- Overview: `| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🔁 |`
+- M1: `### M1 — Island View ⭐ 🔁`
+- M1: `- **Not tested / known gaps:** real phone; the rising animation`
+
+### 2026-11-19 — v1.19
+**Changed:** "Based on" → `requirement.md` v1.19. M1 rework: added real water, lot spread and hidden locked buildings; status back to 🔁 while they are built.
+
+**Why:** Sync with requirement v1.19 (user feedback on the first rework playtest).
+
+**Previous:**
+- M1: `- [x] Default camera angle per community (long side vertical on a portrait phone); growth animation for irregular land`
+- Header: `| Current module | M1 🔁 Island View rework (🟨 Ready for playtest); then M3 🔁, then M5 |`
+- Overview: `| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 🟨 |`
+- M1: `### M1 — Island View ⭐ 🟨 (rework)`
+- Header: `| Based on | `requirement.md` v1.18 |`
+
+### 2026-11-19 — v1.18
+**Changed:** "Based on" → `requirement.md` v1.18. M1 and M3 reopened (🔁) with rework checklists: real-shape islands with stored lot plans and tree building models (M1); building tree as data with conditions, 3-construction limit and upgrades in place (M3). Order: M4 playtest/merge → M1 🔁, M3 🔁 → M5. M4 open decision marked resolved. M5: tree conditions and tree build map. M6: first-visit completed example. M9: newspaper/board by tree buildings. M10: development levels by tree buildings. M13: default sign item removed (Welcome sign is a tree building), features matter most for rectangular communities, lots from the stored plan. After MVP: Phase 4 Main Street note.
+
+**Why:** Sync with requirement v1.18 (building tree, real-shape islands, growth strategy). Reworking M1/M3 before launch keeps the rule that positions never change after launch.
+
+**Previous:**
+- Header: `| Plan version | v1.17 |`
+- Header: `| Last updated | 2026-11-18 |`
+- Header: `| Based on | `requirement.md` v1.17 |`
+- Header: `| Current module | M4 — Daily Actions (🟨 Ready for playtest) |`
+- Overview: `| M1 | Island View | FE (R3F) | ⭐ Core | M0 | ✅ |`
+- Overview: `| M3 | Game Core | BE | ⭐ Core | M0 | ✅ |`
+- Overview: `| M5 | Community State | BE + FE | ⭐ Core | M4 | ⬜ |`
+- Overview: `**Core loop is complete after M5.** At that point the game is playable end to end with a dev user and a manually chosen community: see the island → move the avatar → take daily actions → progress next day → streak, Vitality, unlocks, island growth.`
+- M1: `### M1 — Island View ⭐ ✅`
+- M3: `### M3 — Game Core ⭐ ✅`
+- M4: `- **OPEN — decide before M5 starts (user discussion 2026-11-18/19):**`
+- M5: `unlocks (Playground / Community Centre / Park; resident counts cumulative), island size from cumulative residents`
+- M5: `- [ ] Village build map screen (`requirement.md` §7.6a): unlock track + island size track with remaining conditions and progress, completed projects; Village tab only (Me tab is Phase 2)`
+- M6: `- [ ] avatar shirt colour choice on first visit, changeable later (`requirement.md` §10.2)`
+- M9: `- [ ] Village Notice Board object on the island opens it on tap (Community Centre once built); no walking required`
+- M10: `by level (houses → playground → park → community centre), Vitality mood`
+- M13: `- [ ] default name sign for every community (custom signs come from Phase 3 photo petitions)`
+- M13: `- [ ] a few feature blocks (lake, creek, hill, park) as box models`
+- M13: `- [ ] reserve feature/landmark slots in the island layout (M1 layout has none yet; house lots will be re-laid once, acceptable before launch)`
+- After MVP: `Phase 2 modules (from `requirement.md` §22.2): Art Pass, Resident Board + moderation, Profile & Ranks, Speech Bubbles, Requests, 5 Vitality moods, feature upgrades. Plan them after MVP playtest data.`
+
+### 2026-11-18 — v1.17
+**Changed:** "Based on" → `requirement.md` v1.17. M3 set to 🟨 with Handoff; added a DoD item "user has reviewed it" (M3 is backend only, there is nothing to play).
+
+**Why:** Sync with requirement v1.17 (project starting values); CLAUDE.md Rule 4 needs a user check before ✅ even for backend modules.
+
+**Previous:**
+- `| Plan version | v1.16 |` / `| Based on | `requirement.md` v1.16 |`
+- M3 DoD had no user-review item.
+
+### 2026-11-18 — v1.16
+**Changed:** "Based on" → `requirement.md` v1.16. M5: added the Village build map screen. M6: added avatar shirt colour choice.
+
+**Why:** Sync with requirement v1.16 (village build-up and avatar build-up; avatar growth itself is Phase 2).
+
+**Previous:**
+- `| Plan version | v1.15 |` / `| Based on | `requirement.md` v1.15 |`
+- M5 and M6 had no build map / shirt colour items.
+
+### 2026-11-18 — v1.15
+**Changed:** "Based on" → `requirement.md` v1.15. M13: name sign item is now the default sign for every community; removed the launch-community landmark item (custom signs/landmarks move to Phase 3 photo petitions).
+
+**Why:** Sync with requirement v1.15 (resident-driven signs and landmarks).
+
+**Previous:**
+- `| Plan version | v1.14 |` / `| Based on | `requirement.md` v1.14 |`
+- M13: `  - [ ] name sign (voxel reinterpretation of the real entrance sign from operator photos; community name only, no developer logos; default sign otherwise)` / `  - [ ] optional community-specific landmark for launch communities only (e.g. Mahogany)`
+
+### 2026-11-18 — v1.14
+**Changed:** "Based on" → `requirement.md` v1.14. M9: notice board opens on tap without walking; added global operator announcements.
+
+**Why:** Sync with requirement v1.14 (user decisions).
+
+**Previous:**
+- `| Plan version | v1.13 |` / `| Based on | `requirement.md` v1.13 |`
+- M9: `  - [ ] Village Notice Board object on the island opens it` (announcements item did not exist)
+
+### 2026-11-18 — v1.13
+**Changed:** "Based on" → `requirement.md` v1.13. M13: name sign wording (voxel reinterpretation, no logos), mapping sources include City hydrology, added optional launch-community landmark and a layout-slot item.
+
+**Why:** Sync with requirement v1.13. User chose to keep M13 in its planned order (no layout change in M1).
+
+**Previous:**
+- `| Plan version | v1.12 |` / `| Based on | `requirement.md` v1.12 |`
+- M13: `  - [ ] name sign` / `  - [ ] community → feature mapping (OSM suggestion + CSV override) for launch communities` (landmark and layout-slot items did not exist)
+
+### 2026-11-18 — v1.12
+**Changed:** "Based on" → `requirement.md` v1.12. M1 label item now includes the show/hide labels toggle.
+
+**Why:** Sync with requirement v1.12 (labels toggle, slower individual villagers) after the user's first look at M1.
+
+**Previous:**
+- `| Plan version | v1.11 |` / `| Based on | `requirement.md` v1.11 |`
+- M1: `  - [x] Labels and speech bubbles via drei `Html``
+
+### 2026-11-18 — v1.11
+**Changed:** M1 item "Instanced rendering for tiles (drei `Instances`)" now reads "Instanced rendering for tiles and repeated boxes (raw `InstancedMesh`, ...)". M1 set to 🟨 with its Handoff note.
+
+**Why:** drei `<Instances>` re-uploads every instance matrix on every frame (one React child per instance). Island boxes are static, so a raw `InstancedMesh` updated only when the state changes is cheaper on phones and still follows `requirement.md` §20.3a (instanced rendering).
+
+**Previous:**
+- M1: `  - [ ] Instanced rendering for tiles (drei `Instances`); animations in `useFrame` with refs (no per-frame React state); phone-size viewport check`
+- Header: `| Plan version | v1.10 |` / `| Current module | M1 — Island View (next; M0 ✅ Done) |`
+
+### 2026-11-18 — v1.10
+**Changed:** Added rule 10 (each module ends with a Handoff note; new sessions read `git log`, Change Logs and Handoff notes first). Added the M0 Handoff note. M0 marked ✅ and current module set to M1 (status update, recorded here for completeness).
+
+**Why:** Each module is built in a new Claude Code session with no memory of earlier sessions. Commits and Change Logs record *what* changed; Handoff notes record decisions, gaps and gotchas that are not obvious from the code.
+
+**Previous:**
+- Rule 10: (none)
+- M0 Handoff: (none)
+- Header: `| Plan version | v1.9 |` / `| Current module | M0 — Foundation (in progress) |`
+
+### 2026-11-18 — v1.9
+**Changed:** M0 status 🟦 In progress. M0 items reworded to what was built: local Supabase (cloud project at M14), pooling via PostgREST, Calgary day boundary as server-side Postgres functions (no client time zone math), conventions enforced by tests; DoD day-boundary item now covers Alberta's permanent UTC-6. M14: added a production tzdata check. "Based on" → `requirement.md` v1.11.
+
+**Why:** Alberta's Official Time Act (2026) ended DST: no fall-back on 2026-11-01, UTC-6 year-round (IANA tzdata 2026c+). Database tests caught this; client tzdata (Node 20 = 2025a, many browsers) is outdated, so the day boundary must be server-only. Local-only Supabase for M0 was agreed with the user.
+
+**Previous:**
+- `| Based on | `requirement.md` v1.10 |`
+- M0 In scope (verbatim):
+```
+  - [ ] Supabase project (PostgreSQL + PostGIS enabled); Supabase CLI for local dev and SQL migrations; database connection pooling
+  - [ ] Shared time utility: **Calgary day boundary (America/Edmonton)** with tests
+  - [ ] Module folder conventions in place (see `CLAUDE.md` §2 Modular code)
+```
+- M0 DoD: `  - [ ] day-boundary tests cover DST changes`
+- M14: (tzdata check did not exist)
+
+### 2026-11-18 — v1.8
+**Changed:** Added rule 9 to "How this plan works": one branch per module, merged to `main` with `--no-ff` only after ✅ Done, green CI, and ✅ already recorded on the branch; reopened modules use `fix/` branches.
+
+**Why:** User decision: `main` should only contain modules that were checked together and work. Branches also make it easy to discard a failed attempt.
+
+**Previous:** Rules 1–8 only (rule 9 did not exist).
+
+### 2026-11-17 — v1.7
+**Changed:** "Based on" → `requirement.md` v1.10. M7: replaced "90-day community change" with the full moving flow (§6.4) and cumulative-count rule; added move edge-case tests to M7 Definition of Done. M9: added farewell line item.
+
+**Why:** Sync with requirement v1.10 (user-friendly moving rules).
+
+**Previous:**
+- `| Based on | `requirement.md` v1.9 |`
+- M7 In scope: `  - [ ] 90-day community change`
+- M7 Definition of Done: (move edge-case item did not exist)
+- M9 In scope: (farewell line item did not exist)
+
+### 2026-11-17 — v1.6
+**Changed:** "Based on" → `requirement.md` v1.9. M5 item: Vitality denominator uses the last active day (later of last action and verification day), 30 days including today.
+
+**Why:** Sync with requirement v1.9.
+
+**Previous:**
+- `| Based on | `requirement.md` v1.8 |`
+- M5 (part): `Vitality (7-day average; denominator = Verified Residents active within last 30 days, rises fast/falls slow)`
+
+### 2026-11-17 — v1.5
+**Changed:** "Based on" → `requirement.md` v1.8. M5 item: Vitality uses the 30-day denominator; unlock resident counts are cumulative.
+
+**Why:** Sync with requirement v1.8.
+
+**Previous:**
+- `| Based on | `requirement.md` v1.7 |`
+- M5 (part): `Vitality (7-day, same Active Verified Resident denominator, rises fast/falls slow), unlocks (Playground / Community Centre / Park)`
+
+### 2026-11-17 — v1.4
+**Changed:** "Based on" updated to `requirement.md` v1.7. M5 streak/Vitality item now uses the Active Verified Resident (7-day) denominator.
+
+**Why:** Keep the plan in sync with requirement fixes (v1.6 was missed; v1.7 defines the streak denominator).
+
+**Previous:**
+- `| Based on | `requirement.md` v1.5 |`
+- M5: `  - [ ] Backend: community streak (≥ half of residents acted), Vitality (7-day, rises fast/falls slow), unlocks (Playground / Community Centre / Park), island size from cumulative residents`
+
+### 2026-11-16 — v1.3
+**Changed:** Removed all time estimates (Est. column and total). Added rule 7 (no time estimates; tick checkboxes). Converted every module's In scope and Definition of Done items into checkboxes (`- [ ]`) for progress tracking; single-line lists were split on `; ` with the wording unchanged.
+
+**Why:** With vibe coding, durations are unpredictable. The plan's main purpose is to make sure nothing is missed and to see progress, not to schedule.
+
+**Previous:**
+- Overview table:
+```
+| # | Module | Layer | Core? | Depends on | Est. | Status |
+|---|---|---|---|---|---|---|
+| M0 | Foundation | FE + Supabase + infra | Base | — | 1 wk | ⬜ |
+| M1 | Island View | FE (R3F) | ⭐ Core | M0 | 2 wk | ⬜ |
+| M2 | Avatar | FE (R3F) | ⭐ Core | M1 | 1 wk | ⬜ |
+| M3 | Game Core | BE | ⭐ Core | M0 | 1 wk | ⬜ |
+| M4 | Daily Actions | FE + BE | ⭐ Core | M2, M3 | 1 wk | ⬜ |
+| M5 | Community State | BE + FE | ⭐ Core | M4 | 1.5 wk | ⬜ |
+| M6 | Identity | FE + BE | | M4 | 0.5 wk | ⬜ |
+| M7 | Residency | FE + BE | | M6 | 1 wk | ⬜ |
+| M8 | Residents & Villagers | FE + BE | | M5, M7 | 1 wk | ⬜ |
+| M9 | Village News | BE + FE | | M8 | 0.5 wk | ⬜ |
+| M10 | World Map | FE (2D) + BE | | M5 | 1.5 wk | ⬜ |
+| M11 | Ranking & Share | BE + FE | | M5, M10 | 1 wk | ⬜ |
+| M12 | Invites | FE + BE | | M6, M7 | 0.5 wk | ⬜ |
+| M13 | Feature Library | FE + data | | M1 | 0.5 wk | ⬜ |
+| M14 | Launch Readiness | All | | All above | 1 wk | ⬜ |
+```
+- `Estimates assume ~10 hours/week. Total ≈ 15–16 weeks including learning time (React + react-three-fiber) and playtests. Estimates are rough and will be revised.`
+- Scope and Definition of Done items were plain bullets / single lines (same wording).
+
+### 2026-11-16 — v1.2
+**Changed:** M10 World Map scope updated for `requirement.md` v1.5 (development illustrations inside real boundary polygons, area-scaled icons, zoom-dependent detail, Canvas). M10 estimate 1 → 1.5 weeks; total 14–15 → 15–16 weeks.
+
+**Why:** World Map design refined after the user chose the polygon style with in-polygon development illustrations.
+
+**Previous:**
+- `| Plan version | v1.1 |` / `| Based on | \`requirement.md\` v1.4 |`
+- `| M10 | World Map | FE (2D) + BE | | M5 | 1 wk | ⬜ |`
+- `Total ≈ 14–15 weeks ...`
+- M10: `- **In scope:** 2D map from community boundaries (SVG/Canvas); Vitality colours, grey for unsettled, tier label; tap → enter community island; empty community → invite prompt (link placeholder until M12)`
+
+### 2026-11-16 — v1.1
+**Changed:** Updated for the new tech stack (`requirement.md` v1.4): React + Vite + TypeScript + react-three-fiber + drei on the frontend; Supabase only (SQL migrations, Postgres functions/RPC with RLS, Edge Functions, pg_cron) instead of Spring Boot. Added scalability rules to M3. M1 estimate 1.5 → 2 weeks for learning React/R3F; total 13–14 → 14–15 weeks.
+
+**Why:** Stack changed to the best-fit combination for this project (vibe coding, lowest ops cost, largest web-3D ecosystem).
+
+**Previous:**
+- Header: `| Plan version | v1.0 |` / `| Based on | \`requirement.md\` v1.2 |`
+- Overview rows: `| M0 | Foundation | FE + BE + infra | Base | — | 1 wk | ⬜ |` / `| M1 | Island View | FE (three.js) | ⭐ Core | M0 | 1.5 wk | ⬜ |` / `| M2 | Avatar | FE (three.js) | ⭐ Core | M1 | 1 wk | ⬜ |`
+- `Estimates assume ~10 hours/week. Total ≈ 13–14 weeks including learning time and playtests. Estimates are rough and will be revised.` (Layers note did not exist)
+- M0: `  - Monorepo folders: \`frontend/\` (Angular), \`backend/\` (Spring Boot), \`docs/\`` / `  - Supabase project (PostgreSQL + PostGIS enabled); DB migrations tool (e.g. Flyway)` / `  - Backend health endpoint; frontend calls it and shows "connected"` / `  - Basic CI: build + tests on push` / DoD: `both apps run locally with one command each;`
+- M1: `  - three.js scene inside an Angular component: orthographic isometric camera, pastel lights, sky background, rotate/zoom limits` / `  - **Asset registry**: asset key → box model (house, building, silhouette, tree, construction site, sign, mini villager)` / `  - HTML overlay system for labels and speech bubbles` / `  - InstancedMesh for tiles; phone-size viewport check`
+- M3: `  - Tables/migrations: communities ...` / `  - REST API: get community state, submit action(s)` / `  - Unit tests for every rule including day boundary and energy limit` / DoD: `API rejects a 4th action in a day;`
+- M5: `  - Snapshot generation every 5–10 min (JSON) for community state`
+- M7: `browser geolocation → server-side point-in-polygon (PostGIS)`
+
+### 2026-11-16 — v1.0 (initial plan)
+**Changed:** Initial module-based development plan for the MVP (M0–M14), core-first order.
+
+**Why:** Keep vibe coding on track; finish one module before the next; isolate fixes to the owning module.
+
+**Previous:** None (initial version).

@@ -114,7 +114,7 @@ CI (`.github/workflows/ci.yml`) runs all of the above on every push.
 
 `requirement.md` changes over time. **Never edit requirements without logging the change.**
 
-1. Add a new entry at the top of the Change Log (§24) with date, version, what changed, why, and the previous text verbatim
+1. Add a new entry at the top of [`changelog/requirement.md`](./changelog/requirement.md) with date, version, what changed, why, and the previous text verbatim (plan changes: [`changelog/plan.md`](./changelog/plan.md))
 2. Then update the body
 3. Bump the document version and last-updated date
 
