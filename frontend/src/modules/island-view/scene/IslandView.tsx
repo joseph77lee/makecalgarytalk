@@ -17,6 +17,8 @@ import { IslandContext, useSceneFx, type IslandCtx } from './islandContext';
 import { IslandLabels } from './Labels';
 import { futureLandParts, terrainParts } from './terrainParts';
 import { Trains } from './Trains';
+import { IslandLife } from './IslandLife';
+import { featuresFor } from '../plan/features';
 
 const GROWTH_SECONDS = 1.4;
 /** A tapped house's bubble closes by itself after this. */
@@ -212,6 +214,7 @@ function IslandScene({
       {(onTileTap || houseBoxes.length > 0) && <TapPlane radius={outlineRadius} isLand={(t) => stageOf(t) <= settled} onTileTap={tap} />}
       <ObjectsLayer objects={shown} />
       <Trains routes={layout.railRoutes} landStage={settled} />
+      <IslandLife code={plan.code} features={featuresFor(plan.code).map((f) => f.key)} hasWater={plan.water.length > 0} radius={layout.landRadius} />
       <BloomBurst layout={layout} />
       <IslandLabels
         objects={shown}

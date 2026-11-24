@@ -35,6 +35,9 @@ const SECTORS: Record<string, string> = Object.fromEntries(
     .map((c) => [c[0], c[3]]),
 );
 
+/** The City's sector of a community (Centre, North, Northeast, …), or '' when unknown. */
+export const sectorOf = (code: string): string => SECTORS[code] ?? '';
+
 /** Downtown, inner-city (the City's Centre sector) or suburb. */
 export function houseStyleFor(code: string): HouseStyle {
   if (DOWNTOWN.has(code)) return 'downtown';

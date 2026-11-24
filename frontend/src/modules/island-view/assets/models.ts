@@ -11,7 +11,7 @@ import { asGhost, box, translate, type BoxPart } from './boxes';
 import { BUILDING_VOXELS, placeholderModel } from './voxel/buildings';
 import { FEATURE_VOXELS, catenaryPole, crossingSign, railEndSignParts, stationPlatformParts } from './voxel/features';
 import { shade, vb } from './voxel/voxel';
-import { lampPost, leafyTree, spruce } from './voxel/samples';
+import { bench as benchModel, car as carModel, flowerBed as flowerBedModel, lampPost, leafyTree, mailbox as mailboxModel, spruce } from './voxel/samples';
 import { vturn } from './voxel/voxel';
 
 export interface BuildCtx {
@@ -287,6 +287,13 @@ export function railEnd(item: ObjectOf<'rail-end'>): BoxPart[] {
   // board faces against the travel direction (towards the island)
   const facing = item.dir.z > 0 ? 2 : item.dir.z < 0 ? 0 : item.dir.x > 0 ? 3 : 1;
   return translate(vturn(railEndSignParts(), facing), sx, sz);
+}
+
+/** A street prop (bench, flower bed, parked car, mailbox), turned to face its path or house. */
+export function prop(item: ObjectOf<'prop'>): BoxPart[] {
+  const parts =
+    item.kind === 'bench' ? benchModel() : item.kind === 'flowers' ? flowerBedModel(item.seed) : item.kind === 'car' ? carModel(item.seed, item.seed % 5 === 0) : mailboxModel();
+  return vturn(parts, item.facing);
 }
 
 /** A locked (or ready) building: its model as a translucent ghost on its lot. */

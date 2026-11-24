@@ -41,6 +41,7 @@ export const FIXED_ASSET_KEYS = [
   'track',
   'station',
   'rail-end',
+  'prop',
 ] as const;
 export type FixedAssetKey = (typeof FIXED_ASSET_KEYS)[number];
 /** `building.<key>` draws a built building of the tree (or the placeholder for unknown keys). */
@@ -100,6 +101,8 @@ export type PlacedObject =
   | (Base & { assetKey: 'track'; dx: number; dz: number; /** An overhead-wire pole stands at this stretch. */ pole: boolean })
   /** A CTrain station platform beside the track (real position). */
   | (Base & Footprint & Look & { assetKey: 'station'; name: string; lines: string[]; along: 'x' | 'z' })
+  /** A street prop on free grass (never blocks walking): bench, flower bed, parked car or mailbox. */
+  | (Base & { assetKey: 'prop'; kind: PropKind; facing: number; seed: number })
   /** Sign where the track leaves the island: the next station beyond. */
   | (Base & { assetKey: 'rail-end'; next: string; dir: Tile })
   | (Base &
@@ -117,6 +120,11 @@ export type PlacedObject =
 
 export type ObjectOf<K extends PlacedObject['assetKey']> = Extract<PlacedObject, { assetKey: K }>;
 export type BuildingObject = Extract<PlacedObject, { assetKey: `building.${string}` }>;
+
+export type PropKind = 'bench' | 'flowers' | 'car' | 'mailbox';
+
+/** At most this many street props per island (busy, not cluttered). */
+export const MAX_PROPS = 70;
 
 export interface RailLinks {
   /** +x, -x, +z, -z neighbours connected by rails. */
@@ -442,6 +450,32 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
   for (const t of plan.trees.filter(on)) {
     objects.push({ assetKey: 'tree', id: `tree:${tileKey(t)}`, x: t.x + 0.5, z: t.z + 0.5, stage: stageOf(t), variant: Math.floor(hash01(t.x, t.z, 3) * 3) });
     occupied.add(tileKey(t));
+  }
+
+  // Street props (Art Pass, "busier communities"): benches along paths, flower beds near the plaza
+  // and paths, parked cars and mailboxes beside houses. Decoration only: they never block walking.
+  const houseKeys = new Set(houseTiles);
+  let props = 0;
+  for (const t of land) {
+    if (props >= MAX_PROPS) break;
+    const k = tileKey(t);
+    if (pathKeys.has(k) || waterKeys.has(k) || occupied.has(k) || houseLotKeys.has(k)) continue;
+    const near = (keys: Set<string>) => N4.findIndex((d) => keys.has(tileKey({ x: t.x + d.x, z: t.z + d.z })));
+    const pathSide = near(pathKeys);
+    const houseSide = near(houseKeys);
+    const r = hash01(t.x, t.z, 11);
+    const plazaNear = Math.hypot(t.x + 0.5, t.z + 0.5) < 5;
+    let kind: PropKind | null = null;
+    if (houseSide >= 0 && r < 0.14) kind = style === 'downtown' || r < 0.08 ? 'car' : 'mailbox';
+    else if (pathSide >= 0 && r < 0.1) kind = 'bench';
+    else if ((pathSide >= 0 && r < 0.17) || (plazaNear && r < 0.35)) kind = 'flowers';
+    if (!kind) continue;
+    const towards = kind === 'bench' ? pathSide : houseSide >= 0 ? houseSide : pathSide;
+    // N4 order is +x, −x, +z, −z; facing order is +z, +x, −z, −x
+    const facing = towards < 0 ? 0 : [1, 3, 0, 2][towards];
+    objects.push({ assetKey: 'prop', id: `prop:${k}`, x: t.x + 0.5, z: t.z + 0.5, stage: t.stage, kind, facing, seed: hashString(k) });
+    occupied.add(k);
+    props++;
   }
 
   // Mood decorations on free grass (never blocking).
