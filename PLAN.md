@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.64 |
+| Plan version | v1.65 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-23 |
-| Based on | `requirement.md` v1.36 |
-| Current module | M16 Deploy & Playtest (next; M14 ✅ Done) |
+| Last updated | 2026-11-24 |
+| Based on | `requirement.md` v1.37 |
+| Current module | M19 Art Pass (next; scope to be planned with the user) |
 
 ---
 
@@ -54,7 +54,8 @@
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
-| M16 | Deploy & Playtest | All + operator accounts | | M14 | ⬜ |
+| M19 | Art Pass | FE (R3F) | | M14 | ⬜ |
+| M16 | Deploy & Playtest | All + operator accounts | | M19 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -75,7 +76,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -514,6 +515,15 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Launch steps:** `docs/launch.md` lists every operator step (Supabase project in Canada Central, link + `db push`, auth settings, Cloudflare Pages env vars, Turnstile, Google OAuth, email routing, adding an operator, deletion requests, Pro before public launch).
   - **Legal text** is a template-based first version written from what the game actually stores; professional review once revenue starts (§18). If the Supabase region is not Canada, update the Privacy Policy.
 
+### M19 — Art Pass ⬜
+**Goal:** Every community looks worth playing before anyone sees it (`requirement.md` v1.37 §19.0, §22.2, §22.6). Built **before M16** (deploy and playtest).
+- **In scope** (to be planned with the user before work starts)
+  - [ ] prettier buildings of the tree, houses, people (avatar, mini villagers) and props, through the existing asset keys (§20.4: no game-logic changes)
+  - [ ] the details — which assets, style, how they are made, phone performance budget — are decided together first
+- **Definition of Done** (to be completed when the scope is planned)
+  - [ ] phone performance stays within §20.3a
+  - [ ] user has looked at it
+
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
 - **In scope** (`docs/launch.md` has every step; most need the operator's accounts)
@@ -521,8 +531,8 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] Google OAuth client (production domain + local redirect); verify Google linking keeps progress and re-join with the same Google account restores the record (moved from M6; code in `frontend/src/modules/identity/`, see M6 Handoff)
   - [ ] production database tzdata is 2026c or newer (`common_calgary_day` tests pass against it; Alberta permanent UTC-6) — SQL check in `docs/launch.md` §2
   - [ ] low-end phone performance pass on a real device (adaptive quality from M14; carried from M1)
-  - [ ] **family/friends playtest**, focused on **one pilot community** (e.g. Mahogany) so neighbours actually meet (`requirement.md` v1.36 §22.7)
-  - [ ] read the dashboard after the playtest (first action %, D1, D7) and decide M17's channel (email digest or web push)
+  - [ ] deploy with **all communities open**; family/friends playtest; then the public launch reveals the whole city at once (`requirement.md` v1.37 §22.7)
+  - [ ] read the dashboard after the playtest (first action %, D1, D7, communities with a single player)
   - [ ] before the public launch: Supabase Pro, Sentry error monitoring (deferred 2026-11-23)
 - **Out of scope:** new features (playtest feedback goes to modules as 🔁 or to Phase 2)
 - **Definition of Done**
@@ -530,20 +540,22 @@ M0 ─┬─ M1 ── M2 ─┐
   - [ ] playtest feedback triaged into modules or Phase 2
 
 ### M17 — Return Reminders ⬜
-**Goal:** Players are reminded when their community needs them (`requirement.md` v1.36 §22.7a.1).
-- **In scope** (details decided after M16's playtest data)
-  - [ ] one channel: **email digest** (opted-in players, §18) or **web push** (home-screen web app, iPhone included)
+**Goal:** Players are reminded when their community needs them (`requirement.md` v1.37 §22.7a.1).
+- **In scope**
+  - [ ] **email** reminders for players who gave an email (opt-in, §18)
+  - [ ] **web push** for players who allow notifications (home-screen web app, iPhone included)
   - [ ] messages from real community state: streak at risk ("2 more helpers today"), built overnight, land grew, weekly result
-  - [ ] at most one message a day, never at night (Calgary time), one-tap turn off
+  - [ ] at most one message a day per player across both channels, never at night (Calgary time), each channel easy to turn off
 - **Definition of Done**
   - [ ] messages are correct for streak/built/land/weekly cases (tests), limits respected
   - [ ] D1/D7 compared before and after on the dashboard
   - [ ] user has looked at it
 
 ### M18 — Community Association Partnership ⬜
-**Goal:** The pilot community's association helps bring neighbours in; its notices appear in the community newspaper (`requirement.md` v1.36 §22.7a.2).
+**Goal:** Associations of growing communities help bring neighbours in; their notices appear in the community newspaper (`requirement.md` v1.37 §22.7a.2).
 - **In scope**
-  - [ ] operator contacts the pilot association: newsletter / social media mention; permission to show notices
+  - [ ] operator sets the player threshold (e.g. Active Verified Residents) and sees on the dashboard which communities reached it
+  - [ ] operator contacts those associations directly: newsletter / social media mention; permission to show notices
   - [ ] operator-maintained feed list (community, association, feed URL, permission)
   - [ ] daily read of the feeds (robots.txt respected), notices stored as title, date, link; simple word filter
   - [ ] "📢 From <association>" lines in the community newspaper, linking to the original
@@ -570,6 +582,34 @@ Phase 4: local business shops on **Main Street lots** (open after the Community 
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-24 — v1.65
+**Changed:** New **M19 Art Pass** before M16 (scope to be planned with the user). M16: all communities open, public launch reveals the whole city; dashboard review also watches single-player communities. M17: both email and web push. M18: associations contacted once a community reaches a player threshold. Overview, diagram, current module updated. "Based on" → `requirement.md` v1.37.
+
+**Why:** Operator decisions (2026-11-24).
+
+**Previous:**
+- Header: `| Plan version | v1.64 |`, `| Based on | \`requirement.md\` v1.36 |`
+- M16 items (verbatim):
+  >   - [ ] **family/friends playtest**, focused on **one pilot community** (e.g. Mahogany) so neighbours actually meet (`requirement.md` v1.36 §22.7)
+  >   - [ ] read the dashboard after the playtest (first action %, D1, D7) and decide M17's channel (email digest or web push)
+- M17 scope (verbatim):
+  > ### M17 — Return Reminders ⬜
+  > **Goal:** Players are reminded when their community needs them (`requirement.md` v1.36 §22.7a.1).
+  > - **In scope** (details decided after M16's playtest data)
+  >   - [ ] one channel: **email digest** (opted-in players, §18) or **web push** (home-screen web app, iPhone included)
+- M17 limits (verbatim):
+  >   - [ ] at most one message a day, never at night (Calgary time), one-tap turn off
+- M18 scope (verbatim):
+  > **Goal:** The pilot community's association helps bring neighbours in; its notices appear in the community newspaper (`requirement.md` v1.36 §22.7a.2).
+  > - **In scope**
+  >   - [ ] operator contacts the pilot association: newsletter / social media mention; permission to show notices
+- overview (verbatim):
+  > | M16 | Deploy & Playtest | All + operator accounts | | M14 | ⬜ |
+- diagram (verbatim):
+  >     (all) ── M14 ── M16 ── M17 ── M18
+- header (verbatim):
+  > | Current module | M16 Deploy & Playtest (next; M14 ✅ Done) |
 
 ### 2026-11-23 — v1.64
 **Changed:** Growth order after launch: M16 playtest focuses on one pilot community and ends with a dashboard review; new **M17 Return Reminders** (email digest or web push, chosen from the data) and **M18 Community Association Partnership** (newsletter mention + association notices as title/link in the newspaper). Overview and diagram updated. "Based on" → `requirement.md` v1.36.

@@ -11,7 +11,7 @@ The site itself, **makecalgarytalk.com**, is the game.
 🚧 **Pre-MVP.** Development has started (module M0 Foundation, see `PLAN.md`).
 
 - The MVP builds the 3D island entirely from **simple coloured boxes with react-three-fiber (three.js)** (no detailed art) to validate the core loop quickly. Because the target style is voxel, the box version already looks close to the final look.
-- Detailed voxel models, props and animations come later in the **Art Pass**.
+- Detailed voxel models, props and animations come in the **Art Pass**, before the deploy and playtest (see `PLAN.md`).
 - A ~100-line three.js proof of concept (floating island, box trees/houses, wandering villagers, speech bubbles, tap-to-move avatar, construction progress, island growth) confirmed the approach is feasible.
 
 ## Documents

@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.36 |
+| Document version | v1.37 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-23 |
+| Last updated | 2026-11-24 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -553,7 +553,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - Projects: box construction site + progress bar UI
 - Because the target style is voxel (made of boxes), the box-based MVP already looks close to the target. A working proof of concept was built on 2026-11-16 (~100 lines of three.js: floating island, layered dirt, box trees/houses, wandering villagers, HTML speech bubbles, tap-to-move avatar, construction progress, island growth).
 - Purpose: ship the full MVP fast and validate the core loop before investing in art.
-- Detailed art (19.1–19.4) is applied in the **Art Pass** (22.2) without changing game logic.
+- Detailed art (19.1–19.4) is applied in the **Art Pass** without changing game logic. The Art Pass is done **before the deploy and playtest** (decided 2026-11-24): communities must look worth playing; its scope is planned with the operator
 
 ### 19.1 Style guide (target)
 - **Pastel voxel style**: everything built from blocks/boxes, flat-shaded, soft shadows
@@ -696,7 +696,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 5. Community newspaper with my name (recognition)
 
 ### 22.2 Phase 2
-- **Art Pass**: refined pastel voxel models and props (Section 19.1–19.4), styled World Map with animated Bow/Elbow rivers, moving CTrain trains, Calgary landmark buildings and transitions, character variants and animations, avatar customization, walk-up-and-tap actions, day/night and weather effects
+- **Art Pass** — *moved before the deploy and playtest (22.6, 2026-11-24)*: refined pastel voxel models and props (Section 19.1–19.4), styled World Map with animated Bow/Elbow rivers, moving CTrain trains, Calgary landmark buildings and transitions, character variants and animations, avatar customization, walk-up-and-tap actions, day/night and weather effects
 - Activity-based signature feature upgrades (7.9)
 - Resident board + report moderation screen
 - Profile & ranks, **avatar growth** (rank = level, cosmetic rewards, community-linked rewards, badge collection, Me tab; 13.3)
@@ -741,18 +741,20 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 2 | react-three-fiber box-built diorama island (island growth, buildings, houses, mini villagers, Vitality, speech bubbles) + avatar tap-to-move with pathfinding + swappable rendering layer |
 | 3 | Daily actions, projects, community streak, unlocks, action replay, newspaper |
 | 4 | World Map, weekly ranking, share cards, invites |
-| 5 | Legal pages, analytics, email subscription, polish → family/friends test |
+| 5 | Legal pages, analytics, email subscription |
+| 6 | **Art Pass**: prettier buildings, people and props for every community (scope planned with the operator) |
+| 7 | Deploy with **all communities open** → family/friends playtest → public launch |
 
 ### 22.7 Launch
 - Supabase **Free** plan for the family/friends playtest; upgrade to **Pro** (no pausing, daily backups) right before the public launch
-- **Pilot community first**: the game is only fun with neighbours, so the playtest and the first push focus on **one or two pilot communities** (e.g. Mahogany) until their islands visibly grow; other communities then see them on the World Map. Opening the whole city at once leaves most islands empty
-- Decisions after the playtest are made from the operator dashboard (21): low first-action % → first screens/onboarding; low D1 → return reasons and reminders; low D7 → neighbour density
+- **All communities open at once**: the deploy and the family/friends playtest run with every community open, and the public launch reveals the whole city together (operator decision 2026-11-24)
+- Decisions after the playtest are made from the operator dashboard (21): low first-action % → first screens/onboarding; low D1 → return reasons and reminders; low D7 → neighbour density (watch for communities with a single player)
 - After family/friends testing, post on r/Calgary and community Facebook groups with a "Calgary dev made this" story
 - After the initial spark, growth comes from in-game invite/share mechanics
 
 ### 22.7a Growth after launch (in this order)
-1. **Return reminders** (right after the playtest): the game already has reasons to come back (streak, daily energy, overnight construction) but no way to tell players. Either an **email digest** for players who opted in (18) — e.g. "Mahogany's 15-day streak needs 2 more helpers today", "The skating rink was finished overnight" — or **web push** (works on phones once the site is added to the home screen, iPhone included). Which one is decided from the playtest data; at most one message a day, easy to turn off, never at night
-2. **Community association partnership** (pilot community first): ask the association to mention the game in its newsletter / social media; in return the community newspaper (11) shows the association's notices — **title, date and a link to the original only** (no copied text), from an operator-maintained list of feeds (community, association, feed URL, permission), read once a day, respecting robots.txt, with a simple word filter. Only associations whose site has a feed (e.g. WordPress RSS) and that agreed are included; Facebook/Instagram-only associations are out of scope
+1. **Return reminders**: the game already has reasons to come back (streak, daily energy, overnight construction) but no way to tell players. **Both channels**: an **email** reminder for players who gave an email (opt-in, 18) and **web push** for players who allow notifications (works on phones once the site is added to the home screen, iPhone included). Examples: "Mahogany's 15-day streak needs 2 more helpers today", "The skating rink was finished overnight". At most one message a day per player across both channels, never at night (Calgary time), each easy to turn off
+2. **Community association partnership**: when a community reaches a set number of players (threshold chosen by the operator, e.g. Active Verified Residents), the operator contacts its association directly to ask to mention the game in its newsletter / social media; in return the community newspaper (11) shows the association's notices — **title, date and a link to the original only** (no copied text), from an operator-maintained list of feeds (community, association, feed URL, permission), read once a day, respecting robots.txt, with a simple word filter. Only associations whose site has a feed (e.g. WordPress RSS) and that agreed are included; Facebook/Instagram-only associations are out of scope
 
 ### 22.8 Open items
 - [ ] Pastel palette and lighting values (before the Art Pass); save reference screenshots in `docs/references/`
@@ -817,6 +819,21 @@ Each community gets its identity from its **real shape** (7.8) and from:
 > **Why:** why it changed
 > **Previous:** the old text, verbatim
 > ```
+
+### 2026-11-24 — v1.37
+**Changed:** Art Pass moved before the deploy and playtest (19.0, 22.2, 22.6; scope to be planned). 22.7: all communities open at once instead of a pilot community. 22.7a.1: both email (opted-in players) and web push reminders, one message a day at most across both. 22.7a.2: association contact once a community reaches a player threshold.
+
+**Why:** Operator decisions (2026-11-24): communities must look worth playing before anyone sees them; the whole city is revealed together. Risk noted: with everything open, many early players may be alone in their community — watch single-player communities on the dashboard.
+
+**Previous:**
+- 19.0: `- Detailed art (19.1–19.4) is applied in the **Art Pass** (22.2) without changing game logic.`
+- 22.2: `- **Art Pass**: refined pastel voxel models and props (Section 19.1–19.4), styled World Map with animated Bow/Elbow rivers, moving CTrain trains, Calgary landmark buildings and transitions, character variants and animations, avatar customization, walk-up-and-tap actions, day/night and weather effects`
+- 22.6: `| 5 | Legal pages, analytics, email subscription, polish → family/friends test |`
+- 22.7 pilot (verbatim):
+  > - **Pilot community first**: the game is only fun with neighbours, so the playtest and the first push focus on **one or two pilot communities** (e.g. Mahogany) until their islands visibly grow; other communities then see them on the World Map. Opening the whole city at once leaves most islands empty
+  > - Decisions after the playtest are made from the operator dashboard (21): low first-action % → first screens/onboarding; low D1 → return reasons and reminders; low D7 → neighbour density
+- 22.7a.1: `1. **Return reminders** (right after the playtest): the game already has reasons to come back (streak, daily energy, overnight construction) but no way to tell players. Either an **email digest** for players who opted in (18) — e.g. "Mahogany's 15-day streak needs 2 more helpers today", "The skating rink was finished overnight" — or **web push** (works on phones once the site is added to the home screen, iPhone included). Which one is decided from the playtest data; at most one message a day, easy to turn off, never at night`
+- 22.7a.2: `2. **Community association partnership** (pilot community first): ask the association`
 
 ### 2026-11-23 — v1.36
 **Changed:** 22.7: pilot community first; post-playtest decisions from the dashboard. New 22.7a Growth after launch: 1. return reminders (email digest or web push, chosen from playtest data), 2. community association partnership with association notices (title + link) in the newspaper.
