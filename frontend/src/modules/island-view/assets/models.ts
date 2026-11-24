@@ -8,7 +8,10 @@ import type { BuildingObject, ObjectOf } from '../layout';
 import type { FeatureKey } from '../plan/features';
 import { houseParts } from './voxel/houses';
 import { ACCENTS, type MoodPalette, type VitalityMood } from '../mood';
-import { asGhost, box, type BoxPart } from './boxes';
+import { asGhost, box, translate, type BoxPart } from './boxes';
+import { BUILDING_VOXELS, placeholderModel } from './voxel/buildings';
+import { lampPost } from './voxel/samples';
+import { vturn } from './voxel/voxel';
 
 export interface BuildCtx {
   palette: MoodPalette;
@@ -87,8 +90,9 @@ export function tree(item: ObjectOf<'tree'>, { palette, mood }: BuildCtx): BoxPa
   return parts;
 }
 
+/** A pathway light (voxel lamp post) at the tile's corner. */
 export function lamp(): BoxPart[] {
-  return [box('solid', 0.38, 0, 0.38, 0.07, 0.85, 0.07, '#5d6470'), box('glow', 0.38, 0.85, 0.38, 0.16, 0.14, 0.16, '#ffe7a3')];
+  return translate(lampPost(), 0.38, 0.38);
 }
 
 const FLOWER_SPOTS = [
@@ -158,217 +162,6 @@ export function constructionSite(item: ObjectOf<'construction-site'>): BoxPart[]
 type Spec = { w: number; d: number; level: number };
 type Builder = (s: Spec, ctx: BuildCtx) => BoxPart[];
 
-const welcomeSign: Builder = () => [
-  box('solid', -0.38, 0, 0.3, 0.08, 0.95, 0.08, WOOD),
-  box('solid', 0.38, 0, 0.3, 0.08, 0.95, 0.08, WOOD),
-  box('solid', 0, 0.55, 0.3, 0.9, 0.36, 0.07, '#fff6e3'),
-  box('solid', 0, 0.91, 0.3, 0.98, 0.07, 0.1, WOOD),
-];
-
-const gatewayArch: Builder = () => [
-  box('solid', -0.42, 0, 0.3, 0.14, 1.45, 0.14, '#8a6a52'),
-  box('solid', 0.42, 0, 0.3, 0.14, 1.45, 0.14, '#8a6a52'),
-  box('solid', 0, 1.45, 0.3, 1.12, 0.14, 0.2, '#8a6a52'),
-  box('solid', 0, 1.0, 0.3, 0.8, 0.32, 0.08, '#fff6e3'),
-  box('glow', -0.42, 1.59, 0.3, 0.12, 0.12, 0.12, WARM_LIGHT),
-  box('glow', 0.42, 1.59, 0.3, 0.12, 0.12, 0.12, WARM_LIGHT),
-];
-
-const firePit: Builder = ({ w, d }) => {
-  const parts: BoxPart[] = [box('solid', 0, 0, 0, w - 0.6, 0.03, d - 0.6, '#d9cdb5')];
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
-    parts.push(box('solid', Math.cos(a) * 0.38, 0.03, Math.sin(a) * 0.38, 0.16, 0.12, 0.16, STONE));
-  }
-  parts.push(box('solid', 0, 0.05, 0, 0.36, 0.08, 0.1, '#8a6343', [0, 0.6, 0]), box('solid', 0, 0.05, 0, 0.36, 0.08, 0.1, '#8a6343', [0, -0.6, 0]));
-  parts.push(box('glow', 0, 0.12, 0, 0.22, 0.24, 0.22, '#ffb054'), box('glow', 0, 0.3, 0, 0.12, 0.16, 0.12, '#ffe27a'));
-  for (const [x, z, r] of [[-0.95, 0, 0], [0.95, 0, 0], [0, -0.95, Math.PI / 2]] as const) {
-    parts.push(box('solid', x, 0, z, 0.24, 0.16, 0.8, WOOD, [0, r, 0]));
-  }
-  return parts;
-};
-
-const warmingHut: Builder = ({ w, d }) => [
-  box('solid', 0, 0, 0, w - 0.5, 0.03, d - 0.5, '#d9cdb5'),
-  box('solid', -0.2, 0, -0.2, 1.5, 0.75, 1.3, '#c7926b'),
-  box('solid', -0.2, 0.75, -0.2, 1.7, 0.16, 1.5, '#8f5f45'),
-  box('solid', -0.2, 0.91, -0.2, 1.2, 0.16, 1.0, '#8f5f45'),
-  box('solid', 0.25, 0.85, -0.5, 0.16, 0.5, 0.16, STONE),
-  box('solid', 0.1, 0, 0.46, 0.28, 0.45, 0.03, DOOR),
-  box('glow', -0.45, 0.3, 0.46, 0.22, 0.18, 0.02, WARM_LIGHT),
-  box('glow', 0.56, 0.3, -0.2, 0.02, 0.18, 0.24, WARM_LIGHT),
-  // community board beside the hut
-  box('solid', 0.95, 0, 0.95, 0.06, 0.7, 0.06, WOOD),
-  box('solid', 1.21, 0, 0.95, 0.06, 0.7, 0.06, WOOD),
-  box('solid', 1.08, 0.38, 0.95, 0.42, 0.3, 0.05, '#fff6e3'),
-];
-
-const communityHall: Builder = ({ w, d }) => {
-  const roof = '#8ec5ea';
-  const base: BoxPart[] = [
-    box('solid', 0, 0, 0, 1.7, 0.9, 1.4, '#f3e6cf'),
-    box('solid', 0, 0.9, 0, 1.9, 0.16, 1.6, roof),
-    box('solid', 0, 1.06, 0, 1.4, 0.16, 1.1, roof),
-    box('solid', 0, 1.22, 0, 0.8, 0.14, 0.6, roof),
-    box('solid', 0, 0, 0.71, 0.34, 0.48, 0.03, DOOR),
-    box('solid', 0, 0.56, 0.715, 0.7, 0.2, 0.03, '#fff6e3'),
-    ...[-0.6, -0.35, 0.35, 0.6].map((x) => box('glow', x, 0.3, 0.715, 0.16, 0.2, 0.02, WARM_LIGHT)),
-    ...[-0.4, 0, 0.4].map((z) => box('glow', 0.855, 0.3, z, 0.02, 0.2, 0.16, WARM_LIGHT)),
-    box('solid', -0.7, 1.06, -0.5, 0.04, 0.6, 0.04, '#8a8f99'),
-    box('solid', -0.6, 1.46, -0.5, 0.18, 0.12, 0.02, ACCENTS[0]),
-  ];
-  return fit(base, w, d);
-};
-
-const frozenPond: Builder = ({ w, d }) => [
-  box('solid', 0, 0, 0, w - 0.3, 0.05, d - 0.3, SNOW),
-  box('solid', 0, 0.01, 0, w - 0.7, 0.06, d - 0.6, ICE),
-  box('solid', 0.3, 0.02, -0.1, w - 1.4, 0.06, d - 0.4, ICE),
-  box('solid', -0.6, 0.07, 0.1, 0.5, 0.01, 0.04, '#b3d8ec'),
-  box('solid', 0.5, 0.07, -0.2, 0.04, 0.01, 0.4, '#b3d8ec'),
-];
-
-function rink({ w, d }: Spec, extra: BoxPart[]): BoxPart[] {
-  const iw = w - 0.4;
-  const id = d - 0.4;
-  return [
-    box('solid', 0, 0, 0, iw, 0.05, id, ICE),
-    box('solid', 0, 0, -id / 2, iw + 0.1, 0.14, 0.06, '#ffffff'),
-    box('solid', 0, 0, id / 2, iw + 0.1, 0.14, 0.06, '#ffffff'),
-    box('solid', -iw / 2, 0, 0, 0.06, 0.14, id, '#ffffff'),
-    box('solid', iw / 2, 0, 0, 0.06, 0.14, id, '#ffffff'),
-    box('solid', -0.4, 0.05, 0.1, 0.6, 0.01, 0.04, '#b3d8ec'),
-    ...extra,
-  ];
-}
-
-const skatingRink: Builder = (s) => rink(s, []);
-
-const hockeyRink: Builder = (s) => {
-  const iw = s.w - 0.4;
-  const id = s.d - 0.4;
-  return rink(s, [
-    box('solid', 0, 0.05, 0, 0.04, 0.01, id - 0.1, '#e57373'),
-    box('solid', -iw / 2 + 0.25, 0.05, 0, 0.12, 0.2, 0.36, '#e57373'),
-    box('solid', iw / 2 - 0.25, 0.05, 0, 0.12, 0.2, 0.36, '#e57373'),
-    ...[[-iw / 2, -id / 2], [iw / 2, -id / 2], [-iw / 2, id / 2], [iw / 2, id / 2]].flatMap(([x, z]) => [
-      box('solid', x, 0.14, z, 0.05, 0.85, 0.05, '#5d6470'),
-      box('glow', x, 0.99, z, 0.14, 0.1, 0.14, '#ffe7a3'),
-    ]),
-    box('solid', 0, 0, id / 2 + 0.12, iw * 0.6, 0.18, 0.16, '#9aa5b1'),
-  ]);
-};
-
-const playground: Builder = ({ w, d }) => {
-  const post = '#e9a46a';
-  return fit(
-    [
-      box('solid', 0, 0, 0, 1.8, 0.04, 1.8, '#f1dfb6'),
-      box('solid', -0.75, 0.04, -0.45, 0.07, 0.9, 0.07, post),
-      box('solid', 0.15, 0.04, -0.45, 0.07, 0.9, 0.07, post),
-      box('solid', -0.3, 0.94, -0.45, 1.0, 0.07, 0.07, post),
-      box('solid', -0.52, 0.42, -0.45, 0.02, 0.52, 0.02, '#8a8f99'),
-      box('solid', -0.08, 0.42, -0.45, 0.02, 0.52, 0.02, '#8a8f99'),
-      box('solid', -0.52, 0.38, -0.45, 0.2, 0.04, 0.12, ACCENTS[1]),
-      box('solid', -0.08, 0.38, -0.45, 0.2, 0.04, 0.12, ACCENTS[2]),
-      box('solid', 0.5, 0.04, 0.35, 0.42, 0.62, 0.42, ACCENTS[0]),
-      box('solid', 0.5, 0.66, 0.35, 0.48, 0.06, 0.48, '#fff6e3'),
-      box('solid', 0.5, 0.05, -0.12, 0.3, 0.05, 0.85, ACCENTS[4], [0.62, 0, 0]),
-      box('solid', -0.45, 0.04, 0.45, 0.1, 0.16, 0.1, post),
-      box('solid', -0.45, 0.2, 0.45, 0.9, 0.05, 0.12, ACCENTS[3], [0, 0, 0.12]),
-    ],
-    w,
-    d,
-  );
-};
-
-const sleddingHill: Builder = ({ w, d }) =>
-  fit(
-    [
-      box('solid', 0, 0, 0, 1.8, 0.2, 1.8, SNOW),
-      box('solid', -0.2, 0.2, -0.2, 1.3, 0.2, 1.3, SNOW),
-      box('solid', -0.4, 0.4, -0.4, 0.8, 0.2, 0.8, SNOW),
-      box('solid', -0.5, 0.6, -0.5, 0.4, 0.14, 0.4, SNOW),
-      box('solid', 0.55, 0.2, 0.5, 0.22, 0.05, 0.36, '#e57373'),
-      box('solid', 0.55, 0.25, 0.5, 0.12, 0.16, 0.1, ACCENTS[2]),
-      box('solid', 0.55, 0.41, 0.5, 0.1, 0.1, 0.1, '#f5d3b5'),
-    ],
-    w,
-    d,
-  );
-
-const dogPark: Builder = ({ w, d }, { palette }) => {
-  const hx = w / 2 - 0.08;
-  const hz = d / 2 - 0.08;
-  return [
-    box('solid', 0, 0, 0, w - 0.1, 0.03, d - 0.1, palette.grass[0]),
-    box('solid', 0, 0, -hz, w - 0.1, 0.22, 0.04, WOOD),
-    box('solid', -hx, 0, 0, 0.04, 0.22, d - 0.1, WOOD),
-    box('solid', hx, 0, 0, 0.04, 0.22, d - 0.1, WOOD),
-    box('solid', -0.35, 0, d / 2 - 0.08, w - 1.0, 0.22, 0.04, WOOD),
-    box('solid', -0.45, 0.03, -0.45, 0.4, 0.3, 0.36, '#d9a066'),
-    box('solid', -0.45, 0.33, -0.45, 0.46, 0.1, 0.42, ACCENTS[0]),
-    box('solid', 0.3, 0.03, 0.2, 0.26, 0.12, 0.1, '#8a6343'),
-    box('solid', 0.45, 0.07, 0.2, 0.1, 0.1, 0.1, '#8a6343'),
-    box('solid', -0.1, 0.03, 0.5, 0.22, 0.1, 0.09, '#f5f0e6'),
-    box('solid', 0.02, 0.06, 0.5, 0.08, 0.08, 0.08, '#f5f0e6'),
-    box('solid', 0.5, 0.03, -0.5, 0.1, 0.08, 0.1, '#f2c94c'),
-  ];
-};
-
-const communityGarden: Builder = ({ w, d }, { palette }) => {
-  const parts: BoxPart[] = [box('solid', 0, 0, 0, w - 0.2, 0.03, d - 0.2, palette.path[0])];
-  const beds = [[-0.45, -0.45], [0.45, -0.45], [-0.45, 0.45], [0.45, 0.45]];
-  beds.forEach(([x, z], i) => {
-    parts.push(box('solid', x, 0.03, z, 0.7, 0.12, 0.7, WOOD), box('solid', x, 0.15, z, 0.6, 0.03, 0.6, '#7a5a3c'));
-    for (const dx of [-0.17, 0.17]) parts.push(box('solid', x + dx, 0.18, z, 0.14, 0.14, 0.5, i % 2 ? '#7cc46a' : ACCENTS[(i + 4) % ACCENTS.length]));
-  });
-  return parts;
-};
-
-const neighbourhoodPark: Builder = ({ w, d }, { palette }) =>
-  fit(
-    [
-      box('solid', 0, 0, 0, 1.9, 0.05, 1.9, palette.leaves[1]),
-      box('solid', 0.35, 0.05, 0.35, 0.8, 0.04, 0.6, '#8ec5ea'),
-      box('solid', 0.35, 0.05, 0.35, 0.92, 0.02, 0.72, '#d9cdb5'),
-      box('solid', -0.45, 0.05, 0.55, 0.5, 0.06, 0.16, '#b88a64'),
-      box('solid', -0.45, 0.11, 0.48, 0.5, 0.16, 0.04, '#b88a64'),
-      box('solid', -0.5, 0.05, -0.45, 0.12, 0.3, 0.12, palette.trunk),
-      box('solid', -0.5, 0.33, -0.45, 0.56, 0.5, 0.56, palette.leaves[0]),
-      box('solid', 0.45, 0.05, -0.5, 0.1, 0.26, 0.1, palette.trunk),
-      box('solid', 0.45, 0.29, -0.5, 0.44, 0.6, 0.44, palette.leaves[0]),
-      box('solid', 0.0, 0.05, -0.1, 0.5, 0.04, 0.4, '#f4978e'),
-      ...[-0.1, 0.1, 0.0].map((x, i) => box('solid', x - 0.1, 0.05, -0.05 + i * 0.12, 0.1, 0.1, 0.1, ACCENTS[i])),
-    ],
-    w,
-    d,
-  );
-
-/** Generic model for buildings the client does not know yet (requirement.md §7.6b, §20.4). */
-const placeholder: Builder = ({ w, d }) => [
-  box('solid', 0, 0, 0, w - 0.3, 0.03, d - 0.3, '#d9cdb5'),
-  box('solid', 0, 0, 0, Math.min(1.2, w - 0.6), 0.7, Math.min(1.2, d - 0.6), '#e7dcc8'),
-  box('solid', 0, 0.7, 0, Math.min(1.4, w - 0.4), 0.14, Math.min(1.4, d - 0.4), '#b8a9e8'),
-  box('solid', 0, 0.3, Math.min(1.2, d - 0.6) / 2 + 0.01, 0.5, 0.22, 0.03, '#fff6e3'),
-];
-
-export const BUILDING_MODELS: Record<string, Builder> = {
-  'welcome-sign': welcomeSign,
-  'gateway-arch': gatewayArch,
-  'fire-pit': firePit,
-  'warming-hut': warmingHut,
-  'community-hall': communityHall,
-  'frozen-pond': frozenPond,
-  'skating-rink': skatingRink,
-  'hockey-rink': hockeyRink,
-  playground,
-  'sledding-hill': sleddingHill,
-  'dog-park': dogPark,
-  'community-garden': communityGarden,
-  'neighbourhood-park': neighbourhoodPark,
-};
-
 /** Small scaffold at the back corner while a built building is upgraded in place. */
 function upgradeScaffold(w: number, d: number): BoxPart[] {
   const pole = '#e0a96d';
@@ -383,10 +176,21 @@ function upgradeScaffold(w: number, d: number): BoxPart[] {
   ];
 }
 
+/**
+ * The Art Pass model of a tree building (placeholder for unknown keys), turned to its facing.
+ * Models are written for the lot's canonical size; a turned lot (e.g. 2×3 instead of 3×2) comes
+ * with an odd facing from the layout, so the turn also fits the model to the lot.
+ */
+function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx): BoxPart[] {
+  const make = BUILDING_VOXELS[key];
+  if (!make) return placeholderModel({ w, d, level, variant }, ctx);
+  const turned = facing % 2 === 1;
+  return vturn(make({ w: turned ? d : w, d: turned ? w : d, level, variant }, ctx), facing);
+}
+
 /** A built building of the tree (placeholder for unknown keys), with upgrade markers. */
 export function building(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
-  const make = BUILDING_MODELS[item.buildingKey] ?? placeholder;
-  return [...make(item, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
+  return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
 }
 
 // --- Signature features (feature library, requirement.md §7.9) ------------------------
@@ -621,6 +425,5 @@ export function railEnd(item: ObjectOf<'rail-end'>): BoxPart[] {
 
 /** A locked (or ready) building: its model as a translucent ghost on its lot. */
 export function silhouette(item: ObjectOf<'silhouette'>, ctx: BuildCtx): BoxPart[] {
-  const make = BUILDING_MODELS[item.buildingKey] ?? placeholder;
-  return asGhost(make({ w: item.w, d: item.d, level: 1 }, ctx), SILHOUETTE);
+  return asGhost(treeModel(item.buildingKey, item.w, item.d, 1, item.variant, item.facing, ctx), SILHOUETTE);
 }

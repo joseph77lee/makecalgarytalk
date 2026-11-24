@@ -7,6 +7,7 @@ import { remainingText } from '../scene/labelText';
 import { futureLandParts, terrainParts } from '../scene/terrainParts';
 import { asGhost, box } from './boxes';
 import { building, constructionSite, house, reservedPlot, silhouette, tree, type BuildCtx } from './models';
+import { BUILDING_VARIANTS } from './voxel/buildings';
 
 const ctx = (mood: 'lively' | 'normal' | 'sleepy'): BuildCtx => ({ mood, palette: MOOD_PALETTES[mood] });
 const houseItem = (activeToday: boolean): ObjectOf<'house'> => ({
@@ -51,7 +52,7 @@ describe('models', () => {
   });
 
   const built = (buildingKey: string, w: number, d: number, level = 1): BuildingObject => ({
-    assetKey: `building.${buildingKey}`, id: 'b', x: 0, z: 0, stage: 0, w, d, buildingKey, title: buildingKey, level, next: null, upgrade: null,
+    assetKey: `building.${buildingKey}`, id: 'b', x: 0, z: 0, stage: 0, w, d, facing: 0, variant: 0, buildingKey, title: buildingKey, level, next: null, upgrade: null,
   });
 
   it.each(BUILDING_TREE.buildings.filter((b) => b.lot).map((b) => [b.key, BUILDING_TREE.lots[b.lot as string].size] as const))(
@@ -65,6 +66,33 @@ describe('models', () => {
       }
     },
   );
+
+  it.each(BUILDING_TREE.buildings.filter((b) => b.lot).map((b) => [b.key, BUILDING_TREE.lots[b.lot as string].size] as const))(
+    '%s: every design fits its lot in every allowed facing (also a turned lot)',
+    (key, [w, d]) => {
+      const shapes: [number, number, number[]][] = w === d ? [[w, d, [0, 1, 2, 3]]] : [[w, d, [0, 2]], [d, w, [1, 3]]];
+      for (const [lw, ld, facings] of shapes) {
+        for (const facing of facings) {
+          for (let variant = 0; variant < (BUILDING_VARIANTS[key] ?? 1); variant++) {
+            const parts = building({ ...built(key, lw, ld), facing, variant }, ctx('normal'));
+            for (const p of parts) {
+              expect(Math.abs(p.p[0]) + p.s[0] / 2, `${key} ${lw}x${ld} f${facing} v${variant} x`).toBeLessThanOrEqual(lw / 2 + 0.1);
+              expect(Math.abs(p.p[2]) + p.s[2] / 2, `${key} ${lw}x${ld} f${facing} v${variant} z`).toBeLessThanOrEqual(ld / 2 + 0.1);
+            }
+          }
+        }
+      }
+    },
+  );
+
+  it('buildings with several designs really look different per design', () => {
+    for (const [key, n] of Object.entries(BUILDING_VARIANTS)) {
+      if (n < 2) continue;
+      const size = BUILDING_TREE.lots[BUILDING_TREE.buildings.find((b) => b.key === key)!.lot as string].size;
+      const looks = new Set(Array.from({ length: n }, (_, v) => JSON.stringify(building({ ...built(key, size[0], size[1]), variant: v }, ctx('normal')))));
+      expect(looks.size, key).toBe(n);
+    }
+  });
 
   it('upgrades add one gold marker per level (max 4)', () => {
     const markers = (level: number) => building(built('fire-pit', 3, 3, level), ctx('normal')).filter((p) => p.c === '#f2c94c').length;
@@ -91,7 +119,7 @@ describe('models', () => {
 
   it('silhouettes are translucent ghosts of the real building', () => {
     const parts = silhouette(
-      { assetKey: 'silhouette', id: 's', x: 0, z: 0, stage: 0, w: 3, d: 3, buildingKey: 'fire-pit', title: 'Fire pit', ready: false, remaining: null },
+      { assetKey: 'silhouette', id: 's', x: 0, z: 0, stage: 0, w: 3, d: 3, facing: 0, variant: 0, buildingKey: 'fire-pit', title: 'Fire pit', ready: false, remaining: null },
       ctx('normal'),
     );
     expect(parts.length).toBeGreaterThan(5);
@@ -100,7 +128,7 @@ describe('models', () => {
 
   it('construction sites fit their lot and add a frame from half progress', () => {
     const site = (progress: number): ObjectOf<'construction-site'> => ({
-      assetKey: 'construction-site', id: 'c', x: 0, z: 0, stage: 0, w: 3, d: 2, buildingKey: 'frozen-pond', title: 'T', progress, level: 1,
+      assetKey: 'construction-site', id: 'c', x: 0, z: 0, stage: 0, w: 3, d: 2, facing: 0, variant: 0, buildingKey: 'frozen-pond', title: 'T', progress, level: 1,
     });
     expect(constructionSite(site(0.6)).length).toBeGreaterThan(constructionSite(site(0.2)).length);
   });
