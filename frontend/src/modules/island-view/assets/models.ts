@@ -229,11 +229,11 @@ function upgradeScaffold(w: number, d: number): BoxPart[] {
  * Models are written for the lot's canonical size; a turned lot (e.g. 2×3 instead of 3×2) comes
  * with an odd facing from the layout, so the turn also fits the model to the lot.
  */
-function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx): BoxPart[] {
+function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx, lowpoly = false): BoxPart[] {
   const make = BUILDING_VOXELS[key];
   if (!make) return placeholderModel({ w, d, level, variant }, ctx);
   const turned = facing % 2 === 1;
-  return vturn(make({ w: turned ? d : w, d: turned ? w : d, level, variant }, ctx), facing);
+  return vturn(make({ w: turned ? d : w, d: turned ? w : d, level, variant, lowpoly }, ctx), facing);
 }
 
 /** A built building of the tree (placeholder for unknown keys), with upgrade markers. */
@@ -241,11 +241,21 @@ export function building(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
   return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
 }
 
+/** A building's surroundings when its main structure is a Polyfork model (M23). */
+export function buildingSurroundings(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
+  return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx, true), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
+}
+
 // --- Signature features and CTrain (Art Pass models in voxel/features.ts) ------------------
 
 /** A signature feature on its spare lot: the community's design, facing the path. */
 export function feature(item: ObjectOf<'feature'>, ctx: BuildCtx): BoxPart[] {
   return vturn(FEATURE_VOXELS[item.featureKey](item.variant, ctx), item.facing);
+}
+
+/** A feature's surroundings when its main structure is a Polyfork model (M23). */
+export function featureSurroundings(item: ObjectOf<'feature'>, ctx: BuildCtx): BoxPart[] {
+  return vturn(FEATURE_VOXELS[item.featureKey](item.variant, ctx, true), item.facing);
 }
 
 const BALLAST = '#cbbfae';

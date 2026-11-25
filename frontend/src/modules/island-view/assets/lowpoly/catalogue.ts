@@ -29,6 +29,7 @@ const house = (file: string, footprint = 0.92): LpSpec => ({ file, cat: 'house',
 const tower = (file: string, footprint = 0.94): LpSpec => ({ file, cat: 'tower', fit: { footprint } });
 const tree = (file: string, height: number): LpSpec => ({ file, cat: 'tree', fit: { height } });
 const car = (file: string): LpSpec => ({ file, cat: 'car', fit: { metres: true } });
+const building = (file: string, footprint: number): LpSpec => ({ file, cat: 'building', fit: { footprint } });
 const prop = (file: string, fit: LpFit, extra: Partial<LpSpec> = {}): LpSpec => ({ file, cat: 'prop', fit, ...extra });
 
 export const LP_MODELS = {
@@ -80,6 +81,31 @@ export const LP_MODELS = {
   cobraLight: prop('cobra-head-street-light-3e25b8', { height: 1.0 }, { lamp: true }),
   mailbox: prop('curbside-mailbox-0e0736', { height: 0.38 }),
   snowman: prop('snowman-18c02d', { height: 0.42 }),
+  // Buildings of the tree and features (footprints fit their lots; pieces stand on our ground)
+  townArch: building('town-welcome-arch-d2af7d', 0.95),
+  gateArch: building('main-gate-arch-with-738ddb', 0.95),
+  parkArch: building('amusement-park-entrance-arch-687549', 0.95),
+  stoneFirePit: prop('stone-fire-pit-4136b0', { footprint: 0.8 }),
+  ringCampfire: prop('stone-ring-campfire-8a0c6f', { footprint: 0.8 }),
+  clearedFirePit: prop('cleared-fire-pit-399cda', { footprint: 0.8 }),
+  pisteHut: building('piste-patrol-hut-17a90a', 1.75),
+  refugeHut: building('mountain-refuge-hut-32ab1e', 1.75),
+  logCabinHut: building('porch-log-cabin-d2f3ef', 1.75),
+  santasWorkshop: building('santa-s-workshop-58f43b', 2.4),
+  countryStation: building('country-station-building-2d8f5e', 2.4),
+  audienceHall: building('governor-s-audience-hall-a4d777', 2.4),
+  toyTownSchool: building('toy-town-school-fa7bb1', 2.2),
+  publicSchool: building('public-school-19ade5', 1.4),
+  oneRoomSchool: building('one-room-schoolhouse-107ec9', 1.2),
+  // play equipment counts as a building so it can wear the playground's colours (roof/wall paint)
+  playgroundSlide: building('playground-slide-8b764c', 0.85),
+  roundabout: building('playground-roundabout-e4d43b', 0.6),
+  springRider: { file: 'spring-rider-c8b8d8', cat: 'building', fit: { height: 0.42 } } as LpSpec,
+  teeterTotter: building('teeter-totter-ee9c62', 0.75),
+  picnicShelter: building('park-picnic-shelter-9548a3', 1.0),
+  drinkingFountain: prop('park-drinking-fountain-b1c25b', { height: 0.3 }),
+  gardenBed: prop('station-garden-bed-d369e3', { footprint: 0.45 }),
+  gardenShed: building('backyard-garden-shed-38d79f', 0.5),
 } as const satisfies Record<string, LpSpec>;
 
 export type LpName = keyof typeof LP_MODELS;
@@ -132,4 +158,27 @@ export const LP_HEIGHTS: Record<LpName, number> = {
   cobraLight: 1.0,
   mailbox: 0.38,
   snowman: 0.42,
+  townArch: 0.81,
+  gateArch: 0.68,
+  parkArch: 0.77,
+  stoneFirePit: 0.28,
+  ringCampfire: 0.47,
+  clearedFirePit: 0.46,
+  pisteHut: 2.06,
+  refugeHut: 1.29,
+  logCabinHut: 1.32,
+  santasWorkshop: 3.42,
+  countryStation: 1.59,
+  audienceHall: 1.90,
+  toyTownSchool: 1.68,
+  publicSchool: 0.92,
+  oneRoomSchool: 1.22,
+  playgroundSlide: 0.55,
+  roundabout: 0.21,
+  springRider: 0.42,
+  teeterTotter: 0.19,
+  picnicShelter: 0.79,
+  drinkingFountain: 0.30,
+  gardenBed: 0.10,
+  gardenShed: 0.51,
 };

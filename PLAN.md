@@ -624,7 +624,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] catalogue picks: 82 Polyfork candidates in 12 groups (`docs/polyfork-picks.json`, review page https://claude.ai/artifact/HB5iNMcE1ASturtPeTeza4); the user chose to use **all of them, mixed sensibly per group** (2026-11-25). No goose, cougar or moose in the catalogue: keep ours or request them
   - [x] houses with variety: many models and variants (Polyfork remix GLBs), mirrored/turned, yard extras, size mix by community type (suburb / inner city / downtown) (2026-11-25: all 22 house/tower picks pooled per house type, roof/wall per house, mirrored, row-unit pairs, yard trees; remix GLB variants not used yet)
   - [x] trees, street props and cars (2026-11-25: trees, parked cars, benches, mailboxes, path lamps with bulbs lit at night and a light pool, a snowman for one snow pile in four; flower beds stay ours)
-  - [ ] buildings of the tree and features (rink, hall, playground, park, school, …); CTrain and Calgary-specific parts stay ours, repainted to match
+  - [x] buildings of the tree and features (rink, hall, playground, park, school, …); CTrain and Calgary-specific parts stay ours, repainted to match (2026-11-25: Polyfork arch, fire-pit stones, hut, hall, play equipment, park shelter/trees/benches/fountain, garden shed/bed, school, big-park trees on our box-part ground, flames, flags and flowers; rinks, frozen pond, sledding hill, dog park and CTrain stay ours; ice-rink-tile, rink-board-run and movie-theater picks not used yet)
   - [ ] people (avatar, villagers) and animals with our own walking from the rigs
   - [ ] gallery shows every new model with weather and times
 - **Definition of Done**
