@@ -1,6 +1,6 @@
 // Public API of the `island-view` module (M1). Other modules import ONLY from here.
 export { IslandView } from './scene/IslandView';
-export { celebrateIsland, reviveIsland, useIslandCrowd, useIslandWalkable } from './scene/islandContext';
+export { celebrateIsland, celebrateNewBuilding, useIslandCrowd, useIslandWalkable } from './scene/islandContext';
 export type { Crowd } from './scene/crowd';
 export { useHtmlPortal } from './scene/htmlPortal';
 export { setCameraFocus, clearCameraFocus } from './scene/cameraFocus';
@@ -11,7 +11,8 @@ export { AssetGallery } from './dev/AssetGallery';
 export { VoxelPerson, PERSON_SCALE, type PersonMotion } from './assets/VoxelPerson';
 export { useMockCommunityStore } from './mockStore';
 export { parseCommunityViewState, type ParseResult } from './parseState';
-export { MOOD_PALETTES, vitalityMood, type VitalityMood } from './mood';
+export { MOOD_PALETTES } from './mood';
+export { developmentLevel } from './development';
 export { buildIslandLayout, buildingSiteTile, tileKey, type IslandLayout, type Tile } from './layout';
 export { loadIslandPlan } from './plan/loadPlan';
 export { decodePlan, walkableTiles, type IslandPlan } from './plan/islandPlan';

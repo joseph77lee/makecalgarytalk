@@ -12,6 +12,7 @@ import { useLiveWeather, WeatherChip, isSnowing, type LiveWeather } from '../../
 import { Precipitation } from './Precipitation';
 import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, futureLandOpacity, type SkyLook } from './sky';
 import { setWind } from './wind';
+import { pickPostBubbles, seededRandom, villagerCount, villagersOutside } from './villagers';
 import { BloomBurst } from './BloomBurst';
 import { BoxBatch } from './BoxBatch';
 import { ISLAND_AZIMUTH, landExtent, northScreenAngle, viewFrame, zoomForFrame, type ViewFrame } from './camera';
@@ -30,6 +31,9 @@ const GROWTH_SECONDS = 1.4;
 const HOUSE_INFO_MS = 5000;
 /** Each of today's actions is replayed by a villager for this long (requirement.md §7.3). */
 const REPLAY_MS = 6000;
+/** Post bubbles take turns this often; at most MAX_POST_BUBBLES show at once (§7.3). */
+const POST_TURN_MS = 9000;
+const MAX_POST_BUBBLES = 2;
 const CHEER_MS = 2500;
 /** Max pointer travel (px) for a press to count as a tap rather than a camera drag. */
 const TAP_MAX_DRAG_PX = 8;
@@ -39,6 +43,7 @@ const CAMERA_FLAT = 40 * Math.SQRT2;
 const CAMERA_DISTANCE = Math.hypot(CAMERA_HEIGHT, CAMERA_FLAT);
 /** When it starts snowing while the island is open, the snow lies after this long (§10.4). */
 const SNOW_SETTLE_MS = 45_000;
+const NO_POSTS: { id: string; text: string }[] = [];
 
 interface IslandViewProps {
   /** The community's stored island plan (real shape, lots). */
@@ -54,6 +59,10 @@ interface IslandViewProps {
   children?: ReactNode;
   /** Fixed sun and weather (previews); by default the island shows Calgary's live weather and sun. */
   environment?: IslandEnvironment;
+  /** Today's local posts carried by walking mini villagers (§7.3), already filtered and credited. */
+  postBubbles?: { id: string; text: string }[];
+  /** Tapping a post bubble (opens Community News). */
+  onPostTap?: (postId: string) => void;
 }
 
 function liveEnvironment(live: LiveWeather): IslandEnvironment {
@@ -83,8 +92,16 @@ function useShownSnow(cover: boolean, snowing: boolean): boolean {
 }
 
 /** The 3D voxel island for one community, rendered purely from its plan and `state`. */
-export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuildingKeys = [], children, environment }: IslandViewProps) {
-  const layout = useMemo(() => buildIslandLayout(plan, state), [plan, state]);
+export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuildingKeys = [], children, environment, postBubbles = NO_POSTS, onPostTap }: IslandViewProps) {
+  // Mini villagers: a random number for this visit, by island size (§7.3); one at least when
+  // there is something real to replay.
+  const [villagerSeed] = useState(() => Math.random());
+  // one villager per real story: today's action replay, today's posts
+  const storyVillagers = ((state.replay?.length ?? 0) > 0 ? 1 : 0) + (postBubbles.length > 0 ? 1 : 0);
+  const layout = useMemo(
+    () => buildIslandLayout(plan, state, undefined, (w) => villagerCount(w, seededRandom(villagerSeed), storyVillagers)),
+    [plan, state, villagerSeed, storyVillagers],
+  );
   const live = useLiveWeather();
   const env = environment ?? liveEnvironment(live);
   const snow = useShownSnow(env.snowCover, isSnowing(env.weather));
@@ -117,6 +134,8 @@ export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuilding
           lowQuality={lowQuality}
           flash={flash}
           state={state}
+          postBubbles={postBubbles}
+          onPostTap={onPostTap}
           onTileTap={onTileTap}
           onBuildingTap={onBuildingTap}
           newsBuildingKeys={newsBuildingKeys}
@@ -142,6 +161,8 @@ function IslandScene({
   lowQuality,
   flash,
   state,
+  postBubbles,
+  onPostTap,
   onTileTap,
   onBuildingTap,
   newsBuildingKeys,
@@ -155,6 +176,8 @@ function IslandScene({
   env: IslandEnvironment;
   lowQuality: boolean;
   flash: AngleChannel;
+  postBubbles: { id: string; text: string }[];
+  onPostTap?: (postId: string) => void;
   state: CommunityViewState;
   onTileTap?: (tile: Tile) => void;
   onBuildingTap?: (buildingKey: string) => void;
@@ -170,7 +193,10 @@ function IslandScene({
 
   // Action replay: today's real actions, one at a time, over the villagers (§7.3).
   const replay = state.replay ?? [];
-  const villagerCount = layout.objects.filter((o) => o.assetKey === 'mini-villager').length;
+  // fewer villagers outside at night and in rain or snow (§7.3)
+  const villagersTotal = layout.objects.filter((o) => o.assetKey === 'mini-villager').length;
+  const outside = villagersOutside(villagersTotal, { weather: env.weather, nightness: look.nightness }, (replay.length > 0 ? 1 : 0) + (postBubbles.length > 0 ? 1 : 0));
+  const villagerCount = outside;
   const [replayTick, setReplayTick] = useState(0);
   useEffect(() => {
     if (replay.length === 0 || villagerCount === 0) return;
@@ -178,6 +204,12 @@ function IslandScene({
     return () => clearInterval(t);
   }, [replay.length, villagerCount]);
   const replayIndex = replay.length > 0 && villagerCount > 0 ? replayTick % villagerCount : -1;
+  const [postTick, setPostTick] = useState(0);
+  useEffect(() => {
+    if (postBubbles.length === 0) return;
+    const t = setInterval(() => setPostTick((n) => n + 1), POST_TURN_MS);
+    return () => clearInterval(t);
+  }, [postBubbles.length]);
   const replayText = replayIndex >= 0 ? `${replay[replayTick % replay.length].nickname} helped the ${replay[replayTick % replay.length].title}` : '';
 
   // Tapping a house shows whose it is (§7.2).
@@ -188,26 +220,38 @@ function IslandScene({
     return () => clearTimeout(t);
   }, [selectedHouse]);
 
+  // Villagers rest at night and keep an ordinary pace in bad weather (time and weather, not
+  // Vitality, requirement.md v1.41 §7.3).
+  const wet = env.weather === 'rain' || env.weather === 'snow' || env.weather === 'mix' || env.weather === 'thunderstorm';
+  const villagerMood = look.nightness > 0.5 ? 'sleepy' : wet ? 'normal' : 'lively';
+
   // one crowd per island view: walkers claim tiles in it every frame
   const [crowd] = useState(() => new Crowd());
   const ctx: IslandCtx = useMemo(() => {
     const villagerBubbles = new Map<number, string>();
     for (const b of state.speechBubbles) if (b.anchor.kind === 'villager') villagerBubbles.set(b.anchor.index, b.text);
     if (replayIndex >= 0 && !villagerBubbles.has(replayIndex)) villagerBubbles.set(replayIndex, replayText);
+    // Today's posts ride on other villagers, taking turns (§7.3).
+    const villagerBubbleTaps = new Map<number, () => void>();
+    for (const { villager, post } of pickPostBubbles(postBubbles, villagerCount, new Set(villagerBubbles.keys()), postTick, MAX_POST_BUBBLES)) {
+      villagerBubbles.set(villager, post.text);
+      if (onPostTap) villagerBubbleTaps.set(villager, () => onPostTap(post.id));
+    }
     const walkable = layout.walkable.filter((t) => (stages.get(tileKey(t)) ?? 99) <= settled);
     return {
       palette,
       snow,
       lightsOn: look.lightsOn,
-      mood: layout.mood,
-      villagerSpeed: MOOD_PALETTES[layout.mood].villagerSpeed,
+      mood: villagerMood,
+      villagerSpeed: MOOD_PALETTES[villagerMood].villagerSpeed,
       walkable,
       walkableKeys: new Set(walkable.map(tileKey)),
       landStage: settled,
       villagerBubbles,
+      villagerBubbleTaps,
       crowd,
     };
-  }, [palette, snow, look.lightsOn, layout, state.speechBubbles, settled, stages, replayIndex, replayText, crowd]);
+  }, [palette, snow, look.lightsOn, villagerMood, layout, state.speechBubbles, settled, stages, replayIndex, replayText, crowd, postBubbles, postTick, villagerCount, onPostTap]);
 
   const houseBubbles = useMemo(() => {
     const m = new Map<string, string>();
@@ -215,7 +259,10 @@ function IslandScene({
     return m;
   }, [state.speechBubbles]);
 
-  const shown = useMemo(() => layout.objects.filter((o) => o.stage <= settled), [layout, settled]);
+  const shown = useMemo(
+    () => layout.objects.filter((o) => o.stage <= settled && (o.assetKey !== 'mini-villager' || o.index < outside)),
+    [layout, settled, outside],
+  );
   // Houses are tapped on their body, not on the ground behind them: test the tap ray against
   // each house's box and take the nearest hit.
   // Buildings (by footprint) can be tapped the same way.
@@ -306,6 +353,7 @@ function IslandScene({
         code={plan.code}
         features={featuresFor(plan.code).map((f) => f.key)}
         hasWater={plan.water.length > 0}
+        landTiles={layout.walkable.length}
         radius={layout.landRadius}
         extent={extent}
         azimuth={az}

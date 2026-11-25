@@ -12,6 +12,77 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.42
+**Changed:** 7.3: always one mini villager per real story (today's action replay, today's posts), even on the smallest islands.
+
+**Why:** Screen check (M21): on a stage-0 island the only villager was busy replaying an action, so today's posts never showed.
+
+**Previous:**
+- Header: `| Document version | v1.41 |`
+- 7.3 (verbatim): `- **Count: natural and random**, chosen on the device for each visit and **scaled by the size of the walkable land**: the smallest islands have 0–1, the largest up to 20 (20.3a); fewer at night (about 40 %) and in rain or snow (about half). Not based on player counts or activity`
+
+### 2026-11-24 — v1.41
+**Changed:** 7.2 houses fill every house lot on the risen land; every Verified Resident still has their own house among them ("My house"); the others are unnamed village houses (no tap; about half lit at night); archived residents' houses become village houses. 7.3 mini villagers: random count by island size (0–1 on the smallest islands, up to 20; fewer at night and in rain/snow), behaviour by time and weather, today's local posts (never Safety) as credited speech bubbles, wildlife by community location and island size. 7.4: players see the development level (0–4, as on the World Map) instead of Vitality; Vitality stays an internal operator metric; no moods, sleepy text or Community Revival. 2, 7.8, 9, 10.4, 12.2, 19.0, 22.2, 22.6, 22.8 and the glossary follow.
+
+**Why:** Operator decisions (2026-11-24, M21 planning and an iPad playtest): communities should look lived in whatever the number of players, without house or villager counts revealing it; 3 villagers and many animals on a tiny island looked like too many and wildlife should depend on location; development, not an activity score, is what players should see; "My house" stays for interior decorating.
+
+**Previous:**
+- Header: `| Document version | v1.40 |`
+- (verbatim): `- When a community develops, its mini villagers are happy and new buildings rise; when neglected, its mini villagers get sleepy. The scenery always looks its best and follows Calgary's real weather and time of day (10.4).`
+- (verbatim): `2. **My community**: "What changed since yesterday" summary + mini villagers' mood`
+- (verbatim): `- **The island never shrinks.** Inactivity is shown through Vitality (the mini villagers' mood, 7.3), not size or scenery.`
+- (verbatim): `- **Vitality is shown through mood**: lively = green ground, window lights, flowers; normal = plain; sleepy = snowy ground and trees under a dusk sky`
+- (verbatim): `the levels, moods and resident counts in one request`
+- (verbatim): `info card (name, level, mood, residents)`
+- (verbatim): `- Generated on: weekly results, building completion, community revival (random surprises: later)`
+- (verbatim): `(Vitality tone; grey = unsettled)`
+- (verbatim): `- 5 Vitality mood levels`
+- (verbatim): `| 6b | **Living community** (decided with the operator 2026-11-24, details written into 7.2–7.4 when the work starts):`
+- (verbatim): `- [ ] Vitality smoothing details (rise/fall speed)`
+- (verbatim): `| Mini villager | Ambient voxel character showing the community's mood; never represents or impersonates a real player |`
+- (verbatim): `| Vitality | 0–100 score of recent community activity that drives mood and scenery |`
+- 10.4 (verbatim): `- At night the **street lamps and public buildings' windows light up**; residents' houses light their windows only when the resident was active today (7.2)`
+- 7.2 (verbatim):
+  > ### 7.2 Resident houses
+  > - One house per Verified Resident. **Tapping a house** shows whose it is: "<nickname>'s house", active today or not, and the Founding Resident badge if they have it. No name tags floating over houses; **my own house always has a small "My house" marker**, and the labels toggle can show every house's name at once
+  > - Residents active today: **warm window lights** (no chimney smoke: with many houses it would look like factories)
+  > - Residents not active today: lights off
+  > - **Each resident keeps a fixed house lot** in their community: given once, the first free lot in the stored lot plan (lots ordered by land stage, then plan order, so growing the island never moves a house). It stays theirs while their house is archived, unless all lots are taken: then the lots of archived residents go to new residents, and a returning resident gets a free lot. If even active residents exceed the lots, extra houses are not drawn and the village shows "+N more residents". Moving gives a lot in the new community. Lots are assigned while building the shared state (no extra request)
+  > - **Last active day** = the later of the resident's last action day and their verification day (so a newly verified resident who has not acted yet still has a house)
+  > - **No activity for 30+ days** (last active day is not within the last 30 Calgary days, including today): house is temporarily removed from the village (archived); it reappears when they return
+  > - Houses are not something individuals grow; they show "I live in this community"
+  > - Houses and buildings fill the island from the centre outward; the island itself grows with residents (see 7.8)
+  > - Houses have **no relation to real addresses/locations**
+- 7.3 (verbatim):
+  > ### 7.3 Mini villagers (ambient characters)
+  > - **Ambient characters that show the community's mood**; they never pretend to be real players (no names, not counted as residents)
+  > - Count: based on resident count and Vitality. **Min 2–3, max 20**
+  > - Behaviour/expressions change with Vitality (running and cheering ↔ sitting with heads down)
+  > - **Action replay**: mini villagers replay real actions residents took today, with a system speech bubble
+  >   - e.g. a mini villager shovels snow with "Sarah cleared the snow"
+  >   - Always based on real records (nothing fake)
+- 7.4 (verbatim):
+  > ### 7.4 Community Vitality (0–100)
+  > - Definition: 7-day average of the "daily active resident ratio" × 100
+  >   - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, i.e. residents whose houses are shown, excluding residents with a move in progress, 6.4); the ratio therefore never exceeds 1; 0 if the denominator is 0
+  >   - This intentionally differs from the streak denominator (7.5, 7-day Active Verified Residents): the streak rewards regular players and must not be blocked by dormant residents, while Vitality honestly reflects the whole community — many dark houses make the community look gloomier, which motivates waking up neighbours
+  > - Tuned to **fall slowly and rise quickly**: Vitality = 100 × **max(average ratio of the last 3 days, average ratio of the last 7 days)**, rounded. A burst of activity lifts the 3-day average fast; when activity stops, the 7-day average holds it up and it falls by about 1/7 per day
+  >   - Days counted are **finished Calgary days** (yesterday and before), so Vitality changes once a day, like construction progress. Only days since the community's first resident are averaged; before the first finished day Vitality is not shown (normal mood), so a new community never starts sleepy
+  > - MVP has 3 mood levels
+  >
+  > | Vitality | Mood | Mini villagers |
+  > |---|---|---|
+  > | 60–100 | Lively | Many mini villagers, walking briskly and cheering |
+  > | 30–59 | Normal | Ordinary pace |
+  > | 0–29 | Sleepy | Villagers mostly resting. Pastel, never grey or dark |
+  >
+  > - **The island scenery does not follow the mood** (operator decision 2026-11-24): every island shows the same full look (deep green grass, flowers, street lamps), changed only by the real weather and time of day (10.4). The World Map keeps its mood tones for now (9); Vitality is being redesigned as community development (22.6 step 6b)
+  >
+  > - Don't make it too depressing ("cute sleepy"): a newcomer's first look must still be inviting
+  > - While Sleepy, the streak bar says "<Community> is sleepy. Help today to wake it up!", so a quiet community becomes a reason to help
+  > - Sleepy → recovered triggers a **"Community Revival" effect** (cheering, flowers bloom) + a share card
+  >   - Recovered = yesterday's Vitality was Sleepy (0–29) and today's is 30 or more; shown once in the "Since yesterday" panel of that day
+
 ### 2026-11-24 — v1.40
 **Changed:** 10.4 filled in with the details planned with the operator: Environment Canada as the weather source (server, every 15 minutes, attribution), the weather states and wind levels, snow that settles and melts with warmth or rain, a weather chip, the sun computed from the server instant with phases by sun height and a minimum drawn height, lamps and public windows lit at night (houses only when active today), particle caps. 7.4: the island scenery no longer follows the Vitality mood (every island has the same full look, changed only by weather and time); the mood now drives the mini villagers; 2 and 7.8 follow. 19.1 light comes from the real sun. 22.3: decorating my house's interior with activity rewards (so "My house" must always exist). 22.6: new step 6b Living community (random mini villagers, houses fill the land with every resident keeping "My house", Vitality as development, villagers speaking community posts except Safety).
 

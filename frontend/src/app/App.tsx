@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
-import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen, revivedToday, type ChangeCard, type ChangeItem } from '../modules/community-state';
+import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen, type ChangeCard, type ChangeItem } from '../modules/community-state';
 import { ActionBar, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
 import { AdminDashboard } from '../modules/admin';
 import { track } from '../modules/analytics';
 import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, arrivedByInvite, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
-import { NewspaperPanel, newsBuildingKeys, newsReady, useNews } from '../modules/news';
+import { NewspaperPanel, newsBuildingKeys, newsReady, useNews, useTodayPostBubbles } from '../modules/news';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import { useRanking, weeklyAnnouncement, weeklyCardTitle } from '../modules/ranking';
 import { ShareCardDialog, type ShareCard } from '../modules/share-cards';
@@ -18,9 +18,8 @@ import {
   IslandView,
   captureIsland,
   finishedExampleState,
-  reviveIsland,
+  celebrateNewBuilding,
   upcomingIdentity,
-  vitalityMood,
   useMockCommunityStore,
   type CommunityViewState,
   type IslandPlan,
@@ -131,7 +130,7 @@ function LiveApp() {
     setShareCard({ card: { ...c, communityName }, island: server?.community.name === communityName ? captureIsland() : null });
   const weekly = member && ranking?.home?.code === server?.community.code ? weeklyAnnouncement(ranking) : null;
   const extraChanges: ChangeItem[] = weekly ? [{ icon: '🏆', text: weekly.text, card: { kind: 'weekly', title: weeklyCardTitle(weekly.rank) } }] : [];
-  const panelOpen = !!server?.me?.member && changesPanelOpen(server.changes, server.community.vitality, changesSeen, extraChanges);
+  const panelOpen = !!server?.me?.member && changesPanelOpen(server.changes, changesSeen, extraChanges);
   // Welcome card right after the first counted check-in (§5.1), once per community.
   const showWelcome =
     status === 'ready' &&
@@ -150,6 +149,7 @@ function LiveApp() {
             <Island
               plan={plan}
               state={view}
+              communityId={server.community.id}
               showAvatar={server.me?.member === true}
               newsBuildings={(() => {
                 const built = view.buildings.filter((b) => b.status === 'built' || b.level > 1).map((b) => b.key);
@@ -191,7 +191,6 @@ function LiveApp() {
                 nextLandResidents={server.community.next_land_residents}
                 onOpenMap={() => setMapOpen(true)}
                 onInvite={server.me?.member ? invite : undefined}
-                sleepyName={server.community.vitality !== null && vitalityMood(server.community.vitality) === 'sleepy' ? server.community.name : null}
               >
                 <ResidencyChip />
                 {!server.me?.member && myCommunityId && (
@@ -230,13 +229,12 @@ function LiveApp() {
                 server.me?.member && (
                   <ChangesPanel
                     changes={server.changes}
-                    vitality={server.community.vitality}
                     seen={changesSeen}
                     extra={extraChanges}
                     onShare={(c) => openCard(c, server.community.name)}
                     onSeen={() => {
-                      // Community Revival plays on the island once the panel closes (§7.4).
-                      if (revivedToday(server.changes, server.community.vitality)) reviveIsland();
+                      // A new building is celebrated on the island once the panel closes (§7.4).
+                      if (server.changes.built.length > 0) celebrateNewBuilding();
                       markChangesSeen();
                     }}
                   />
@@ -340,16 +338,28 @@ function Island({
   showAvatar = true,
   newsBuildings = [],
   onBuildingTap,
+  communityId = null,
 }: {
   plan: IslandPlan;
   state: CommunityViewState;
+  /** Community shown (today's local posts ride on the mini villagers, §7.3); null in previews. */
+  communityId?: string | null;
   showAvatar?: boolean;
   newsBuildings?: string[];
   onBuildingTap?: (key: string) => void;
 }) {
   const profile = useIdentity((s) => s.profile);
+  const postBubbles = useTodayPostBubbles(communityId);
   return (
-    <IslandView plan={plan} state={state} onTileTap={showAvatar ? moveTo : undefined} onBuildingTap={onBuildingTap} newsBuildingKeys={newsBuildings}>
+    <IslandView
+      plan={plan}
+      state={state}
+      onTileTap={showAvatar ? moveTo : undefined}
+      onBuildingTap={onBuildingTap}
+      newsBuildingKeys={newsBuildings}
+      postBubbles={postBubbles}
+      onPostTap={communityId ? () => void useNews.getState().show(communityId) : undefined}
+    >
       {showAvatar && <Avatar nickname={profile?.nickname ?? 'You'} shirtColor={shirtColor(profile?.shirt)} />}
     </IslandView>
   );

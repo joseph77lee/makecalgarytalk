@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.40 |
+| Document version | v1.42 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Status | Initial draft for starting MVP development |
@@ -60,7 +60,7 @@ The service grows in this order; features are judged by how they serve it. The *
 - Each real Calgary community (e.g. Mahogany, Bridgeland, Tuscany) is a **pastel voxel village on a floating diorama island** that grows as more residents join.
 - Visual reference: `docs/references/` (VibeBase "Voxel Village" screenshots — floating voxel island, isometric view, pastel colours, small characters with speech bubbles).
 - Residents take short daily actions **together** to **grow the community itself** (this is not a game about growing your own personal plot).
-- When a community develops, its mini villagers are happy and new buildings rise; when neglected, its mini villagers get sleepy. The scenery always looks its best and follows Calgary's real weather and time of day (10.4).
+- When a community develops, new buildings rise and its island grows; mini villagers and wildlife wander naturally whatever the number of players. The scenery always looks its best and follows Calgary's real weather and time of day (10.4).
 - Communities compete on development/participation.
 - Long-term, it expands into a **neighbourhood platform** (community news, local business coupons).
 
@@ -97,7 +97,7 @@ The service grows in this order; features are judged by how they serve it. The *
 
 ### 5.2 Daily routine
 1. **World Map**: see how developed all of Calgary is. Tap an empty community to invite a friend who lives there
-2. **My community**: "What changed since yesterday" summary + mini villagers' mood
+2. **My community**: "What changed since yesterday" summary + life on the island (mini villagers, today's local posts)
 3. **Today's 3 actions**: pick one of the active projects and click
 4. **Welcome sign / Warming hut / Community hall** (7.6): read the auto-generated community newspaper and the community board (later: resident posts, coupons, new business news)
 
@@ -159,45 +159,34 @@ Goal: moving never punishes the person who moves or the residents who stay.
 - **Unsettled**: 0 residents. Covered by fog/clouds on the World Map
 - **Settled**: the community's **Welcome sign** (first building of the tree, 7.6) is built → fog clears on the World Map; the first resident (the community's **first Verified Resident**) gets the "Founding Resident" badge. A first resident can build it on their first day
 
-### 7.2 Resident houses
-- One house per Verified Resident. **Tapping a house** shows whose it is: "<nickname>'s house", active today or not, and the Founding Resident badge if they have it. No name tags floating over houses; **my own house always has a small "My house" marker**, and the labels toggle can show every house's name at once
-- Residents active today: **warm window lights** (no chimney smoke: with many houses it would look like factories)
-- Residents not active today: lights off
+### 7.2 Houses: resident houses among the village houses
+- **Houses fill the land as the community grows** (operator decision 2026-11-24): every house lot on the risen land (7.8) has a house, so a community never looks empty however many people play. The houses are not a count of players
+- **Every Verified Resident has their own house among them** ("My house"), the base for decorating its interior later (22.3). **Tapping a resident's house** shows whose it is: "<nickname>'s house", active today or not, and the Founding Resident badge if they have it. No name tags floating over houses; **my own house always has a small "My house" marker**, and the labels toggle can show every resident house's name at once
+- The other houses are **village houses** with no owner: no name, nothing happens when tapped (they never pretend to be players, like mini villagers in 7.3)
+- Residents active today: **warm window lights** (no chimney smoke: with many houses it would look like factories); residents not active today: lights off. At night about half of the village houses have lit windows too (10.4), so the village looks cosy
 - **Each resident keeps a fixed house lot** in their community: given once, the first free lot in the stored lot plan (lots ordered by land stage, then plan order, so growing the island never moves a house). It stays theirs while their house is archived, unless all lots are taken: then the lots of archived residents go to new residents, and a returning resident gets a free lot. If even active residents exceed the lots, extra houses are not drawn and the village shows "+N more residents". Moving gives a lot in the new community. Lots are assigned while building the shared state (no extra request)
 - **Last active day** = the later of the resident's last action day and their verification day (so a newly verified resident who has not acted yet still has a house)
-- **No activity for 30+ days** (last active day is not within the last 30 Calgary days, including today): house is temporarily removed from the village (archived); it reappears when they return
+- **No activity for 30+ days** (last active day is not within the last 30 Calgary days, including today): the house becomes an ordinary village house (archived: no name, not lit); it becomes theirs again when they return
 - Houses are not something individuals grow; they show "I live in this community"
-- Houses and buildings fill the island from the centre outward; the island itself grows with residents (see 7.8)
 - Houses have **no relation to real addresses/locations**
 
-### 7.3 Mini villagers (ambient characters)
-- **Ambient characters that show the community's mood**; they never pretend to be real players (no names, not counted as residents)
-- Count: based on resident count and Vitality. **Min 2–3, max 20**
-- Behaviour/expressions change with Vitality (running and cheering ↔ sitting with heads down)
+### 7.3 Mini villagers and wildlife (ambient life)
+- **Ambient characters that make every island feel lived in**, whatever the number of players (operator decision 2026-11-24); they never pretend to be real players (no names, not counted as residents)
+- **Count: natural and random**, chosen on the device for each visit and **scaled by the size of the walkable land**: the smallest islands have 0–1, the largest up to 20 (20.3a); fewer at night (about 40 %) and in rain or snow (about half). Not based on player counts or activity. There is always one villager per real story to tell (today's action replay, today's posts), so a tiny island still shows them
+- Behaviour follows the time and weather (strolling, resting, cheering when someone helps), each with its own pace (10.1)
 - **Action replay**: mini villagers replay real actions residents took today, with a system speech bubble
   - e.g. a mini villager shovels snow with "Sarah cleared the snow"
   - Always based on real records (nothing fake)
+- **Today's local posts**: walking mini villagers carry residents' posts from today (14) as speech bubbles: "💬 <nickname>: <first ~40 characters>…" with the kind icon, credited to the writer so the villager never looks like the author. **Never Safety posts**; hidden, reported (for me) and deleted posts drop out (same server function as the newspaper). At most 2 post bubbles at a time, taking turns; tapping one opens the post in Community News
+- **Wildlife** (jackrabbits, deer, Canada geese, rarely a cougar) **depends on where the community is**: downtown and inner-city communities rarely see wild animals (an occasional jackrabbit), communities near the city edge often do (measured by the distance of the community from the city centre); small islands get fewer animals. Deer and cougars need a park, hill, creek or water nearby; geese need water
 
-### 7.4 Community Vitality (0–100)
-- Definition: 7-day average of the "daily active resident ratio" × 100
-  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, i.e. residents whose houses are shown, excluding residents with a move in progress, 6.4); the ratio therefore never exceeds 1; 0 if the denominator is 0
-  - This intentionally differs from the streak denominator (7.5, 7-day Active Verified Residents): the streak rewards regular players and must not be blocked by dormant residents, while Vitality honestly reflects the whole community — many dark houses make the community look gloomier, which motivates waking up neighbours
-- Tuned to **fall slowly and rise quickly**: Vitality = 100 × **max(average ratio of the last 3 days, average ratio of the last 7 days)**, rounded. A burst of activity lifts the 3-day average fast; when activity stops, the 7-day average holds it up and it falls by about 1/7 per day
-  - Days counted are **finished Calgary days** (yesterday and before), so Vitality changes once a day, like construction progress. Only days since the community's first resident are averaged; before the first finished day Vitality is not shown (normal mood), so a new community never starts sleepy
-- MVP has 3 mood levels
-
-| Vitality | Mood | Mini villagers |
-|---|---|---|
-| 60–100 | Lively | Many mini villagers, walking briskly and cheering |
-| 30–59 | Normal | Ordinary pace |
-| 0–29 | Sleepy | Villagers mostly resting. Pastel, never grey or dark |
-
-- **The island scenery does not follow the mood** (operator decision 2026-11-24): every island shows the same full look (deep green grass, flowers, street lamps), changed only by the real weather and time of day (10.4). The World Map keeps its mood tones for now (9); Vitality is being redesigned as community development (22.6 step 6b)
-
-- Don't make it too depressing ("cute sleepy"): a newcomer's first look must still be inviting
-- While Sleepy, the streak bar says "<Community> is sleepy. Help today to wake it up!", so a quiet community becomes a reason to help
-- Sleepy → recovered triggers a **"Community Revival" effect** (cheering, flowers bloom) + a share card
-  - Recovered = yesterday's Vitality was Sleepy (0–29) and today's is 30 or more; shown once in the "Since yesterday" panel of that day
+### 7.4 Community development (Vitality is internal)
+- **Players see their community's development, not an activity score** (operator decision 2026-11-24): the **development level 0–4** from built buildings (the same level as the World Map, 9) is shown next to the community name, e.g. "Mahogany · Lv 2". It never goes down; development means new buildings (7.6) and, later, things to do inside them (22.3)
+- **Vitality stays as an internal operator metric** (dashboard, 21), not shown to players and not changing the island:
+  - Definition: 7-day average of the "daily active resident ratio" × 100
+  - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, excluding residents with a move in progress, 6.4); the ratio therefore never exceeds 1; 0 if the denominator is 0
+  - Vitality = 100 × **max(average ratio of the last 3 days, average ratio of the last 7 days)**, rounded; finished Calgary days only, days since the community's first resident
+- No mood levels, no sleepy text and no "Community Revival" effect any more: quiet communities are shown by the streak (7.5) and dark resident houses (7.2), and a new building is what gets celebrated (12.2)
 
 ### 7.5 Community Streak
 - **Active Verified Resident (7-day)** = a Verified Resident who took at least one action within the **last 7 Calgary days, including today**. Residents inactive longer (including those whose houses are archived after 30 days) are **not** counted, so dormant residents cannot make the streak impossible.
@@ -276,7 +265,7 @@ Community unlock buildings and construction projects are **one building tree**. 
 | 51+ | all (~1,024) |
 
 - Growth effect: new land **rises at the island edge**, mini villagers cheer, share card generated.
-- **The island never shrinks.** Inactivity is shown through Vitality (the mini villagers' mood, 7.3), not size or scenery.
+- **The island never shrinks.** Inactivity is shown by the streak and dark resident houses (7.2, 7.5), not by size or scenery.
 - **Positions never change.** Each community's lot plan (building lots, house lots, spare lots, Main Street lots, paths) is generated **once** and stored; later algorithm changes apply only to new communities or newly added lots.
 - Buildings opened by the tree always have land: their resident conditions match the land available at that resident count.
 - First-stage buildings sit around the plaza (a cosy village centre); later buildings get lots in the **newly grown outer land, spread in different directions**, so every growth brings new building spots.
@@ -333,9 +322,9 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 3 | + Community hall | Houses + community hall with flag |
 | 4 | + Neighbourhood park | Dense houses + community hall + neighbourhood park |
 
-  - Level comes from the community's built buildings (same data as the island; 7.6, 7.8); the map loads the shapes as a static file and the levels, moods and resident counts in one request
+  - Level comes from the community's built buildings (same data as the island; 7.6, 7.8); the map loads the shapes as a static file and the levels and resident counts in one request
   - Shown for the 223 residential communities
-  - **Vitality is shown through mood**: lively = green ground, window lights, flowers; normal = plain; sleepy = snowy ground and trees under a dusk sky
+  - **Colour tone follows the level** (more developed = richer green); grey = unsettled. No mood tones (7.4)
   - Crown on this week's #1 community
   - **CTrain Red and Blue lines** drawn over the communities with their stations (names when zoomed in), so the map shows how the communities are connected (7.9)
   - Illustrations use the **same designs as the island buildings** so the map and islands feel like one world
@@ -344,7 +333,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - **Icon count scales with polygon area** so large and small communities at the same level look equally developed
   - **Zoom-dependent detail**: at city zoom show a few representative icons per community; when zoomed in show more
   - Render with **Canvas** (thousands of small icons) for phone performance; SVG is acceptable for prototypes
-- **Interaction**: tap a community → smooth zoom to it + info card (name, level, mood, residents) → "Enter island"; tap an unsettled community → **"Invite a friend from this community"** (pre-filled message)
+- **Interaction**: tap a community → smooth zoom to it + info card (name, level, residents) → "Enter island"; tap an unsettled community → **"Invite a friend from this community"** (pre-filled message)
   - **Any community can be visited** (view only), settled or not, including its Community News (reading, thanks and reports; posting only in your own community). A "Visiting <community> · Back home" bar returns to your own community; the "What changed since yesterday" panel only shows in your own community
 - **Art Pass / later enhancements** (target design):
   - **Animated Bow and Elbow rivers** (flowing water), Glenmore Reservoir, major parks (Nose Hill, Fish Creek)
@@ -394,7 +383,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Time of day follows the real sun**: the light comes from the sun's real direction, so shadows move through the day; dawn and dusk tints; at night the sky darkens to a soft starry night (pastel, never black)
   - The sun's direction is computed from the **server's current instant** and Calgary's coordinates (no time zones, 7.5). Phases come from the sun's height: **day**, **dawn/dusk** (sun within 6° of the horizon), **night**
   - The drawn sun is kept at least about 22° high so low winter sun does not shade the whole island; only its direction is real
-  - At night the **street lamps and public buildings' windows light up**; residents' houses light their windows only when the resident was active today (7.2)
+  - At night the **street lamps and public buildings' windows light up**, about half of the village houses too; residents' houses light their windows only when the resident was active today (7.2)
 - Effects stay within the phone budget (20.3a): rain and snow particles capped (about 1,500), the low-quality mode (M14) reduces them further (about 400) and drops lightning
 
 ---
@@ -433,7 +422,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ### 12.2 Share cards
 - The image **always includes the community name** (so it spreads in community Facebook groups, etc.)
-- Generated on: weekly results, building completion, community revival (random surprises: later)
+- Generated on: weekly results, building completion (random surprises: later)
 - MVP: the card image is **made on the phone** (a picture of the island + text) and shared as an image (system share sheet, or saved when sharing files is not supported), with the site link in the text. Link previews use one site-wide preview image; per-community link previews (server-made images) come later
 
 ### 12.3 Invites
@@ -561,7 +550,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ### 19.0 MVP art policy
 - **The MVP uses only simple shapes, no detailed art.**
-  - World Map: flat pastel 2D polygons of community boundaries (Vitality tone; grey = unsettled)
+  - World Map: flat pastel 2D polygons of community boundaries (level tone; grey = unsettled)
   - Community view: **react-three-fiber (three.js) scene built from coloured boxes** — island tiles, box trees, box houses with box roofs, labelled box buildings, translucent/grey boxes for locked silhouettes, two-box characters for avatar and mini villagers
   - Projects: box construction site + progress bar UI
 - Because the target style is voxel (made of boxes), the box-based MVP already looks close to the target. A working proof of concept was built on 2026-11-16 (~100 lines of three.js: floating island, layered dirt, box trees/houses, wandering villagers, HTML speech bubbles, tap-to-move avatar, construction progress, island growth).
@@ -715,7 +704,6 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Profile & ranks, **avatar growth** (rank = level, cosmetic rewards, community-linked rewards, badge collection, Me tab; 13.3)
 - Speech bubbles (preset phrases → free text)
 - Mini villager requests, player requests
-- 5 Vitality mood levels
 
 ### 22.3 Phase 3
 - Seasonal events (Rodeo Season, winter aurora, etc.), collections
@@ -757,7 +745,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 5 | Legal pages, analytics, email subscription |
 | 6 | **Art Pass**: prettier voxel communities, buildings, people and props, and **busier** communities (scope planned with the operator) |
 | 6a | **Real weather and time of day** on the islands (10.4); island scenery no longer follows the Vitality mood |
-| 6b | **Living community** (decided with the operator 2026-11-24, details written into 7.2–7.4 when the work starts): mini villagers appear naturally at random instead of from player counts; houses fill the land as the community grows, and every Verified Resident still has their own house among them ("My house"); Vitality is redefined as community development (new buildings); walking villagers show residents' recent community posts (14; never Safety posts) as speech bubbles credited by nickname |
+| 6b | **Living community** (decided with the operator 2026-11-24, details in 7.2–7.4): mini villagers appear naturally at random instead of from player counts; houses fill the land as the community grows, and every Verified Resident still has their own house among them ("My house"); Vitality is redefined as community development (new buildings); walking villagers show residents' recent community posts (14; never Safety posts) as speech bubbles credited by nickname |
 | 7 | Deploy with **all communities open** → family/friends playtest → public launch |
 
 ### 22.7 Launch
@@ -777,7 +765,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - [ ] Island shape conversion parameters (smoothing, minimum width, centre choice) and lot plan generation per community (tuning)
 - [ ] Building tree numbers (conditions, stage multipliers) and models for the new buildings
 - [x] Project list and required actions per project (decided 2026-11-18, see 7.7)
-- [ ] Vitality smoothing details (rise/fall speed)
+- [x] Vitality smoothing details (2026-11-24: Vitality is no longer shown to players, 7.4)
 - [ ] Random surprise types and probabilities
 - [ ] Newspaper sentence templates
 - [x] Analytics tool choice (decided 2026-11-23: own in Supabase + Cloudflare Web Analytics, see 20.1 / 21)
@@ -796,7 +784,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Newcomer | A user who has not finished resident verification |
 | Verified Resident | A user who opened the site from inside their community on 3 different days within 7 days |
 | House | One per Verified Resident in the community view; a presence marker, not something the user grows |
-| Mini villager | Ambient voxel character showing the community's mood; never represents or impersonates a real player |
+| Mini villager | Ambient voxel character that makes the island feel lived in (random count by island size); never represents or impersonates a real player |
 | Avatar | The user's own controllable character in their community's island (tap/click to move) |
 | Destination event | Avatar movement expressed as "move to tile (x, y)"; local-only in the MVP, broadcastable for real-time presence later |
 | Island / diorama | The floating voxel island in the real shape of one community; its land grows inside the visible outline with cumulative Verified Residents. **Internal term only: player-facing text says "community"** (e.g. "Visit this community", "Back to my community", "Community size") |
@@ -805,7 +793,9 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Action replay | Mini villagers re-enacting real actions residents took today, with a system speech bubble |
 | Energy | Daily action allowance (3 per day) |
 | Project | The construction or upgrade of one building of the tree, which residents contribute actions to |
-| Vitality | 0–100 score of recent community activity that drives mood and scenery |
+| Vitality | 0–100 score of recent community activity; internal operator metric, not shown to players (7.4) |
+| Development level | 0–4 from built buildings; shown next to the community name and on the World Map (7.4, 9) |
+| Village house | A house with no owner that fills a house lot on the risen land (7.2) |
 | Community Streak | Consecutive days on which at least half of the Active Verified Residents took an action |
 | Active Verified Resident | A Verified Resident who took at least one action within the last 7 Calgary days (including today); denominator for the streak (Vitality uses the 30-day basis, 7.4) |
 | Last active day | The later of a Verified Resident's last action day and verification day; decides whether their house is shown (30 days) and the Vitality denominator |

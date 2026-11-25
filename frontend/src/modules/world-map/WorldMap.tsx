@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MOOD_PALETTES, vitalityMood } from '../island-view';
+import { MOOD_PALETTES } from '../island-view';
 import { getSupabaseClient, readSupabaseConfig } from '../common';
 import { RankingSheet, useRanking, type RankEntry } from '../ranking';
 import { fetchStatuses, loadShapes, type CommunityStatus } from './api';
@@ -33,10 +33,10 @@ const NAME_MIN_PX2 = 1200;
 /** Map scale (px per metre) from which CTrain station names show. */
 const STATION_NAME_SCALE = 0.09;
 
-function moodColours(vitality: number | null): { fill: string; edge: string; c: MoodColours } {
-  const mood = vitality === null ? 'normal' : vitalityMood(vitality);
-  const p = MOOD_PALETTES[mood];
-  return { fill: p.grass[0], edge: p.grass[1], c: { ground: p.grass[0], ground2: p.grass[1], roofSnow: mood === 'sleepy', lights: mood === 'lively' } };
+/** Colour tone by development level (requirement.md v1.41 §9): richer green and lit windows as it grows. */
+function levelColours(level: number): { fill: string; edge: string; c: MoodColours } {
+  const p = MOOD_PALETTES[level >= 2 ? 'lively' : 'normal'];
+  return { fill: p.grass[0], edge: p.grass[1], c: { ground: p.grass[0], ground2: p.grass[1], roofSnow: false, lights: level >= 3 } };
 }
 
 /** Calgary World Map (requirement.md v1.29 §9): every residential community with its development. */
@@ -122,7 +122,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
           ctx.setLineDash([6 / scale, 5 / scale]);
           ctx.strokeStyle = '#a3acbb';
         } else {
-          const m = moodColours(st.vitality);
+          const m = levelColours(st.level);
           ctx.fillStyle = m.fill;
           ctx.fill(p.path);
           ctx.setLineDash([]);
@@ -190,7 +190,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
         const level = st?.level ?? 0;
         const room = Math.floor((p.c.area * scale * scale) / (ICON_ROOM_PX * ICON_ROOM_PX));
         const plan = iconPlan(level, p.c.area, room, p.seed);
-        const colours = moodColours(st?.vitality ?? null).c;
+        const colours = levelColours(level).c;
         // Unsettled: a small faint cloud, only where it has room (keeps the city view calm).
         if (plan[0] === 'cloud' && room < 3) continue;
         plan.forEach((kind, i) => {
@@ -391,7 +391,6 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
                 </h2>
                 <p className="text-xs text-slate-500">
                   {levelText(selStatus?.level ?? 0)}
-                  {selStatus && selStatus.level > 0 && selStatus.vitality !== null && ` · ${vitalityMood(selStatus.vitality)}`}
                   {` · ${selStatus?.residents ?? 0} ${selStatus?.residents === 1 ? 'resident' : 'residents'}`}
                 </p>
                 {champions.has(sel.c.code) && <p className="mt-0.5 text-xs font-semibold text-amber-600">👑 #1 in Calgary last week</p>}

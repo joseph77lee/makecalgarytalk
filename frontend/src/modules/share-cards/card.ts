@@ -1,6 +1,6 @@
 /** Share cards (requirement.md v1.31 §12.2): made on the phone, always naming the community. */
 
-export type ShareCardKind = 'weekly' | 'built' | 'revival';
+export type ShareCardKind = 'weekly' | 'built';
 
 export interface ShareCard {
   kind: ShareCardKind;
@@ -15,7 +15,6 @@ export const CARD_HEIGHT = 1350;
 const THEMES: Record<ShareCardKind, { emoji: string; top: string; bottom: string; accent: string }> = {
   weekly: { emoji: '🏆', top: '#fde68a', bottom: '#e0e7ff', accent: '#b45309' },
   built: { emoji: '🎉', top: '#bae6fd', bottom: '#ede9fe', accent: '#4338ca' },
-  revival: { emoji: '🌸', top: '#fbcfe8', bottom: '#dcfce7', accent: '#be185d' },
 };
 
 export function cardTheme(kind: ShareCardKind) {
@@ -24,7 +23,7 @@ export function cardTheme(kind: ShareCardKind) {
 
 /** The text that goes with the image (the image itself carries the community name too). */
 export function cardShareText(card: ShareCard, siteUrl: string): string {
-  const lead = { weekly: `${card.communityName}: ${card.title}`, built: `${card.communityName}: ${card.title}!`, revival: `${card.communityName} woke up!` }[card.kind];
+  const lead = { weekly: `${card.communityName}: ${card.title}`, built: `${card.communityName}: ${card.title}!` }[card.kind];
   return `${lead} Help our community grow on MakeCalgaryTalk: ${siteUrl}`;
 }
 

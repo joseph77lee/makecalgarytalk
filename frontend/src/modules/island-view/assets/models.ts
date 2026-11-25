@@ -40,7 +40,7 @@ function levelMarkers(level: number, w: number, d: number): BoxPart[] {
 
 /** A resident's house (Art Pass): its type, colours and facing come from the layout (requirement.md §7.2). */
 export function house(item: ObjectOf<'house'>): BoxPart[] {
-  return houseParts(item.houseType, item.colorIndex, item.facing, item.activeToday);
+  return houseParts(item.houseType, item.colorIndex, item.facing, item.activeToday, item.village === true);
 }
 
 /** The M1 box house (kept for comparison in the asset gallery). */

@@ -3,7 +3,6 @@ import { changeItems, changesPanelOpen, type ChangeCard, type ChangeItem } from 
 
 interface Props {
   changes: ServerChanges;
-  vitality: number | null;
   /** Seen today by this account (server-side, identity module). */
   seen: boolean;
   onSeen: () => void;
@@ -14,9 +13,9 @@ interface Props {
 }
 
 /** On entry, once per account per Calgary day: what changed since yesterday (requirement.md §10.1). */
-export function ChangesPanel({ changes, vitality, seen, onSeen, extra = [], onShare }: Props) {
-  if (!changesPanelOpen(changes, vitality, seen, extra)) return null;
-  const items = changeItems(changes, vitality, extra);
+export function ChangesPanel({ changes, seen, onSeen, extra = [], onShare }: Props) {
+  if (!changesPanelOpen(changes, seen, extra)) return null;
+  const items = changeItems(changes, extra);
   const close = onSeen;
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/20 p-4" onClick={close}>

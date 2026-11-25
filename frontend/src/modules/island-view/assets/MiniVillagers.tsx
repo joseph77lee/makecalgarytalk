@@ -39,7 +39,7 @@ function mulberry32(seed: number) {
 }
 
 function MiniVillager({ index, startTile, colorIndex }: { index: number; startTile: Tile; colorIndex: number }) {
-  const { villagerSpeed, mood, walkableKeys, villagerBubbles, crowd } = useIslandCtx();
+  const { villagerSpeed, mood, walkableKeys, villagerBubbles, villagerBubbleTaps, crowd } = useIslandCtx();
   const meId = `villager:${index}`;
   useEffect(() => () => crowd.release(meId), [crowd, meId]);
   const group = useRef<Group>(null);
@@ -51,6 +51,7 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
   const showLabels = useIslandUi((u) => u.showLabels);
   const portal = useHtmlPortal();
   const bubble = showLabels ? villagerBubbles.get(index) : undefined;
+  const onBubbleTap = bubble ? villagerBubbleTaps.get(index) : undefined;
 
   useFrame(({ clock }, rawDt) => {
     const g = group.current;
@@ -114,8 +115,14 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
         <VoxelPerson seed={index * 7 + 3} shirt={ACCENTS[colorIndex % ACCENTS.length]} motion={motion} headTilt={headTilt} />
       </group>
       {bubble && (
-        <Html portal={portal} position={[0, 0.85, 0]} center zIndexRange={BUBBLE_Z} style={{ pointerEvents: 'none' }}>
-          <SpeechBubbleLabel text={bubble} />
+        <Html portal={portal} position={[0, 0.85, 0]} center zIndexRange={BUBBLE_Z} style={{ pointerEvents: onBubbleTap ? 'auto' : 'none' }}>
+          {onBubbleTap ? (
+            <button type="button" onClick={onBubbleTap} aria-label={`Open in Community News: ${bubble}`} className="block cursor-pointer">
+              <SpeechBubbleLabel text={bubble} />
+            </button>
+          ) : (
+            <SpeechBubbleLabel text={bubble} />
+          )}
         </Html>
       )}
     </group>
