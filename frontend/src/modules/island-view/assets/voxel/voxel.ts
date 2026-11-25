@@ -74,7 +74,7 @@ export function gableRoof(x0: number, x1: number, z0: number, z1: number, y: num
     const b = z1 + overhang - i;
     if (b - a <= 0) break;
     const c = i % 2 === 0 ? roof : shade(roof, -0.08);
-    parts.push(vb(x0 - overhang, y + i, a, x1 + overhang, y + i + 1, b, c));
+    parts.push({ ...vb(x0 - overhang, y + i, a, x1 + overhang, y + i + 1, b, c), tag: 'roof' });
     // gable end infill (inside the walls)
     const ia = z0 + i;
     const ib = z1 - i;
@@ -93,7 +93,7 @@ export function hipRoof(x0: number, x1: number, z0: number, z1: number, y: numbe
     const az = z0 - overhang + i;
     const bz = z1 + overhang - i;
     if (bx - ax <= 0 || bz - az <= 0) break;
-    parts.push(vb(ax, y + i, az, bx, y + i + 1, bz, i % 2 === 0 ? roof : shade(roof, -0.08)));
+    parts.push({ ...vb(ax, y + i, az, bx, y + i + 1, bz, i % 2 === 0 ? roof : shade(roof, -0.08)), tag: 'roof' });
   }
   return parts;
 }

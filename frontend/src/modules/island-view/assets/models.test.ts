@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FIXED_ASSET_KEYS, type BuildingObject, type ObjectOf } from '../layout';
-import { MOOD_PALETTES } from '../mood';
+import { MOOD_PALETTES, scenePalette } from '../mood';
 import { BUILDING_TREE } from '../plan/buildingTree';
 import { fitZoom } from '../scene/camera';
 import { remainingText } from '../scene/labelText';
@@ -9,7 +9,8 @@ import { asGhost, box } from './boxes';
 import { building, constructionSite, house, reservedPlot, silhouette, tree, type BuildCtx } from './models';
 import { BUILDING_VARIANTS } from './voxel/buildings';
 
-const ctx = (mood: 'lively' | 'normal' | 'sleepy'): BuildCtx => ({ mood, palette: MOOD_PALETTES[mood] });
+/** Scenery context: 'sleepy' kept as the old name for snow on the ground. */
+const ctx = (look: 'lively' | 'normal' | 'sleepy'): BuildCtx => ({ snow: look === 'sleepy', palette: scenePalette(look === 'sleepy') });
 const houseItem = (activeToday: boolean): ObjectOf<'house'> => ({
   assetKey: 'house',
   id: 'house:a',

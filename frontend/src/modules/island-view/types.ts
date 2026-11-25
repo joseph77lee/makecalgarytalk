@@ -7,6 +7,29 @@
 /** Visible mini villagers are capped at 20 (requirement.md §7.3, §20.3a). */
 export const MAX_MINI_VILLAGERS = 20;
 
+/**
+ * The real world around the island (requirement.md v1.40 §10.4): the sun over Calgary and the
+ * city's weather. The scene only shows it; it never changes game state.
+ */
+export interface IslandEnvironment {
+  sun: { azimuthDeg: number; elevationDeg: number };
+  weather: 'clear' | 'partly_cloudy' | 'overcast' | 'rain' | 'snow' | 'mix' | 'fog' | 'thunderstorm';
+  wind: 'calm' | 'breezy' | 'windy';
+  /** Direction the wind blows from (degrees clockwise from north); null = unknown. */
+  windFromDeg: number | null;
+  /** Snow lies on roofs, trees and ground. */
+  snowCover: boolean;
+}
+
+/** A clear winter noon: for previews without live weather. */
+export const NOON_CLEAR: IslandEnvironment = {
+  sun: { azimuthDeg: 180, elevationDeg: 15.5 },
+  weather: 'clear',
+  wind: 'calm',
+  windFromDeg: null,
+  snowCover: false,
+};
+
 export interface ResidentHouse {
   /** Stable house id (never a real address or user id). */
   id: string;

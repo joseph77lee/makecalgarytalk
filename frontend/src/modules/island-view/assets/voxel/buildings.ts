@@ -6,7 +6,7 @@
  * nearest path (`facing`).
  */
 import type { BuildCtx } from '../models';
-import type { BoxPart } from '../boxes';
+import { asSway, type BoxPart } from '../boxes';
 import { ART } from './samples';
 import { gableRoof, hipRoof, pick, rnd, shade, vb, windowX, windowZ } from './voxel';
 
@@ -43,10 +43,12 @@ const flowers = (x0: number, z0: number, x1: number, z1: number, seed: number): 
 /** A small Canadian flag (red bars, white centre with a red mark) on a pole at (x, z). */
 const flagAt = (x: number, z: number, h = 16): BoxPart[] => [
   vb(x - 0.25, 0, z - 0.25, x + 0.25, h, z + 0.25, '#9aa1ab'),
+  ...asSway([
   vb(x + 0.25, h - 3, z - 0.15, x + 1.25, h - 0.6, z + 0.15, '#e0453c'),
   vb(x + 1.25, h - 3, z - 0.15, x + 3.25, h - 0.6, z + 0.15, '#ffffff'),
   vb(x + 1.95, h - 2.2, z - 0.2, x + 2.55, h - 1.4, z + 0.2, '#e0453c'),
   vb(x + 3.25, h - 3, z - 0.15, x + 4.25, h - 0.6, z + 0.15, '#e0453c'),
+  ]),
 ];
 
 // --- Entrance (1×1) -------------------------------------------------------------------------

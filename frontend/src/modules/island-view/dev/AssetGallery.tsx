@@ -6,6 +6,7 @@ import { translate, type BoxPart } from '../assets/boxes';
 import { boxHouse, rail, track } from '../assets/models';
 import { FEATURE_VOXELS, ctrainCarParts, stationPlatformParts } from '../assets/voxel/features';
 import { MOOD_PALETTES } from '../mood';
+import { withLights } from '../assets/environmentParts';
 import {
   ART,
   apartment,
@@ -94,28 +95,8 @@ const TIMES = {
 } as const;
 type TimeName = keyof typeof TIMES;
 
-const WINDOW_COLOURS = new Set<string>([ART.glass, ART.glassDark, '#a9d3ea']);
-const LAMP = '#ffe7a3';
-
-/**
- * Day/night version of the parts: at night about 70% of windows glow warm (the rest stay dark),
- * lamps glow and throw a soft warm pool on the ground; by day lamp heads are off.
- */
-function forTime(parts: BoxPart[], night: boolean): BoxPart[] {
-  const out: BoxPart[] = [];
-  for (const b of parts) {
-    if (WINDOW_COLOURS.has(b.c) && night) {
-      const lit = rnd(Math.round(b.p[0] * 97), Math.round(b.p[1] * 89), Math.round(b.p[2] * 83)) < 0.7;
-      out.push(lit ? { ...b, layer: 'glow', c: rnd(Math.round(b.p[0] * 31), Math.round(b.p[2] * 37), 5) < 0.5 ? '#ffd98a' : '#ffe6b3' } : { ...b, c: '#2b3550' });
-    } else if (b.layer === 'glow' && b.c === LAMP) {
-      if (night) {
-        out.push(b);
-        if (b.s[1] > 0.1) out.push({ layer: 'mist', p: [b.p[0], 0.02, b.p[2]], s: [1.6, 0.02, 1.6], c: '#ffd27a' }, { layer: 'mist', p: [b.p[0], 0.03, b.p[2]], s: [0.9, 0.02, 0.9], c: '#ffe2a0' });
-      } else out.push({ ...b, layer: 'solid', c: '#f1ece0' });
-    } else out.push(b);
-  }
-  return out;
-}
+/** Day/night version of the parts (shared with the game, requirement.md v1.40 §10.4). */
+const forTime = withLights;
 
 /** Art Pass step 1 (M19): voxel style samples for review, at `?gallery`. Not part of the game. */
 export function AssetGallery() {
@@ -254,7 +235,7 @@ function GalleryLabel({ text, position }: { text: string; position: [number, num
   );
 }
 
-const CTX = { mood: 'normal' as const, palette: MOOD_PALETTES.normal };
+const CTX = { snow: false, palette: MOOD_PALETTES.lively };
 
 /** All signature feature blocks, two designs each (variant 0 and 1), on 2×2 lots. */
 function featureSamples(): Item[] {

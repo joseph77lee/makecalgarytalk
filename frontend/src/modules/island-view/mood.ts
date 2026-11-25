@@ -79,5 +79,18 @@ export const MOOD_PALETTES: Record<VitalityMood, MoodPalette> = {
   },
 };
 
+/**
+ * Island scenery colours (requirement.md v1.40 §7.4, §10.4): every island has the same full look
+ * (the former "lively" colours), changed only by the weather: snow on the ground turns grass
+ * white and water icy. The mood no longer changes scenery (only mini villagers, `villagerSpeed`);
+ * sky and light come from the real sun and weather (scene/sky.ts).
+ */
+export function scenePalette(snow: boolean): MoodPalette {
+  const green = MOOD_PALETTES.lively;
+  if (!snow) return green;
+  const winter = MOOD_PALETTES.sleepy;
+  return { ...green, grass: winter.grass, path: winter.path, water: winter.water, leaves: winter.leaves };
+}
+
 /** Fixed pastel accent colours used for roofs and villager clothes. */
 export const ACCENTS = ['#f4978e', '#b8a9e8', '#8ec5ea', '#9ad9c2', '#f6d37a', '#f2a6c8'] as const;

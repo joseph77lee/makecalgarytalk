@@ -6,7 +6,7 @@
  */
 import type { BuildingObject, ObjectOf } from '../layout';
 import { houseParts } from './voxel/houses';
-import { ACCENTS, type MoodPalette, type VitalityMood } from '../mood';
+import { ACCENTS, type MoodPalette } from '../mood';
 import { asGhost, box, translate, type BoxPart } from './boxes';
 import { BUILDING_VOXELS, placeholderModel } from './voxel/buildings';
 import { FEATURE_VOXELS, catenaryPole, crossingSign, railEndSignParts, stationPlatformParts } from './voxel/features';
@@ -16,7 +16,8 @@ import { vturn } from './voxel/voxel';
 
 export interface BuildCtx {
   palette: MoodPalette;
-  mood: VitalityMood;
+  /** Snow lies on the island (real weather, requirement.md v1.40 §10.4). */
+  snow: boolean;
 }
 
 const WALL = '#fbf3e4';
@@ -62,20 +63,22 @@ export function boxHouse(item: Pick<ObjectOf<'house'>, 'colorIndex' | 'activeTod
 
 
 /**
- * An island tree (Art Pass voxel): leafy trees in the mood's leaf colours, one in three a spruce;
- * the sleepy (winter evening) mood puts snow on the tops.
+ * An island tree (Art Pass voxel): leafy trees in the palette's leaf colours, one in three a spruce;
+ * snow on the ground puts snow on the tops too.
  */
-export function tree(item: ObjectOf<'tree'>, { palette, mood }: BuildCtx): BoxPart[] {
+export function tree(item: ObjectOf<'tree'>, { palette, snow }: BuildCtx): BoxPart[] {
   const seed = Math.round(item.x * 131 + item.z * 977);
-  const sleepy = mood === 'sleepy';
+  const sleepy = snow;
+  let parts: BoxPart[];
   if (item.variant === 2) {
-    const parts = spruce(seed, sleepy ? '#4f8a6b' : undefined);
+    parts = spruce(seed, sleepy ? '#4f8a6b' : undefined);
     if (sleepy) parts.push(vb(-2.7, 7, -2.7, 2.7, 7.4, 2.7, SNOW), vb(-1.9, 9.5, -1.9, 1.9, 9.9, 1.9, SNOW), vb(-1.1, 11.5, -1.1, 1.1, 11.9, 1.1, SNOW));
-    return parts;
+  } else {
+    parts = leafyTree(seed, palette.leaves[item.variant % 2], palette.trunk);
+    if (sleepy) parts.push(vb(-2.5, 10, -2.5, 2.5, 10.5, 2.5, SNOW), vb(-3.5, 8.5, -3.5, -1, 8.9, 3.5, SNOW));
   }
-  const parts = leafyTree(seed, palette.leaves[item.variant % 2], palette.trunk);
-  if (sleepy) parts.push(vb(-2.5, 10, -2.5, 2.5, 10.5, 2.5, SNOW), vb(-3.5, 8.5, -3.5, -1, 8.9, 3.5, SNOW));
-  return parts;
+  // the crown (everything above the lowest third of a tile) sways in the wind
+  return parts.map((b) => (b.layer === 'solid' && b.p[1] - b.s[1] / 2 > 0.3 ? { ...b, layer: 'sway' } : b));
 }
 
 /** A pathway light (voxel lamp post) at the tile's corner. */
@@ -93,10 +96,11 @@ const FLOWER_SPOTS = [
 ] as const;
 
 /**
- * A wild flower patch (lively communities): a low clump of leaves with blossoms of one colour
- * (plus a white one), so it reads as one patch instead of scattered coloured dots.
+ * A wild flower patch: a low clump of leaves with blossoms of one colour (plus a white one), so it
+ * reads as one patch instead of scattered coloured dots. Under snow it is a little snow pile.
  */
-export function flowers(item: ObjectOf<'flowers'>): BoxPart[] {
+export function flowers(item: ObjectOf<'flowers'>, ctx?: BuildCtx): BoxPart[] {
+  if (ctx?.snow) return snowPileParts(item.variant);
   const colour = ACCENTS[item.variant % ACCENTS.length];
   const leaf = '#6fae55';
   const parts: BoxPart[] = [box('solid', 0, 0, 0, 0.42, 0.07, 0.36, leaf), box('solid', 0.03, 0.07, -0.02, 0.28, 0.05, 0.24, shade(leaf, 0.08))];
@@ -107,7 +111,11 @@ export function flowers(item: ObjectOf<'flowers'>): BoxPart[] {
 }
 
 export function snowPile(item: ObjectOf<'snow-pile'>): BoxPart[] {
-  const dx = item.variant % 2 === 0 ? 0.1 : -0.1;
+  return snowPileParts(item.variant);
+}
+
+function snowPileParts(variant: number): BoxPart[] {
+  const dx = variant % 2 === 0 ? 0.1 : -0.1;
   return [box('solid', dx, 0, 0, 0.5, 0.15, 0.4, SNOW), box('solid', dx - 0.05, 0.15, 0.03, 0.28, 0.11, 0.22, SNOW)];
 }
 
@@ -121,7 +129,7 @@ export function reservedPlot(item: ObjectOf<'reserved-plot'>): BoxPart[] {
   const parts: BoxPart[] = [];
   for (const [x, z] of [[-hx, -hz], [hx, -hz], [-hx, hz], [hx, hz]]) {
     parts.push(box('solid', x, 0, z, 0.06, 0.32, 0.06, WOOD));
-    parts.push(box('solid', x + 0.06, 0.24, z, 0.1, 0.07, 0.02, flag));
+    parts.push(box('sway', x + 0.06, 0.24, z, 0.1, 0.07, 0.02, flag));
   }
   return parts;
 }

@@ -16,8 +16,8 @@ export { buildIslandLayout, buildingSiteTile, tileKey, type IslandLayout, type T
 export { loadIslandPlan } from './plan/loadPlan';
 export { decodePlan, walkableTiles, type IslandPlan } from './plan/islandPlan';
 export { BUILDING_TREE, buildingSpec, landStageForResidents, type BuildingSpec } from './plan/buildingTree';
-export { MAX_MINI_VILLAGERS } from './types';
+export { MAX_MINI_VILLAGERS, NOON_CLEAR } from './types';
 export { finishedExampleState } from './example';
 export { upcomingIdentity, type UpcomingIdentity } from './plan/upcoming';
 export { remainingText } from './scene/labelText';
-export type { BuildingStatus, BuildingView, CommunityViewState, Remaining, ResidentHouse, SpeechBubble } from './types';
+export type { BuildingStatus, BuildingView, CommunityViewState, IslandEnvironment, Remaining, ResidentHouse, SpeechBubble } from './types';

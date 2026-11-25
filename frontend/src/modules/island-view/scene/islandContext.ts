@@ -2,9 +2,16 @@ import { createContext, useContext } from 'react';
 import { create } from 'zustand';
 import type { BuildCtx } from '../assets/models';
 import type { Tile } from '../layout';
+import type { VitalityMood } from '../mood';
 import type { Crowd } from './crowd';
 
 export interface IslandCtx extends BuildCtx {
+  /** Vitality mood: drives only the mini villagers now (requirement.md v1.40 §7.4). */
+  mood: VitalityMood;
+  /** The mood's base villager walking speed (tiles per second). */
+  villagerSpeed: number;
+  /** Lamps and public windows on (night, storms; §10.4). */
+  lightsOn: boolean;
   /** Tiles reachable on foot that are currently shown (not still rising after growth). */
   walkable: Tile[];
   /** "x,z" keys of `walkable`. */

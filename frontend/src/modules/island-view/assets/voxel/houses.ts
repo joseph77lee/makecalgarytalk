@@ -68,7 +68,9 @@ const WINDOWS = new Set<string>([ART.glass, ART.glassDark]);
  * light their windows warm (§7.2).
  */
 export function houseParts(type: HouseType, seed: number, facing: number, active: boolean): BoxPart[] {
-  const parts = BUILDERS[type](seed).map((b) => (active && WINDOWS.has(b.c) ? { ...b, layer: 'glow' as const, c: '#ffd98a' } : b));
+  const parts = BUILDERS[type](seed).map((b): BoxPart =>
+    !WINDOWS.has(b.c) ? b : active ? { ...b, layer: 'glow', c: '#ffd98a' } : { ...b, tag: 'house-window' },
+  );
   return vturn(parts, facing);
 }
 

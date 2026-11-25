@@ -1,13 +1,17 @@
 import { OrbitControls, OrthographicCamera, PerformanceMonitor } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
-import { Box3, Vector3, type Group, type OrthographicCamera as OrthoCam, type Ray } from 'three';
+import { Box3, Vector3, type Group, type HemisphereLight, type OrthographicCamera as OrthoCam, type Ray } from 'three';
 import type { ItemsProps } from '../assets/BoxAsset';
 import { ASSET_REGISTRY, BuildingAsset } from '../assets/registry';
 import { FIXED_ASSET_KEYS, buildIslandLayout, tileKey, type BuildingObject, type IslandLayout, type PlacedObject, type Tile } from '../layout';
-import { MOOD_PALETTES, type MoodPalette } from '../mood';
+import { MOOD_PALETTES, scenePalette, type MoodPalette } from '../mood';
 import { stageMap, type IslandPlan } from '../plan/islandPlan';
-import type { CommunityViewState } from '../types';
+import type { CommunityViewState, IslandEnvironment } from '../types';
+import { useLiveWeather, WeatherChip, isSnowing, type LiveWeather } from '../../weather';
+import { Precipitation } from './Precipitation';
+import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, type SkyLook } from './sky';
+import { setWind } from './wind';
 import { BloomBurst } from './BloomBurst';
 import { BoxBatch } from './BoxBatch';
 import { ISLAND_AZIMUTH, landExtent, northScreenAngle, viewFrame, zoomForFrame, type ViewFrame } from './camera';
@@ -31,6 +35,10 @@ const CHEER_MS = 2500;
 const TAP_MAX_DRAG_PX = 8;
 const CAMERA_HEIGHT = 40;
 const CAMERA_FLAT = 40 * Math.SQRT2;
+/** Camera distance from what it looks at (fog is measured from the camera). */
+const CAMERA_DISTANCE = Math.hypot(CAMERA_HEIGHT, CAMERA_FLAT);
+/** When it starts snowing while the island is open, the snow lies after this long (§10.4). */
+const SNOW_SETTLE_MS = 45_000;
 
 interface IslandViewProps {
   /** The community's stored island plan (real shape, lots). */
@@ -44,19 +52,57 @@ interface IslandViewProps {
   newsBuildingKeys?: string[];
   /** Extra scene content (e.g. the avatar), rendered inside the island scene. */
   children?: ReactNode;
+  /** Fixed sun and weather (previews); by default the island shows Calgary's live weather and sun. */
+  environment?: IslandEnvironment;
+}
+
+function liveEnvironment(live: LiveWeather): IslandEnvironment {
+  const w = live.weather;
+  return { sun: live.sun, weather: w.state, wind: w.wind, windFromDeg: w.windFromDeg, snowCover: w.snowCover };
+}
+
+/**
+ * Snow cover as shown: it appears at once when the island opens, but when it starts snowing while
+ * the island is open, the ground turns white only after a while of falling snow.
+ */
+function useShownSnow(cover: boolean, snowing: boolean): boolean {
+  // the first answer after opening counts as "already there"
+  const [justOpened, setJustOpened] = useState(true);
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setJustOpened(false), 10_000);
+    return () => clearTimeout(t);
+  }, []);
+  const waiting = cover && snowing && !justOpened && !settled;
+  useEffect(() => {
+    if (!waiting) return;
+    const t = setTimeout(() => setSettled(true), SNOW_SETTLE_MS);
+    return () => clearTimeout(t);
+  }, [waiting]);
+  return cover && !waiting;
 }
 
 /** The 3D voxel island for one community, rendered purely from its plan and `state`. */
-export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuildingKeys = [], children }: IslandViewProps) {
+export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuildingKeys = [], children, environment }: IslandViewProps) {
   const layout = useMemo(() => buildIslandLayout(plan, state), [plan, state]);
-  const palette = MOOD_PALETTES[layout.mood];
+  const live = useLiveWeather();
+  const env = environment ?? liveEnvironment(live);
+  const snow = useShownSnow(env.snowCover, isSnowing(env.weather));
+  const palette = scenePalette(snow);
+  const { azimuthDeg, elevationDeg } = env.sun;
+  const look = useMemo(
+    () => skyLook({ sun: { azimuthDeg, elevationDeg }, weather: env.weather, wind: env.wind, windFromDeg: env.windFromDeg, snowCover: snow }),
+    [azimuthDeg, elevationDeg, env.weather, env.wind, env.windFromDeg, snow],
+  );
+  const flash = useMemo(() => createAngleChannel(), []);
   const north = useMemo(() => createAngleChannel(), []);
   // Low-end phones (§20.3a): if the frame rate stays low, drop to 1x pixel ratio and no shadows.
   // One way only (no flip-flopping between qualities while playing).
   const [lowQuality, setLowQuality] = useState(false);
 
   return (
-    <div className="absolute inset-0 transition-[background] duration-700" style={{ background: palette.sky }}>
+    <div className="absolute inset-0" style={{ background: skyBackground(look) }}>
+      {look.starsOpacity > 0 && <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: STARS, backgroundSize: STARS_TILE, opacity: look.starsOpacity, maskImage: 'linear-gradient(to bottom, #000 0%, #000 45%, transparent 85%)' }} />}
       <Canvas flat shadows={!lowQuality} dpr={lowQuality ? 1 : [1, 2]} gl={{ antialias: true, alpha: true }}>
         <PerformanceMonitor flipflops={2} onDecline={() => setLowQuality(true)} onFallback={() => setLowQuality(true)} />
         {/* A new community (plan) starts a fresh scene: camera angle, growth state. */}
@@ -65,6 +111,11 @@ export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuilding
           plan={plan}
           layout={layout}
           palette={palette}
+          snow={snow}
+          look={look}
+          env={env}
+          lowQuality={lowQuality}
+          flash={flash}
           state={state}
           onTileTap={onTileTap}
           onBuildingTap={onBuildingTap}
@@ -74,7 +125,9 @@ export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuilding
         </IslandScene>
         <CompassTracker channel={north} />
       </Canvas>
+      <FlashOverlay channel={flash} />
       <NorthArrow channel={north} />
+      {!environment && <WeatherChip weather={live.weather} night={look.nightness > 0.5} className="absolute bottom-[13.25rem] left-3 z-20" />}
     </div>
   );
 }
@@ -83,6 +136,11 @@ function IslandScene({
   plan,
   layout,
   palette,
+  snow,
+  look,
+  env,
+  lowQuality,
+  flash,
   state,
   onTileTap,
   onBuildingTap,
@@ -92,6 +150,11 @@ function IslandScene({
   plan: IslandPlan;
   layout: IslandLayout;
   palette: MoodPalette;
+  snow: boolean;
+  look: SkyLook;
+  env: IslandEnvironment;
+  lowQuality: boolean;
+  flash: AngleChannel;
   state: CommunityViewState;
   onTileTap?: (tile: Tile) => void;
   onBuildingTap?: (buildingKey: string) => void;
@@ -132,8 +195,19 @@ function IslandScene({
     for (const b of state.speechBubbles) if (b.anchor.kind === 'villager') villagerBubbles.set(b.anchor.index, b.text);
     if (replayIndex >= 0 && !villagerBubbles.has(replayIndex)) villagerBubbles.set(replayIndex, replayText);
     const walkable = layout.walkable.filter((t) => (stages.get(tileKey(t)) ?? 99) <= settled);
-    return { palette, mood: layout.mood, walkable, walkableKeys: new Set(walkable.map(tileKey)), landStage: settled, villagerBubbles, crowd };
-  }, [palette, layout, state.speechBubbles, settled, stages, replayIndex, replayText, crowd]);
+    return {
+      palette,
+      snow,
+      lightsOn: look.lightsOn,
+      mood: layout.mood,
+      villagerSpeed: MOOD_PALETTES[layout.mood].villagerSpeed,
+      walkable,
+      walkableKeys: new Set(walkable.map(tileKey)),
+      landStage: settled,
+      villagerBubbles,
+      crowd,
+    };
+  }, [palette, snow, look.lightsOn, layout, state.speechBubbles, settled, stages, replayIndex, replayText, crowd]);
 
   const houseBubbles = useMemo(() => {
     const m = new Map<string, string>();
@@ -190,6 +264,13 @@ function IslandScene({
   const wholeFrame = useMemo(() => viewFrame(plan.tiles, az), [plan, az]);
   const extent = useMemo(() => landExtent(layout.tiles, az), [layout.tiles, az]);
 
+  const wind = useMemo(() => windVector({ wind: env.wind, windFromDeg: env.windFromDeg }), [env.wind, env.windFromDeg]);
+  const precip = precipitation(env.weather, lowQuality);
+  // Fog from the front edge of the land: thick fog hides the back of the island a little.
+  const R = layout.landRadius + 2;
+  const fogNear = CAMERA_DISTANCE - R + R * (1.4 - 1.9 * look.fog);
+  const fogFar = CAMERA_DISTANCE + R + R * (7 - 5.5 * look.fog);
+
   const finishGrowth = () => {
     setSettled(layout.landStage);
     useSceneFx.setState({ celebrateUntil: performance.now() + CHEER_MS });
@@ -205,9 +286,12 @@ function IslandScene({
       />
       <CameraRig frame={landFrame} whole={wholeFrame} azimuth={az} />
       <CaptureRegistrar />
-      <Lights palette={palette} radius={layout.landRadius} azimuth={az} />
+      <Lights look={look} radius={layout.landRadius} storm={env.weather === 'thunderstorm' && !lowQuality} flash={flash} />
+      {look.fog > 0 && <fog attach="fog" args={[look.bg[2], fogNear, fogFar]} />}
+      <WindDriver wind={wind} />
+      {precip && <Precipitation kind={precip.kind} count={precip.count} radius={layout.landRadius + 5} wind={wind} />}
 
-      <BoxBatch parts={future} castShadow={false} receiveShadow={false} />
+      <BoxBatch parts={future} castShadow={false} receiveShadow={false} mistOpacity={0.16 * (1 - 0.7 * look.nightness)} />
       <BoxBatch parts={settledTerrain} castShadow={false} />
       {growing && (
         <RisingGroup key={layout.landStage} onDone={finishGrowth}>
@@ -218,7 +302,17 @@ function IslandScene({
       {(onTileTap || houseBoxes.length > 0) && <TapPlane radius={outlineRadius} isLand={(t) => stageOf(t) <= settled} onTileTap={tap} />}
       <ObjectsLayer objects={shown} />
       <Trains routes={layout.railRoutes} landStage={settled} />
-      <IslandLife code={plan.code} features={featuresFor(plan.code).map((f) => f.key)} hasWater={plan.water.length > 0} radius={layout.landRadius} extent={extent} azimuth={az} />
+      <IslandLife
+        code={plan.code}
+        features={featuresFor(plan.code).map((f) => f.key)}
+        hasWater={plan.water.length > 0}
+        radius={layout.landRadius}
+        extent={extent}
+        azimuth={az}
+        cloudSpeed={env.wind === 'windy' ? 3 : env.wind === 'breezy' ? 1.8 : 1}
+        cloudGrey={look.cloudiness}
+        quiet={look.nightness > 0.5 || look.cloudiness >= 0.75}
+      />
       <BloomBurst layout={layout} />
       <IslandLabels
         objects={shown}
@@ -376,19 +470,31 @@ function CameraRig({ frame, whole, azimuth }: { frame: ViewFrame; whole: ViewFra
   );
 }
 
-/** Soft pastel light from the viewer's top-left with modest shadows (§19.1, §20.3a). */
-function Lights({ palette, radius, azimuth }: { palette: MoodPalette; radius: number; azimuth: number }) {
+/**
+ * Light from the real sun's direction (requirement.md v1.40 §10.4), a moon light at night, soft
+ * sky light, modest shadows (§20.3a). Colours are props (not constructor args) so they follow
+ * the sky as it changes.
+ * In a thunderstorm (not in low quality) lightning flickers the sky light and a white overlay.
+ */
+function Lights({ look, radius, storm, flash }: { look: SkyLook; radius: number; storm: boolean; flash: AngleChannel }) {
   const extent = radius * 1.2 + 3;
-  // (-14, 26, 18) is top-left for the default view (azimuth π/4); rotate it with the camera.
-  const a = azimuth - Math.PI / 4;
-  const lx = -14 * Math.cos(a) + 18 * Math.sin(a);
-  const lz = 14 * Math.sin(a) + 18 * Math.cos(a);
+  const [dx, dy, dz] = look.lightDir;
+  const hemi = useRef<HemisphereLight>(null);
+  const strike = useRef({ next: 5, last: 0 });
+  useFrame(({ clock }) => {
+    const s = strike.current;
+    const f = storm ? lightningFlash(clock.elapsedTime, s) : 0;
+    if (hemi.current) hemi.current.intensity = look.ambientIntensity + f * 2.2;
+    if (f !== s.last) flash.emit(f);
+    s.last = f;
+  });
   return (
     <>
-      <hemisphereLight args={['#ffffff', '#d9d2ea', palette.ambientIntensity]} />
+      <hemisphereLight ref={hemi} color={look.hemiSky} groundColor={look.hemiGround} intensity={look.ambientIntensity} />
       <directionalLight
-        position={[lx, 26, lz]}
-        intensity={palette.sunIntensity}
+        position={[dx * 40, dy * 40, dz * 40]}
+        color={look.sunColor}
+        intensity={look.sunIntensity}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0004}
@@ -402,6 +508,32 @@ function Lights({ palette, radius, azimuth }: { palette: MoodPalette; radius: nu
       />
     </>
   );
+}
+
+/** Lightning brightness 0..1 at time t: a double flicker every 6–16 seconds. */
+function lightningFlash(t: number, s: { next: number }): number {
+  if (t > s.next + 0.5) s.next = t + 6 + Math.random() * 10;
+  const d = t - s.next;
+  return d < 0 ? 0 : d < 0.08 ? 1 : d < 0.16 ? 0.2 : d < 0.26 ? 0.8 : d < 0.5 ? (0.5 - d) * 2 : 0;
+}
+
+/** White sky flash for lightning, driven through the channel (no React state per frame). */
+function FlashOverlay({ channel }: { channel: AngleChannel }) {
+  const el = useRef<HTMLDivElement>(null);
+  useEffect(
+    () =>
+      channel.listen((f) => {
+        if (el.current) el.current.style.opacity = String(f * 0.55);
+      }),
+    [channel],
+  );
+  return <div ref={el} className="pointer-events-none absolute inset-0 bg-white" style={{ opacity: 0 }} />;
+}
+
+/** Writes time and wind into the shared sway uniforms once per frame (no re-render). */
+function WindDriver({ wind }: { wind: { x: number; z: number; strength: number } }) {
+  useFrame(({ clock }) => setWind(clock.elapsedTime, wind.x, wind.z, wind.strength));
+  return null;
 }
 
 const forward = new Vector3();
