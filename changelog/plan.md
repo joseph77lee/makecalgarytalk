@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.82
+**Changed:** M22 Sound → 🟨 Ready for playtest again: playtest-fix item ticked, Handoff gains the fixes (portal panel, per-channel switches and sliders, louder footsteps, tapping walkers, optional animal/villager files with a fallback).
+
+**Why:** Playtest fixes finished on `module/m22-sound`.
+
+**Previous:**
+- Header: `| Plan version | v1.81 |`, `| Current module | M22 Sound 🟦 (playtest fixes, then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟦 |`
+- M22 title `### M22 — Sound 🟦`; playtest-fix item unticked; Handoff tests line (verbatim): `  - **Tests:** \`sound/sound.test.ts\` (mix, music, work sound, settings, every catalogued file exists in \`public/sfx\`). 928 frontend tests.`
+
 ### 2026-11-25 — v1.81
 **Changed:** M22 Sound back to 🟦 for playtest fixes: new in-scope item (sound panel hidden behind the streak bar, volume sliders for music/ambience/effects, louder footsteps, tapping animals and villagers). Based on `requirement.md` v1.44.
 
