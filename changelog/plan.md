@@ -12,6 +12,26 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.85
+**Changed:** M22 Sound → 🟨 Ready for playtest again: gallery upgrade ticked, Handoff gains the gallery note.
+
+**Why:** Gallery upgrade finished on `module/m22-sound`.
+
+**Previous:**
+- Header: `| Plan version | v1.84 |`, `| Current module | M22 Sound 🟦 (gallery upgrade, then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟦 |`
+- M22 title `### M22 — Sound 🟦`; gallery item unticked; no gallery Handoff note.
+
+### 2026-11-25 — v1.84
+**Changed:** M22 Sound back to 🟦: new in-scope item, the `?gallery` upgrade (weather, wind, snow and times of day through the game's sky; a sound board; tapping animals and people).
+
+**Why:** Operator request (2026-11-25): checking weather and sounds is easier in the gallery than in the game.
+
+**Previous:**
+- Header: `| Plan version | v1.83 |`, `| Current module | M22 Sound 🟨 Ready for playtest (then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟨 |`
+- M22 title `### M22 — Sound 🟨`; no gallery item.
+
 ### 2026-11-25 — v1.83
 **Changed:** M22 Handoff: the animal and villager sound files are delivered; villagers have a female or male hello, fixed per villager.
 

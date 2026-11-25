@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.83 |
+| Plan version | v1.85 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
 | Based on | `requirement.md` v1.44 |
@@ -598,6 +598,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] `sound` module: Web Audio engine with music / ambience / effects buses, started on the first tap, paused while hidden, files loaded on demand, missing files skipped
   - [x] 🔊 button: music and effects on/off separately, remembered on the device, both on by default (music quiet)
   - [x] playtest fixes (operator 2026-11-25): the sound panel was hidden behind the streak bar; volume sliders for music, ambience and effects (ambience gets its own switch); louder footsteps; tapping an animal or a villager makes it hop with its sound (requirement v1.44)
+  - [x] `?gallery` upgrade for checking (operator request 2026-11-25): weather, wind, snow cover and times of day through the game's sky; a sound board (every effect, ambience auto or by hand, music, volumes); tapping animals and people
   - [x] action effects: project tap, work at the site (hammer / shovel / broom by building), success, error, footsteps (grass/snow), house knock, newspaper, post bubble pop, new building fanfare + cheer, island growth sparkle + cheer
   - [x] island ambience by weather and time (birds, wind, rain, winter night, water, campfire, construction; max 3 loops) and events (CTrain, geese, plane, owl at night, thunder with lightning)
   - [x] World Map sounds (tap a community, enter, open/close) and background music by time and weather (day / night / snow) with crossfades
@@ -611,6 +612,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Files:** 35 MP3s, 12 MB in `public/sfx/` (README in English with every source). No encoder was available, so files are as delivered; only small effects preload, loops and music load when first wanted (a first island visit fetches ≈ 3 MB: day music 2.3 MB + two loops). CC BY files (music-day, music-snow, ambient-night) are credited on `credits.html`, which now also credits Environment Canada.
   - **Not tested / known gaps:** listening (no audio in the test browser) — volumes, loop seams and the hammer cut (1.1 s from 2 s) need the user's ears; iPhone (needs the first tap; silent switch mutes Web Audio); real phone data use; the World Map does not change the ambience (the island underneath keeps its loops); `plane-flyby` is a low-quality preview.
   - **Playtest fixes (v1.44):** the panel is a portal on `document.body` (fixed, z 90+, closes on an outside tap) so the streak bar no longer covers it; settings are `{on, volume}` per channel (music / ambience / effects; old `{music, effects}` is migrated, ambience follows effects); slider level is squared. Footsteps 0.75 / 0.8. Tapping: `Crowd.whoAt`, `pokeWalker` / `pokeHop` (0.45 s hop read in useFrame), `walkerSound(id)`; the tap checks the tapped tile and its 4 neighbours before houses and moving. Animal and villager files (`deer-call`, `cougar-growl`, `rabbit-hop`, `villager-hello-female`, `villager-hello-male`) were delivered on 2026-11-25; each villager keeps one voice (hash of its index), and every one of these still falls back to `bubble-pop` if its file goes missing (catalog `fallback`).
+  - **Gallery (`?gallery`):** time presets are sun positions lit by `skyLook` (the M19 hand-made looks are gone, so gallery and game match); weather (8), wind (3) and snow-on-ground buttons with rain/snow particles, fog, sway and snowy roofs; `dev/SoundBoard.tsx` plays every effect (lists unknown ones under "Other"), ambience automatic or by hand, music auto/day/night/snow/off, plus the volume panel; animals and people in `GalleryLife` hop and sound when tapped (`Tappable`, same crowd ids as the game). No lightning in the gallery (thunder is on the board).
   - **Tests:** `sound/sound.test.ts` (mix, music, work sound, settings incl. migration, required files exist, optional ones have a fallback), walker taps in `crowd.test.ts`. 934 frontend tests.
 
 ### M16 — Deploy & Playtest ⬜
