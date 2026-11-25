@@ -5,6 +5,7 @@
  * from the island like every other model.
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import { useThree } from '@react-three/fiber';
 import { Color, InstancedBufferAttribute, Matrix4, MeshStandardMaterial, type InstancedMesh, type WebGLProgramParametersWithUniforms } from 'three';
 import { translate, type BoxPart } from '../assets/boxes';
 import type { ItemsProps } from '../assets/BoxAsset';
@@ -276,9 +277,29 @@ export function PfSwitch() {
     window.location.href = u.toString();
   };
   const label: Record<PfMode, string> = { off: 'Now (our voxels)', voxel: 'A · Polyfork → voxels', lowpoly: 'B · Polyfork low-poly' };
+  // frames per second and triangles, refreshed every second (for checking on a real phone)
+  const meter = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let frames = 0;
+    let start = performance.now();
+    let raf = 0;
+    const tick = (t: number) => {
+      frames++;
+      if (t - start >= 1000) {
+        const info = (window as unknown as { __pfInfo?: { render: { triangles: number } } }).__pfInfo;
+        if (meter.current) meter.current.textContent = `${Math.round((frames * 1000) / (t - start))} fps · ${info ? Math.round(info.render.triangles / 1000) : '?'}k triangles`;
+        frames = 0;
+        start = t;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
   return (
     <div className="absolute bottom-56 right-3 z-30 flex flex-col gap-1 rounded-2xl bg-white/90 p-1.5 text-xs shadow">
       <div className="px-1 font-bold text-slate-600">Spike: houses, trees, cars</div>
+      <div ref={meter} className="px-1 font-mono text-[11px] text-emerald-700">…</div>
       {(['off', 'voxel', 'lowpoly'] as PfMode[]).map((m) => (
         <button key={m} type="button" onClick={() => go(m)} className={`rounded-full px-2.5 py-1 text-left font-semibold ${m === PF_MODE ? 'bg-indigo-500 text-white' : 'text-slate-700'}`}>
           {label[m]}
@@ -286,4 +307,13 @@ export function PfSwitch() {
       ))}
     </div>
   );
+}
+
+/** SPIKE: exposes the renderer's counters for measuring (dev builds only). */
+export function PfStats() {
+  const gl = useThree((st) => st.gl);
+  useEffect(() => {
+    (window as unknown as { __pfInfo?: unknown }).__pfInfo = gl.info;
+  }, [gl]);
+  return null;
 }

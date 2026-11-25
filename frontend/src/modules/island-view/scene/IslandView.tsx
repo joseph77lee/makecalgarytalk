@@ -12,7 +12,7 @@ import { useLiveWeather, WeatherChip, isSnowing, type LiveWeather } from '../../
 import { Precipitation } from './Precipitation';
 import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, futureLandOpacity, type SkyLook } from './sky';
 import { setWind } from './wind';
-import { PfSwitch, pfAssetFor } from '../spike/PfAssets';
+import { PfStats, PfSwitch, pfAssetFor } from '../spike/PfAssets';
 import { initialSnowMemo, nextSnowMemo, snowVisible } from './snowCover';
 import { ambienceMix, musicFor, playSound, setAmbience, setMusic } from '../../sound';
 import { pickPostBubbles, seededRandom, villagerCount, villagersOutside } from './villagers';
@@ -150,6 +150,7 @@ export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuilding
           {children}
         </IslandScene>
         <CompassTracker channel={north} />
+        {import.meta.env.DEV && <PfStats />}
       </Canvas>
       <FlashOverlay channel={flash} />
       <NorthArrow channel={north} />
