@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.80 |
+| Plan version | v1.81 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
-| Based on | `requirement.md` v1.43 |
-| Current module | M22 Sound 🟨 Ready for playtest (then M16) |
+| Based on | `requirement.md` v1.44 |
+| Current module | M22 Sound 🟦 (playtest fixes, then M16) |
 
 ---
 
@@ -57,7 +57,7 @@
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
 | M21 | Living Community | FE + BE | | M20 | ✅ |
-| M22 | Sound | FE | | M21 | 🟨 |
+| M22 | Sound | FE | | M21 | 🟦 |
 | M16 | Deploy & Playtest | All + operator accounts | | M22 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
@@ -592,11 +592,12 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** real phone; post bubbles refresh only when the island is reopened (a post written meanwhile shows on the next visit); bubbles can overlap other labels on small phones; analytics still accepts the old `revival` share detail (no new events); requirement §5.1 onboarding text not reviewed for "mood".
   - **Tests:** `villagers.test.ts`, `lifePlan.test.ts` (downtown vs edge, small vs big), `development.test.ts`, `posts/bubbles.test.ts`, layout village-house cases, village night lights in `environmentParts.test.ts`; community-state and share-card tests updated. 919 frontend tests.
 
-### M22 — Sound 🟨
-**Goal:** The game sounds alive and satisfying: action effects, island ambience by weather and time, World Map sounds, background music, and music/effects switches (`requirement.md` v1.43 §10.5). Built after M21, **before M16**.
+### M22 — Sound 🟦
+**Goal:** The game sounds alive and satisfying: action effects, island ambience by weather and time, World Map sounds, background music, and music/effects switches (`requirement.md` v1.44 §10.5). Built after M21, **before M16**.
 - **In scope** (planned with the user 2026-11-25; files collected by the user in `frontend/public/sfx/`)
   - [x] `sound` module: Web Audio engine with music / ambience / effects buses, started on the first tap, paused while hidden, files loaded on demand, missing files skipped
   - [x] 🔊 button: music and effects on/off separately, remembered on the device, both on by default (music quiet)
+  - [ ] playtest fixes (operator 2026-11-25): the sound panel was hidden behind the streak bar; volume sliders for music, ambience and effects (ambience gets its own switch); louder footsteps; tapping an animal or a villager makes it hop with its sound (requirement v1.44)
   - [x] action effects: project tap, work at the site (hammer / shovel / broom by building), success, error, footsteps (grass/snow), house knock, newspaper, post bubble pop, new building fanfare + cheer, island growth sparkle + cheer
   - [x] island ambience by weather and time (birds, wind, rain, winter night, water, campfire, construction; max 3 loops) and events (CTrain, geese, plane, owl at night, thunder with lightning)
   - [x] World Map sounds (tap a community, enter, open/close) and background music by time and weather (day / night / snow) with crossfades

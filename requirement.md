@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.43 |
+| Document version | v1.44 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Status | Initial draft for starting MVP development |
@@ -392,7 +392,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Island ambience follows the real world** (10.4): birds by day, wind by its strength, rain, a quiet winter night, water where the community has water, the campfire and construction sites, the CTrain passing, Canada geese flying over, a distant plane, sometimes an owl at night, thunder with the lightning. At most 3 ambience loops at once, quiet under the effects
 - **World Map**: tapping a community, entering an island and opening/closing the map have soft sounds; panning and zooming are silent
 - **Background music**, quiet, by time and weather: a day tune, a night tune, a snow tune; it keeps playing across the island and the map and crossfades when it changes
-- **Sound settings**: a 🔊 button turns **music** and **effects** (with ambience) on and off separately; remembered on the device; both on by default (music quiet). Sound starts only after the first tap (browser rules) and pauses while the page is hidden
+- **Sound settings**: a 🔊 button opens a small panel where **music**, **ambience** and **effects** each have an on/off switch and a **volume slider**; remembered on the device; all on by default (music quiet). Sound starts only after the first tap (browser rules) and pauses while the page is hidden
+- **Tapping an animal or a mini villager**: it hops and makes its sound (geese honk, a deer call, a cougar growl, a jackrabbit rustle, a villager's friendly greeting); a soft pop stands in while a file is missing
 - Files are static (no server cost) and loaded only when needed; a missing file is skipped silently. Sources and licences are listed on the credits page (CC BY files are credited there)
 
 ---

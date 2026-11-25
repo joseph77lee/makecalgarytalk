@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.81
+**Changed:** M22 Sound back to 🟦 for playtest fixes: new in-scope item (sound panel hidden behind the streak bar, volume sliders for music/ambience/effects, louder footsteps, tapping animals and villagers). Based on `requirement.md` v1.44.
+
+**Why:** Operator playtest on a phone (2026-11-25).
+
+**Previous:**
+- Header: `| Plan version | v1.80 |`, `| Based on | \`requirement.md\` v1.43 |`, `| Current module | M22 Sound 🟨 Ready for playtest (then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟨 |`
+- M22 title `### M22 — Sound 🟨`, goal "(`requirement.md` v1.43 §10.5)"; no playtest-fix item.
+
 ### 2026-11-25 — v1.80
 **Changed:** M22 Sound → 🟨 Ready for playtest: in-scope items ticked, the first DoD item reworded to what could be checked without hearing (loading, first tap, switches), Handoff note added.
 
