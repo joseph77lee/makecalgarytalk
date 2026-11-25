@@ -3,4 +3,4 @@ export { installSound, playSound, setAmbience, setMusic, type PlayOptions } from
 export { ambienceMix, musicFor, workSound, type SoundScene } from './mix';
 export { useSoundSettings } from './settings';
 export { SoundToggle } from './SoundToggle';
-export type { EffectName, LoopName, TrackName } from './catalog';
+export { EFFECTS, LOOPS, TRACKS, type EffectName, type LoopName, type TrackName } from './catalog';

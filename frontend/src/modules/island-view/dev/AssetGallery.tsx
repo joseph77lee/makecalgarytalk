@@ -1,12 +1,17 @@
 import { Html, OrbitControls, OrthographicCamera } from '@react-three/drei';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useState } from 'react';
 import type { OrthographicCamera as OrthoCam } from 'three';
 import { translate, type BoxPart } from '../assets/boxes';
 import { boxHouse, rail, track } from '../assets/models';
 import { FEATURE_VOXELS, ctrainCarParts, stationPlatformParts } from '../assets/voxel/features';
 import { MOOD_PALETTES } from '../mood';
-import { withLights } from '../assets/environmentParts';
+import { withLights, withSnow } from '../assets/environmentParts';
+import { Precipitation } from '../scene/Precipitation';
+import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector } from '../scene/sky';
+import { setWind } from '../scene/wind';
+import type { IslandEnvironment } from '../types';
+import { SoundBoard } from './SoundBoard';
 import {
   ART,
   apartment,
@@ -85,24 +90,46 @@ function ViewRig({ view }: { view: ViewName }) {
   return null;
 }
 
-/** Time-of-day looks (the M20 preview): sun direction and colour, ambient light, sky. */
+/** Times of day as sun positions; the light, sky and lamps come from the game's sky (scene/sky.ts). */
 const TIMES = {
-  Dawn: { sun: [-28, 12, 14], sunColor: '#ffbf98', sunI: 1.7, sky: '#ffe0d0', ground: '#b4a8d6', ambI: 1.15, bg: 'linear-gradient(to bottom, #a9a7e0 0%, #f2c3c6 55%, #ffe0c2 100%)', night: false },
-  Morning: { sun: [-22, 20, 20], sunColor: '#fff0d8', sunI: 2.0, sky: '#fff4e6', ground: '#cfd2ea', ambI: 1.1, bg: 'linear-gradient(to bottom, #c4e1ff 0%, #e6f1ff 55%, #fff1df 100%)', night: false },
-  Noon: { sun: [-6, 34, 10], sunColor: '#ffffff', sunI: 2.4, sky: '#ffffff', ground: '#d9d2ea', ambI: 1.2, bg: 'linear-gradient(to bottom, #c9e0f7 0%, #e6f0fb 60%, #f1eefb 100%)', night: false },
-  Sunset: { sun: [26, 13, 16], sunColor: '#ffa868', sunI: 2.0, sky: '#ffd8ac', ground: '#a98fc4', ambI: 1.1, bg: 'linear-gradient(to bottom, #7d78c8 0%, #ee9bb2 45%, #ffb47c 75%, #ffd79c 100%)', night: false },
-  Night: { sun: [14, 30, -12], sunColor: '#a9bcff', sunI: 0.45, sky: '#4a5a8f', ground: '#1d2236', ambI: 0.5, bg: 'radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 32% 8%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 58% 14%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 78% 22%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 88% 6%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 22% 30%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 66% 32%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 45% 26%, #fff 50%, transparent 51%), linear-gradient(to bottom, #0f1636 0%, #24305e 60%, #3b3f73 100%)', night: true },
+  Dawn: { azimuthDeg: 120, elevationDeg: 2 },
+  Morning: { azimuthDeg: 140, elevationDeg: 12 },
+  Noon: { azimuthDeg: 180, elevationDeg: 35 },
+  Sunset: { azimuthDeg: 240, elevationDeg: 2 },
+  Night: { azimuthDeg: 0, elevationDeg: -40 },
 } as const;
 type TimeName = keyof typeof TIMES;
 
-/** Day/night version of the parts (shared with the game, requirement.md v1.40 §10.4). */
-const forTime = withLights;
+const WEATHERS: [IslandEnvironment['weather'], string][] = [
+  ['clear', '☀️'],
+  ['partly_cloudy', '⛅'],
+  ['overcast', '☁️'],
+  ['rain', '🌧️'],
+  ['snow', '❄️'],
+  ['mix', '🌨️'],
+  ['fog', '🌫️'],
+  ['thunderstorm', '⛈️'],
+];
+const WINDS: IslandEnvironment['wind'][] = ['calm', 'breezy', 'windy'];
+
+/** Wind for the swaying trees and flags, written once per frame. */
+function GalleryWind({ wind }: { wind: { x: number; z: number; strength: number } }) {
+  useFrame(({ clock }) => setWind(clock.elapsedTime, wind.x, wind.z, wind.strength));
+  return null;
+}
 
 /** Art Pass step 1 (M19): voxel style samples for review, at `?gallery`. Not part of the game. */
 export function AssetGallery() {
   const [view, setView] = useState<ViewName>('All');
   const [time, setTime] = useState<TimeName>('Noon');
-  const t = TIMES[time];
+  const [weather, setWeather] = useState<IslandEnvironment['weather']>('clear');
+  const [windLevel, setWindLevel] = useState<IslandEnvironment['wind']>('calm');
+  const [snow, setSnow] = useState(false);
+  const env: IslandEnvironment = { sun: TIMES[time], weather, wind: windLevel, windFromDeg: 270, snowCover: snow };
+  const look = skyLook(env);
+  const wind = windVector(env);
+  const precip = precipitation(weather, false);
+  const [dx, dy, dz] = look.lightDir;
   const { ground, items } = useMemo(() => {
     const items: Item[] = [
       { label: 'Bungalow', at: [-7.5, -4.5], parts: bungalow(1) },
@@ -158,13 +185,17 @@ export function AssetGallery() {
     return { ground: groundParts(), items };
   }, []);
 
-  const parts = useMemo(() => forTime([...ground, ...items.flatMap((i) => translate(i.parts, i.at[0], i.at[1]))], t.night), [ground, items, t.night]);
+  const parts = useMemo(
+    () => withLights(withSnow([...ground, ...items.flatMap((i) => translate(i.parts, i.at[0], i.at[1]))], snow), look.lightsOn),
+    [ground, items, snow, look.lightsOn],
+  );
 
   return (
-    <div className="absolute inset-0 transition-[background] duration-700" style={{ background: t.bg }}>
+    <div className="absolute inset-0" style={{ background: skyBackground(look) }}>
+      {look.starsOpacity > 0 && <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: STARS, backgroundSize: STARS_TILE, opacity: look.starsOpacity }} />}
       <div className="pointer-events-none absolute left-3 top-3 z-10 rounded-2xl bg-white/85 px-3 py-2 text-xs text-slate-700 shadow">
-        <div className="font-bold">Art Pass · style samples (M19)</div>
-        <div>Drag to rotate, scroll/pinch to zoom. Not in the game yet.</div>
+        <div className="font-bold">Asset gallery · M19 art, M20 weather, M22 sound</div>
+        <div>Drag to rotate, scroll/pinch to zoom. Tap animals and people to hear them.</div>
       </div>
       <div className="absolute right-3 top-3 z-10 flex gap-1 rounded-full bg-white/85 p-1 shadow">
         {(Object.keys(TIMES) as TimeName[]).map((n) => (
@@ -178,6 +209,24 @@ export function AssetGallery() {
           </button>
         ))}
       </div>
+      <div className="absolute right-3 top-14 z-10 flex flex-wrap justify-end gap-1 rounded-2xl bg-white/85 p-1 shadow">
+        {WEATHERS.map(([w, icon]) => (
+          <button key={w} type="button" onClick={() => setWeather(w)} title={w} className={`rounded-full px-2 py-1 text-xs font-semibold ${w === weather ? 'bg-sky-500 text-white' : 'text-slate-700'}`}>
+            {icon} {w.replace('_', ' ')}
+          </button>
+        ))}
+      </div>
+      <div className="absolute right-3 top-[6.5rem] z-10 flex gap-1 rounded-full bg-white/85 p-1 shadow">
+        {WINDS.map((w) => (
+          <button key={w} type="button" onClick={() => setWindLevel(w)} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${w === windLevel ? 'bg-teal-500 text-white' : 'text-slate-700'}`}>
+            💨 {w}
+          </button>
+        ))}
+        <button type="button" onClick={() => setSnow(!snow)} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${snow ? 'bg-slate-600 text-white' : 'text-slate-700'}`}>
+          ⛄ snow on ground
+        </button>
+      </div>
+      <SoundBoard scene={{ weather, wind: windLevel, nightness: look.nightness > 0.5 ? 1 : 0, hasWater: true, campfire: true, construction: true }} />
       <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 flex-wrap justify-center gap-1.5">
         {(Object.keys(VIEWS) as ViewName[]).map((v) => (
           <button
@@ -193,11 +242,11 @@ export function AssetGallery() {
       <Canvas flat shadows dpr={[1, 2]} gl={{ antialias: true }}>
         <OrthographicCamera makeDefault position={[22, 24, 22]} zoom={42} near={0.1} far={400} />
         <OrbitControls makeDefault target={[0, 0, 0.5]} enablePan minZoom={15} maxZoom={200} />
-        <hemisphereLight args={[t.sky, t.ground, t.ambI]} />
+        <hemisphereLight color={look.hemiSky} groundColor={look.hemiGround} intensity={look.ambientIntensity} />
         <directionalLight
-          position={t.sun as unknown as [number, number, number]}
-          color={t.sunColor}
-          intensity={t.sunI}
+          position={[dx * 40, dy * 40, dz * 40]}
+          color={look.sunColor}
+          intensity={look.sunIntensity}
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0004}
@@ -209,6 +258,9 @@ export function AssetGallery() {
           shadow-camera-near={1}
           shadow-camera-far={120}
         />
+        {look.fog > 0 && <fog attach="fog" args={[look.bg[2], 30 - 12 * look.fog, 75 - 30 * look.fog]} />}
+        <GalleryWind wind={wind} />
+        {precip && <Precipitation kind={precip.kind} count={precip.count} radius={14} wind={wind} />}
         <ViewRig view={view} />
         <GalleryLife />
         <BoxBatch parts={parts} />

@@ -1,6 +1,7 @@
 /**
  * Moving samples for the Art Pass gallery (M19): sky (clouds, birds, hot-air balloon, airplane)
  * and wildlife (deer, jackrabbit, cougar). Positions change in useFrame through refs only.
+ * Animals and people can be tapped to hear them (M22).
  */
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, type ReactNode } from 'react';
@@ -11,6 +12,29 @@ import { VoxelPerson, type PersonMotion } from '../assets/VoxelPerson';
 import type { AnimalKind } from '../assets/voxel/rigs';
 import { airplane, birdBody, birdWing, cloud, gooseFlyingBody, gooseWing, hotAirBalloon } from '../assets/voxel/samples';
 import { BoxBatch } from '../scene/BoxBatch';
+import { pokeHop, pokeWalker, walkerSound } from '../scene/islandContext';
+import { playSound } from '../../sound';
+
+/** Tap to hear it (M22): the same hop and sound as on the islands, keyed by the game's crowd id. */
+function Tappable({ id, children }: { id: string; children: ReactNode }) {
+  const hop = useRef<Group>(null);
+  useFrame(() => {
+    if (hop.current) hop.current.position.y = pokeHop(id);
+  });
+  return (
+    <group
+      ref={hop}
+      onClick={(e) => {
+        e.stopPropagation();
+        const sound = walkerSound(id);
+        pokeWalker(id);
+        if (sound) playSound(sound);
+      }}
+    >
+      {children}
+    </group>
+  );
+}
 
 function Batch({ parts, shadow = true }: { parts: BoxPart[]; shadow?: boolean }) {
   return <BoxBatch parts={parts} castShadow={shadow} receiveShadow={false} />;
@@ -34,7 +58,9 @@ function Walker({ kind, seed, move }: { kind: AnimalKind; seed: number; move: (t
   });
   return (
     <group ref={ref}>
-      <VoxelAnimal kind={kind} motion={motion} seed={seed} />
+      <Tappable id={`animal:${kind}:${seed}`}>
+        <VoxelAnimal kind={kind} motion={motion} seed={seed} />
+      </Tappable>
     </group>
   );
 }
@@ -48,7 +74,9 @@ function PersonWalker({ seed, shirt, move }: { seed: number; shirt: string; move
   });
   return (
     <group ref={ref}>
-      <VoxelPerson seed={seed} shirt={shirt} motion={motion} />
+      <Tappable id={`villager:${seed}`}>
+        <VoxelPerson seed={seed} shirt={shirt} motion={motion} />
+      </Tappable>
     </group>
   );
 }
