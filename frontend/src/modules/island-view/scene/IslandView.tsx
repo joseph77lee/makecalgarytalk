@@ -12,6 +12,7 @@ import { useLiveWeather, WeatherChip, isSnowing, type LiveWeather } from '../../
 import { Precipitation } from './Precipitation';
 import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, futureLandOpacity, type SkyLook } from './sky';
 import { setWind } from './wind';
+import { PfSwitch, pfAssetFor } from '../spike/PfAssets';
 import { ambienceMix, musicFor, playSound, setAmbience, setMusic } from '../../sound';
 import { pickPostBubbles, seededRandom, villagerCount, villagersOutside } from './villagers';
 import { BloomBurst } from './BloomBurst';
@@ -147,6 +148,7 @@ export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuilding
       </Canvas>
       <FlashOverlay channel={flash} />
       <NorthArrow channel={north} />
+      {import.meta.env.DEV && <PfSwitch />}
       {!environment && <WeatherChip weather={live.weather} night={look.nightness > 0.5} className="absolute bottom-[13.25rem] left-3 z-20" />}
     </div>
   );
@@ -417,7 +419,7 @@ function ObjectsLayer({ objects }: { objects: PlacedObject[] }) {
       {FIXED_ASSET_KEYS.map((key) => {
         const items = groups.get(key);
         if (!items) return null;
-        const Asset = ASSET_REGISTRY[key] as ComponentType<ItemsProps<PlacedObject>>;
+        const Asset = pfAssetFor(key) ?? (ASSET_REGISTRY[key] as ComponentType<ItemsProps<PlacedObject>>);
         return <Asset key={key} items={items} />;
       })}
       {buildings && <BuildingAsset items={buildings} />}
