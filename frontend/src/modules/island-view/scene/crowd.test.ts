@@ -62,7 +62,12 @@ describe('tapping walkers (requirement v1.44 §10.5)', () => {
 
   it('each walker has its sound; the avatar has none', async () => {
     const { walkerSound } = await import('./islandContext');
-    expect(walkerSound('villager:4')).toBe('villager-hello');
+    expect(['villager-hello-female', 'villager-hello-male']).toContain(walkerSound('villager:4'));
+    expect(walkerSound('villager:4')).toBe(walkerSound('villager:4')); // the same villager keeps its voice
+    const voices = Array.from({ length: 20 }, (_, i) => walkerSound(`villager:${i}`));
+    const female = voices.filter((v) => v === 'villager-hello-female').length;
+    expect(female).toBeGreaterThanOrEqual(6); // both voices are heard among the villagers
+    expect(female).toBeLessThanOrEqual(14);
     expect(walkerSound('animal:goose:41')).toBe('geese-honk');
     expect(walkerSound('animal:deer:3')).toBe('deer-call');
     expect(walkerSound('animal:cougar:37')).toBe('cougar-growl');

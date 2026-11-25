@@ -43,7 +43,16 @@ All converted to MP3, mono, 128 kbps, 44.1 kHz; long originals were cut to the p
 - music-night.mp3 — 1:24, "Music box lullaby" by csnmedia, Freesound 381973, CC0 — https://freesound.org/people/csnmedia/sounds/381973/
 - music-snow.mp3 — 2:22, "Jingle Bells (Calm)" by Kevin MacLeod (incompetech.com), **CC BY 4.0 (credit required)** — https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jingle%20Bells%20Calm.mp3
 
+## Animals & villagers (third batch, 2026-11-25)
+All converted to MP3, mono, 128 kbps, 44.1 kHz; long originals were cut to the part used, quiet ones were loudness-normalised.
+- deer-call.mp3 — 1.4 s, "Sika deer rut call #1" by Joseph SARDIN & Axeline T., BigSoundBank 3617, CC0 — https://bigsoundbank.com/sika-deer-rut-call-1-s3617.html — first call, 0.30–1.70 s of 12.58 s (a sika call is a shrill whistle, not a low "moo")
+- cougar-growl.mp3 — 1.25 s, "Growl" by egomassive, Freesound 536761, CC0 — https://freesound.org/people/egomassive/sounds/536761/ — deep growl, 0.50–1.75 s of 5.29 s, turned down so it stays gentle; a generic large-animal growl, not a real cougar recording (no CC0 cougar recording was found)
+- rabbit-hop.mp3 — 0.5 s, "Game Rustle Leaves" by Fupicat, Freesound 538152, CC0 — https://freesound.org/people/Fupicat/sounds/538152/ — leaves rustling as a small creature hops through, first 0.5 s (the rest of the file is silence), loudness-normalised
+- villager-hello-female.mp3 — 0.55 s, "feminine voice saying 'hello' different ways" by buggly, Freesound 505436, CC0 — https://freesound.org/people/buggly/sounds/505436/ — one short hello, 1.15–1.70 s of 36.97 s
+- villager-hello-male.mp3 — 0.70 s, "Driver.ogg" by scottfromscott, Freesound 211059, CC0 — https://freesound.org/people/scottfromscott/sounds/211059/ — a man's voice saying hello, 0.15–0.85 s of 1.60 s, volume raised (the original was quiet)
+
 ## Notes
+- Each mini villager keeps one voice (female or male, about half each) for its hello.
 - ambient-rain loops seamlessly; ambient-night and the three music files were not made as loops, so they end with a short fade-out (the game crossfades music changes).
 - Browsers allow sound only after the first tap; the game starts audio then.
 - Other sources consulted: Open Game SFX Index (Kenney + OpenGameArt CC0) — https://github.com/Mcamento8/open-game-sfx-index

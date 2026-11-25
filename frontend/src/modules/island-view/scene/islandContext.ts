@@ -90,9 +90,17 @@ export function pokeHop(id: string, now: number = performance.now()): number {
   return Math.sin(k * Math.PI) * 0.28;
 }
 
-/** The sound a walker makes when tapped, from its crowd id (`villager:3`, `animal:deer:7`). */
-export function walkerSound(id: string): 'villager-hello' | 'geese-honk' | 'deer-call' | 'cougar-growl' | 'rabbit-hop' | null {
-  if (id.startsWith('villager:')) return 'villager-hello';
+/**
+ * The sound a walker makes when tapped, from its crowd id (`villager:3`, `animal:deer:7`). Each
+ * villager keeps one voice (female or male, about half each), so it always sounds like itself.
+ */
+export function walkerSound(
+  id: string,
+): 'villager-hello-female' | 'villager-hello-male' | 'geese-honk' | 'deer-call' | 'cougar-growl' | 'rabbit-hop' | null {
+  if (id.startsWith('villager:')) {
+    const n = Number(id.slice('villager:'.length)) || 0;
+    return (((n + 1) * 2654435761) >>> 16) % 2 === 0 ? 'villager-hello-female' : 'villager-hello-male';
+  }
   const kind = id.startsWith('animal:') ? id.split(':')[1] : null;
   if (kind === 'goose') return 'geese-honk';
   if (kind === 'deer') return 'deer-call';

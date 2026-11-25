@@ -32,7 +32,8 @@ export const EFFECTS = {
   'deer-call': { volume: 0.5, gap: 0.5, fallback: 'bubble-pop' },
   'cougar-growl': { volume: 0.5, gap: 0.8, fallback: 'bubble-pop' },
   'rabbit-hop': { volume: 0.5, gap: 0.4, fallback: 'bubble-pop' },
-  'villager-hello': { volume: 0.5, gap: 0.4, fallback: 'bubble-pop' },
+  'villager-hello-female': { volume: 0.5, gap: 0.4, fallback: 'bubble-pop' },
+  'villager-hello-male': { volume: 0.5, gap: 0.4, fallback: 'bubble-pop' },
 } as const satisfies Record<string, { volume: number; gap?: number; fallback?: string }>;
 export type EffectName = keyof typeof EFFECTS;
 
