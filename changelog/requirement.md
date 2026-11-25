@@ -12,6 +12,24 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.44
+**Changed:** 10.5: the sound panel has music, ambience and effects each with an on/off switch and a volume slider (was: music and effects switches only); tapping an animal or a mini villager makes it hop and play its sound.
+
+**Why:** Operator playtest on a phone (2026-11-25): wanted volume control per kind of sound, and expected animals to make a sound when tapped.
+
+**Previous:**
+- Header: `| Document version | v1.43 |`
+- 10.5 (verbatim): `- **Sound settings**: a 🔊 button turns **music** and **effects** (with ambience) on and off separately; remembered on the device; both on by default (music quiet). Sound starts only after the first tap (browser rules) and pauses while the page is hidden`
+
+### 2026-11-25 — v1.43
+**Changed:** New 10.5 Sound (effects for player actions, island ambience following weather and time, World Map sounds, quiet background music by time and weather, separate music/effects switches, on by default, loaded only when needed, credits for CC BY files). 22.6 gains step 6c Sound before the deploy.
+
+**Why:** Operator request (2026-11-25): a full sound design before the playtest; the operator collected the sound and music files (`frontend/public/sfx/`).
+
+**Previous:**
+- Header: `| Document version | v1.42 |`
+- No 10.5 section; 22.6 had no step 6c (sound was only "short sound effect" in 8).
+
 ### 2026-11-24 — v1.42
 **Changed:** 7.3: always one mini villager per real story (today's action replay, today's posts), even on the smallest islands.
 

@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import type { Group } from 'three';
 import type { Tile } from '../layout';
 import { ACCENTS } from '../mood';
-import { useIslandCtx, useSceneFx } from '../scene/islandContext';
+import { useIslandCtx, useSceneFx, pokeHop } from '../scene/islandContext';
 import type { ObjectOf } from '../layout';
 import type { ItemsProps } from './BoxAsset';
 import { villagerPersonality } from './villagerPersonality';
@@ -95,7 +95,7 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
     if (cheering) y = Math.abs(Math.sin(time * 7 + index)) * 0.3;
     else if (moving && me.hops && mood === 'lively') y = Math.abs(Math.sin(time * me.bobRate + index)) * 0.05;
     else if (moving) y = Math.abs(Math.sin(time * me.bobRate + index)) * 0.015;
-    g.position.set(x, y, z);
+    g.position.set(x, y + pokeHop(meId), z);
     if (moving) g.rotation.y = Math.atan2(s.to.x - s.from.x, s.to.z - s.from.z);
 
     // Sleepy: heads down, sits when resting. Lively: looks up.

@@ -3,6 +3,7 @@
  * at stations, leaves the island, waits, and comes back the other way. Pure decoration: positions
  * are computed per frame in useFrame with refs (no React state per frame).
  */
+import { playSound } from '../../sound';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import type { Group } from 'three';
@@ -43,6 +44,7 @@ function Train({ path, seed }: { path: TrainPath; seed: number }) {
       t.wait -= dt;
       cars.current.forEach((c) => c && (c.visible = false));
       if (t.wait <= 0) {
+        playSound('tram-passing');
         t.s = -0.2;
         t.nextStop = 0;
       }

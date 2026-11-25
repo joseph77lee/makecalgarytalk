@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.78 |
+| Plan version | v1.86 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
-| Based on | `requirement.md` v1.42 |
-| Current module | M16 Deploy & Playtest (next; M21 ✅ Done) |
+| Based on | `requirement.md` v1.44 |
+| Current module | M16 Deploy & Playtest (next; M22 ✅ Done) |
 
 ---
 
@@ -57,7 +57,8 @@
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
 | M21 | Living Community | FE + BE | | M20 | ✅ |
-| M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |
+| M22 | Sound | FE | | M21 | ✅ |
+| M16 | Deploy & Playtest | All + operator accounts | | M22 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -78,7 +79,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M21 ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -591,6 +592,29 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** real phone; post bubbles refresh only when the island is reopened (a post written meanwhile shows on the next visit); bubbles can overlap other labels on small phones; analytics still accepts the old `revival` share detail (no new events); requirement §5.1 onboarding text not reviewed for "mood".
   - **Tests:** `villagers.test.ts`, `lifePlan.test.ts` (downtown vs edge, small vs big), `development.test.ts`, `posts/bubbles.test.ts`, layout village-house cases, village night lights in `environmentParts.test.ts`; community-state and share-card tests updated. 919 frontend tests.
 
+### M22 — Sound ✅
+**Goal:** The game sounds alive and satisfying: action effects, island ambience by weather and time, World Map sounds, background music, and music/effects switches (`requirement.md` v1.44 §10.5). Built after M21, **before M16**.
+- **In scope** (planned with the user 2026-11-25; files collected by the user in `frontend/public/sfx/`)
+  - [x] `sound` module: Web Audio engine with music / ambience / effects buses, started on the first tap, paused while hidden, files loaded on demand, missing files skipped
+  - [x] 🔊 button: music and effects on/off separately, remembered on the device, both on by default (music quiet)
+  - [x] playtest fixes (operator 2026-11-25): the sound panel was hidden behind the streak bar; volume sliders for music, ambience and effects (ambience gets its own switch); louder footsteps; tapping an animal or a villager makes it hop with its sound (requirement v1.44)
+  - [x] `?gallery` upgrade for checking (operator request 2026-11-25): weather, wind, snow cover and times of day through the game's sky; a sound board (every effect, ambience auto or by hand, music, volumes); tapping animals and people
+  - [x] action effects: project tap, work at the site (hammer / shovel / broom by building), success, error, footsteps (grass/snow), house knock, newspaper, post bubble pop, new building fanfare + cheer, island growth sparkle + cheer
+  - [x] island ambience by weather and time (birds, wind, rain, winter night, water, campfire, construction; max 3 loops) and events (CTrain, geese, plane, owl at night, thunder with lightning)
+  - [x] World Map sounds (tap a community, enter, open/close) and background music by time and weather (day / night / snow) with crossfades
+  - [x] credits page lists the sound and music sources (CC BY credited) and Environment Canada (missing since M20); `sfx/README.md` in English
+- **Definition of Done**
+  - [x] nothing loads or plays before the first tap, only the needed files load after it, switches remembered (checked in the browser by the loaded files and storage; I cannot hear audio, so every sound still needs the user's ears)
+  - [x] user has listened to it (confirmed 2026-11-25)
+- **Handoff**
+  - **Code:** `frontend/src/modules/sound/` — `catalog.ts` (every file name, relative volumes, minimum gaps), `engine.ts` (one AudioContext created on the first pointerdown/keydown by `installSound()` in `App`; buses music 0.22 / ambience 0.8 / effects 0.9 under a master; `playSound(name, {volume, delay, offset, duration, rate})`, `setAmbience(mix)` with 1.5 s fades, `setMusic(track)` with 2.5 s crossfades; suspended while hidden; ≤ 8 effects at once), `mix.ts` (pure, tested: `ambienceMix` ≤ 3 loops, `musicFor`, `workSound`), `settings.ts` (`mct.sound` in localStorage, both on by default), `SoundToggle.tsx` (in `IslandHud`).
+  - **Hooks:** daily-actions deps gained `feedback(tap|refused)` and `onHelped(site, buildingKey)` (work sound, then the confirm chime; the synthesized chime `daily-actions/sound.ts` is gone). `IslandView` has `IslandSound` (ambience + music; ambience stops when the island closes, music carries on), house knock, land rise + cheer, thunder 0.8–2 s after each lightning flash, a pop the first time each post shows. `IslandLife` `LifeSounds` (geese every 45 s when not quiet, plane per its period, owl at night every 40–90 s), `Trains` (tram when a train enters), `Avatar` footsteps per tile (snow variant), `celebrateNewBuilding` (fanfare + cheer), `NewspaperPanel` (page turn), `WorldMap` (whoosh on open/enter, select, close, ranking click), build-map open/close clicks.
+  - **Files:** 35 MP3s, 12 MB in `public/sfx/` (README in English with every source). No encoder was available, so files are as delivered; only small effects preload, loops and music load when first wanted (a first island visit fetches ≈ 3 MB: day music 2.3 MB + two loops). CC BY files (music-day, music-snow, ambient-night) are credited on `credits.html`, which now also credits Environment Canada.
+  - **Not tested / known gaps:** listening (no audio in the test browser) — volumes, loop seams and the hammer cut (1.1 s from 2 s) need the user's ears; iPhone (needs the first tap; silent switch mutes Web Audio); real phone data use; the World Map does not change the ambience (the island underneath keeps its loops); `plane-flyby` is a low-quality preview.
+  - **Playtest fixes (v1.44):** the panel is a portal on `document.body` (fixed, z 90+, closes on an outside tap) so the streak bar no longer covers it; settings are `{on, volume}` per channel (music / ambience / effects; old `{music, effects}` is migrated, ambience follows effects); slider level is squared. Footsteps 0.75 / 0.8. Tapping: `Crowd.whoAt`, `pokeWalker` / `pokeHop` (0.45 s hop read in useFrame), `walkerSound(id)`; the tap checks the tapped tile and its 4 neighbours before houses and moving. Animal and villager files (`deer-call`, `cougar-growl`, `rabbit-hop`, `villager-hello-female`, `villager-hello-male`) were delivered on 2026-11-25; each villager keeps one voice (hash of its index), and every one of these still falls back to `bubble-pop` if its file goes missing (catalog `fallback`).
+  - **Gallery (`?gallery`):** time presets are sun positions lit by `skyLook` (the M19 hand-made looks are gone, so gallery and game match); weather (8), wind (3) and snow-on-ground buttons with rain/snow particles, fog, sway and snowy roofs; `dev/SoundBoard.tsx` plays every effect (lists unknown ones under "Other"), ambience automatic or by hand, music auto/day/night/snow/off, plus the volume panel; animals and people in `GalleryLife` hop and sound when tapped (`Tappable`, same crowd ids as the game). No lightning in the gallery (thunder is on the board).
+  - **Tests:** `sound/sound.test.ts` (mix, music, work sound, settings incl. migration, required files exist, optional ones have a fallback), walker taps in `crowd.test.ts`. 934 frontend tests.
+
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
 - **In scope** (`docs/launch.md` has every step; most need the operator's accounts)
@@ -634,7 +658,7 @@ M0 ─┬─ M1 ── M2 ─┐
 ---
 
 ## After launch — checklist for the user to review
-**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
+**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M22 Sound → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
 
 **Growth (already modules)**
 - [ ] M17 Return Reminders — email (opted-in players) + web push (`requirement.md` §22.7a.1)

@@ -1,9 +1,16 @@
 import { createContext, useContext } from 'react';
 import { create } from 'zustand';
+import { playSound } from '../../sound';
+import type { AnimalKind } from '../assets/voxel/rigs';
 import type { BuildCtx } from '../assets/models';
 import type { Tile } from '../layout';
 import type { VitalityMood } from '../mood';
 import type { Crowd } from './crowd';
+
+/** Whether snow lies on the island (footsteps sound different, §10.5). */
+export function useIslandSnow(): boolean {
+  return useIslandCtx().snow;
+}
 
 export interface IslandCtx extends BuildCtx {
   /** Vitality mood: drives only the mini villagers now (requirement.md v1.40 §7.4). */
@@ -58,6 +65,52 @@ export function celebrateIsland(ms = 1500): void {
 
 /** A new building (requirement.md v1.41 §7.4, §12.2): villagers cheer and flowers bloom for `ms`. */
 export function celebrateNewBuilding(ms = 7000): void {
+  playSound('celebrate-built');
+  playSound('crowd-cheer', { delay: 0.6 });
   const until = performance.now() + ms;
   useSceneFx.setState({ celebrateUntil: until, bloomUntil: until });
+}
+
+// Tapping a villager or an animal makes it hop (requirement.md v1.44 §10.5). Read in useFrame.
+const pokes = new Map<string, number>();
+const HOP_MS = 450;
+
+export function pokeWalker(id: string): void {
+  pokes.set(id, performance.now());
+}
+
+/** Extra height of a poked walker right now (a quick hop), 0 when not poked. */
+export function pokeHop(id: string, now: number = performance.now()): number {
+  const at = pokes.get(id);
+  if (at === undefined) return 0;
+  const k = (now - at) / HOP_MS;
+  if (k >= 1) {
+    pokes.delete(id);
+    return 0;
+  }
+  return Math.sin(k * Math.PI) * 0.28;
+}
+
+/** The sound each animal makes when tapped; typed on every kind so a new kind cannot be forgotten. */
+const ANIMAL_SOUND: Record<AnimalKind, 'geese-honk' | 'deer-call' | 'cougar-growl' | 'rabbit-hop'> = {
+  deer: 'deer-call',
+  buck: 'deer-call',
+  goose: 'geese-honk',
+  cougar: 'cougar-growl',
+  jackrabbit: 'rabbit-hop',
+};
+
+/**
+ * The sound a walker makes when tapped, from its crowd id (`villager:3`, `animal:buck:23`). Each
+ * villager keeps one voice (female or male, about half each), so it always sounds like itself.
+ */
+export function walkerSound(
+  id: string,
+): 'villager-hello-female' | 'villager-hello-male' | 'geese-honk' | 'deer-call' | 'cougar-growl' | 'rabbit-hop' | null {
+  if (id.startsWith('villager:')) {
+    const n = Number(id.slice('villager:'.length)) || 0;
+    return (((n + 1) * 2654435761) >>> 16) % 2 === 0 ? 'villager-hello-female' : 'villager-hello-male';
+  }
+  const kind = id.startsWith('animal:') ? id.split(':')[1] : '';
+  return kind in ANIMAL_SOUND ? ANIMAL_SOUND[kind as AnimalKind] : null;
 }

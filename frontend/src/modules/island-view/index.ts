@@ -1,6 +1,6 @@
 // Public API of the `island-view` module (M1). Other modules import ONLY from here.
 export { IslandView } from './scene/IslandView';
-export { celebrateIsland, celebrateNewBuilding, useIslandCrowd, useIslandWalkable } from './scene/islandContext';
+export { celebrateIsland, celebrateNewBuilding, useIslandCrowd, useIslandSnow, useIslandWalkable } from './scene/islandContext';
 export type { Crowd } from './scene/crowd';
 export { useHtmlPortal } from './scene/htmlPortal';
 export { setCameraFocus, clearCameraFocus } from './scene/cameraFocus';

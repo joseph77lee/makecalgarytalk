@@ -36,7 +36,10 @@ export interface DailyActionsDeps {
   loadPlan: (code: string) => Promise<IslandPlan>;
   /** Where the avatar walks to help a building (next to its lot), or null if not on the island. */
   siteTile: (plan: IslandPlan, view: CommunityViewState, buildingKey: string) => Tile | null;
-  onHelped: (site: Tile) => void;
+  /** The avatar reached the site and works there (`buildingKey`: what is being built). */
+  onHelped: (site: Tile, buildingKey: string) => void;
+  /** Optional feedback (sounds): a project was tapped, or the tap was refused. */
+  feedback?: (kind: 'tap' | 'refused') => void;
   randomId: () => string;
   now: () => Date;
   setTimer: (fn: () => void, ms: number) => unknown;
@@ -234,20 +237,23 @@ export function createDailyActionsStore(deps: DailyActionsDeps) {
         if (!server || !queue || !project) return;
         if (!server.me?.member) {
           get().showToast('You are looking around. Find your community to help build it.');
+          deps.feedback?.('refused');
           return;
         }
         if (!canAct(queue)) {
           const wait = formatCountdown(msUntil(new Date(server.next_day_start), deps.now()));
           get().showToast(`No energy left today. New energy in ${wait}.`);
+          deps.feedback?.('refused');
           return;
         }
         setQueue(enqueue(queue, deps.randomId(), project.id));
+        deps.feedback?.('tap');
         const site = (plan && view && deps.siteTile(plan, view, project.building_key)) || { x: 0, z: 0 };
         const { seq } = deps.moveTo(site);
         deps.whenArrived(
           seq,
           () => {
-            deps.onHelped(site);
+            deps.onHelped(site, project.building_key);
             void get().flush();
           },
           ARRIVAL_TIMEOUT_MS,

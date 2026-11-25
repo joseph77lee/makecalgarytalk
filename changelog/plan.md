@@ -12,6 +12,86 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.86
+**Changed:** M22 Sound ✅ Done (user confirmed); header "Current module" → M16 Deploy & Playtest.
+
+**Why:** The user listened to M22 and asked to merge it.
+
+**Previous:**
+- Header: `| Plan version | v1.85 |`, `| Current module | M22 Sound 🟨 Ready for playtest (then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟨 |`
+- M22 title `### M22 — Sound 🟨`; DoD: `  - [ ] user has listened to it`
+
+### 2026-11-25 — v1.85
+**Changed:** M22 Sound → 🟨 Ready for playtest again: gallery upgrade ticked, Handoff gains the gallery note.
+
+**Why:** Gallery upgrade finished on `module/m22-sound`.
+
+**Previous:**
+- Header: `| Plan version | v1.84 |`, `| Current module | M22 Sound 🟦 (gallery upgrade, then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟦 |`
+- M22 title `### M22 — Sound 🟦`; gallery item unticked; no gallery Handoff note.
+
+### 2026-11-25 — v1.84
+**Changed:** M22 Sound back to 🟦: new in-scope item, the `?gallery` upgrade (weather, wind, snow and times of day through the game's sky; a sound board; tapping animals and people).
+
+**Why:** Operator request (2026-11-25): checking weather and sounds is easier in the gallery than in the game.
+
+**Previous:**
+- Header: `| Plan version | v1.83 |`, `| Current module | M22 Sound 🟨 Ready for playtest (then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟨 |`
+- M22 title `### M22 — Sound 🟨`; no gallery item.
+
+### 2026-11-25 — v1.83
+**Changed:** M22 Handoff: the animal and villager sound files are delivered; villagers have a female or male hello, fixed per villager.
+
+**Why:** The operator added the files and asked for two villager voices.
+
+**Previous:**
+- Header: `| Plan version | v1.82 |`
+- M22 Handoff (verbatim): `Optional files `deer-call`, `cougar-growl`, `rabbit-hop`, `villager-hello` are not delivered yet and fall back to `bubble-pop` (catalog `fallback`).`
+
+### 2026-11-25 — v1.82
+**Changed:** M22 Sound → 🟨 Ready for playtest again: playtest-fix item ticked, Handoff gains the fixes (portal panel, per-channel switches and sliders, louder footsteps, tapping walkers, optional animal/villager files with a fallback).
+
+**Why:** Playtest fixes finished on `module/m22-sound`.
+
+**Previous:**
+- Header: `| Plan version | v1.81 |`, `| Current module | M22 Sound 🟦 (playtest fixes, then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟦 |`
+- M22 title `### M22 — Sound 🟦`; playtest-fix item unticked; Handoff tests line (verbatim): `  - **Tests:** \`sound/sound.test.ts\` (mix, music, work sound, settings, every catalogued file exists in \`public/sfx\`). 928 frontend tests.`
+
+### 2026-11-25 — v1.81
+**Changed:** M22 Sound back to 🟦 for playtest fixes: new in-scope item (sound panel hidden behind the streak bar, volume sliders for music/ambience/effects, louder footsteps, tapping animals and villagers). Based on `requirement.md` v1.44.
+
+**Why:** Operator playtest on a phone (2026-11-25).
+
+**Previous:**
+- Header: `| Plan version | v1.80 |`, `| Based on | \`requirement.md\` v1.43 |`, `| Current module | M22 Sound 🟨 Ready for playtest (then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟨 |`
+- M22 title `### M22 — Sound 🟨`, goal "(`requirement.md` v1.43 §10.5)"; no playtest-fix item.
+
+### 2026-11-25 — v1.80
+**Changed:** M22 Sound → 🟨 Ready for playtest: in-scope items ticked, the first DoD item reworded to what could be checked without hearing (loading, first tap, switches), Handoff note added.
+
+**Why:** M22 work finished on `module/m22-sound`; waiting for the user to listen.
+
+**Previous:**
+- Header: `| Plan version | v1.79 |`, `| Current module | M22 Sound 🟦 (then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟦 |`
+- M22 title `### M22 — Sound 🟦`; all boxes unticked; DoD (verbatim): `  - [ ] every sound heard on desktop and a phone, switches remembered, nothing plays before the first tap`; no Handoff.
+
+### 2026-11-25 — v1.79
+**Changed:** New module **M22 Sound** 🟦 after M21 and before M16 (sound engine, 🔊 switches, action effects, island ambience by weather and time, World Map sounds, background music, credits). M16 now depends on M22; header, table, graph and the "Before opening" line updated. Based on `requirement.md` v1.43.
+
+**Why:** Operator request (2026-11-25): a full sound design before the playtest; the operator collected the files.
+
+**Previous:**
+- Header: `| Plan version | v1.78 |`, `| Based on | \`requirement.md\` v1.42 |`, `| Current module | M16 Deploy & Playtest (next; M21 ✅ Done) |`
+- Module table: `| M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |`
+- Graph: `(all) ── M14 ── M19 ── M20 ── M21 ── M16 ── M17 ── M18`
+- After launch: `M21 Living Community → M16 Deploy & Playtest`
+
 ### 2026-11-25 — v1.78
 **Changed:** M21 Living Community ✅ Done (user confirmed); header "Current module" → M16 Deploy & Playtest; last updated 2026-11-25.
 

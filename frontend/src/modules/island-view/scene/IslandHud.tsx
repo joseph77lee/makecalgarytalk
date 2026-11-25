@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { developmentLevel } from '../development';
 import type { CommunityViewState } from '../types';
 import { useIslandUi } from '../uiStore';
+import { SoundToggle } from '../../sound';
 
 /** Top bar: optional left slot (e.g. my profile), community name with its development level (§7.4), labels toggle. */
 export function IslandHud({ state, left, right }: { state: CommunityViewState; left?: ReactNode; right?: ReactNode }) {
@@ -20,6 +21,7 @@ export function IslandHud({ state, left, right }: { state: CommunityViewState; l
       </div>
       <div className="pointer-events-auto flex shrink-0 items-start gap-2">
       {right}
+      <SoundToggle />
       <button
         type="button"
         onClick={() => setShowLabels(!showLabels)}

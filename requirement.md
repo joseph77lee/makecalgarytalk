@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.42 |
+| Document version | v1.44 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Status | Initial draft for starting MVP development |
@@ -386,6 +386,16 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - At night the **street lamps and public buildings' windows light up**, about half of the village houses too; residents' houses light their windows only when the resident was active today (7.2)
 - Effects stay within the phone budget (20.3a): rain and snow particles capped (about 1,500), the low-quality mode (M14) reduces them further (about 400) and drops lightning
 
+
+### 10.5 Sound (before launch)
+- **Effects for what the player does**: tapping a project, the avatar working at the site (hammer for buildings, shovel for ice and snow places, broom for parks and gardens), success and error, footsteps (grass or snow), tapping a house (a knock), opening Community News (a page turn), a post bubble appearing (a soft pop), a new building (fanfare and cheering), the island growing (a rising sparkle and cheering)
+- **Island ambience follows the real world** (10.4): birds by day, wind by its strength, rain, a quiet winter night, water where the community has water, the campfire and construction sites, the CTrain passing, Canada geese flying over, a distant plane, sometimes an owl at night, thunder with the lightning. At most 3 ambience loops at once, quiet under the effects
+- **World Map**: tapping a community, entering an island and opening/closing the map have soft sounds; panning and zooming are silent
+- **Background music**, quiet, by time and weather: a day tune, a night tune, a snow tune; it keeps playing across the island and the map and crossfades when it changes
+- **Sound settings**: a 🔊 button opens a small panel where **music**, **ambience** and **effects** each have an on/off switch and a **volume slider**; remembered on the device; all on by default (music quiet). Sound starts only after the first tap (browser rules) and pauses while the page is hidden
+- **Tapping an animal or a mini villager**: it hops and makes its sound (geese honk, a deer call, a cougar growl, a jackrabbit rustle, a villager's friendly greeting); a soft pop stands in while a file is missing
+- Files are static (no server cost) and loaded only when needed; a missing file is skipped silently. Sources and licences are listed on the credits page (CC BY files are credited there)
+
 ---
 
 ## 11. Community news (community newspaper)
@@ -746,6 +756,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 6 | **Art Pass**: prettier voxel communities, buildings, people and props, and **busier** communities (scope planned with the operator) |
 | 6a | **Real weather and time of day** on the islands (10.4); island scenery no longer follows the Vitality mood |
 | 6b | **Living community** (decided with the operator 2026-11-24, details in 7.2–7.4): mini villagers appear naturally at random instead of from player counts; houses fill the land as the community grows, and every Verified Resident still has their own house among them ("My house"); Vitality is redefined as community development (new buildings); walking villagers show residents' recent community posts (14; never Safety posts) as speech bubbles credited by nickname |
+| 6c | **Sound** (10.5): effects, island ambience by weather and time, World Map sounds, background music, music/effects on-off |
 | 7 | Deploy with **all communities open** → family/friends playtest → public launch |
 
 ### 22.7 Launch
