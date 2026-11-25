@@ -12,6 +12,15 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.83
+**Changed:** M22 Handoff: the animal and villager sound files are delivered; villagers have a female or male hello, fixed per villager.
+
+**Why:** The operator added the files and asked for two villager voices.
+
+**Previous:**
+- Header: `| Plan version | v1.82 |`
+- M22 Handoff (verbatim): `Optional files `deer-call`, `cougar-growl`, `rabbit-hop`, `villager-hello` are not delivered yet and fall back to `bubble-pop` (catalog `fallback`).`
+
 ### 2026-11-25 — v1.82
 **Changed:** M22 Sound → 🟨 Ready for playtest again: playtest-fix item ticked, Handoff gains the fixes (portal panel, per-channel switches and sliders, louder footsteps, tapping walkers, optional animal/villager files with a fallback).
 

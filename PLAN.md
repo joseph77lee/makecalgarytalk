@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.82 |
+| Plan version | v1.83 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
 | Based on | `requirement.md` v1.44 |
@@ -610,7 +610,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Hooks:** daily-actions deps gained `feedback(tap|refused)` and `onHelped(site, buildingKey)` (work sound, then the confirm chime; the synthesized chime `daily-actions/sound.ts` is gone). `IslandView` has `IslandSound` (ambience + music; ambience stops when the island closes, music carries on), house knock, land rise + cheer, thunder 0.8–2 s after each lightning flash, a pop the first time each post shows. `IslandLife` `LifeSounds` (geese every 45 s when not quiet, plane per its period, owl at night every 40–90 s), `Trains` (tram when a train enters), `Avatar` footsteps per tile (snow variant), `celebrateNewBuilding` (fanfare + cheer), `NewspaperPanel` (page turn), `WorldMap` (whoosh on open/enter, select, close, ranking click), build-map open/close clicks.
   - **Files:** 35 MP3s, 12 MB in `public/sfx/` (README in English with every source). No encoder was available, so files are as delivered; only small effects preload, loops and music load when first wanted (a first island visit fetches ≈ 3 MB: day music 2.3 MB + two loops). CC BY files (music-day, music-snow, ambient-night) are credited on `credits.html`, which now also credits Environment Canada.
   - **Not tested / known gaps:** listening (no audio in the test browser) — volumes, loop seams and the hammer cut (1.1 s from 2 s) need the user's ears; iPhone (needs the first tap; silent switch mutes Web Audio); real phone data use; the World Map does not change the ambience (the island underneath keeps its loops); `plane-flyby` is a low-quality preview.
-  - **Playtest fixes (v1.44):** the panel is a portal on `document.body` (fixed, z 90+, closes on an outside tap) so the streak bar no longer covers it; settings are `{on, volume}` per channel (music / ambience / effects; old `{music, effects}` is migrated, ambience follows effects); slider level is squared. Footsteps 0.75 / 0.8. Tapping: `Crowd.whoAt`, `pokeWalker` / `pokeHop` (0.45 s hop read in useFrame), `walkerSound(id)`; the tap checks the tapped tile and its 4 neighbours before houses and moving. Optional files `deer-call`, `cougar-growl`, `rabbit-hop`, `villager-hello` are not delivered yet and fall back to `bubble-pop` (catalog `fallback`).
+  - **Playtest fixes (v1.44):** the panel is a portal on `document.body` (fixed, z 90+, closes on an outside tap) so the streak bar no longer covers it; settings are `{on, volume}` per channel (music / ambience / effects; old `{music, effects}` is migrated, ambience follows effects); slider level is squared. Footsteps 0.75 / 0.8. Tapping: `Crowd.whoAt`, `pokeWalker` / `pokeHop` (0.45 s hop read in useFrame), `walkerSound(id)`; the tap checks the tapped tile and its 4 neighbours before houses and moving. Animal and villager files (`deer-call`, `cougar-growl`, `rabbit-hop`, `villager-hello-female`, `villager-hello-male`) were delivered on 2026-11-25; each villager keeps one voice (hash of its index), and every one of these still falls back to `bubble-pop` if its file goes missing (catalog `fallback`).
   - **Tests:** `sound/sound.test.ts` (mix, music, work sound, settings incl. migration, required files exist, optional ones have a fallback), walker taps in `crowd.test.ts`. 934 frontend tests.
 
 ### M16 — Deploy & Playtest ⬜
