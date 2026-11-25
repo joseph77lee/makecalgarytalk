@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.78
+**Changed:** M21 Living Community ✅ Done (user confirmed); header "Current module" → M16 Deploy & Playtest; last updated 2026-11-25.
+
+**Why:** The user looked at M21 and asked to merge it.
+
+**Previous:**
+- Header: `| Plan version | v1.77 |`, `| Last updated | 2026-11-24 |`, `| Current module | M21 Living Community 🟨 Ready for playtest |`
+- Module table: `| M21 | Living Community | FE + BE | | M20 | 🟨 |`
+- M21 title: `### M21 — Living Community 🟨`; DoD: `  - [ ] user has looked at it`
+
 ### 2026-11-24 — v1.77
 **Changed:** M21 Living Community → 🟨 Ready for playtest: in-scope items and the screen check ticked, Handoff note added. Based on `requirement.md` v1.42.
 

@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.77 |
+| Plan version | v1.78 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-24 |
+| Last updated | 2026-11-25 |
 | Based on | `requirement.md` v1.42 |
-| Current module | M21 Living Community 🟨 Ready for playtest |
+| Current module | M16 Deploy & Playtest (next; M21 ✅ Done) |
 
 ---
 
@@ -56,7 +56,7 @@
 | M14 | Launch Prep | All | | All above | ✅ |
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
-| M21 | Living Community | FE + BE | | M20 | 🟨 |
+| M21 | Living Community | FE + BE | | M20 | ✅ |
 | M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
@@ -570,7 +570,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** real phone and the low-quality mode on screen (particle caps are unit-tested only); the 45 s settling delay (hook, not unit-tested, not watched on screen); production cron/pg_net; summer sun on screen (unit-tested); rain streaks are vertical on screen even in wind (the drops' positions slant, the streak sprite does not); sway is subtle at full-island zoom (≈ 2 px).
   - **Tests:** `supabase/tests/database/weather_rules.test.sql` (34: mapping, wind, storing, collecting answers, snow cover/melt), `weather/sun.test.ts` (solstices, equinox, sunrise azimuth, midnight from geometry), `weather/weather.test.ts`, `scene/sky.test.ts`, `assets/environmentParts.test.ts`; layout flower test now checks mood-independence. 899 frontend tests, 525 DB tests.
 
-### M21 — Living Community 🟨
+### M21 — Living Community ✅
 **Goal:** Communities look naturally alive whatever the number of players, every resident keeps "My house", and players see development instead of Vitality (`requirement.md` v1.42 §7.2–7.4). Built after M20, **before M16**.
 - **In scope** (decided with the user 2026-11-24)
   - [x] mini villagers: random count on the device by walkable land size (0–1 on the smallest islands, up to 20), fewer at night (~40 %) and in rain/snow (~50 %); behaviour by time and weather instead of mood; never named; action replay stays real (§7.3). The server's `mini_villagers` field is no longer used
@@ -581,7 +581,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done**
   - [x] requirement §7.2–7.4 (and §9, §10.4, §12.2 where Vitality appears) updated with changelog entries (v1.41)
   - [x] checked on screen (desktop 1280 px and 390 px phone): new community (stage 0, live), small and large islands (mock, Dev tools land stage), downtown (Beltline) and edge (Mahogany)
-  - [ ] user has looked at it
+  - [x] user has looked at it (confirmed 2026-11-25)
 - **Handoff**
   - **Villagers:** `island-view/scene/villagers.ts` — `villagerCount(walkable, rand, minimum)` (walkable ÷ 60 × 0.7–1.3, ≤ 20; walkable tiles per land stage ≈ 40, 114, 214, 348, 609, 860), `villagersOutside` (night × 0.4, wet × 0.5), `pickPostBubbles` (turns every 9 s, ≤ 2). `IslandView` picks a seed per visit and passes `villagerCountFor` to `buildIslandLayout` (new 4th parameter); extra villagers are hidden, not removed, when night or rain comes. One villager per real story (replay, posts) is always kept (requirement v1.42). Villager behaviour uses the old mood machinery driven by time and weather (`villagerMood`: night → resting, wet → ordinary, else lively). The server's `mini_villagers` field is still sent but unused — drop it when the snapshot function is next touched.
   - **Wildlife:** `frontend/scripts/wildness.py` → `island-view/plan/wildness.json` (0 within 4 km of the Downtown Commercial Core label, 1 from 18 km; rerun if the World Map data changes). `lifePlan(code, features, hasWater, landTiles, rand)`; `islandSize` = (walkable − 40) / 260.
