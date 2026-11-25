@@ -18,6 +18,7 @@ import { IslandLabels } from './Labels';
 import { futureLandParts, terrainParts } from './terrainParts';
 import { Trains } from './Trains';
 import { IslandLife } from './IslandLife';
+import { Crowd } from './crowd';
 import { featuresFor } from '../plan/features';
 
 const GROWTH_SECONDS = 1.4;
@@ -124,13 +125,15 @@ function IslandScene({
     return () => clearTimeout(t);
   }, [selectedHouse]);
 
+  // one crowd per island view: walkers claim tiles in it every frame
+  const [crowd] = useState(() => new Crowd());
   const ctx: IslandCtx = useMemo(() => {
     const villagerBubbles = new Map<number, string>();
     for (const b of state.speechBubbles) if (b.anchor.kind === 'villager') villagerBubbles.set(b.anchor.index, b.text);
     if (replayIndex >= 0 && !villagerBubbles.has(replayIndex)) villagerBubbles.set(replayIndex, replayText);
     const walkable = layout.walkable.filter((t) => (stages.get(tileKey(t)) ?? 99) <= settled);
-    return { palette, mood: layout.mood, walkable, walkableKeys: new Set(walkable.map(tileKey)), landStage: settled, villagerBubbles };
-  }, [palette, layout, state.speechBubbles, settled, stages, replayIndex, replayText]);
+    return { palette, mood: layout.mood, walkable, walkableKeys: new Set(walkable.map(tileKey)), landStage: settled, villagerBubbles, crowd };
+  }, [palette, layout, state.speechBubbles, settled, stages, replayIndex, replayText, crowd]);
 
   const houseBubbles = useMemo(() => {
     const m = new Map<string, string>();

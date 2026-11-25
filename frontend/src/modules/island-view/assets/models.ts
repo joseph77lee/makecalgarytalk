@@ -83,18 +83,27 @@ export function lamp(): BoxPart[] {
   return translate(lampPost(), 0.38, 0.38);
 }
 
+/** Blossom spots of a wild flower patch, close together in the middle of the tile. */
 const FLOWER_SPOTS = [
-  [-0.25, -0.2],
-  [0.2, -0.28],
-  [0.05, 0.12],
-  [-0.22, 0.26],
-  [0.28, 0.22],
+  [-0.12, -0.08],
+  [0.1, -0.12],
+  [0.02, 0.08],
+  [-0.14, 0.12],
+  [0.15, 0.1],
 ] as const;
 
+/**
+ * A wild flower patch (lively communities): a low clump of leaves with blossoms of one colour
+ * (plus a white one), so it reads as one patch instead of scattered coloured dots.
+ */
 export function flowers(item: ObjectOf<'flowers'>): BoxPart[] {
-  return FLOWER_SPOTS.slice(0, 3 + (item.variant % 3)).map(([x, z], i) =>
-    box('solid', x, 0, z, 0.1, 0.12, 0.1, ACCENTS[(item.variant + i) % ACCENTS.length]),
-  );
+  const colour = ACCENTS[item.variant % ACCENTS.length];
+  const leaf = '#6fae55';
+  const parts: BoxPart[] = [box('solid', 0, 0, 0, 0.42, 0.07, 0.36, leaf), box('solid', 0.03, 0.07, -0.02, 0.28, 0.05, 0.24, shade(leaf, 0.08))];
+  FLOWER_SPOTS.slice(0, 3 + (item.variant % 3)).forEach(([x, z], i) => {
+    parts.push(box('solid', x, 0.07, z, 0.03, 0.1, 0.03, leaf), box('solid', x, 0.16, z, 0.11, 0.07, 0.11, i === 2 ? '#fdf8f0' : colour));
+  });
+  return parts;
 }
 
 export function snowPile(item: ObjectOf<'snow-pile'>): BoxPart[] {

@@ -6,7 +6,7 @@
  * Pure decoration; positions change in useFrame through refs only.
  */
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Group } from 'three';
 import type { BoxPart } from '../assets/boxes';
 import { VoxelAnimal, type AnimalMotion } from '../assets/VoxelAnimal';
@@ -16,6 +16,7 @@ import { airplane, birdBody, birdWing, cloud, gooseFlyingBody, gooseWing, hotAir
 import type { FeatureKey } from '../plan/features';
 import type { LandExtent } from './camera';
 import { lifePlan } from './lifePlan';
+import { claimedTiles, freeSteps } from './steps';
 import { BoxBatch } from './BoxBatch';
 import { useIslandCtx } from './islandContext';
 
@@ -39,7 +40,9 @@ function Mover({ move, children }: { move: (t: number, g: Group) => void; childr
  * break into a run if its kind does (deer bound, cougars dash); its legs follow its gait.
  */
 function Wanderer({ kind, speed, seed }: { kind: AnimalKind; speed: number; seed: number }) {
-  const { walkable, walkableKeys } = useIslandCtx();
+  const { walkable, walkableKeys, crowd } = useIslandCtx();
+  const meId = `animal:${kind}:${seed}`;
+  useEffect(() => () => crowd.release(meId), [crowd, meId]);
   const start = walkable[Math.floor(((seed * 9301 + 49297) % 233280) / 233280 * walkable.length)] ?? { x: 0, z: 0 };
   const sim = useRef({ from: start, to: start, t: 1, pause: 1 + (seed % 3), rng: seed * 16807, running: false });
   const motion = useRef<AnimalMotion>({ speed: 0, running: false });
@@ -57,7 +60,7 @@ function Wanderer({ kind, speed, seed }: { kind: AnimalKind; speed: number; seed
     if (s.t >= 1) {
       if (s.pause > 0) s.pause -= dt;
       else {
-        const opts = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dz]) => ({ x: s.to.x + dx, z: s.to.z + dz })).filter((n) => walkableKeys.has(`${n.x},${n.z}`));
+        const opts = freeSteps(s.to, walkableKeys, crowd, meId);
         if (opts.length > 0) {
           s.from = s.to;
           s.to = opts[Math.floor(rnd() * opts.length)];
@@ -71,6 +74,7 @@ function Wanderer({ kind, speed, seed }: { kind: AnimalKind; speed: number; seed
     const pace = s.running && style.run ? speed * style.run.speedUp : speed;
     const moving = s.t < 1;
     if (moving) s.t = Math.min(1, s.t + dt * pace);
+    crowd.claim(meId, claimedTiles(s.from, s.to, moving));
     const x = s.from.x + (s.to.x - s.from.x) * s.t + 0.5;
     const z = s.from.z + (s.to.z - s.from.z) * s.t + 0.5;
     g.position.set(x, 0, z);

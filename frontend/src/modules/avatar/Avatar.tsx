@@ -2,7 +2,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import type { Group } from 'three';
-import { VoxelPerson, type PersonMotion, clearCameraFocus, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
+import { VoxelPerson, type PersonMotion, clearCameraFocus, useIslandCrowd, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
 import { useAvatarStore } from './avatarStore';
 import { stepCandidates } from './keyboard';
 import { usePressedKeys } from './usePressedKeys';
@@ -23,6 +23,8 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
   // Hair and skin follow the nickname, so my villager keeps its look.
   const nickSeed = useMemo(() => [...nickname].reduce((h, ch) => Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0, 2166136261), [nickname]);
   const { walkable, walkableKeys } = useIslandWalkable();
+  const crowd = useIslandCrowd();
+  useEffect(() => () => crowd.release('avatar'), [crowd]);
   const portal = useHtmlPortal();
   const walker = useRef<AvatarWalker | null>(null);
   walker.current ??= new AvatarWalker(SPAWN);
@@ -69,7 +71,9 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
       if (next) useAvatarStore.setState({ lastEvent: { avatarId: store.avatarId, to: next, seq, at: Date.now() } });
     }
 
-    const f = w.update(dt, AVATAR_SPEED);
+    const f = w.update(dt, AVATAR_SPEED, (k) => crowd.takenByOther(k, 'avatar'));
+    // the avatar claims its tiles too, so villagers and animals never walk through it
+    crowd.claim('avatar', f.moving ? [`${w.from.x},${w.from.z}`, `${w.to.x},${w.to.z}`] : [`${w.to.x},${w.to.z}`]);
     if (f.arrivedSeq !== null) useAvatarStore.getState().reportArrival(f.arrivedSeq, w.tile);
 
     const time = clock.elapsedTime;
