@@ -12,6 +12,15 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.42
+**Changed:** 7.3: always one mini villager per real story (today's action replay, today's posts), even on the smallest islands.
+
+**Why:** Screen check (M21): on a stage-0 island the only villager was busy replaying an action, so today's posts never showed.
+
+**Previous:**
+- Header: `| Document version | v1.41 |`
+- 7.3 (verbatim): `- **Count: natural and random**, chosen on the device for each visit and **scaled by the size of the walkable land**: the smallest islands have 0–1, the largest up to 20 (20.3a); fewer at night (about 40 %) and in rain or snow (about half). Not based on player counts or activity`
+
 ### 2026-11-24 — v1.41
 **Changed:** 7.2 houses fill every house lot on the risen land; every Verified Resident still has their own house among them ("My house"); the others are unnamed village houses (no tap; about half lit at night); archived residents' houses become village houses. 7.3 mini villagers: random count by island size (0–1 on the smallest islands, up to 20; fewer at night and in rain/snow), behaviour by time and weather, today's local posts (never Safety) as credited speech bubbles, wildlife by community location and island size. 7.4: players see the development level (0–4, as on the World Map) instead of Vitality; Vitality stays an internal operator metric; no moods, sleepy text or Community Revival. 2, 7.8, 9, 10.4, 12.2, 19.0, 22.2, 22.6, 22.8 and the glossary follow.
 

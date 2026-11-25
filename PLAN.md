@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.76 |
+| Plan version | v1.77 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
-| Based on | `requirement.md` v1.41 |
-| Current module | M21 Living Community 🟦 |
+| Based on | `requirement.md` v1.42 |
+| Current module | M21 Living Community 🟨 Ready for playtest |
 
 ---
 
@@ -56,7 +56,7 @@
 | M14 | Launch Prep | All | | All above | ✅ |
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
-| M21 | Living Community | FE + BE | | M20 | 🟦 |
+| M21 | Living Community | FE + BE | | M20 | 🟨 |
 | M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
@@ -570,18 +570,26 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** real phone and the low-quality mode on screen (particle caps are unit-tested only); the 45 s settling delay (hook, not unit-tested, not watched on screen); production cron/pg_net; summer sun on screen (unit-tested); rain streaks are vertical on screen even in wind (the drops' positions slant, the streak sprite does not); sway is subtle at full-island zoom (≈ 2 px).
   - **Tests:** `supabase/tests/database/weather_rules.test.sql` (34: mapping, wind, storing, collecting answers, snow cover/melt), `weather/sun.test.ts` (solstices, equinox, sunrise azimuth, midnight from geometry), `weather/weather.test.ts`, `scene/sky.test.ts`, `assets/environmentParts.test.ts`; layout flower test now checks mood-independence. 899 frontend tests, 525 DB tests.
 
-### M21 — Living Community 🟦
-**Goal:** Communities look naturally alive whatever the number of players, every resident keeps "My house", and players see development instead of Vitality (`requirement.md` v1.41 §7.2–7.4). Built after M20, **before M16**.
+### M21 — Living Community 🟨
+**Goal:** Communities look naturally alive whatever the number of players, every resident keeps "My house", and players see development instead of Vitality (`requirement.md` v1.42 §7.2–7.4). Built after M20, **before M16**.
 - **In scope** (decided with the user 2026-11-24)
-  - [ ] mini villagers: random count on the device by walkable land size (0–1 on the smallest islands, up to 20), fewer at night (~40 %) and in rain/snow (~50 %); behaviour by time and weather instead of mood; never named; action replay stays real (§7.3). The server's `mini_villagers` field is no longer used
-  - [ ] wildlife by community location (distance from the city centre, precomputed per community) and island size: downtown/inner city rarely, near the city edge often; fewer geese and jackrabbits overall (§7.3)
-  - [ ] houses: every house lot on the risen land has a house; residents' houses at their fixed lots (name on tap, "My house", lit when active today); the rest are unnamed village houses (no tap, about half lit at night); archived residents' houses look like village houses (§7.2)
-  - [ ] development instead of Vitality for players: HUD shows "Lv N" (0–4, same as the World Map); World Map tone by level; sleepy streak text, Community Revival (effect, panel line, share card) and the "Vitality a → b" panel line removed; Vitality stays on the server for the operator (§7.4)
-  - [ ] today's local posts as villager speech bubbles: "💬 nickname: ~40 characters…" with the kind icon, never Safety, at most 2 at a time taking turns, tap opens the post in Community News; same server function as the newspaper (one extra call per island visit) (§7.3)
+  - [x] mini villagers: random count on the device by walkable land size (0–1 on the smallest islands, up to 20), fewer at night (~40 %) and in rain/snow (~50 %); behaviour by time and weather instead of mood; never named; action replay stays real (§7.3). The server's `mini_villagers` field is no longer used
+  - [x] wildlife by community location (distance from the city centre, precomputed per community) and island size: downtown/inner city rarely, near the city edge often; fewer geese and jackrabbits overall (§7.3)
+  - [x] houses: every house lot on the risen land has a house; residents' houses at their fixed lots (name on tap, "My house", lit when active today); the rest are unnamed village houses (no tap, about half lit at night); archived residents' houses look like village houses (§7.2)
+  - [x] development instead of Vitality for players: HUD shows "Lv N" (0–4, same as the World Map); World Map tone by level; sleepy streak text, Community Revival (effect, panel line, share card) and the "Vitality a → b" panel line removed; Vitality stays on the server for the operator (§7.4)
+  - [x] today's local posts as villager speech bubbles: "💬 nickname: ~40 characters…" with the kind icon, never Safety, at most 2 at a time taking turns, tap opens the post in Community News; same server function as the newspaper (one extra call per island visit) (§7.3)
 - **Definition of Done**
   - [x] requirement §7.2–7.4 (and §9, §10.4, §12.2 where Vitality appears) updated with changelog entries (v1.41)
-  - [ ] checked on screen (desktop and phone) for a new, a small and a large community, downtown and edge
+  - [x] checked on screen (desktop 1280 px and 390 px phone): new community (stage 0, live), small and large islands (mock, Dev tools land stage), downtown (Beltline) and edge (Mahogany)
   - [ ] user has looked at it
+- **Handoff**
+  - **Villagers:** `island-view/scene/villagers.ts` — `villagerCount(walkable, rand, minimum)` (walkable ÷ 60 × 0.7–1.3, ≤ 20; walkable tiles per land stage ≈ 40, 114, 214, 348, 609, 860), `villagersOutside` (night × 0.4, wet × 0.5), `pickPostBubbles` (turns every 9 s, ≤ 2). `IslandView` picks a seed per visit and passes `villagerCountFor` to `buildIslandLayout` (new 4th parameter); extra villagers are hidden, not removed, when night or rain comes. One villager per real story (replay, posts) is always kept (requirement v1.42). Villager behaviour uses the old mood machinery driven by time and weather (`villagerMood`: night → resting, wet → ordinary, else lively). The server's `mini_villagers` field is still sent but unused — drop it when the snapshot function is next touched.
+  - **Wildlife:** `frontend/scripts/wildness.py` → `island-view/plan/wildness.json` (0 within 4 km of the Downtown Commercial Core label, 1 from 18 km; rerun if the World Map data changes). `lifePlan(code, features, hasWater, landTiles, rand)`; `islandSize` = (walkable − 40) / 260.
+  - **Houses:** `layout.ts` fills every remaining house lot on the risen land with `village: true` houses (empty nickname → no tap, no label). `houseParts(..., village)` tags about half of them per house `village-window` (lit at night by `withLights`), the rest `house-window` (never lit).
+  - **Development:** `island-view/development.ts` `developmentLevel()` mirrors `gamecore.world_map()` (keep them in step). HUD "Lv N". World Map `levelColours(level)` (lively palette from Lv 2, lit windows from Lv 3). `reviveIsland` → `celebrateNewBuilding` (played when the changes panel closes after a build). Removed: `revivedToday`, `sleepyText`, `StreakBar.sleepyName`, the `revival` share card, the Vitality panel line. Vitality stays in the snapshot and the World Map RPC (operator use); `layout.mood` is still computed but only the dev panel shows it.
+  - **Posts:** `posts/bubbles.ts` (`postBubbleText`, `postBubbles`: today only, never Safety, not reported by me); `news/islandPosts.ts` `useTodayPostBubbles(communityId)` reads the newspaper RPC once per community (no panel), so posts only appear once the Welcome sign is built (the paper is locked before). Tapping opens the newspaper (it does not scroll to the post).
+  - **Not tested / known gaps:** real phone; post bubbles refresh only when the island is reopened (a post written meanwhile shows on the next visit); bubbles can overlap other labels on small phones; analytics still accepts the old `revival` share detail (no new events); requirement §5.1 onboarding text not reviewed for "mood".
+  - **Tests:** `villagers.test.ts`, `lifePlan.test.ts` (downtown vs edge, small vs big), `development.test.ts`, `posts/bubbles.test.ts`, layout village-house cases, village night lights in `environmentParts.test.ts`; community-state and share-card tests updated. 919 frontend tests.
 
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.

@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.41 |
+| Document version | v1.42 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Status | Initial draft for starting MVP development |
@@ -172,7 +172,7 @@ Goal: moving never punishes the person who moves or the residents who stay.
 
 ### 7.3 Mini villagers and wildlife (ambient life)
 - **Ambient characters that make every island feel lived in**, whatever the number of players (operator decision 2026-11-24); they never pretend to be real players (no names, not counted as residents)
-- **Count: natural and random**, chosen on the device for each visit and **scaled by the size of the walkable land**: the smallest islands have 0–1, the largest up to 20 (20.3a); fewer at night (about 40 %) and in rain or snow (about half). Not based on player counts or activity
+- **Count: natural and random**, chosen on the device for each visit and **scaled by the size of the walkable land**: the smallest islands have 0–1, the largest up to 20 (20.3a); fewer at night (about 40 %) and in rain or snow (about half). Not based on player counts or activity. There is always one villager per real story to tell (today's action replay, today's posts), so a tiny island still shows them
 - Behaviour follows the time and weather (strolling, resting, cheering when someone helps), each with its own pace (10.1)
 - **Action replay**: mini villagers replay real actions residents took today, with a system speech bubble
   - e.g. a mini villager shovels snow with "Sarah cleared the snow"

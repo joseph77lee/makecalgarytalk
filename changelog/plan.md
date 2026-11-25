@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.77
+**Changed:** M21 Living Community → 🟨 Ready for playtest: in-scope items and the screen check ticked, Handoff note added. Based on `requirement.md` v1.42.
+
+**Why:** M21 work finished on `module/m21-living-community`; waiting for the user's playtest.
+
+**Previous:**
+- Header: `| Plan version | v1.76 |`, `| Based on | \`requirement.md\` v1.41 |`, `| Current module | M21 Living Community 🟦 |`
+- Module table: `| M21 | Living Community | FE + BE | | M20 | 🟦 |`
+- M21 title `### M21 — Living Community 🟦`, goal "(`requirement.md` v1.41 §7.2–7.4)", all in-scope boxes and the screen check unticked, no Handoff.
+
 ### 2026-11-24 — v1.76
 **Changed:** M21 Living Community 🟦 In progress; its scope rewritten with the details decided with the user (random villagers by land size, wildlife by location, village houses half lit at night and not tappable, "Lv N" instead of Vitality, today's posts only as bubbles). Based on `requirement.md` v1.41.
 

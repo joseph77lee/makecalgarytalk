@@ -171,3 +171,4 @@ Each module is usually worked on in a **new session** with no memory of earlier 
 - 2026-11-24: ran a throwaway vitest with `--root /`, which crawled the whole disk until it timed out → put throwaway tests inside `frontend/src`, run them normally and delete them right after
 - 2026-11-24: chased "missing tree crowns" on the mock island, which simply has no trees at its land stage → before debugging rendering, confirm the object is in the layout (count asset keys, or raise the land stage in Dev tools)
 - 2026-11-24: fixed escaped backticks in a new changelog entry with a file-wide `sed`, which also rewrote older entries (`\`` is the convention for nested code) → edit only the new entry; never run file-wide replacements on changelogs
+- 2026-11-24: `git add frontend` committed the user's untracked `frontend/public/sfx/` and a `grep -v sfx` on the status output hid it (caught before pushing) → add exact paths; never filter `git status` output right before a commit
