@@ -119,7 +119,7 @@ const WEATHERS: [IslandEnvironment['weather'], string][] = [
 const WINDS: IslandEnvironment['wind'][] = ['calm', 'breezy', 'windy'];
 
 /**
- * The sun, aimed at the section being viewed so the Polyfork plates (40+ tiles away) get the same
+ * The sun, aimed at the section being viewed so the design plates (40+ tiles away) get the same
  * shadows as the box diorama (the shadow box is 40 tiles wide around `centre`).
  */
 function SunLight({ centre, dir, color, intensity }: { centre: readonly [number, number]; dir: [number, number, number]; color: string; intensity: number }) {

@@ -7,10 +7,8 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, type ReactNode } from 'react';
 import type { Group } from 'three';
 import type { BoxPart } from '../assets/boxes';
-import type { AnimalMotion } from '../assets/VoxelAnimal';
-import type { PersonMotion } from '../assets/VoxelPerson';
-import { Animal, Person } from '../assets/lowpoly/RiggedFigures';
-import { villagerModel } from '../assets/lowpoly/rigged';
+import { VoxelAnimal, type AnimalMotion } from '../assets/VoxelAnimal';
+import { VoxelPerson, type PersonMotion } from '../assets/VoxelPerson';
 import type { AnimalKind } from '../assets/voxel/rigs';
 import { airplane, birdBody, birdWing, cloud, gooseFlyingBody, gooseWing, hotAirBalloon } from '../assets/voxel/samples';
 import { BoxBatch } from '../scene/BoxBatch';
@@ -61,7 +59,7 @@ function Walker({ kind, seed, move }: { kind: AnimalKind; seed: number; move: (t
   return (
     <group ref={ref}>
       <Tappable id={`animal:${kind}:${seed}`}>
-        <Animal kind={kind} motion={motion} seed={seed} />
+        <VoxelAnimal kind={kind} motion={motion} seed={seed} />
       </Tappable>
     </group>
   );
@@ -77,7 +75,7 @@ function PersonWalker({ seed, shirt, move }: { seed: number; shirt: string; move
   return (
     <group ref={ref}>
       <Tappable id={`villager:${seed}`}>
-        <Person model={villagerModel(seed)} seed={seed} shirt={shirt} motion={motion} />
+        <VoxelPerson seed={seed} shirt={shirt} motion={motion} />
       </Tappable>
     </group>
   );
