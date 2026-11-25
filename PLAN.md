@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.75 |
+| Plan version | v1.76 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
-| Based on | `requirement.md` v1.40 |
-| Current module | M21 Living Community (next; M20 ✅ Done) |
+| Based on | `requirement.md` v1.41 |
+| Current module | M21 Living Community 🟦 |
 
 ---
 
@@ -56,7 +56,7 @@
 | M14 | Launch Prep | All | | All above | ✅ |
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
-| M21 | Living Community | FE + BE | | M20 | ⬜ |
+| M21 | Living Community | FE + BE | | M20 | 🟦 |
 | M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
@@ -570,17 +570,17 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** real phone and the low-quality mode on screen (particle caps are unit-tested only); the 45 s settling delay (hook, not unit-tested, not watched on screen); production cron/pg_net; summer sun on screen (unit-tested); rain streaks are vertical on screen even in wind (the drops' positions slant, the streak sprite does not); sway is subtle at full-island zoom (≈ 2 px).
   - **Tests:** `supabase/tests/database/weather_rules.test.sql` (34: mapping, wind, storing, collecting answers, snow cover/melt), `weather/sun.test.ts` (solstices, equinox, sunrise azimuth, midnight from geometry), `weather/weather.test.ts`, `scene/sky.test.ts`, `assets/environmentParts.test.ts`; layout flower test now checks mood-independence. 899 frontend tests, 525 DB tests.
 
-### M21 — Living Community ⬜
-**Goal:** Communities look naturally alive whatever the number of players, every resident keeps "My house", and Vitality becomes community development (`requirement.md` v1.40 §22.6 step 6b; the detailed requirement text is written into §7.2–7.4 when the work starts). Built after M20, **before M16**.
-- **In scope** (decided with the user 2026-11-24; details planned when the work starts)
-  - [ ] mini villagers appear naturally at random (scaled by island size, fewer at night and in bad weather), not from player counts or activity; never named, never pretending to be players (§7.3); action replay stays real. The smallest islands start with 0–1 villagers (operator feedback 2026-11-24: 3 on a stage-1 island looked like too many; today §7.3 sets a minimum of 2–3)
-  - [ ] wildlife by where the community is and how big its island is (operator feedback 2026-11-24): downtown and inner-city communities rarely see wild animals (an occasional jackrabbit), communities near the city edge see them often (distance from the city centre, from the community boundaries); small islands get fewer animals; geese and jackrabbits are fewer overall (today: jackrabbits 60 %, ground geese 50 % by water, deer 40 %, wherever the community is)
-  - [ ] houses fill the land as the community grows (unnamed background houses), and every Verified Resident still has their own house among them with "My house", nickname on tap and lit windows when active (needed later for interior decorating, §22.3)
-  - [ ] Vitality redefined as community development (new buildings): replaces the sleepy streak text, the Revival effect (→ building completion celebration) and the World Map mood tones
-  - [ ] walking villagers show residents' recent community posts as speech bubbles: "nickname: text" with the kind icon, about 40 characters, tap opens the post; never Safety posts; hidden, reported and expired posts drop out (same server function as the newspaper); at most 2–3 bubbles at a time
+### M21 — Living Community 🟦
+**Goal:** Communities look naturally alive whatever the number of players, every resident keeps "My house", and players see development instead of Vitality (`requirement.md` v1.41 §7.2–7.4). Built after M20, **before M16**.
+- **In scope** (decided with the user 2026-11-24)
+  - [ ] mini villagers: random count on the device by walkable land size (0–1 on the smallest islands, up to 20), fewer at night (~40 %) and in rain/snow (~50 %); behaviour by time and weather instead of mood; never named; action replay stays real (§7.3). The server's `mini_villagers` field is no longer used
+  - [ ] wildlife by community location (distance from the city centre, precomputed per community) and island size: downtown/inner city rarely, near the city edge often; fewer geese and jackrabbits overall (§7.3)
+  - [ ] houses: every house lot on the risen land has a house; residents' houses at their fixed lots (name on tap, "My house", lit when active today); the rest are unnamed village houses (no tap, about half lit at night); archived residents' houses look like village houses (§7.2)
+  - [ ] development instead of Vitality for players: HUD shows "Lv N" (0–4, same as the World Map); World Map tone by level; sleepy streak text, Community Revival (effect, panel line, share card) and the "Vitality a → b" panel line removed; Vitality stays on the server for the operator (§7.4)
+  - [ ] today's local posts as villager speech bubbles: "💬 nickname: ~40 characters…" with the kind icon, never Safety, at most 2 at a time taking turns, tap opens the post in Community News; same server function as the newspaper (one extra call per island visit) (§7.3)
 - **Definition of Done**
-  - [ ] requirement §7.2–7.4 (and §9, §11, §12.2 where Vitality appears) updated with changelog entries
-  - [ ] checked on screen (desktop and phone) for a new, a small and a large community
+  - [x] requirement §7.2–7.4 (and §9, §10.4, §12.2 where Vitality appears) updated with changelog entries (v1.41)
+  - [ ] checked on screen (desktop and phone) for a new, a small and a large community, downtown and edge
   - [ ] user has looked at it
 
 ### M16 — Deploy & Playtest ⬜

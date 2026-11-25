@@ -12,6 +12,28 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.76
+**Changed:** M21 Living Community 🟦 In progress; its scope rewritten with the details decided with the user (random villagers by land size, wildlife by location, village houses half lit at night and not tappable, "Lv N" instead of Vitality, today's posts only as bubbles). Based on `requirement.md` v1.41.
+
+**Why:** M21 planning with the user (2026-11-24).
+
+**Previous:**
+- Header: `| Plan version | v1.75 |`, `| Based on | \`requirement.md\` v1.40 |`, `| Current module | M21 Living Community (next; M20 ✅ Done) |`
+- Module table: `| M21 | Living Community | FE + BE | | M20 | ⬜ |`
+- M21 (verbatim):
+  > ### M21 — Living Community ⬜
+  > **Goal:** Communities look naturally alive whatever the number of players, every resident keeps "My house", and Vitality becomes community development (`requirement.md` v1.40 §22.6 step 6b; the detailed requirement text is written into §7.2–7.4 when the work starts). Built after M20, **before M16**.
+  > - **In scope** (decided with the user 2026-11-24; details planned when the work starts)
+  >   - [ ] mini villagers appear naturally at random (scaled by island size, fewer at night and in bad weather), not from player counts or activity; never named, never pretending to be players (§7.3); action replay stays real. The smallest islands start with 0–1 villagers (operator feedback 2026-11-24: 3 on a stage-1 island looked like too many; today §7.3 sets a minimum of 2–3)
+  >   - [ ] wildlife by where the community is and how big its island is (operator feedback 2026-11-24): downtown and inner-city communities rarely see wild animals (an occasional jackrabbit), communities near the city edge see them often (distance from the city centre, from the community boundaries); small islands get fewer animals; geese and jackrabbits are fewer overall (today: jackrabbits 60 %, ground geese 50 % by water, deer 40 %, wherever the community is)
+  >   - [ ] houses fill the land as the community grows (unnamed background houses), and every Verified Resident still has their own house among them with "My house", nickname on tap and lit windows when active (needed later for interior decorating, §22.3)
+  >   - [ ] Vitality redefined as community development (new buildings): replaces the sleepy streak text, the Revival effect (→ building completion celebration) and the World Map mood tones
+  >   - [ ] walking villagers show residents' recent community posts as speech bubbles: "nickname: text" with the kind icon, about 40 characters, tap opens the post; never Safety posts; hidden, reported and expired posts drop out (same server function as the newspaper); at most 2–3 bubbles at a time
+  > - **Definition of Done**
+  >   - [ ] requirement §7.2–7.4 (and §9, §11, §12.2 where Vitality appears) updated with changelog entries
+  >   - [ ] checked on screen (desktop and phone) for a new, a small and a large community
+  >   - [ ] user has looked at it
+
 ### 2026-11-24 — v1.75
 **Changed:** M20 Weather & Time of Day ✅ Done (user confirmed on an iPad); header "Current module" → M21 Living Community.
 
