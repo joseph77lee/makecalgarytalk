@@ -21,6 +21,13 @@ export class Crowd {
     return false;
   }
 
+  /** Who has claimed the tile. */
+  whoAt(key: string): string[] {
+    const out: string[] = [];
+    for (const [who, keys] of this.claims) if (keys.includes(key)) out.push(who);
+    return out;
+  }
+
   /** Every tile claimed by someone other than `id`. */
   othersTiles(id: string): Set<string> {
     const out = new Set<string>();

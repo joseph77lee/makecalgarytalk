@@ -48,3 +48,35 @@ describe('wandering steps (villagers and animals)', () => {
     expect(claimedTiles({ x: 1, z: 2 }, { x: 2, z: 2 }, false)).toEqual(['2,2']);
   });
 });
+
+describe('tapping walkers (requirement v1.44 §10.5)', () => {
+  it('whoAt lists everyone on a tile', async () => {
+    const { Crowd } = await import('./crowd');
+    const c = new Crowd();
+    c.claim('villager:1', ['2,3']);
+    c.claim('animal:deer:7', ['2,3', '3,3']);
+    expect(c.whoAt('2,3').sort()).toEqual(['animal:deer:7', 'villager:1']);
+    expect(c.whoAt('3,3')).toEqual(['animal:deer:7']);
+    expect(c.whoAt('9,9')).toEqual([]);
+  });
+
+  it('each walker has its sound; the avatar has none', async () => {
+    const { walkerSound } = await import('./islandContext');
+    expect(walkerSound('villager:4')).toBe('villager-hello');
+    expect(walkerSound('animal:goose:41')).toBe('geese-honk');
+    expect(walkerSound('animal:deer:3')).toBe('deer-call');
+    expect(walkerSound('animal:cougar:37')).toBe('cougar-growl');
+    expect(walkerSound('animal:jackrabbit:11')).toBe('rabbit-hop');
+    expect(walkerSound('avatar')).toBeNull();
+  });
+
+  it('a poked walker hops once and lands', async () => {
+    const { pokeHop, pokeWalker } = await import('./islandContext');
+    const t0 = performance.now();
+    pokeWalker('villager:9');
+    expect(pokeHop('villager:9', t0 + 225)).toBeGreaterThan(0.2);
+    expect(pokeHop('villager:9', t0 + 500)).toBe(0);
+    expect(pokeHop('villager:9', t0 + 100)).toBe(0); // landed: forgotten
+    expect(pokeHop('nobody')).toBe(0);
+  });
+});

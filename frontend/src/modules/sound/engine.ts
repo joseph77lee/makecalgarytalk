@@ -49,11 +49,13 @@ function load(name: string): Promise<AudioBuffer | null> {
 
 function applySettings(): void {
   if (!ctx || !buses) return;
-  const { music: m, effects } = useSoundSettings.getState();
+  const { on, volume } = useSoundSettings.getState();
   const t = ctx.currentTime;
-  buses.music.gain.setTargetAtTime(m ? MUSIC_VOLUME : 0, t, 0.3);
-  buses.ambience.gain.setTargetAtTime(effects ? AMBIENCE_VOLUME : 0, t, 0.3);
-  buses.effects.gain.setTargetAtTime(effects ? EFFECTS_VOLUME : 0, t, 0.05);
+  // sliders feel natural on a squared curve
+  const level = (c: 'music' | 'ambience' | 'effects', base: number) => (on[c] ? base * volume[c] * volume[c] : 0);
+  buses.music.gain.setTargetAtTime(level('music', MUSIC_VOLUME), t, 0.15);
+  buses.ambience.gain.setTargetAtTime(level('ambience', AMBIENCE_VOLUME), t, 0.15);
+  buses.effects.gain.setTargetAtTime(level('effects', EFFECTS_VOLUME), t, 0.05);
 }
 
 /** Creates the audio graph on the first user gesture. */
@@ -118,15 +120,17 @@ export interface PlayOptions {
 
 /** A one-shot effect. Silently does nothing before the first tap, when effects are off or the file is missing. */
 export function playSound(name: EffectName, opts: PlayOptions = {}): void {
-  if (!ctx || !buses || !useSoundSettings.getState().effects) return;
-  const spec: { volume: number; gap?: number } = EFFECTS[name];
+  if (!ctx || !buses || !useSoundSettings.getState().on.effects) return;
+  const spec: { volume: number; gap?: number; fallback?: EffectName } = EFFECTS[name];
   const now = ctx.currentTime;
   const gap = spec.gap ?? 0.06;
   if (now - (lastPlayed.get(name) ?? -Infinity) < gap || activeEffects >= MAX_EFFECTS) return;
   lastPlayed.set(name, now);
   const c = ctx;
   const out = buses.effects;
-  void load(name).then((buffer) => {
+  void load(name).then(async (found) => {
+    // a missing file can stand in with a softer sound (e.g. animals without their own file)
+    const buffer = found ?? (spec.fallback ? await load(spec.fallback) : null);
     if (!buffer || ctx !== c) return;
     const source = c.createBufferSource();
     source.buffer = buffer;
@@ -186,7 +190,7 @@ function stopLoop(p: Playing, fade: number): void {
 
 function reconcileAmbience(): void {
   if (!ctx || !buses) return;
-  const on = useSoundSettings.getState().effects;
+  const on = useSoundSettings.getState().on.ambience;
   for (const [name, p] of loops) {
     const v = on ? wantedAmbience[name] : undefined;
     if (v === undefined) {
@@ -204,7 +208,7 @@ function reconcileAmbience(): void {
 
 function reconcileMusic(): void {
   if (!ctx || !buses) return;
-  const want = useSoundSettings.getState().music ? wantedTrack : null;
+  const want = useSoundSettings.getState().on.music ? wantedTrack : null;
   if (music?.name === want) return;
   if (music) stopLoop(music.playing, CROSSFADE);
   music = null;

@@ -20,7 +20,7 @@ import { claimedTiles, freeSteps } from './steps';
 import { BoxBatch } from './BoxBatch';
 import { mixHex } from './sky';
 import { playSound } from '../../sound';
-import { useIslandCtx } from './islandContext';
+import { pokeHop, useIslandCtx } from './islandContext';
 
 /** Peak cloud drift speed in tiles per second (slow, but visibly moving). */
 const CLOUD_SPEED = 0.3;
@@ -79,7 +79,7 @@ function Wanderer({ kind, speed, seed }: { kind: AnimalKind; speed: number; seed
     crowd.claim(meId, claimedTiles(s.from, s.to, moving));
     const x = s.from.x + (s.to.x - s.from.x) * s.t + 0.5;
     const z = s.from.z + (s.to.z - s.from.z) * s.t + 0.5;
-    g.position.set(x, 0, z);
+    g.position.set(x, pokeHop(meId), z);
     if (moving) g.rotation.y = Math.atan2(s.to.x - s.from.x, s.to.z - s.from.z) - Math.PI / 2;
     motion.current.speed = moving ? pace : 0;
     motion.current.running = moving && s.running;

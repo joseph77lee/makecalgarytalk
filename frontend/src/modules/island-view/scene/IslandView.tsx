@@ -19,7 +19,7 @@ import { BoxBatch } from './BoxBatch';
 import { ISLAND_AZIMUTH, landExtent, northScreenAngle, viewFrame, zoomForFrame, type ViewFrame } from './camera';
 import { cameraFocus, followStrength } from './cameraFocus';
 import { opaqueBox, setIslandCapturer } from './capture';
-import { IslandContext, useSceneFx, type IslandCtx } from './islandContext';
+import { IslandContext, useSceneFx, type IslandCtx, pokeWalker, walkerSound } from './islandContext';
 import { IslandLabels } from './Labels';
 import { futureLandParts, terrainParts } from './terrainParts';
 import { Trains } from './Trains';
@@ -294,6 +294,16 @@ function IslandScene({
     [shown, onBuildingTap],
   );
   const tap = (tile: Tile, ray: Ray, onLand: boolean) => {
+    // A villager or an animal on (or right next to) the tapped tile hops and makes its sound (§10.5).
+    const near = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dz]) => `${tile.x + dx},${tile.z + dz}`);
+    for (const key of near) {
+      const who = crowd.whoAt(key).find((id) => walkerSound(id) !== null);
+      if (who) {
+        pokeWalker(who);
+        playSound(walkerSound(who)!);
+        return;
+      }
+    }
     let target: (typeof houseBoxes)[number] | null = null;
     let best = Infinity;
     const hit = new Vector3();

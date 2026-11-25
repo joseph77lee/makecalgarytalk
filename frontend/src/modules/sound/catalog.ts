@@ -11,8 +11,8 @@ export const EFFECTS = {
   'ui-place': { volume: 0.45 },
   'ui-back': { volume: 0.45 },
   'ui-close': { volume: 0.45 },
-  footsteps: { volume: 0.22, gap: 0.22 },
-  'footsteps-snow': { volume: 0.28, gap: 0.22 },
+  footsteps: { volume: 0.75, gap: 0.2 },
+  'footsteps-snow': { volume: 0.8, gap: 0.2 },
   'action-shovel': { volume: 0.55 },
   'action-sweep': { volume: 0.5 },
   'construction-hammer-roof': { volume: 0.5 },
@@ -28,7 +28,12 @@ export const EFFECTS = {
   owl: { volume: 0.3, gap: 20 },
   'plane-flyby': { volume: 0.22, gap: 10 },
   'tram-passing': { volume: 0.25, gap: 8 },
-} as const satisfies Record<string, { volume: number; gap?: number }>;
+  // tapping animals and villagers (§10.5); a soft pop stands in until a file exists
+  'deer-call': { volume: 0.5, gap: 0.5, fallback: 'bubble-pop' },
+  'cougar-growl': { volume: 0.5, gap: 0.8, fallback: 'bubble-pop' },
+  'rabbit-hop': { volume: 0.5, gap: 0.4, fallback: 'bubble-pop' },
+  'villager-hello': { volume: 0.5, gap: 0.4, fallback: 'bubble-pop' },
+} as const satisfies Record<string, { volume: number; gap?: number; fallback?: string }>;
 export type EffectName = keyof typeof EFFECTS;
 
 export const LOOPS = ['ambient-birds', 'ambient-water', 'ambient-wind', 'ambient-rain', 'ambient-night', 'campfire', 'construction-site'] as const;

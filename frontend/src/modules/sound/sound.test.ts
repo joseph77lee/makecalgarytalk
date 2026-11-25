@@ -61,10 +61,21 @@ describe('workSound', () => {
   });
 });
 
-describe('sound settings', () => {
-  it('both on by default; remembered choices are read back; junk falls back to the default', () => {
-    expect(DEFAULT_SETTINGS).toEqual({ music: true, effects: true });
-    expect(readSettings({ getItem: () => JSON.stringify({ music: false, effects: true }) })).toEqual({ music: false, effects: true });
+describe('sound settings (requirement v1.44)', () => {
+  it('all on at full volume by default', () => {
+    expect(DEFAULT_SETTINGS).toEqual({ on: { music: true, ambience: true, effects: true }, volume: { music: 1, ambience: 1, effects: 1 } });
+  });
+  it('reads saved switches and volumes, clamping volumes to 0..1', () => {
+    const saved = { on: { music: false, ambience: true, effects: true }, volume: { music: 0.3, ambience: 2, effects: -1 } };
+    expect(readSettings({ getItem: () => JSON.stringify(saved) })).toEqual({ on: saved.on, volume: { music: 0.3, ambience: 1, effects: 0 } });
+  });
+  it('understands the first version ({music, effects}): ambience follows effects', () => {
+    expect(readSettings({ getItem: () => JSON.stringify({ music: true, effects: false }) })).toEqual({
+      on: { music: true, ambience: false, effects: false },
+      volume: { music: 1, ambience: 1, effects: 1 },
+    });
+  });
+  it('junk, no storage or blocked storage fall back to the default', () => {
     expect(readSettings({ getItem: () => '{oops' })).toEqual(DEFAULT_SETTINGS);
     expect(readSettings(null)).toEqual(DEFAULT_SETTINGS);
     expect(readSettings({ getItem: () => { throw new Error('blocked'); } })).toEqual(DEFAULT_SETTINGS);
@@ -72,9 +83,12 @@ describe('sound settings', () => {
 });
 
 describe('sound files', () => {
-  it('every sound the game asks for is in public/sfx', () => {
+  it('every required sound is in public/sfx; optional ones have a fallback that is', () => {
     const dir = join(process.cwd(), 'public', 'sfx');
-    const missing = [...Object.keys(EFFECTS), ...LOOPS, ...TRACKS].filter((n) => !existsSync(join(dir, `${n}.mp3`)));
+    const required = Object.entries(EFFECTS).filter(([, spec]) => !('fallback' in spec)).map(([n]) => n);
+    const missing = [...required, ...LOOPS, ...TRACKS].filter((n) => !existsSync(join(dir, `${n}.mp3`)));
     expect(missing).toEqual([]);
+    // optional files (animals, villagers) fall back to an existing sound
+    for (const spec of Object.values(EFFECTS)) if ('fallback' in spec) expect(existsSync(join(dir, `${spec.fallback}.mp3`))).toBe(true);
   });
 });

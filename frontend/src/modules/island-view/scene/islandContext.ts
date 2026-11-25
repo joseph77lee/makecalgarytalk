@@ -69,3 +69,34 @@ export function celebrateNewBuilding(ms = 7000): void {
   const until = performance.now() + ms;
   useSceneFx.setState({ celebrateUntil: until, bloomUntil: until });
 }
+
+// Tapping a villager or an animal makes it hop (requirement.md v1.44 §10.5). Read in useFrame.
+const pokes = new Map<string, number>();
+const HOP_MS = 450;
+
+export function pokeWalker(id: string): void {
+  pokes.set(id, performance.now());
+}
+
+/** Extra height of a poked walker right now (a quick hop), 0 when not poked. */
+export function pokeHop(id: string, now: number = performance.now()): number {
+  const at = pokes.get(id);
+  if (at === undefined) return 0;
+  const k = (now - at) / HOP_MS;
+  if (k >= 1) {
+    pokes.delete(id);
+    return 0;
+  }
+  return Math.sin(k * Math.PI) * 0.28;
+}
+
+/** The sound a walker makes when tapped, from its crowd id (`villager:3`, `animal:deer:7`). */
+export function walkerSound(id: string): 'villager-hello' | 'geese-honk' | 'deer-call' | 'cougar-growl' | 'rabbit-hop' | null {
+  if (id.startsWith('villager:')) return 'villager-hello';
+  const kind = id.startsWith('animal:') ? id.split(':')[1] : null;
+  if (kind === 'goose') return 'geese-honk';
+  if (kind === 'deer') return 'deer-call';
+  if (kind === 'cougar') return 'cougar-growl';
+  if (kind === 'jackrabbit') return 'rabbit-hop';
+  return null;
+}
