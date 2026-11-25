@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.88
+**Changed:** M20 ✅ Done again: the lying-snow fix is confirmed (fix item ticked); header current module back to M16.
+
+**Why:** The user approved merging the fix (2026-11-25).
+
+**Previous:**
+- Header: `| Plan version | v1.87 |`, `| Current module | M20 🔁 fix (\`fix/m20-snow-settle\`), then M16 Deploy & Playtest |`
+- Module table: `| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | 🔁 |`
+- M20 title `### M20 — Weather & Time of Day 🔁`; fix item unticked.
+
 ### 2026-11-25 — v1.87
 **Changed:** M20 Weather & Time of Day 🔁 Reopened (`fix/m20-snow-settle`): new in-scope fix item (lying snow vanished 10 s after opening for 45 s while it kept snowing). Header current module updated.
 
