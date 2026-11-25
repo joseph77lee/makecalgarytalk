@@ -24,7 +24,7 @@ import { IslandLabels } from './Labels';
 import { futureLandParts, terrainParts } from './terrainParts';
 import { Trains } from './Trains';
 import { IslandLife } from './IslandLife';
-import { Crowd } from './crowd';
+import { Crowd, walkerOnRay } from './crowd';
 import { featuresFor } from '../plan/features';
 
 const GROWTH_SECONDS = 1.4;
@@ -294,15 +294,12 @@ function IslandScene({
     [shown, onBuildingTap],
   );
   const tap = (tile: Tile, ray: Ray, onLand: boolean) => {
-    // A villager or an animal on (or right next to) the tapped tile hops and makes its sound (§10.5).
-    const near = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dz]) => `${tile.x + dx},${tile.z + dz}`);
-    for (const key of near) {
-      const who = crowd.whoAt(key).find((id) => walkerSound(id) !== null);
-      if (who) {
-        pokeWalker(who);
-        playSound(walkerSound(who)!);
-        return;
-      }
+    // A villager or an animal under the tap hops and makes its sound (§10.5).
+    const who = walkerOnRay(ray.origin, ray.direction, crowd.entries(), (id) => walkerSound(id) !== null);
+    if (who) {
+      pokeWalker(who);
+      playSound(walkerSound(who)!);
+      return;
     }
     let target: (typeof houseBoxes)[number] | null = null;
     let best = Infinity;

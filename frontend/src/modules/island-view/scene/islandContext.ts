@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import { create } from 'zustand';
 import { playSound } from '../../sound';
+import type { AnimalKind } from '../assets/voxel/rigs';
 import type { BuildCtx } from '../assets/models';
 import type { Tile } from '../layout';
 import type { VitalityMood } from '../mood';
@@ -90,8 +91,17 @@ export function pokeHop(id: string, now: number = performance.now()): number {
   return Math.sin(k * Math.PI) * 0.28;
 }
 
+/** The sound each animal makes when tapped; typed on every kind so a new kind cannot be forgotten. */
+const ANIMAL_SOUND: Record<AnimalKind, 'geese-honk' | 'deer-call' | 'cougar-growl' | 'rabbit-hop'> = {
+  deer: 'deer-call',
+  buck: 'deer-call',
+  goose: 'geese-honk',
+  cougar: 'cougar-growl',
+  jackrabbit: 'rabbit-hop',
+};
+
 /**
- * The sound a walker makes when tapped, from its crowd id (`villager:3`, `animal:deer:7`). Each
+ * The sound a walker makes when tapped, from its crowd id (`villager:3`, `animal:buck:23`). Each
  * villager keeps one voice (female or male, about half each), so it always sounds like itself.
  */
 export function walkerSound(
@@ -101,10 +111,6 @@ export function walkerSound(
     const n = Number(id.slice('villager:'.length)) || 0;
     return (((n + 1) * 2654435761) >>> 16) % 2 === 0 ? 'villager-hello-female' : 'villager-hello-male';
   }
-  const kind = id.startsWith('animal:') ? id.split(':')[1] : null;
-  if (kind === 'goose') return 'geese-honk';
-  if (kind === 'deer') return 'deer-call';
-  if (kind === 'cougar') return 'cougar-growl';
-  if (kind === 'jackrabbit') return 'rabbit-hop';
-  return null;
+  const kind = id.startsWith('animal:') ? id.split(':')[1] : '';
+  return kind in ANIMAL_SOUND ? ANIMAL_SOUND[kind as AnimalKind] : null;
 }
