@@ -12,7 +12,8 @@ import { BUILDING_VOXELS, placeholderModel } from './voxel/buildings';
 import { FEATURE_VOXELS, catenaryPole, crossingSign, railEndSignParts, stationPlatformParts } from './voxel/features';
 import { shade, vb } from './voxel/voxel';
 import { bench as benchModel, car as carModel, flowerBed as flowerBedModel, lampPost, leafyTree, mailbox as mailboxModel, spruce } from './voxel/samples';
-import { vturn } from './voxel/voxel';
+import { rnd, vturn } from './voxel/voxel';
+import { VOXEL_DESIGNS as N } from './voxel/designFit';
 
 export interface BuildCtx {
   palette: MoodPalette;
@@ -63,28 +64,52 @@ export function boxHouse(item: Pick<ObjectOf<'house'>, 'colorIndex' | 'activeTod
 
 
 /**
- * An island tree (Art Pass voxel): leafy trees in the palette's leaf colours, one in three a spruce;
- * snow on the ground puts snow on the tops too.
+ * An island tree (Art Pass voxel): leafy trees in the palette's leaf colours, one in three an
+ * evergreen; M23 adds more shapes (shade, ornamental, olive, lollipop; tall and young pines, fir,
+ * column, cone) mixed in by position. Snow on the ground puts snow on the tops too.
  */
 export function tree(item: ObjectOf<'tree'>, { palette, snow }: BuildCtx): BoxPart[] {
   const seed = Math.round(item.x * 131 + item.z * 977);
   const sleepy = snow;
+  const evergreen = item.variant === 2;
+  const pool = evergreen ? EVERGREENS : LEAFY;
+  const pickIdx = Math.floor(rnd(seed, 44) * pool.length) % pool.length;
   let parts: BoxPart[];
-  if (item.variant === 2) {
+  if (pickIdx === 0 && evergreen) {
     parts = spruce(seed, sleepy ? '#4f8a6b' : undefined);
     if (sleepy) parts.push(vb(-2.7, 7, -2.7, 2.7, 7.4, 2.7, SNOW), vb(-1.9, 9.5, -1.9, 1.9, 9.9, 1.9, SNOW), vb(-1.1, 11.5, -1.1, 1.1, 11.9, 1.1, SNOW));
-  } else {
+  } else if (pickIdx === 0) {
     parts = leafyTree(seed, palette.leaves[item.variant % 2], palette.trunk);
     if (sleepy) parts.push(vb(-2.5, 10, -2.5, 2.5, 10.5, 2.5, SNOW), vb(-3.5, 8.5, -3.5, -1, 8.9, 3.5, SNOW));
+  } else {
+    parts = pool[pickIdx](seed);
+    if (sleepy) parts.push(...snowCap(parts));
   }
   // the crown (everything above the lowest third of a tile) sways in the wind
   return parts.map((b) => (b.layer === 'solid' && b.p[1] - b.s[1] / 2 > 0.3 ? { ...b, layer: 'sway' } : b));
 }
 
-/** A pathway light (voxel lamp post) at the tile's corner. */
-export function lamp(): BoxPart[] {
-  return translate(lampPost(), 0.38, 0.38);
+const LEAFY: ((seed: number) => BoxPart[])[] = [leafyTree, N.shadeTree.build, N.ornamentalTree.build, N.oliveTree.build, N.lollipopTree.build];
+const EVERGREENS: ((seed: number) => BoxPart[])[] = [spruce, N.tallPine.build, N.youngPine.build, N.firTree.build, N.columnShrub.build, N.coneTree.build];
+
+/** A thin layer of snow on the highest box of a model (its top). */
+function snowCap(parts: BoxPart[]): BoxPart[] {
+  let topBox: BoxPart | null = null;
+  for (const b of parts) if (b.layer !== 'glow' && (!topBox || b.p[1] + b.s[1] / 2 > topBox.p[1] + topBox.s[1] / 2)) topBox = b;
+  if (!topBox) return [];
+  const y = topBox.p[1] + topBox.s[1] / 2;
+  return [{ layer: 'solid', p: [topBox.p[0], y + 0.4 / 24, topBox.p[2]], s: [topBox.s[0] * 1.02, 0.4 / 12, topBox.s[2] * 1.02], c: SNOW }];
 }
+
+/** A pathway light (voxel lamp post) at the tile's corner. */
+export function lamp(item: ObjectOf<'lamp'>): BoxPart[] {
+  // one lamp design per lamp row (M23: post, arm lamp, garland lamp or cobra light)
+  const row = Math.floor(item.x + item.z);
+  const build = LAMPS[Math.floor(rnd(row, 61) * LAMPS.length) % LAMPS.length];
+  return translate(build(), 0.38, 0.38);
+}
+
+const LAMPS: (() => BoxPart[])[] = [lampPost, lampPost, () => N.armLamp.build(0), () => N.garlandLamp.build(0), () => N.cobraLight.build(0)];
 
 /** Blossom spots of a wild flower patch, close together in the middle of the tile. */
 const FLOWER_SPOTS = [
@@ -111,6 +136,8 @@ export function flowers(item: ObjectOf<'flowers'>, ctx?: BuildCtx): BoxPart[] {
 }
 
 export function snowPile(item: ObjectOf<'snow-pile'>): BoxPart[] {
+  // about one pile in four is a snowman (winter launch theme, §19.1)
+  if (item.variant % 4 === 0) return vturn(N.snowman.build(Math.round(item.x * 7 + item.z * 13)), Math.round(item.x + item.z) % 4);
   return snowPileParts(item.variant);
 }
 
@@ -229,11 +256,11 @@ function upgradeScaffold(w: number, d: number): BoxPart[] {
  * Models are written for the lot's canonical size; a turned lot (e.g. 2×3 instead of 3×2) comes
  * with an odd facing from the layout, so the turn also fits the model to the lot.
  */
-function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx, lowpoly = false): BoxPart[] {
+function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx): BoxPart[] {
   const make = BUILDING_VOXELS[key];
   if (!make) return placeholderModel({ w, d, level, variant }, ctx);
   const turned = facing % 2 === 1;
-  return vturn(make({ w: turned ? d : w, d: turned ? w : d, level, variant, lowpoly }, ctx), facing);
+  return vturn(make({ w: turned ? d : w, d: turned ? w : d, level, variant }, ctx), facing);
 }
 
 /** A built building of the tree (placeholder for unknown keys), with upgrade markers. */
@@ -241,21 +268,11 @@ export function building(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
   return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
 }
 
-/** A building's surroundings when its main structure is a Polyfork model (M23). */
-export function buildingSurroundings(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
-  return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx, true), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
-}
-
 // --- Signature features and CTrain (Art Pass models in voxel/features.ts) ------------------
 
 /** A signature feature on its spare lot: the community's design, facing the path. */
 export function feature(item: ObjectOf<'feature'>, ctx: BuildCtx): BoxPart[] {
   return vturn(FEATURE_VOXELS[item.featureKey](item.variant, ctx), item.facing);
-}
-
-/** A feature's surroundings when its main structure is a Polyfork model (M23). */
-export function featureSurroundings(item: ObjectOf<'feature'>, ctx: BuildCtx): BoxPart[] {
-  return vturn(FEATURE_VOXELS[item.featureKey](item.variant, ctx, true), item.facing);
 }
 
 const BALLAST = '#cbbfae';
@@ -332,10 +349,22 @@ export function railEnd(item: ObjectOf<'rail-end'>): BoxPart[] {
 
 /** A street prop (bench, flower bed, parked car, mailbox), turned to face its path or house. */
 export function prop(item: ObjectOf<'prop'>): BoxPart[] {
+  const r = rnd(item.seed, 51);
   const parts =
-    item.kind === 'bench' ? benchModel() : item.kind === 'flowers' ? flowerBedModel(item.seed) : item.kind === 'car' ? carModel(item.seed, item.seed % 5 === 0) : mailboxModel();
+    item.kind === 'bench'
+      ? [benchModel, benchModel, () => N.parkBench.build(0), () => N.logBench.build(0)][Math.floor(r * 4) % 4]()
+      : item.kind === 'flowers'
+        ? flowerBedModel(item.seed)
+        : item.kind === 'car'
+          ? CARS[Math.floor(r * CARS.length) % CARS.length](item.seed)
+          : r < 0.5
+            ? mailboxModel()
+            : N.curbMailbox.build(item.seed);
   return vturn(parts, item.facing);
 }
+
+/** Parked cars: the M19 sedan and pickup plus the M23 designs. */
+const CARS: ((seed: number) => BoxPart[])[] = [(s) => carModel(s, s % 5 === 0), (s) => carModel(s, false), N.suv.build, N.minivan.build, N.pickupTruck.build, N.hatchback.build, N.townCar.build];
 
 /** A locked (or ready) building: its model as a translucent ghost on its lot. */
 export function silhouette(item: ObjectOf<'silhouette'>, ctx: BuildCtx): BoxPart[] {

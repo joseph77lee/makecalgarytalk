@@ -9,8 +9,6 @@ export { IslandHud } from './scene/IslandHud';
 export { IslandDevPanel } from './dev/IslandDevPanel';
 export { AssetGallery } from './dev/AssetGallery';
 export { VoxelPerson, PERSON_SCALE, type PersonMotion } from './assets/VoxelPerson';
-export { Person } from './assets/lowpoly/RiggedFigures';
-export { avatarModel } from './assets/lowpoly/rigged';
 export { useMockCommunityStore } from './mockStore';
 export { parseCommunityViewState, type ParseResult } from './parseState';
 export { MOOD_PALETTES } from './mood';

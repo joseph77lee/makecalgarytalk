@@ -173,7 +173,11 @@ export function modernGable(seed: number): BoxPart[] {
   return parts;
 }
 
-/** After Polyfork "Lighthouse Keeper's Cottage": a cottage with a little striped lighthouse tower at its side (a playful touch). */
+/**
+ * After Polyfork "Lighthouse Keeper's Cottage": a cottage with a little striped lighthouse tower at
+ * its side (a playful touch). The lantern is window glass, so it lights only like the house's
+ * windows do (the resident was active today, §7.2).
+ */
 export function lighthouseCottage(seed: number): BoxPart[] {
   const wall = '#f6f2ea';
   const roof = roofOf(seed);
@@ -185,7 +189,7 @@ export function lighthouseCottage(seed: number): BoxPart[] {
     ...windowZ(-4.4, -3, 2, 3.6, 3.5, G),
   ];
   for (let y = 0; y < 12; y += 2) parts.push(vb(1.8, y, -2.2, 5, y + 2, 1, (y / 2) % 2 ? band : wall));
-  parts.push(vb(1.5, 12, -2.5, 5.3, 12.5, 1.3, '#4a5060'), vb(2.2, 12.5, -1.8, 4.6, 14.5, 0.6, '#ffe7a3', 'glow'), ...hipRoof(2.2, 4.6, -1.8, 0.6, 15.5, '#4a5060', 0.4, 2));
+  parts.push(vb(1.5, 12, -2.5, 5.3, 12.5, 1.3, '#4a5060'), vb(2.2, 12.5, -1.8, 4.6, 14.5, 0.6, G), ...hipRoof(2.2, 4.6, -1.8, 0.6, 15.5, '#4a5060', 0.4, 2));
   return parts;
 }
 
@@ -383,7 +387,7 @@ export function tenement(seed: number): BoxPart[] {
 /** After Polyfork "Slab Apartment Block": a white tower with a dark ribbon of windows on every floor and a rooftop box. */
 export function slabTower(seed: number): BoxPart[] {
   const parts: BoxPart[] = [vb(-5.5, 0, -5, 5.5, 26, 4, '#f6f8fb')];
-  for (let y = 2; y < 26; y += 2.6) parts.push(vb(-5.5, y, 4, 5.5, y + 1.4, 4.2, '#3f4a58'), vb(5.5, y, -5, 5.7, y + 1.4, 4, '#3f4a58'));
+  for (let y = 2; y < 26; y += 2.6) parts.push(vb(-5.5, y, 4, 5.5, y + 1.4, 4.2, ART.glassDark), vb(5.5, y, -5, 5.7, y + 1.4, 4, ART.glassDark));
   parts.push(vb(-2, 26, -2, 2.5, 28.5, 1.5, '#d9dee5'), vb(-1, 0, 4, 1, 2.6, 4.3, '#5d6470'), vb(-5.5, 0, 4, 5.5, 0.4, 5.5, ART.concrete));
   void seed;
   return parts;
@@ -391,7 +395,8 @@ export function slabTower(seed: number): BoxPart[] {
 
 /** After Polyfork "Office Tower": a glass curtain wall on a stone base, fins between the windows, a water tank up top. */
 export function glassOffice(seed: number): BoxPart[] {
-  const glass = pick(['#7fb1d4', '#8fc0d8', '#9bb4cc'], rnd(seed, 25));
+  // the whole curtain wall is window glass, so it lights up at night like other windows
+  const glass = rnd(seed, 25) < 0.5 ? ART.glass : ART.glassDark;
   const parts: BoxPart[] = [vb(-5, 0, -5, 5, 4, 4.5, '#cfc6b8'), vb(-4.8, 4, -4.8, 4.8, 38, 4.3, glass)];
   for (let x = -4.8; x <= 4.8; x += 1.6) parts.push(vb(x - 0.15, 4, 4.3, x + 0.15, 38, 4.6, '#e8eef4'));
   for (let y = 4; y < 38; y += 3) parts.push(vb(-4.8, y, 4.3, 4.8, y + 0.3, 4.6, '#e8eef4'), vb(4.3, y, -4.8, 4.6, y + 0.3, 4.3, '#e8eef4'));
@@ -421,7 +426,7 @@ export function decoSetback(seed: number): BoxPart[] {
 /** After Polyfork "Monolith Office Tower": a white slab cut by tall dark glass slots. */
 export function monolithTower(seed: number): BoxPart[] {
   const parts: BoxPart[] = [vb(-4.5, 0, -4.5, 4.5, 30, 4.5, '#f6f8fb')];
-  for (const x of [-3.2, -0.6, 2]) parts.push(vb(x, 2, 4.5, x + 1.2, 28, 4.7, '#3f4a58'), vb(4.5, 2, x, 4.7, 28, x + 1.2, '#3f4a58'));
+  for (const x of [-3.2, -0.6, 2]) parts.push(vb(x, 2, 4.5, x + 1.2, 28, 4.7, ART.glassDark), vb(4.5, 2, x, 4.7, 28, x + 1.2, ART.glassDark));
   parts.push(vb(-1.4, 0, 4.5, 1.4, 3, 4.8, '#3f4a58'), vb(-4.7, 30, -4.7, 4.7, 30.5, 4.7, pick(['#b7a6f5', '#9fd0bd', '#e3a1a6'], rnd(seed, 27))));
   return parts;
 }

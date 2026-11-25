@@ -8,7 +8,8 @@
 import type { BuildCtx } from '../models';
 import { asSway, type BoxPart } from '../boxes';
 import { ART } from './samples';
-import { gableRoof, hipRoof, pick, rnd, shade, vb, windowX, windowZ } from './voxel';
+import { VOXEL_DESIGNS as N } from './designFit';
+import { gableRoof, hipRoof, pick, rnd, shade, vb, vmove, vturn, windowX, windowZ } from './voxel';
 
 export interface BuildingSpec {
   /** Lot size in tiles as placed on the island (may be the canonical size turned). */
@@ -17,11 +18,6 @@ export interface BuildingSpec {
   level: number;
   /** Design choice for this community (hash of the community code and the building key). */
   variant: number;
-  /**
-   * The main structure is drawn with a Polyfork model (M23): return only the surroundings (ground,
-   * fences, flames, flags, flowers). Buildings without a Polyfork structure ignore it.
-   */
-  lowpoly?: boolean;
 }
 
 type Model = (s: BuildingSpec, ctx: BuildCtx) => BoxPart[];
@@ -59,7 +55,8 @@ const flagAt = (x: number, z: number, h = 16): BoxPart[] => [
 // --- Entrance (1×1) -------------------------------------------------------------------------
 
 const welcomeSign: Model = ({ variant }) => {
-  const v = variant % 3;
+  const v = variant % 4;
+  if (v === 3) return N.welcomeArch.build(variant);
   if (v === 0) {
     return [
       vb(-4.5, 0, -0.5, -3.5, 9, 0.5, WOOD),
@@ -91,9 +88,9 @@ const welcomeSign: Model = ({ variant }) => {
   ];
 };
 
-const gatewayArch: Model = ({ variant, lowpoly }) => {
-  if (lowpoly) return [...bush(-6, 1.4, '#79b85a', 2), ...bush(4, 1.4, '#79b85a', 2)];
-  const v = variant % 3;
+const gatewayArch: Model = ({ variant }) => {
+  const v = variant % 5;
+  if (v >= 3) return [...(v === 3 ? N.lodgeGate : N.funArch).build(variant), ...bush(-6, 1.4, '#79b85a', 2), ...bush(4, 1.4, '#79b85a', 2)];
   const pillar = v === 0 ? STONE : v === 1 ? ART.brick : WOOD;
   const beam = v === 2 ? shade(WOOD, -0.15) : v === 1 ? '#efe2c2' : WOOD;
   return [
@@ -113,18 +110,10 @@ const gatewayArch: Model = ({ variant, lowpoly }) => {
 
 // --- Lot a (3×3): fire pit → warming hut → community hall -----------------------------------
 
-const firePit: Model = ({ variant, lowpoly }, { palette }) => {
+const firePit: Model = ({ variant }, { palette }) => {
   const parts: BoxPart[] = [pad(12, 12, '#dccfb4'), vb(-14, 0, -6, -12, 0.4, 6, '#dccfb4'), vb(12, 0, -6, 14, 0.4, 6, '#dccfb4')];
-  for (let i = 0; i < 10 && !lowpoly; i++) {
-    const a = (i / 10) * Math.PI * 2;
-    parts.push(vb(Math.cos(a) * 4.5 - 1, 0.4, Math.sin(a) * 4.5 - 1, Math.cos(a) * 4.5 + 1, 2, Math.sin(a) * 4.5 + 1, i % 2 ? STONE : shade(STONE, -0.1)));
-  }
-  if (!lowpoly) parts.push(vb(-2.5, 0.4, -0.5, 2.5, 1.4, 0.5, '#8a6343', 'solid'), vb(-0.5, 0.4, -2.5, 0.5, 1.4, 2.5, '#7a5538'));
-  parts.push(
-    vb(-1.8, 1.4, -1.8, 1.8, 3.6, 1.8, '#ff9a3d', 'glow'),
-    vb(-1, 3.6, -1, 1, 5.6, 1, '#ffd23f', 'glow'),
-    vb(-0.4, 5.6, -0.4, 0.4, 6.8, 0.4, '#fff1a8', 'glow'),
-  );
+  // the stone ring with its logs and flames (M23 designs: three kinds of ring)
+  parts.push(...vmove([N.firePit1, N.firePit2, N.firePit3][variant % 3].build(variant), 0, 0.4, 0));
   // log benches (3 or 4 sides) and Adirondack-style chairs
   const sides = variant % 2 === 0 ? [0, 1, 2, 3] : [0, 1, 3];
   for (const sd of sides) {
@@ -148,11 +137,12 @@ const firePit: Model = ({ variant, lowpoly }, { palette }) => {
   return [...parts, ...bush(-16, 8, palette.leaves[0], 3), ...bush(13, -16, palette.leaves[1], 3)];
 };
 
-const warmingHut: Model = ({ variant, lowpoly }, { palette }) => {
-  const v = variant % 3;
+const warmingHut: Model = ({ variant }, { palette }) => {
+  const v = variant % 5;
   const parts: BoxPart[] = [pad(17, 17, '#dccfb4', 0.3)];
-  if (lowpoly) {
-    // the hut itself is a Polyfork model
+  if (v >= 3) {
+    // M23 designs: a ski-patrol hut or a mountain refuge hut
+    parts.push(...vmove((v === 3 ? N.patrolHut : N.refugeHut).build(variant), -1, 0.3, -2));
   } else if (v === 0) {
     // log cabin
     for (let y = 0; y < 9; y++) parts.push(vb(-11, 0.3 + y, -10, 9, 1.3 + y, 6, y % 2 ? '#b98159' : '#a8714c'));
@@ -177,11 +167,12 @@ const warmingHut: Model = ({ variant, lowpoly }, { palette }) => {
   return [...parts, ...bush(-16, 12, palette.leaves[0], 3), ...bush(12, -16, palette.leaves[1], 3)];
 };
 
-const communityHall: Model = ({ variant, lowpoly }, { palette }) => {
-  const v = variant % 3;
+const communityHall: Model = ({ variant }, { palette }) => {
+  const v = variant % 7;
   const parts: BoxPart[] = [pad(17, 17, '#d9cdb5', 0.3)];
-  if (lowpoly) {
-    // the hall itself is a Polyfork model
+  if (v >= 3) {
+    // M23 designs: station hall, grand hall, toy-block hall, workshop hall
+    parts.push(...vmove([N.stationHall, N.grandHall, N.toyBlockHall, N.workshopHall][v - 3].build(variant), -1, 0.3, -2));
   } else if (v === 0) {
     const wall = pick(['#f6e7c8', '#f3dcc0', '#eef0d8'], rnd(variant, 5));
     const roof = pick(['#a8c69a', '#ef9b7f', '#93b8db'], rnd(variant, 6));
@@ -266,7 +257,7 @@ const hockeyRink: Model = ({ variant }, { palette }) => {
 
 // --- 2×2 lots ----------------------------------------------------------------------------
 
-const playground: Model = ({ variant, lowpoly }) => {
+const playground: Model = ({ variant }) => {
   const sets = [
     ['#ef9b7f', '#e9c46a', '#9fd0bd', '#b9a6e2'],
     ['#e0453c', '#ffcc2e', '#3d8bfd', '#6fbf8a'],
@@ -278,8 +269,16 @@ const playground: Model = ({ variant, lowpoly }) => {
     vb(3.2, 3, -10.4, 4.8, 3.4, -9, a), vb(6.8, 3, -10.4, 8.4, 3.4, -9, b),
     vb(3.9, 3.4, -9.8, 4.1, 8, -9.6, '#8a8f99'), vb(7.5, 3.4, -9.8, 7.7, 8, -9.6, '#8a8f99'),
   ];
-  // Polyfork slide, roundabout, spring rider and seesaw stand on the sand beside our swings
-  if (lowpoly) return [pad(11.5, 11.5, '#f0c9a8', 0.4), ...swings];
+  // M23 designs (variants 2–3): slide, roundabout, spring rider and seesaw beside the swings
+  if (variant % 4 >= 2)
+    return [
+      pad(11.5, 11.5, '#f0c9a8', 0.4),
+      ...swings,
+      ...vmove(vturn(N.slide.build(variant), 1), -5.5, 0.4, -4),
+      ...vmove(N.roundabout.build(variant), 6, 0.4, 5.5),
+      ...vmove(N.springRider.build(variant), -6.5, 0.4, 6),
+      ...vmove(vturn(N.teeterTotter.build(variant), 1), 0, 0.4, 2),
+    ];
   return [
     pad(11.5, 11.5, '#f0c9a8', 0.4),
     // tower with a roof and a slide
@@ -325,7 +324,8 @@ const dogPark: Model = ({ variant }, { palette }) => {
   return parts;
 };
 
-const communityGarden: Model = ({ variant, lowpoly }, { palette }) => {
+const communityGarden: Model = ({ variant }, { palette }) => {
+  const fresh = variant % 2 === 1; // M23 design: a painted shed and a flower bed
   const parts: BoxPart[] = [pad(11.5, 11.5, palette.path[0], 0.3)];
   const crops = ['#6fae4f', '#e0453c', '#f39a52', '#9fd36a'];
   for (const [x, z] of [[-10, -10], [-2, -10], [-10, -2], [-2, -2]]) {
@@ -339,7 +339,8 @@ const communityGarden: Model = ({ variant, lowpoly }, { palette }) => {
     }
   }
   // shed, sunflowers, scarecrow, watering can
-  if (!lowpoly) parts.push(vb(6, 0.3, -11, 11, 6, -5, '#a8c69a'), ...gableRoof(6, 11, -11, -5, 7, '#ef9b7f', '#a8c69a', 0.6), vb(7.8, 0.3, -5, 9.6, 4.5, -4.7, ART.door));
+  if (fresh) parts.push(...vmove(N.gardenShed.build(variant), 8.5, 0.3, -8), ...vmove(N.gardenBed.build(variant), 3, 0.3, 8.7));
+  else parts.push(vb(6, 0.3, -11, 11, 6, -5, '#a8c69a'), ...gableRoof(6, 11, -11, -5, 7, '#ef9b7f', '#a8c69a', 0.6), vb(7.8, 0.3, -5, 9.6, 4.5, -4.7, ART.door));
   for (const x of [6.5, 8.5, 10.5]) parts.push(vb(x, 0.3, 2, x + 0.4, 7, 2.4, '#5f9a4a'), vb(x - 0.6, 7, 1.6, x + 1, 8.4, 2.8, '#ffcc2e'), vb(x - 0.1, 7.4, 2.7, x + 0.5, 8, 2.9, '#7a5a3c'));
   parts.push(vb(8, 0.3, 7, 8.4, 6, 7.4, WOOD), vb(6.5, 4, 7, 10, 4.4, 7.4, WOOD), vb(7.4, 4.4, 6.8, 9, 6, 7.6, '#5b8fd6'), vb(7.6, 6, 6.9, 8.8, 7.2, 7.5, '#f2dc9a'), vb(7.2, 7.2, 6.6, 9.2, 7.6, 7.8, '#c79a76'));
   parts.push(vb(2, 0.3, 8, 4, 1.8, 9.5, '#6fbf8a'), vb(4, 1, 8.5, 5.4, 1.4, 9, '#6fbf8a'));
@@ -348,11 +349,12 @@ const communityGarden: Model = ({ variant, lowpoly }, { palette }) => {
 
 // --- Neighbourhood park (3×3) -------------------------------------------------------------
 
-const neighbourhoodPark: Model = ({ variant, lowpoly }, { palette }) => {
+const neighbourhoodPark: Model = ({ variant }, { palette }) => {
+  const fresh = variant % 4 >= 2; // M23 designs: picnic shelter, new trees, park benches, a drinking fountain
   const parts: BoxPart[] = [pad(17.5, 17.5, palette.grass[0], 0.3)];
   parts.push(vb(-17, 0.3, -1.5, 17, 0.5, 1.5, palette.path[0]), vb(-1.5, 0.3, -17, 1.5, 0.5, 17, palette.path[0]));
-  if (variant % 2 === 0 && lowpoly) {
-    // the picnic shelter is a Polyfork model
+  if (variant % 2 === 0 && fresh) {
+    parts.push(...vmove(N.picnicShelter.build(variant), 0, 0.5, 0));
   } else if (variant % 2 === 0) {
     // gazebo
     parts.push(vb(-6, 0.5, -6, 6, 1.5, 6, '#efe2c2'));
@@ -363,8 +365,11 @@ const neighbourhoodPark: Model = ({ variant, lowpoly }, { palette }) => {
     parts.push(vb(-6, 0.5, -6, 6, 2, 6, STONE), vb(-5, 0.5, -5, 5, 2.1, 5, '#8ec5ea'), vb(-1.2, 2, -1.2, 1.2, 5, 1.2, STONE), vb(-2.5, 5, -2.5, 2.5, 5.6, 2.5, STONE), vb(-0.6, 5.6, -0.6, 0.6, 8, 0.6, '#c8e6f4', 'glow'));
   }
   const tree = (x: number, z: number, c: string): BoxPart[] => [vb(x - 0.6, 0.3, z - 0.6, x + 0.6, 5, z + 0.6, palette.trunk), vb(x - 3.5, 5, z - 3.5, x + 3.5, 10, z + 3.5, c), vb(x - 2.4, 10, z - 2.4, x + 2.4, 12, z + 2.4, shade(c, 0.08))];
-  if (!lowpoly) {
-    // trees and benches are Polyfork models in low-poly mode
+  if (fresh) {
+    const trees = [N.shadeTree, N.ornamentalTree, N.firTree, N.lollipopTree];
+    ([[-11, -11], [11, -11], [-11, 11], [12, 12]] as const).forEach(([x, z], i) => parts.push(...vmove(asSway(trees[(i + variant) % trees.length].build(variant + i)), x, 0.3, z)));
+    parts.push(...vmove(vturn(N.parkBench.build(0), 2), -7, 0.3, 3.6), ...vmove(N.parkBench.build(0), 8, 0.3, -3.9), ...vmove(vturn(N.parkBench.build(0), 3), 3.6, 0.3, 11), ...vmove(N.drinkingFountain.build(0), 3, 0.3, -3));
+  } else {
     parts.push(...tree(-11, -11, palette.leaves[0]), ...tree(11, -11, palette.leaves[1]), ...tree(-11, 11, palette.leaves[1]), ...tree(12, 12, palette.leaves[0]));
     for (const [x, z, along] of [[-9, 3, true], [6, -4.5, true], [3, 9, false]] as const) parts.push(along ? vb(x, 0.3, z, x + 4, 2, z + 1.2, WOOD) : vb(x, 0.3, z, x + 1.2, 2, z + 4, WOOD));
   }
@@ -399,17 +404,17 @@ export const placeholderModel = placeholder;
 
 /** How many designs a building has (for tests and the gallery). */
 export const BUILDING_VARIANTS: Record<string, number> = {
-  'welcome-sign': 3,
-  'gateway-arch': 3,
-  'fire-pit': 2,
-  'warming-hut': 3,
-  'community-hall': 3,
+  'welcome-sign': 4,
+  'gateway-arch': 5,
+  'fire-pit': 3,
+  'warming-hut': 5,
+  'community-hall': 7,
   'frozen-pond': 1,
   'skating-rink': 3,
   'hockey-rink': 2,
-  playground: 2,
+  playground: 4,
   'sledding-hill': 2,
   'dog-park': 2,
-  'community-garden': 1,
-  'neighbourhood-park': 2,
+  'community-garden': 2,
+  'neighbourhood-park': 4,
 };

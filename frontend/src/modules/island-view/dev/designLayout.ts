@@ -102,7 +102,6 @@ export const DESIGN_PAIRS: Record<Exclude<DesignSection, 'New people'>, { perRow
       p(car(4), v('hatchback', 4)),
       p(car(5), v('townCar', 5)),
       p(null, v('schoolBus'), 1.5),
-      p(null, v('cityTram'), 2),
       p(bench(), v('parkBench')),
       p(bench(), v('logBench')),
       p(lampPost(), v('armLamp')),

@@ -267,7 +267,6 @@ function IslandScene({
       palette,
       snow,
       lightsOn: look.lightsOn,
-      lowQuality,
       mood: villagerMood,
       villagerSpeed: MOOD_PALETTES[villagerMood].villagerSpeed,
       walkable,
@@ -277,7 +276,7 @@ function IslandScene({
       villagerBubbleTaps,
       crowd,
     };
-  }, [palette, snow, look.lightsOn, lowQuality, villagerMood, layout, state.speechBubbles, settled, stages, replayIndex, replayText, crowd, postBubbles, postTick, villagerCount, onPostTap]);
+  }, [palette, snow, look.lightsOn, villagerMood, layout, state.speechBubbles, settled, stages, replayIndex, replayText, crowd, postBubbles, postTick, villagerCount, onPostTap]);
 
   const houseBubbles = useMemo(() => {
     const m = new Map<string, string>();

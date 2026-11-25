@@ -7,8 +7,7 @@
  * (§7.6): a construction site while a new building goes up, else the last built one (with a
  * small scaffold while it is upgraded in place), else a silhouette.
  */
-import { houseStyleFor, houseTypeFor, type HouseType } from './assets/voxel/houses';
-import { houseModelHeight } from './assets/lowpoly/islandModels';
+import { houseModelHeight, houseStyleFor, houseTypeFor, type HouseType } from './assets/voxel/houses';
 import { vitalityMood, type VitalityMood } from './mood';
 import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
 import { featuresFor, type CommunityFeature, type FeatureKey } from './plan/features';

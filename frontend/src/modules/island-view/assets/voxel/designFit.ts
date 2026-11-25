@@ -92,7 +92,7 @@ export const VOXEL_DESIGNS = {
   rowUnits: d('row units', D.rowUnits, HOUSE_TALL),
   modernCube: d('modern cube', D.modernCube, HOUSE_LOW),
   modernGable: d('modern gable', D.modernGable, withH(HOUSE_LOW, HOUSE_TALL.h)),
-  lighthouseCottage: d('lighthouse cottage', D.lighthouseCottage, withH(HOUSE_LOW, HOUSE_TALL.h)),
+  lighthouseCottage: d('lighthouse cottage', D.lighthouseCottage, withH(HOUSE_LOW, HOUSE_TALL.h - 1.5)), // its little tower stays below two storeys
   keeperCottage: d('keeper cottage', D.keeperCottage, HOUSE_LOW),
   thatchedCottage: d('thatched cottage', D.thatchedCottage, HOUSE_LOW),
   porchLogCabin: d('porch log cabin', D.porchLogCabin, HOUSE_LOW),
@@ -144,7 +144,6 @@ export const VOXEL_DESIGNS = {
   hatchback: d('hatchback', S.hatchback, { ...CAR, w: CAR.w * 0.9 }),
   townCar: d('town car', S.townCar, { ...CAR, w: CAR.w * 1.05, h: CAR.h - 0.2 }),
   schoolBus: d('school bus', () => S.schoolBus(), box(13, CAR.d, CAR.h + 1.2)),
-  cityTram: d('city tram', () => S.cityTram(), box(20, CAR.d, 7)),
   // Street props like today's bench, lamp and mailbox
   parkBench: d('park bench', () => S.parkBench(), BENCH),
   logBench: d('log bench', () => S.logBench(), { ...BENCH, d: BENCH.d + 0.4, h: BENCH.h * 0.75 }),

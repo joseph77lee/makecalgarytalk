@@ -60,8 +60,8 @@ export function cobraLight(): BoxPart[] {
     vb(-0.5, 0, -0.5, 0.5, 0.6, 0.5, '#9aa1ab'),
     vb(-0.3, 0.6, -0.3, 0.3, 11, 0.3, '#9aa1ab'),
     vb(-0.25, 11, -0.25, 3, 11.4, 0.25, '#9aa1ab'),
-    vb(2.4, 10.6, -0.7, 4.6, 11.4, 0.7, '#9aa1ab'),
-    vb(2.6, 10.4, -0.5, 4.4, 10.6, 0.5, LAMP, 'glow'),
+    vb(2.4, 10.9, -0.7, 4.6, 11.4, 0.7, '#9aa1ab'),
+    vb(2.6, 9.5, -0.5, 4.4, 10.9, 0.5, LAMP, 'glow'),
   ];
 }
 
@@ -259,13 +259,4 @@ export function schoolBus(): BoxPart[] {
   const parts: BoxPart[] = [vb(-7, 0.8, -2, 5.5, 5.4, 2, y), vb(5.5, 0.8, -1.8, 7.2, 3.2, 1.8, y), vb(-6.6, 3.2, 1.95, 4.8, 4.6, 2.05, '#2a2d36'), vb(-6.6, 3.2, -2.05, 4.8, 4.6, -1.95, '#2a2d36')];
   parts.push(vb(-7, 2, 2, 5.5, 2.3, 2.1, '#2a2d36'), vb(-7, 2, -2.1, 5.5, 2.3, -2, '#2a2d36'), vb(5.4, 3.4, -1.6, 5.55, 4.8, 1.6, ART.glassDark));
   return [...parts, ...wheels([-4.5, 4.4], 2), ...lights(7.15, 1.8)];
-}
-
-/** After Polyfork "City Tram": a long two-section streetcar with a pantograph (our CTrain stays its own model). */
-export function cityTram(): BoxPart[] {
-  const body = '#e9dccb';
-  const band = '#e46a5c';
-  const parts: BoxPart[] = [vb(-11, 0.8, -2, 11, 6, 2, body), vb(-11, 1.6, -2.05, 11, 2.4, 2.05, band), vb(-10.4, 3, 1.95, 10.4, 5, 2.1, ART.glassDark), vb(-10.4, 3, -2.1, 10.4, 5, -1.95, ART.glassDark)];
-  parts.push(vb(-0.2, 0.8, -2.1, 0.2, 6, 2.1, '#5d6470'), vb(-1.5, 6, -0.4, 1.5, 6.4, 0.4, '#5d6470'), vb(-0.2, 6.4, -0.2, 0.2, 8, 0.2, '#2a2d36'), vb(-2, 8, -0.2, 2, 8.3, 0.2, '#2a2d36'));
-  return [...parts, ...wheels([-8, -4, 4, 8], 1.8)];
 }

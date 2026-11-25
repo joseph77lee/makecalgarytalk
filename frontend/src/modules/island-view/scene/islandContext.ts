@@ -19,8 +19,6 @@ export interface IslandCtx extends BuildCtx {
   villagerSpeed: number;
   /** Lamps and public windows on (night, storms; §10.4). */
   lightsOn: boolean;
-  /** The device struggled (PerformanceMonitor): fewer extras such as yard models (§20.3a). */
-  lowQuality: boolean;
   /** Tiles reachable on foot that are currently shown (not still rising after growth). */
   walkable: Tile[];
   /** "x,z" keys of `walkable`. */

@@ -12,13 +12,16 @@ const built = (buildingKey: string) =>
   ({ assetKey: `building.${buildingKey}`, id: buildingKey, buildingKey, x: 0, z: 0, stage: 0, w: 3, d: 3, level: 1, status: 'built', facing: 0, variant: 0 }) as unknown as Parameters<typeof building>[0];
 
 describe('withLights (night, storms)', () => {
-  it('lamps glow at night with a pool of light, and are off by day', () => {
-    const night = withLights(lamp(), true);
-    expect(lampHeads(night).every((p) => p.layer === 'glow')).toBe(true);
-    expect(night.some((p) => p.layer === 'mist')).toBe(true);
-    const day = withLights(lamp(), false);
-    expect(lampHeads(day)).toHaveLength(0);
-    expect(day.some((p) => p.layer === 'glow')).toBe(false);
+  it('lamps glow at night with a pool of light, and are off by day (every lamp design)', () => {
+    for (let row = 0; row < 30; row++) {
+      const item = { assetKey: 'lamp', id: 'l', x: row, z: 0, stage: 0 } as const;
+      const night = withLights(lamp(item), true);
+      expect(lampHeads(night).every((p) => p.layer === 'glow')).toBe(true);
+      expect(night.some((p) => p.layer === 'mist'), `row ${row}`).toBe(true);
+      const day = withLights(lamp(item), false);
+      expect(lampHeads(day)).toHaveLength(0);
+      expect(day.some((p) => p.layer === 'glow')).toBe(false);
+    }
   });
 
   it("a resident's windows never light by night: only being active today lights them (§7.2)", () => {
