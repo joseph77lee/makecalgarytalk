@@ -6,7 +6,7 @@
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
 | Based on | `requirement.md` v1.45 |
-| Current module | M23 Art Pass 2 🟦 (then M16) |
+| Current module | M23 Art Pass 2 🟨 Ready for playtest (then M16) |
 
 ---
 
@@ -58,7 +58,7 @@
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
 | M21 | Living Community | FE + BE | | M20 | ✅ |
 | M22 | Sound | FE | | M21 | ✅ |
-| M23 | Art Pass 2 (Polyfork) | FE (R3F) | | M22 | 🟦 |
+| M23 | Art Pass 2 (Polyfork) | FE (R3F) | | M22 | 🟨 |
 | M16 | Deploy & Playtest | All + operator accounts | | M23 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
@@ -617,7 +617,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Gallery (`?gallery`):** time presets are sun positions lit by `skyLook` (the M19 hand-made looks are gone, so gallery and game match); weather (8), wind (3) and snow-on-ground buttons with rain/snow particles, fog, sway and snowy roofs; `dev/SoundBoard.tsx` plays every effect (lists unknown ones under "Other"), ambience automatic or by hand, music auto/day/night/snow/off, plus the volume panel; animals and people in `GalleryLife` hop and sound when tapped (`Tappable`, same crowd ids as the game). No lightning in the gallery (thunder is on the board).
   - **Tests:** `sound/sound.test.ts` (mix, music, work sound, settings incl. migration, required files exist, optional ones have a fallback), walker taps in `crowd.test.ts`. 934 frontend tests.
 
-### M23 — Art Pass 2 (Polyfork low-poly) 🟦
+### M23 — Art Pass 2 (Polyfork low-poly) 🟨
 **Goal:** Every community looks clean, varied and alive with pastel low-poly models from Polyfork, under the real weather and time (`requirement.md` v1.45 §19.1–19.2). Built after M22, **before M16**. Option B of the `spike/polyfork` comparison (2026-11-25).
 - **In scope** (decided with the user 2026-11-25; picks shown for review)
   - [x] foundation: GLB loading per island (only what it needs, cached), one instanced mesh per model, pastel repaint (roof/wall per house, kit colours mapped to our palette), shader weather (snow on upward faces, lit windows, swaying crowns), triangle budget and low-quality fallback, CC BY credits generated from the files (2026-11-25: `assets/lowpoly/`, `scripts/polyfork_models.py`; low quality drops yard extras, box models only while loading or if a file fails)
@@ -628,9 +628,16 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] people (avatar, villagers) and animals with our own walking from the rigs (2026-11-25: all 7 people for villagers, 3 grown-ups for the avatar with the player's shirt colour; deer, buck (reindeer) and jackrabbit (rabbit/hare) posed by our gaits, the files' clips never played; cougar and goose stay ours; farm dog not used yet)
   - [x] gallery shows every new model with weather and times (2026-11-25: `?gallery` views Polyfork houses / towers / trees & cars / props / people / lots A–B; `?meter` shows fps, triangles and draw calls on any island)
 - **Definition of Done**
-  - [ ] checked on screen (desktop and phone) for a new, a small and a grown community, suburb and downtown, every weather and time
-  - [ ] real-phone frame rate checked with the spike meter (or its successor)
+  - [x] checked on screen (desktop and phone) for a new, a small and a grown community, suburb and downtown, every weather and time (2026-11-25: Mahogany new/small at dusk on a phone, grown by day on desktop and phone, Beltline grown at night with snow; every weather and time in the gallery for each model; rain, fog and storms on an island not looked at one by one: they only change the scene, not the models)
+  - [ ] real-phone frame rate checked with the spike meter (or its successor): open any island with `?meter` (headless desktop: grown Mahogany 761k triangles with shadows before cars/props stopped casting them, Beltline 970k with shadows, low quality 364k; 150–340 draw calls)
   - [ ] user has looked at it
+- **Handoff**
+  - **Code:** `frontend/src/modules/island-view/assets/lowpoly/` — `catalogue.ts` (every static model: file, category, fit, optional `yaw`/`lamp`; `LP_HEIGHTS` checked against the files by `catalogue.test.ts`; `castsShadow`), `normalise.ts` (merge, door side to +z, fit, pastel repaint, glass/roof/wall flags from colour groups in sRGB, lamp bulbs), `loadModel.ts` (cached loads, null on failure), `material.ts` (shared shader: snow on upward faces, lit windows `aLit` 2/1/0, per-instance roof/wall paint, sway; back-side materials for mirrored copies), `LowpolyMeshes.tsx` (one InstancedMesh per model and mirroring), `lowpolyAsset.tsx` (asset factory: place → placements, box model fallback, optional extra box parts), `islandModels.ts` (houses, trees, cars, benches, mailboxes, lamps + light pool, snowmen), `buildingModels.ts` (tree buildings and features: Polyfork structure on our box surroundings via the `lowpoly` flag in `voxel/buildings.ts` / `voxel/features.ts`), `rigged.ts` + `RiggedFigures.tsx` (people and animals: `Person` / `Animal`, bones posed in the figure's frame by `gaits.ts`).
+  - **Files:** `frontend/scripts/polyfork_models.py` downloads the picks to `public/models/pf/` (79 GLBs, 24 MB; an island fetches only the models it shows) and writes `CREDITS.md` plus the "3D models" list on `credits.html`; `/models/*` cached a week (`_headers`).
+  - **Decisions:** colours are judged in sRGB (three's `Color` is linear: dark shades merged and windows were missed); glass must face sideways (slate roofs are dark blue too); every house gets a pastel roof and wall from `ART`; the files' own animation clips are never played (§19.2) — our gaits pose the bones; the avatar keeps the player's shirt colour (commonest colour on chest-bone vertices); label and tap heights come from `LP_HEIGHTS`, so they are a little off while the box model shows during loading.
+  - **Not used yet / known gaps:** picks `ice-rink-tile`, `rink-board-run`, `movie-theater`, `farm-dog` (rinks, pond, sledding hill, dog park, CTrain, cougar and goose stay ours); Polyfork remix variants; `crossingCottage` windows stay dark (warm dark glass); `city-commuter` has Polyfork's mushroom-shaped head (villagers only, not the avatar); people files are 0.7–1 MB (mostly geometry) and animal files 1.2–1.5 MB (65 % unused clips) — stripping clips is a follow-up if phones load slowly; skinned people are 5–8 draw calls each (20 villagers ≈ 100–160 calls); towers make downtown heavy (≈ 1M triangles with shadows) — if real phones struggle, first ideas: towers without shadows, fewer tower models per island, simpler fallback in low quality.
+  - **Gallery (`?gallery`):** views Polyfork houses / towers / trees & cars / props / people / lots A–B (every design of each building and feature); `?mock&plan=BLN&weather=snow&snow=1&time=night` shows any community in any weather (dev builds).
+  - **Tests:** every GLB parsed in node (fit, heights, roof/wall/window/bulbs found, rig bones present), normalise/placement units, island model choices (every catalogue model used, looks fixed per seed, lit windows share, pairs, yard trees in the tile, building pieces turn with the lot), bone posing in the figure frame. 1041 frontend tests.
 
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
