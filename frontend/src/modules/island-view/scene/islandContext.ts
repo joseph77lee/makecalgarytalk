@@ -54,8 +54,8 @@ export function celebrateIsland(ms = 1500): void {
   useSceneFx.setState({ celebrateUntil: performance.now() + ms });
 }
 
-/** Community Revival (requirement.md v1.31 §7.4): villagers cheer and flowers bloom for `ms`. */
-export function reviveIsland(ms = 7000): void {
+/** A new building (requirement.md v1.41 §7.4, §12.2): villagers cheer and flowers bloom for `ms`. */
+export function celebrateNewBuilding(ms = 7000): void {
   const until = performance.now() + ms;
   useSceneFx.setState({ celebrateUntil: until, bloomUntil: until });
 }

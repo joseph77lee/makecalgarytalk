@@ -174,7 +174,7 @@ describe('lots and the building tree (requirement.md §7.6)', () => {
 describe('houses, villagers, mood', () => {
   it('residents take the plan\'s house lots in order; overflow is counted', () => {
     const l = buildIslandLayout(MAH, stateWith({ landStage: 0, houses: residents(4) }));
-    const houses = l.objects.filter((o) => o.assetKey === 'house');
+    const houses = l.objects.filter((o) => o.assetKey === 'house' && !o.village);
     const stage0 = MAH.houses.filter((h) => MAH.tiles.find((t) => t.x === h.x && t.z === h.z)?.stage === 0);
     expect(houses.length).toBe(Math.min(4, stage0.length));
     expect(l.hiddenHouseCount).toBe(4 - houses.length);
@@ -185,7 +185,7 @@ describe('houses, villagers, mood', () => {
     const order = houseLotOrder(MAH);
     const house = (stage: number) =>
       buildIslandLayout(MAH, stateWith({ landStage: stage, houses: [{ id: 'slot-3', slot: 3, nickname: 'Maple', activeToday: true, mine: true }] })).objects.find(
-        (o) => o.assetKey === 'house',
+        (o) => o.assetKey === 'house' && !o.village,
       );
     expect(house(1)).toMatchObject({ x: order[3].x + 0.5, z: order[3].z + 0.5, mine: true, founding: false });
     for (const stage of [2, 3, 4, 5]) expect(house(stage)).toMatchObject({ x: order[3].x + 0.5, z: order[3].z + 0.5 });
@@ -200,16 +200,33 @@ describe('houses, villagers, mood', () => {
 
   it('a slot not on the current land, and residents beyond the lots, are counted as hidden', () => {
     const l = buildIslandLayout(MAH, stateWith({ landStage: 0, houses: [{ id: 'slot-149', slot: 149, nickname: 'Far', activeToday: false }], extraResidents: 2 }));
-    expect(l.objects.filter((o) => o.assetKey === 'house')).toHaveLength(0);
+    expect(l.objects.filter((o) => o.assetKey === 'house' && !o.village)).toHaveLength(0);
     expect(l.hiddenHouseCount).toBe(3);
   });
 
-  it('taken house lots block walking; free lots stay walkable', () => {
+  it('every house lot on the risen land has a house: residents at their lots, village houses on the rest (v1.41 §7.2)', () => {
     const order = houseLotOrder(MAH);
-    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, houses: [{ id: 'slot-0', slot: 0, nickname: 'A', activeToday: false }] }));
-    const walk = new Set(l.walkable.map(tileKey));
-    expect(walk.has(tileKey(order[0]))).toBe(false);
-    expect(walk.has(tileKey(order[1]))).toBe(true);
+    for (const stage of [0, 2, 5]) {
+      const l = buildIslandLayout(MAH, stateWith({ landStage: stage, houses: [{ id: 'slot-0', slot: 0, nickname: 'A', activeToday: false }] }));
+      const onLand = order.filter((t) => (MAH.tiles.find((p) => p.x === t.x && p.z === t.z)?.stage ?? 99) <= stage);
+      const houses = l.objects.filter((o) => o.assetKey === 'house');
+      expect(houses).toHaveLength(onLand.length);
+      const walk = new Set(l.walkable.map(tileKey));
+      for (const t of onLand) expect(walk.has(tileKey(t))).toBe(false); // houses block walking
+      const resident = houses.filter((o) => o.assetKey === 'house' && !o.village);
+      expect(resident).toHaveLength(1);
+      expect(resident[0]).toMatchObject({ x: order[0].x + 0.5, z: order[0].z + 0.5, nickname: 'A' });
+    }
+  });
+
+  it('village houses have no name, are never active and are not mine; an archived resident\'s lot shows one', () => {
+    const order = houseLotOrder(MAH);
+    const withB = buildIslandLayout(MAH, stateWith({ landStage: 2, houses: [{ id: 'b', slot: 1, nickname: 'B', activeToday: true }] }));
+    const without = buildIslandLayout(MAH, stateWith({ landStage: 2, houses: [] })); // B archived: not in the state
+    const at = (l: typeof withB) => l.objects.find((o) => o.assetKey === 'house' && o.x === order[1].x + 0.5 && o.z === order[1].z + 0.5);
+    expect(at(withB)).toMatchObject({ nickname: 'B', activeToday: true });
+    expect(at(without)).toMatchObject({ village: true, nickname: '', activeToday: false, mine: false });
+    for (const o of without.objects) if (o.assetKey === 'house') expect(o.village).toBe(true);
   });
 
   it('mini villagers start on walkable path tiles, capped at 20', () => {

@@ -1,17 +1,11 @@
 import type { ReactNode } from 'react';
-import { vitalityMood, type VitalityMood } from '../mood';
+import { developmentLevel } from '../development';
 import type { CommunityViewState } from '../types';
 import { useIslandUi } from '../uiStore';
 
-const MOOD_LABEL: Record<VitalityMood, { text: string; className: string }> = {
-  lively: { text: 'Lively', className: 'bg-emerald-100 text-emerald-700' },
-  normal: { text: 'Normal', className: 'bg-sky-100 text-sky-700' },
-  sleepy: { text: 'Sleepy', className: 'bg-indigo-100 text-indigo-600' },
-};
-
-/** Top bar: optional left slot (e.g. my profile), community name with Vitality mood, labels toggle. */
+/** Top bar: optional left slot (e.g. my profile), community name with its development level (§7.4), labels toggle. */
 export function IslandHud({ state, left, right }: { state: CommunityViewState; left?: ReactNode; right?: ReactNode }) {
-  const mood = state.vitality === null ? null : MOOD_LABEL[vitalityMood(state.vitality)];
+  const level = developmentLevel(state.buildings);
   const showLabels = useIslandUi((u) => u.showLabels);
   const setShowLabels = useIslandUi((u) => u.setShowLabels);
 
@@ -20,11 +14,9 @@ export function IslandHud({ state, left, right }: { state: CommunityViewState; l
       <div className="pointer-events-auto flex w-10 shrink-0 justify-start">{left}</div>
       <div className="flex min-w-0 items-center gap-2 rounded-full bg-white/85 px-4 py-1.5 shadow-sm backdrop-blur">
         <span className="truncate text-sm font-bold text-slate-800">{state.communityName}</span>
-        {mood && state.vitality !== null && (
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${mood.className}`}>
-            {mood.text} · {Math.round(state.vitality)}
-          </span>
-        )}
+        <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700" title="Development level: grows with every new building">
+          Lv {level}
+        </span>
       </div>
       <div className="pointer-events-auto flex shrink-0 items-start gap-2">
       {right}

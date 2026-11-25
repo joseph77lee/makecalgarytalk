@@ -12,6 +12,7 @@ import { useLiveWeather, WeatherChip, isSnowing, type LiveWeather } from '../../
 import { Precipitation } from './Precipitation';
 import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, futureLandOpacity, type SkyLook } from './sky';
 import { setWind } from './wind';
+import { seededRandom, villagerCount, villagersOutside } from './villagers';
 import { BloomBurst } from './BloomBurst';
 import { BoxBatch } from './BoxBatch';
 import { ISLAND_AZIMUTH, landExtent, northScreenAngle, viewFrame, zoomForFrame, type ViewFrame } from './camera';
@@ -84,7 +85,14 @@ function useShownSnow(cover: boolean, snowing: boolean): boolean {
 
 /** The 3D voxel island for one community, rendered purely from its plan and `state`. */
 export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuildingKeys = [], children, environment }: IslandViewProps) {
-  const layout = useMemo(() => buildIslandLayout(plan, state), [plan, state]);
+  // Mini villagers: a random number for this visit, by island size (§7.3); one at least when
+  // there is something real to replay.
+  const [villagerSeed] = useState(() => Math.random());
+  const needsVillager = (state.replay?.length ?? 0) > 0;
+  const layout = useMemo(
+    () => buildIslandLayout(plan, state, undefined, (w) => villagerCount(w, seededRandom(villagerSeed), needsVillager)),
+    [plan, state, villagerSeed, needsVillager],
+  );
   const live = useLiveWeather();
   const env = environment ?? liveEnvironment(live);
   const snow = useShownSnow(env.snowCover, isSnowing(env.weather));
@@ -170,7 +178,10 @@ function IslandScene({
 
   // Action replay: today's real actions, one at a time, over the villagers (§7.3).
   const replay = state.replay ?? [];
-  const villagerCount = layout.objects.filter((o) => o.assetKey === 'mini-villager').length;
+  // fewer villagers outside at night and in rain or snow (§7.3)
+  const villagersTotal = layout.objects.filter((o) => o.assetKey === 'mini-villager').length;
+  const outside = villagersOutside(villagersTotal, { weather: env.weather, nightness: look.nightness }, replay.length > 0);
+  const villagerCount = outside;
   const [replayTick, setReplayTick] = useState(0);
   useEffect(() => {
     if (replay.length === 0 || villagerCount === 0) return;
@@ -188,6 +199,11 @@ function IslandScene({
     return () => clearTimeout(t);
   }, [selectedHouse]);
 
+  // Villagers rest at night and keep an ordinary pace in bad weather (time and weather, not
+  // Vitality, requirement.md v1.41 §7.3).
+  const wet = env.weather === 'rain' || env.weather === 'snow' || env.weather === 'mix' || env.weather === 'thunderstorm';
+  const villagerMood = look.nightness > 0.5 ? 'sleepy' : wet ? 'normal' : 'lively';
+
   // one crowd per island view: walkers claim tiles in it every frame
   const [crowd] = useState(() => new Crowd());
   const ctx: IslandCtx = useMemo(() => {
@@ -199,15 +215,15 @@ function IslandScene({
       palette,
       snow,
       lightsOn: look.lightsOn,
-      mood: layout.mood,
-      villagerSpeed: MOOD_PALETTES[layout.mood].villagerSpeed,
+      mood: villagerMood,
+      villagerSpeed: MOOD_PALETTES[villagerMood].villagerSpeed,
       walkable,
       walkableKeys: new Set(walkable.map(tileKey)),
       landStage: settled,
       villagerBubbles,
       crowd,
     };
-  }, [palette, snow, look.lightsOn, layout, state.speechBubbles, settled, stages, replayIndex, replayText, crowd]);
+  }, [palette, snow, look.lightsOn, villagerMood, layout, state.speechBubbles, settled, stages, replayIndex, replayText, crowd]);
 
   const houseBubbles = useMemo(() => {
     const m = new Map<string, string>();
@@ -215,7 +231,10 @@ function IslandScene({
     return m;
   }, [state.speechBubbles]);
 
-  const shown = useMemo(() => layout.objects.filter((o) => o.stage <= settled), [layout, settled]);
+  const shown = useMemo(
+    () => layout.objects.filter((o) => o.stage <= settled && (o.assetKey !== 'mini-villager' || o.index < outside)),
+    [layout, settled, outside],
+  );
   // Houses are tapped on their body, not on the ground behind them: test the tap ray against
   // each house's box and take the nearest hit.
   // Buildings (by footprint) can be tapped the same way.
@@ -306,6 +325,7 @@ function IslandScene({
         code={plan.code}
         features={featuresFor(plan.code).map((f) => f.key)}
         hasWater={plan.water.length > 0}
+        landTiles={layout.walkable.length}
         radius={layout.landRadius}
         extent={extent}
         azimuth={az}

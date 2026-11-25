@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { ServerChanges, ServerStreak } from '../daily-actions';
 import { BUILDING_TREE, buildIslandLayout, decodePlan, finishedExampleState, type BuildingView } from '../island-view';
 import { completionPercent, groupByStage, isBuilt } from './buildMapModel';
-import { changeItems, changesPanelOpen, revivedToday } from './changesText';
-import { landGoalText, sleepyText, streakText } from './streakText';
+import { changeItems, changesPanelOpen } from './changesText';
+import { landGoalText, streakText } from './streakText';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -37,10 +37,10 @@ const changes = (patch: Partial<ServerChanges> = {}): ServerChanges => ({
 
 describe('what changed since yesterday', () => {
   it('is empty when nothing happened (the panel then stays closed)', () => {
-    expect(changeItems(changes(), 50)).toEqual([]);
-    expect(changeItems(changes({ vitality_before: 50 }), 50)).toEqual([]); // unchanged Vitality is not news
+    expect(changeItems(changes())).toEqual([]);
+    expect(changeItems(changes({ vitality_before: 20 }))).toEqual([]); // Vitality is never shown (v1.41 §7.4)
   });
-  it('lists builds, openings, growth, neighbours, help and Vitality', () => {
+  it('lists builds, openings, growth, neighbours and help; no Vitality line', () => {
     const items = changeItems(
       changes({
         actions: 4,
@@ -51,7 +51,6 @@ describe('what changed since yesterday', () => {
         land_grew: true,
         vitality_before: 40,
       }),
-      55,
     ).map((i) => i.text);
     expect(items).toEqual([
       'Frozen pond was built',
@@ -60,32 +59,23 @@ describe('what changed since yesterday', () => {
       'Your community grew!',
       '2 new neighbours joined',
       '4 actions yesterday: Fire pit +3, Welcome sign Lv 2 +1',
-      'Vitality 40 → 55',
     ]);
   });
   it('built lines carry a share card; others do not', () => {
-    const items = changeItems(changes({ built: [{ building_key: 'fire-pit', title: 'Fire pit', level: 1 }], new_residents: 1 }), null);
+    const items = changeItems(changes({ built: [{ building_key: 'fire-pit', title: 'Fire pit', level: 1 }], new_residents: 1 }));
     expect(items[0]?.card).toEqual({ kind: 'built', title: 'Fire pit was built' });
     expect(items[1]?.card).toBeUndefined();
   });
-  it('Community Revival: Sleepy (0–29) yesterday → 30+ today, first line with a card', () => {
-    expect(revivedToday(changes({ vitality_before: 29 }), 30)).toBe(true);
-    expect(revivedToday(changes({ vitality_before: 0 }), 75)).toBe(true);
-    expect(revivedToday(changes({ vitality_before: 29 }), 29)).toBe(false); // still sleepy
-    expect(revivedToday(changes({ vitality_before: 30 }), 45)).toBe(false); // was not sleepy
-    expect(revivedToday(changes({ vitality_before: 40 }), 20)).toBe(false); // fell asleep
-    expect(revivedToday(changes({ vitality_before: null }), 40)).toBe(false); // new community
-    expect(revivedToday(changes({ vitality_before: 10 }), null)).toBe(false);
-    const items = changeItems(changes({ vitality_before: 25 }), 31);
-    expect(items[0]).toEqual({ icon: '🌸', text: 'Community Revival! Your community woke up', card: { kind: 'revival', title: 'Community Revival!' } });
-    expect(items.map((i) => i.text)).toContain('Vitality 25 → 31');
+  it('no Community Revival any more, even when a quiet community picks up (v1.41 §7.4)', () => {
+    const items = changeItems(changes({ vitality_before: 10 }));
+    expect(items).toEqual([]);
   });
   it('extra lines (Monday ranking) come first and open the panel on their own', () => {
     const extra = [{ icon: '🏆', text: 'Last week Mahogany ranked #2 in Calgary', card: { kind: 'weekly' as const, title: '#2 in Calgary this week' } }];
-    expect(changeItems(changes(), 50, extra)).toEqual(extra);
-    expect(changesPanelOpen(changes(), 50, false, extra)).toBe(true);
-    expect(changesPanelOpen(changes(), 50, true, extra)).toBe(false);
-    expect(changesPanelOpen(changes(), 50, false)).toBe(false);
+    expect(changeItems(changes(), extra)).toEqual(extra);
+    expect(changesPanelOpen(changes(), false, extra)).toBe(true);
+    expect(changesPanelOpen(changes(), true, extra)).toBe(false);
+    expect(changesPanelOpen(changes(), false)).toBe(false);
   });
 });
 
@@ -125,8 +115,3 @@ describe('finished example', () => {
   });
 });
 
-describe('sleepy line', () => {
-  it('invites everyone to wake the community up', () => {
-    expect(sleepyText('Mahogany')).toBe('😴 Mahogany is sleepy. Help today to wake it up!');
-  });
-});

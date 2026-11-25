@@ -30,7 +30,7 @@ export function withLights(parts: BoxPart[], on: boolean): BoxPart[] {
         out.push({ ...b, c: DARK_GLASS });
         continue;
       }
-      const lit = rnd(Math.round(b.p[0] * 97), Math.round(b.p[1] * 89), Math.round(b.p[2] * 83)) < 0.7;
+      const lit = rnd(Math.round(b.p[0] * 97), Math.round(b.p[1] * 89), Math.round(b.p[2] * 83)) < (b.tag === 'village-window' ? 0.85 : 0.7);
       out.push(lit ? { ...b, layer: 'glow', c: rnd(Math.round(b.p[0] * 31), Math.round(b.p[2] * 37), 5) < 0.5 ? '#ffd98a' : '#ffe6b3' } : { ...b, c: DARK_GLASS });
     } else out.push(b);
   }

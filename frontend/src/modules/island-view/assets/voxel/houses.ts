@@ -67,9 +67,11 @@ const WINDOWS = new Set<string>([ART.glass, ART.glassDark]);
  * The house model: `facing` 0 = front towards +z, 1 = +x, 2 = −z, 3 = −x. Active-today houses
  * light their windows warm (§7.2).
  */
-export function houseParts(type: HouseType, seed: number, facing: number, active: boolean): BoxPart[] {
+export function houseParts(type: HouseType, seed: number, facing: number, active: boolean, village = false): BoxPart[] {
+  // about half of the village houses light up at night (§7.2); residents' only when active
+  const nightTag = village && rnd(seed, 91) < 0.5 ? 'village-window' : 'house-window';
   const parts = BUILDERS[type](seed).map((b): BoxPart =>
-    !WINDOWS.has(b.c) ? b : active ? { ...b, layer: 'glow', c: '#ffd98a' } : { ...b, tag: 'house-window' },
+    !WINDOWS.has(b.c) ? b : active ? { ...b, layer: 'glow', c: '#ffd98a' } : { ...b, tag: nightTag },
   );
   return vturn(parts, facing);
 }

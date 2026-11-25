@@ -22,9 +22,9 @@ export interface BoxPart {
   /**
    * What the part is, for weather and time of day (requirement.md v1.40 §10.4): `roof` gets snow
    * when snow lies; `house-window` is a resident's window, lit only when they were active today
-   * (never by the night lights).
+   * (never by the night lights); `village-window` is a village house's window, about half lit at night (§7.2).
    */
-  tag?: 'roof' | 'house-window';
+  tag?: 'roof' | 'house-window' | 'village-window';
 }
 
 /** Box helper with the BOTTOM at y (easier to stack than centres). */

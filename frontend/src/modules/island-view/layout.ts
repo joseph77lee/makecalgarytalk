@@ -84,6 +84,8 @@ export type PlacedObject =
       facing: number;
       /** Height of the house in tiles (labels and taps). */
       height: number;
+      /** A village house with no owner (requirement.md v1.41 §7.2): no name, no tap, half lit at night. */
+      village?: boolean;
     })
   | (Base & { assetKey: 'tree'; variant: number })
   | (Base & { assetKey: 'lamp' })
@@ -188,7 +190,16 @@ const N4: Tile[] = [
   { x: 0, z: -1 },
 ];
 
-export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, features: CommunityFeature[] = featuresFor(plan.code)): IslandLayout {
+/**
+ * @param villagers how many mini villagers walk this island given its walkable tile count
+ *   (requirement.md v1.41 §7.3: random by island size, chosen per visit); default: the state's count.
+ */
+export function buildIslandLayout(
+  plan: IslandPlan,
+  state: CommunityViewState,
+  features: CommunityFeature[] = featuresFor(plan.code),
+  villagerCountFor?: (walkableTiles: number) => number,
+): IslandLayout {
   const landStage = state.landStage;
   const mood: VitalityMood = state.vitality === null ? 'normal' : vitalityMood(state.vitality);
   const stages = stageMap(plan);
@@ -445,6 +456,33 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
     });
     occupied.add(tileKey(t));
   });
+  // Every other house lot on the risen land gets a village house, so the village fills up as the
+  // island grows whatever the number of players (§7.2). Archived residents' lots are among them.
+  for (const t of lotOrder) {
+    const k = tileKey(t);
+    if (!on(t) || occupied.has(k)) continue;
+    houseTiles.push(k);
+    const colorIndex = hashString(`village:${plan.code}:${k}`);
+    const houseType = houseTypeFor(style, colorIndex);
+    objects.push({
+      assetKey: 'house',
+      id: `village:${k}`,
+      houseId: `village:${k}`,
+      x: t.x + 0.5,
+      z: t.z + 0.5,
+      stage: stageOf(t),
+      nickname: '',
+      activeToday: false,
+      colorIndex,
+      founding: false,
+      mine: false,
+      houseType,
+      facing: houseFacing(t, pathKeys, (n) => landKeys.has(n) && !blockedForDoor(n)),
+      height: houseHeight(houseType),
+      village: true,
+    });
+    occupied.add(k);
+  }
   const houseLotKeys = new Set(plan.houses.map(tileKey));
 
   for (const t of plan.trees.filter(on)) {
@@ -525,7 +563,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
   // Mini villagers start on the paths and plaza.
   const walkKeys = new Set(walkable.map(tileKey));
   const pathTiles = [...PLAZA, ...plan.paths].filter((t) => walkKeys.has(tileKey(t)));
-  const villagers = Math.min(state.miniVillagerCount, MAX_MINI_VILLAGERS);
+  const villagers = Math.min(villagerCountFor ? villagerCountFor(walkable.length) : state.miniVillagerCount, MAX_MINI_VILLAGERS);
   for (let i = 0; i < villagers && pathTiles.length > 0; i++) {
     const t = pathTiles[Math.floor(hash01(i, villagers, 5) * pathTiles.length)];
     objects.push({ assetKey: 'mini-villager', id: `villager:${i}`, x: t.x + 0.5, z: t.z + 0.5, stage: stageOf(t), index: i, startTile: t, colorIndex: i });

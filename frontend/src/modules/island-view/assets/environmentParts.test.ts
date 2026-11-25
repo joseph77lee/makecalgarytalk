@@ -32,6 +32,18 @@ describe('withLights (night, storms)', () => {
     }
   });
 
+  it('about half of the village houses light up at night, none by day (v1.41 §7.2)', () => {
+    let lit = 0;
+    const n = 200;
+    for (let seed = 0; seed < n; seed++) {
+      const parts = houseParts('bungalow', seed * 7 + 1, 0, false, true);
+      if (withLights(parts, true).some((p) => p.layer === 'glow')) lit++;
+      expect(withLights(parts, false).some((p) => p.layer === 'glow')).toBe(false);
+    }
+    expect(lit / n).toBeGreaterThan(0.35);
+    expect(lit / n).toBeLessThan(0.65);
+  });
+
   it('public buildings light about 70 % of windows at night, none by day', () => {
     let glass = 0;
     let lit = 0;

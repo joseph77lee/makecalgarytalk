@@ -9,7 +9,6 @@ describe('share card text', () => {
     expect(cardShareText(card, 'https://makecalgarytalk.com')).toBe(
       'Mahogany: Fire pit was built! Help our community grow on MakeCalgaryTalk: https://makecalgarytalk.com',
     );
-    expect(cardShareText({ ...card, kind: 'revival', title: 'Community Revival!' }, 'x')).toContain('Mahogany woke up!');
     expect(cardShareText({ ...card, kind: 'weekly', title: '#2 in Calgary last week' }, 'x')).toContain('Mahogany: #2 in Calgary last week');
   });
   it('file names are safe', () => {
@@ -55,9 +54,9 @@ describe('drawing a card', () => {
   });
   it('without an island picture it shows the event emoji', () => {
     const f = fakeCtx();
-    drawCard(f.ctx, { ...card, kind: 'revival', title: 'Community Revival!' }, null, null);
+    drawCard(f.ctx, { ...card, kind: 'weekly', title: '#2 in Calgary last week' }, null, null);
     expect(f.images).toHaveLength(0);
-    expect(f.texts).toContain('🌸');
+    expect(f.texts).toContain('🏆');
   });
 });
 

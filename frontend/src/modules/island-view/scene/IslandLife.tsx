@@ -96,6 +96,8 @@ interface Props {
   code: string;
   features: FeatureKey[];
   hasWater: boolean;
+  /** Walkable land tiles (island size for wildlife, §7.3). */
+  landTiles: number;
   radius: number;
   /** Where the land ends in each screen direction, and the camera orbit angle it was measured for. */
   extent: LandExtent;
@@ -108,14 +110,14 @@ interface Props {
   quiet?: boolean;
 }
 
-export function IslandLife({ code, features, hasWater, radius, extent, azimuth, cloudSpeed = 1, cloudGrey = 0, quiet = false }: Props) {
+export function IslandLife({ code, features, hasWater, landTiles, radius, extent, azimuth, cloudSpeed = 1, cloudGrey = 0, quiet = false }: Props) {
   // screen right and towards-the-camera directions on the ground
   const rx = Math.cos(azimuth);
   const rz = -Math.sin(azimuth);
   const fx = Math.sin(azimuth);
   const fz = Math.cos(azimuth);
   // Visitors are picked once per visit (a new chance every time the island is opened).
-  const [plan] = useState(() => lifePlan(code, features, hasWater, Math.random));
+  const [plan] = useState(() => lifePlan(code, features, hasWater, landTiles, Math.random));
   const clouds = useMemo(
     () => [cloud(1), cloud(2), cloud(3)].map((parts) => (cloudGrey > 0 ? parts.map((b) => ({ ...b, c: mixHex(b.c, '#aeb5c3', cloudGrey * 0.75) })) : parts)),
     [cloudGrey],
