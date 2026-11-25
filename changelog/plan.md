@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.75
+**Changed:** M20 Weather & Time of Day ✅ Done (user confirmed on an iPad); header "Current module" → M21 Living Community.
+
+**Why:** The user looked at M20 and asked to merge it; the villager-count and wildlife feedback is in M21.
+
+**Previous:**
+- Header: `| Plan version | v1.74 |`, `| Current module | M20 Weather & Time of Day 🟨 Ready for playtest (then M21 Living Community) |`
+- Module table: `| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | 🟨 |`
+- M20 title: `### M20 — Weather & Time of Day 🟨`; DoD: `  - [ ] user has looked at it`
+
 ### 2026-11-24 — v1.74
 **Changed:** M21 Living Community scope: the mini-villager item adds that the smallest islands start with 0–1 villagers; new item "wildlife by where the community is and how big its island is" (downtown/inner city rarely, near the city edge often, fewer on small islands, fewer geese and jackrabbits overall). M20 (still 🟨): the future-land outline is now nearly invisible at night and dimmer in storms (playtest fix, no plan text change).
 

@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.74 |
+| Plan version | v1.75 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Based on | `requirement.md` v1.40 |
-| Current module | M20 Weather & Time of Day 🟨 Ready for playtest (then M21 Living Community) |
+| Current module | M21 Living Community (next; M20 ✅ Done) |
 
 ---
 
@@ -55,7 +55,7 @@
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
-| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | 🟨 |
+| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
 | M21 | Living Community | FE + BE | | M20 | ⬜ |
 | M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
@@ -547,7 +547,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Walking animation:** `assets/voxel/rigs.ts` splits a model into a body and parts turning at their joints (`personRig`: head, armL/R, legL/R; `animalRig`: legs `fl fr bl br` or `hind front` / `legL legR`, head, tail; left = −z, animals face +x). `assets/voxel/gaits.ts` holds pure, tested pose functions (`personPose`, `animalPose`, `ANIMAL_STYLE` with walk/run/stalk/hop/waddle and strides, `advancePhase` by distance so feet do not slide). `assets/RigView.tsx` draws a rig and calls a pose callback each frame; `VoxelPerson` (props `motion`, `headTilt`) and `VoxelAnimal` (`motion` = speed + running) read a motion ref the caller writes in its own `useFrame`. Cost: a person is 6 instanced meshes instead of 2 (≤ 21 people ≈ 126 small meshes), an animal 5–7.
   - **Gotchas:** the gallery camera always zooms to the centre, so it has view preset buttons; never give files in one folder names that differ only in case.
 
-### M20 — Weather & Time of Day 🟨
+### M20 — Weather & Time of Day ✅
 **Goal:** Each community shows the real Calgary weather and the time of day (`requirement.md` v1.40 §10.4), and every island has the same full look instead of mood scenery (§7.4). Built after M19, **before M21 and M16**.
 - **In scope** (planned with the user 2026-11-24)
   - [x] island scenery no longer follows the Vitality mood: one full look (deep green, flowers, lamps) for every community; mini villagers still follow the mood until M21
@@ -561,7 +561,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] dev overrides `?weather=<state>&wind=<level>&time=<preset>&snow=1&temp=<°C>` (dev builds only); the `?gallery` shares the night lights but has no weather buttons (the overrides cover it, see Handoff)
 - **Definition of Done**
   - [x] each weather state and day/night phase checked on screen (desktop 1280 px and 390 px phone viewport; real phone in M16)
-  - [ ] user has looked at it
+  - [x] user has looked at it (confirmed 2026-11-24 on an iPad; villager count and wildlife feedback moved to M21)
 - **Handoff**
   - **Server:** `supabase/migrations/20261124120000_weather.sql` — schema `weather` (`readings` keyed by `observed_at`, `requests` for pending pg_net calls). `weather.fetch()` (cron `weather-fetch`, `*/15`) stores the **previous** run's answer (`weather.collect`) and sends a new request, so data lags ≤ 15 min; ECCC observes hourly, duplicates are ignored. Condition text → state in `weather.state_for` (icon code fallback); wind level in `weather.wind_level` (≥ 30 km/h or gusts ≥ 50 → windy, ≥ 10 → breezy). Snow cover is computed on read in `weather.current_at`. No caching table: the read is ≤ ~340 rows. Production needs the `pg_net` extension enabled (the migration creates it) — check after the M16 deploy that `weather.readings` fills.
   - **Client:** `frontend/src/modules/weather/` (`sun.ts` low-precision solar position in UTC; `store.ts` keeps the weather, the server clock offset and the sun, refreshes every 15 min and when the tab comes back, ticks the sun every 30 s; `WeatherChip.tsx`). `IslandView` takes an optional `environment` prop (`IslandEnvironment`, `NOON_CLEAR`); without it it uses `useLiveWeather()` and shows the chip (so the first-visit island is live too). `scene/sky.ts` (pure, tested) turns sun + weather into light direction, colours, stars, fog, lamps on; keyframes are the gallery's day/dawn/dusk/night. `assets/environmentParts.ts` (`withLights`, `withSnow`) is applied in `BoxAsset` to every box model; parts carry `tag: 'roof' | 'house-window'`. Wind sway is a `sway` layer (`scene/wind.ts` shader uniforms written once per frame by `WindDriver`). Rain/snow: `scene/Precipitation.tsx`, GPU-only Points. Lightning flickers the hemisphere light and a white DOM overlay through a channel (no React state per frame).
