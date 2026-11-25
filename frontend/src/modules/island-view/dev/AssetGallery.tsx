@@ -46,6 +46,7 @@ import { rnd, shade, vb, vmove, vturn } from '../assets/voxel/voxel';
 import { BoxBatch } from '../scene/BoxBatch';
 import { useHtmlPortal } from '../scene/htmlPortal';
 import { GalleryLife } from './GalleryLife';
+import { LowpolyShowcase } from './LowpolyShowcase';
 
 interface Item {
   label: string;
@@ -67,6 +68,9 @@ const VIEWS = {
   Clouds: { target: [3, -0.5], zoom: 70, y: 4 },
   Features: { target: [12, -1], zoom: 85 },
   CTrain: { target: [12.5, 6.5], zoom: 120 },
+  'Polyfork houses': { target: [34, 0], zoom: 110 },
+  'Polyfork towers': { target: [40, 3.5], zoom: 46 },
+  'Polyfork trees & cars': { target: [40, 8], zoom: 60 },
 } as const;
 type ViewName = keyof typeof VIEWS;
 
@@ -264,6 +268,7 @@ export function AssetGallery() {
         <ViewRig view={view} />
         <GalleryLife />
         <BoxBatch parts={parts} />
+        <LowpolyShowcase snow={snow} lightsOn={look.lightsOn} />
         {items
           .filter((i) => i.label)
           .map((i) => (
