@@ -7,7 +7,8 @@
  * (§7.6): a construction site while a new building goes up, else the last built one (with a
  * small scaffold while it is upgraded in place), else a silhouette.
  */
-import { houseHeight, houseStyleFor, houseTypeFor, type HouseType } from './assets/voxel/houses';
+import { houseStyleFor, houseTypeFor, type HouseType } from './assets/voxel/houses';
+import { houseModelHeight } from './assets/lowpoly/islandModels';
 import { vitalityMood, type VitalityMood } from './mood';
 import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
 import { featuresFor, type CommunityFeature, type FeatureKey } from './plan/features';
@@ -452,7 +453,7 @@ export function buildIslandLayout(
       mine: h.mine === true,
       houseType,
       facing: houseFacing(t, pathKeys, (k) => landKeys.has(k) && !blockedForDoor(k)),
-      height: houseHeight(houseType),
+      height: houseModelHeight(houseType, colorIndex),
     });
     occupied.add(tileKey(t));
   });
@@ -478,7 +479,7 @@ export function buildIslandLayout(
       mine: false,
       houseType,
       facing: houseFacing(t, pathKeys, (n) => landKeys.has(n) && !blockedForDoor(n)),
-      height: houseHeight(houseType),
+      height: houseModelHeight(houseType, colorIndex),
       village: true,
     });
     occupied.add(k);

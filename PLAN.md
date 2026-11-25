@@ -620,10 +620,10 @@ M0 ─┬─ M1 ── M2 ─┐
 ### M23 — Art Pass 2 (Polyfork low-poly) 🟦
 **Goal:** Every community looks clean, varied and alive with pastel low-poly models from Polyfork, under the real weather and time (`requirement.md` v1.45 §19.1–19.2). Built after M22, **before M16**. Option B of the `spike/polyfork` comparison (2026-11-25).
 - **In scope** (decided with the user 2026-11-25; picks shown for review)
-  - [ ] foundation: GLB loading per island (only what it needs, cached), one instanced mesh per model, pastel repaint (roof/wall per house, kit colours mapped to our palette), shader weather (snow on upward faces, lit windows, swaying crowns), triangle budget and low-quality fallback, CC BY credits generated from the files
+  - [x] foundation: GLB loading per island (only what it needs, cached), one instanced mesh per model, pastel repaint (roof/wall per house, kit colours mapped to our palette), shader weather (snow on upward faces, lit windows, swaying crowns), triangle budget and low-quality fallback, CC BY credits generated from the files (2026-11-25: `assets/lowpoly/`, `scripts/polyfork_models.py`; low quality drops yard extras, box models only while loading or if a file fails)
   - [x] catalogue picks: 82 Polyfork candidates in 12 groups (`docs/polyfork-picks.json`, review page https://claude.ai/artifact/HB5iNMcE1ASturtPeTeza4); the user chose to use **all of them, mixed sensibly per group** (2026-11-25). No goose, cougar or moose in the catalogue: keep ours or request them
-  - [ ] houses with variety: many models and variants (Polyfork remix GLBs), mirrored/turned, yard extras, size mix by community type (suburb / inner city / downtown)
-  - [ ] trees, street props and cars
+  - [x] houses with variety: many models and variants (Polyfork remix GLBs), mirrored/turned, yard extras, size mix by community type (suburb / inner city / downtown) (2026-11-25: all 22 house/tower picks pooled per house type, roof/wall per house, mirrored, row-unit pairs, yard trees; remix GLB variants not used yet)
+  - [ ] trees, street props and cars (trees and parked cars done 2026-11-25; benches, lamps, mailboxes, snowman next)
   - [ ] buildings of the tree and features (rink, hall, playground, park, school, …); CTrain and Calgary-specific parts stay ours, repainted to match
   - [ ] people (avatar, villagers) and animals with our own walking from the rigs
   - [ ] gallery shows every new model with weather and times
