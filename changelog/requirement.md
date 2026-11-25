@@ -12,6 +12,37 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.46
+**Changed:** 19.1/19.2 art policy back to the **pastel voxel style**, with variety: more voxel designs per house type and for buildings, trees, cars and props (shapes may take ideas from catalogues such as Polyfork, redrawn in voxels and sized like today's models), varied people (ages, skin tones, hair, clothes). No external model files. 10.1, the 20.1 stack row and 22.6 step 6d follow. Header date updated.
+
+**Why:** Operator decision (2026-11-25) after reviewing the low-poly Polyfork version in the asset gallery: the existing voxel models and their volumes look better. Variety stays a rule; the Polyfork shapes are kept only as reference. Also lighter (no model downloads, about the triangles of today's islands).
+
+**Previous:**
+- Header: `| Document version | v1.45 |`, `| Last updated | 2026-11-24 |`
+- 10.1 (verbatim): `- **Pastel colours, flat-shaded low-poly models on a tiled island** (19.1), soft shadows`
+- 20.1 (verbatim): `| 3D models | Polyfork low-poly GLB models (CC BY 4.0), repainted in our palette (19.2) |`
+- 22.6 (verbatim): `| 6d | **Art Pass 2** (19.1, 19.2): pastel low-poly models from Polyfork for houses, buildings, trees, cars, people and animals, varied and weather-aware |`
+- 19.1–19.2 (verbatim):
+  > ### 19.1 Style guide (target)
+  > - **Pastel low-poly style** (operator decision 2026-11-25, after comparing voxel, voxelised and low-poly versions of a grown community): houses, buildings, trees, cars, people and animals are flat-shaded **low-poly models**, repainted in our pastel palette; the island ground stays tiles (the diorama look). Fantasy touches are welcome: it is a playful virtual Calgary
+  > - **Floating diorama island** with layered dirt underneath, soft pastel sky background
+  > - **Isometric orthographic view**
+  > - **One pastel palette** for everything: every model is repainted from its own colours into ours (roofs and walls picked per house), so models from different kits look like one world
+  > - **A grown community looks varied, never patterned**: many house models and variants, per-house roof and wall colours, mirrored and turned plans, yard extras (garage, fence, tree, car, play equipment), a mix of sizes by community type
+  > - Weather and time apply to every model (10.4): snow settles on upward faces, windows light at night, crowns sway in the wind
+  > - Light from the sun's real direction (10.4), gentle ambient light, no harsh contrast
+  > - Small, cute characters with HTML speech bubbles and name labels
+  > - **Launch theme: winter** (snow-covered island, window lights)
+  > - Reference: `docs/references/` (VibeBase "Voxel Village" screenshots, for mood and layout)
+  >
+  > ### 19.2 Production
+  > - No outsourcing; made in-house
+  > - **Models come from Polyfork** (polyfork.dev, free low-poly models, CC BY 4.0 for the mesh files): only the GLB mesh files are used and hosted with the game, each credited on the credits page (generated from the credit inside each file); Polyfork's code modules (.mjs) are never copied or hosted. Animation (walking people and animals) is our own code using the models' rigs
+  > - **Calgary-specific things Polyfork does not have** (CTrain, Calgary landmarks) are made in code or requested from Polyfork, in the same pastel style
+  > - Other free/CC0 asset packs may be used — **check licences for commercial use**
+  > - AI is used for concepts/ideas only
+  > - Test consistency with a small set first, then scale (done 2026-11-25: `spike/polyfork`)
+
 ### 2026-11-25 — v1.45
 **Changed:** 19.1/19.2 art policy: pastel **low-poly** models from Polyfork (repainted in our palette, varied, weather-aware; GLB mesh files only, CC BY credits generated; animation our own; Calgary-specific things made in code or requested) instead of the pastel voxel style; the island ground stays tiles. 10.1 and the 20.1 stack follow. 22.6 gains step 6d Art Pass 2.
 

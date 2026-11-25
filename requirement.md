@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.45 |
+| Document version | v1.46 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-24 |
+| Last updated | 2026-11-25 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -350,7 +350,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### 10.1 Scene
 - A **floating island in the community's real shape** (7.8; outline visible from day one, land grows inside it) with visible layered dirt underneath, on a soft pastel sky background
 - **Isometric view** (orthographic camera); user can rotate/zoom within limits
-- **Pastel colours, flat-shaded low-poly models on a tiled island** (19.1), soft shadows
+- **Pastel colours, flat-shaded voxel/box objects on a tiled island** (19.1), soft shadows
 - Contents: buildings of the tree (7.6) and their construction sites, locked-building silhouettes, resident houses, mini villagers, signature features (7.9), Main Street shops (22.4, Phase 4)
 - Speech bubbles and name labels are **HTML overlays** positioned over 3D objects (crisp text, Korean/English supported)
   - A **labels toggle** shows or hides all island overlays (speech bubbles, name tags, construction progress, locked-building hints) so the scene can be viewed without clutter. On by default; the choice is remembered on the device. My own avatar's name tag and my house marker always stay visible, so I can find myself
@@ -568,12 +568,13 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Detailed art (19.1–19.4) is applied in the **Art Pass** without changing game logic. The Art Pass is done **before the deploy and playtest** (decided 2026-11-24): communities must look worth playing; its scope is planned with the operator
 
 ### 19.1 Style guide (target)
-- **Pastel low-poly style** (operator decision 2026-11-25, after comparing voxel, voxelised and low-poly versions of a grown community): houses, buildings, trees, cars, people and animals are flat-shaded **low-poly models**, repainted in our pastel palette; the island ground stays tiles (the diorama look). Fantasy touches are welcome: it is a playful virtual Calgary
+- **Pastel voxel style** (kept by operator decision 2026-11-25 after reviewing the low-poly Polyfork version in the gallery: the voxel look and its volumes read better): houses, buildings, trees, cars, people and animals are built from blocks/boxes, flat-shaded, soft shadows. Fantasy touches are welcome: it is a playful virtual Calgary
 - **Floating diorama island** with layered dirt underneath, soft pastel sky background
 - **Isometric orthographic view**
-- **One pastel palette** for everything: every model is repainted from its own colours into ours (roofs and walls picked per house), so models from different kits look like one world
-- **A grown community looks varied, never patterned**: many house models and variants, per-house roof and wall colours, mirrored and turned plans, yard extras (garage, fence, tree, car, play equipment), a mix of sizes by community type
-- Weather and time apply to every model (10.4): snow settles on upward faces, windows light at night, crowns sway in the wind
+- **One pastel palette** for everything (roofs and walls picked per house)
+- **A grown community looks varied, never patterned**: many house designs per house type (shapes may take ideas from free model catalogues such as Polyfork, redrawn in voxels), per-house roof and wall colours, mirrored plans, a mix of sizes by community type; new designs keep the **volume of the existing voxel models** (same footprint and height class, checked by tests)
+- **People look like Calgary**: adults, children and elders, many skin tones, hair styles (headscarves included) and clothes
+- Weather and time apply to every model (10.4): snow settles on roofs, windows light at night, crowns sway in the wind
 - Light from the sun's real direction (10.4), gentle ambient light, no harsh contrast
 - Small, cute characters with HTML speech bubbles and name labels
 - **Launch theme: winter** (snow-covered island, window lights)
@@ -581,11 +582,11 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ### 19.2 Production
 - No outsourcing; made in-house
-- **Models come from Polyfork** (polyfork.dev, free low-poly models, CC BY 4.0 for the mesh files): only the GLB mesh files are used and hosted with the game, each credited on the credits page (generated from the credit inside each file); Polyfork's code modules (.mjs) are never copied or hosted. Animation (walking people and animals) is our own code using the models' rigs
-- **Calgary-specific things Polyfork does not have** (CTrain, Calgary landmarks) are made in code or requested from Polyfork, in the same pastel style
+- **Every model is built in code from boxes** (voxels, 12 per tile); shapes from other catalogues are used only as reference, never as files
+- Calgary-specific things (CTrain, landmarks) are made in code in the same style
 - Other free/CC0 asset packs may be used — **check licences for commercial use**
 - AI is used for concepts/ideas only
-- Test consistency with a small set first, then scale (done 2026-11-25: `spike/polyfork`)
+- Test consistency with a small set first, then scale (done 2026-11-25: `spike/polyfork`, then the gallery's "New voxel designs")
 
 ### 19.3 Effects handled in code
 - Day/night: sun direction (shadows), light colour/intensity, sky tint, lamps and windows at night, driven by real Calgary time (10.4)
@@ -624,7 +625,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Testing | **Vitest** (unit), **Playwright** (end-to-end, phone viewport), database tests against local Supabase |
 | Error monitoring | Sentry (before launch) |
 | Analytics | **Own, in Supabase** (day-level visits, community views, share and invite-visit events; operator dashboard) + **Cloudflare Web Analytics** for page views (no cookies) |
-| 3D models | Polyfork low-poly GLB models (CC BY 4.0), repainted in our palette (19.2) |
+| 3D models | Voxel models built in code from boxes (19.2) |
 
 ### 20.2 Data
 - City of Calgary Open Data: **community boundaries**, **population per community**
@@ -759,7 +760,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 6a | **Real weather and time of day** on the islands (10.4); island scenery no longer follows the Vitality mood |
 | 6b | **Living community** (decided with the operator 2026-11-24, details in 7.2–7.4): mini villagers appear naturally at random instead of from player counts; houses fill the land as the community grows, and every Verified Resident still has their own house among them ("My house"); Vitality is redefined as community development (new buildings); walking villagers show residents' recent community posts (14; never Safety posts) as speech bubbles credited by nickname |
 | 6c | **Sound** (10.5): effects, island ambience by weather and time, World Map sounds, background music, music/effects on-off |
-| 6d | **Art Pass 2** (19.1, 19.2): pastel low-poly models from Polyfork for houses, buildings, trees, cars, people and animals, varied and weather-aware |
+| 6d | **Art Pass 2** (19.1, 19.2): more voxel designs (shapes after free catalogues such as Polyfork, sized like today's models) for houses, buildings, trees, cars and props, and varied people, weather-aware |
 | 7 | Deploy with **all communities open** → family/friends playtest → public launch |
 
 ### 22.7 Launch
