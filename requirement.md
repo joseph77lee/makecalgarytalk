@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.39 |
+| Document version | v1.40 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Status | Initial draft for starting MVP development |
@@ -60,7 +60,7 @@ The service grows in this order; features are judged by how they serve it. The *
 - Each real Calgary community (e.g. Mahogany, Bridgeland, Tuscany) is a **pastel voxel village on a floating diorama island** that grows as more residents join.
 - Visual reference: `docs/references/` (VibeBase "Voxel Village" screenshots — floating voxel island, isometric view, pastel colours, small characters with speech bubbles).
 - Residents take short daily actions **together** to **grow the community itself** (this is not a game about growing your own personal plot).
-- When a community develops, its mini villagers are happy and the scenery becomes beautiful; when neglected, they get sleepy and the scenery turns snowy and quiet.
+- When a community develops, its mini villagers are happy and new buildings rise; when neglected, its mini villagers get sleepy. The scenery always looks its best and follows Calgary's real weather and time of day (10.4).
 - Communities compete on development/participation.
 - Long-term, it expands into a **neighbourhood platform** (community news, local business coupons).
 
@@ -186,11 +186,13 @@ Goal: moving never punishes the person who moves or the residents who stay.
   - Days counted are **finished Calgary days** (yesterday and before), so Vitality changes once a day, like construction progress. Only days since the community's first resident are averaged; before the first finished day Vitality is not shown (normal mood), so a new community never starts sleepy
 - MVP has 3 mood levels
 
-| Vitality | Mood | Scenery |
+| Vitality | Mood | Mini villagers |
 |---|---|---|
-| 60–100 | Lively | Flowers, lights, clean streets, many mini villagers |
-| 30–59 | Normal | Ordinary look |
-| 0–29 | Sleepy | A quiet snowy winter evening: fresh snow on the ground and trees, icy water, a soft lavender-pink dusk sky, villagers mostly resting. Pastel, never grey or dark |
+| 60–100 | Lively | Many mini villagers, walking briskly and cheering |
+| 30–59 | Normal | Ordinary pace |
+| 0–29 | Sleepy | Villagers mostly resting. Pastel, never grey or dark |
+
+- **The island scenery does not follow the mood** (operator decision 2026-11-24): every island shows the same full look (deep green grass, flowers, street lamps), changed only by the real weather and time of day (10.4). The World Map keeps its mood tones for now (9); Vitality is being redesigned as community development (22.6 step 6b)
 
 - Don't make it too depressing ("cute sleepy"): a newcomer's first look must still be inviting
 - While Sleepy, the streak bar says "<Community> is sleepy. Help today to wake it up!", so a quiet community becomes a reason to help
@@ -274,7 +276,7 @@ Community unlock buildings and construction projects are **one building tree**. 
 | 51+ | all (~1,024) |
 
 - Growth effect: new land **rises at the island edge**, mini villagers cheer, share card generated.
-- **The island never shrinks.** Inactivity is shown through Vitality (mood/scenery), not size.
+- **The island never shrinks.** Inactivity is shown through Vitality (the mini villagers' mood, 7.3), not size or scenery.
 - **Positions never change.** Each community's lot plan (building lots, house lots, spare lots, Main Street lots, paths) is generated **once** and stored; later algorithm changes apply only to new communities or newly added lots.
 - Buildings opened by the tree always have land: their resident conditions match the land available at that resident count.
 - First-stage buildings sit around the plaza (a cosy village centre); later buildings get lots in the **newly grown outer land, spread in different directions**, so every growth brings new building spots.
@@ -385,10 +387,15 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Real-time presence of other online residents is a later phase (22.3)
 
 ### 10.4 Living community: real weather and time of day (before launch)
-- **Weather follows real Calgary weather**: rain falls when it rains, snow when it snows, trees, flags and smoke move with the wind, clouds when it is overcast. One city-wide reading, fetched on the **server** from a free public weather source and cached (a few times an hour, never per player; 20.3); the island only shows it
-- **Time of day follows the real sun**: the light comes from the sun's real direction, so shadows move through the day; dawn and dusk tints; at night the **street lamps and windows light up** and the sky darkens. Time comes from the server (no time-zone math in the client, 7.5); the sun's direction may be computed from the current instant and Calgary's coordinates
-- Effects stay within the phone budget (20.3a): particle counts capped, the low-quality mode (M14) reduces them further
-- Details (which weather states, look of each effect, data source) are planned with the operator before the work starts
+- **Weather follows real Calgary weather**: one city-wide reading of Calgary's current conditions from **Environment and Climate Change Canada** (free public data, commercial use allowed with the attribution "Data source: Environment and Climate Change Canada"), fetched on the **server** every 15 minutes and stored (never per player; 20.3); the island only shows it. Without a reading from the last 3 hours the island shows clear weather
+  - States: **clear, partly cloudy, overcast, rain, snow, rain and snow, fog, thunderstorm** (heavy rain with lightning flashes). Wind: **calm, breezy, windy**: rain and snow slant with it, trees and flags sway, clouds drift faster. Clouds, rain, snow and fog dim the light and grey the sky a little
+  - **Snow settles** on roofs, trees and ground while it snows and stays after it stops, like real Calgary snow; it melts after about 6 hours above +5 °C (e.g. a chinook) or when it rains. Flowers hide under the snow
+  - A small **weather chip** on the island shows the condition icon and temperature; tapping it shows the attribution
+- **Time of day follows the real sun**: the light comes from the sun's real direction, so shadows move through the day; dawn and dusk tints; at night the sky darkens to a soft starry night (pastel, never black)
+  - The sun's direction is computed from the **server's current instant** and Calgary's coordinates (no time zones, 7.5). Phases come from the sun's height: **day**, **dawn/dusk** (sun within 6° of the horizon), **night**
+  - The drawn sun is kept at least about 22° high so low winter sun does not shade the whole island; only its direction is real
+  - At night the **street lamps and public buildings' windows light up**; residents' houses light their windows only when the resident was active today (7.2)
+- Effects stay within the phone budget (20.3a): rain and snow particles capped (about 1,500), the low-quality mode (M14) reduces them further (about 400) and drops lightning
 
 ---
 
@@ -566,7 +573,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Floating square diorama island** with layered dirt underneath, soft pastel sky background
 - **Isometric orthographic view**
 - **One fixed pastel palette** (to be defined; e.g. soft greens for grass, warm sand paths, coral/lavender/sky-blue roofs)
-- Light from top-left, gentle ambient light, no harsh contrast
+- Light from the sun's real direction (10.4), gentle ambient light, no harsh contrast
 - Small, cute characters with HTML speech bubbles and name labels
 - **Launch theme: winter** (snow-covered island, chimney smoke, window lights)
 - Reference: `docs/references/` (VibeBase "Voxel Village" screenshots)
@@ -719,7 +726,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Community petitions (16.2)
 - Advanced share/update celebration events
 - **Community marketplace** (buy, sell, give away): needs in-app messaging and trade-safety rules first; not in the MVP's community posts (14)
-- **Enter buildings and decorate my own house** (idea, not planned yet): tap a building or my house to go inside a small interior scene; residents decorate their own house. The fixed house lot (7.2) is what makes "my house" stable for this
+- **Enter buildings and decorate my own house** (idea, not planned yet): tap a building or my house to go inside a small interior scene; residents decorate their own house's interior with **rewards earned by their activity** (operator plan 2026-11-24), and buildings may hold mini games or other actions. "My house" must therefore always exist (7.2); the fixed house lot is what makes it stable
 
 ### 22.4 Phase 4 (monetization)
 - **Local business buildings as ads** (e.g. a sushi restaurant in Mahogany shows its shop and "50% off sushi this month" on the Mahogany island)
@@ -749,7 +756,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 4 | World Map, weekly ranking, share cards, invites |
 | 5 | Legal pages, analytics, email subscription |
 | 6 | **Art Pass**: prettier voxel communities, buildings, people and props, and **busier** communities (scope planned with the operator) |
-| 6a | **Real weather and time of day** on the islands (10.4) |
+| 6a | **Real weather and time of day** on the islands (10.4); island scenery no longer follows the Vitality mood |
+| 6b | **Living community** (decided with the operator 2026-11-24, details written into 7.2–7.4 when the work starts): mini villagers appear naturally at random instead of from player counts; houses fill the land as the community grows, and every Verified Resident still has their own house among them ("My house"); Vitality is redefined as community development (new buildings); walking villagers show residents' recent community posts (14; never Safety posts) as speech bubbles credited by nickname |
 | 7 | Deploy with **all communities open** → family/friends playtest → public launch |
 
 ### 22.7 Launch

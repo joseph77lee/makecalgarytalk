@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.71 |
+| Plan version | v1.72 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
-| Based on | `requirement.md` v1.39 |
-| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |
+| Based on | `requirement.md` v1.40 |
+| Current module | M20 Weather & Time of Day 🟦 (then M21 Living Community) |
 
 ---
 
@@ -55,8 +55,9 @@
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
-| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ⬜ |
-| M16 | Deploy & Playtest | All + operator accounts | | M20 | ⬜ |
+| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | 🟦 |
+| M21 | Living Community | FE + BE | | M20 | ⬜ |
+| M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -77,7 +78,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -546,16 +547,32 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Walking animation:** `assets/voxel/rigs.ts` splits a model into a body and parts turning at their joints (`personRig`: head, armL/R, legL/R; `animalRig`: legs `fl fr bl br` or `hind front` / `legL legR`, head, tail; left = −z, animals face +x). `assets/voxel/gaits.ts` holds pure, tested pose functions (`personPose`, `animalPose`, `ANIMAL_STYLE` with walk/run/stalk/hop/waddle and strides, `advancePhase` by distance so feet do not slide). `assets/RigView.tsx` draws a rig and calls a pose callback each frame; `VoxelPerson` (props `motion`, `headTilt`) and `VoxelAnimal` (`motion` = speed + running) read a motion ref the caller writes in its own `useFrame`. Cost: a person is 6 instanced meshes instead of 2 (≤ 21 people ≈ 126 small meshes), an animal 5–7.
   - **Gotchas:** the gallery camera always zooms to the centre, so it has view preset buttons; never give files in one folder names that differ only in case.
 
-### M20 — Weather & Time of Day ⬜
-**Goal:** Each community shows the real Calgary weather and the time of day (`requirement.md` v1.38 §10.4). Built after M19, **before M16**.
-- **In scope** (details planned with the user before work starts)
-  - [ ] real weather from the server (city-wide, cached, free public source): rain, snow, wind, overcast
-  - [ ] snow settles on roofs, trees and ground while it snows (carried over from M19)
-  - [ ] time of day: light from the sun's real direction (moving shadows), dawn/dusk tints, night sky, street lamps and windows lit at night
-  - [ ] no time-zone math in the client (§7.5): the server sends the instant / sun data
-  - [ ] effects within the phone budget (§20.3a), reduced further in low-quality mode
+### M20 — Weather & Time of Day 🟦
+**Goal:** Each community shows the real Calgary weather and the time of day (`requirement.md` v1.40 §10.4), and every island has the same full look instead of mood scenery (§7.4). Built after M19, **before M21 and M16**.
+- **In scope** (planned with the user 2026-11-24)
+  - [ ] island scenery no longer follows the Vitality mood: one full look (deep green, flowers, lamps) for every community; mini villagers still follow the mood until M21
+  - [ ] `weather` module (own schema): pg_cron + pg_net read Environment Canada's Calgary conditions (`api.weather.gc.ca` citypageweather `ab-52`) every 15 minutes into an append-only readings table; `public.weather_current()` returns state, wind, temperature, snow cover and the server instant (clear when no reading in the last 3 hours)
+  - [ ] weather states: clear, partly cloudy, overcast, rain, snow, rain and snow, fog, thunderstorm (lightning flashes); wind calm / breezy / windy (slanted rain and snow, swaying trees and flags, faster clouds)
+  - [ ] snow settles on roofs, trees and ground while it snows and stays until about 6 hours above +5 °C or rain (computed on read from the readings); flowers hide under snow
+  - [ ] weather chip (icon + temperature; tap → "Data source: Environment and Climate Change Canada")
+  - [ ] time of day: sun direction from the server instant and Calgary's coordinates (moving shadows, drawn height ≥ ~22°), dawn/dusk tints and night sky blended by sun height; street lamps and public windows lit at night, houses only when active today
+  - [ ] no time-zone math in the client (§7.5): the client only offsets its clock by the server instant
+  - [ ] effects within the phone budget (§20.3a): ≤ ~1,500 particles, ≤ ~400 and no lightning in low-quality mode
+  - [ ] dev overrides `?weather=<state>&time=<phase>` and weather buttons in the `?gallery`
 - **Definition of Done**
   - [ ] each weather state and day/night phase checked on screen (and on a phone)
+  - [ ] user has looked at it
+
+### M21 — Living Community ⬜
+**Goal:** Communities look naturally alive whatever the number of players, every resident keeps "My house", and Vitality becomes community development (`requirement.md` v1.40 §22.6 step 6b; the detailed requirement text is written into §7.2–7.4 when the work starts). Built after M20, **before M16**.
+- **In scope** (decided with the user 2026-11-24; details planned when the work starts)
+  - [ ] mini villagers appear naturally at random (scaled by island size, fewer at night and in bad weather), not from player counts or activity; never named, never pretending to be players (§7.3); action replay stays real
+  - [ ] houses fill the land as the community grows (unnamed background houses), and every Verified Resident still has their own house among them with "My house", nickname on tap and lit windows when active (needed later for interior decorating, §22.3)
+  - [ ] Vitality redefined as community development (new buildings): replaces the sleepy streak text, the Revival effect (→ building completion celebration) and the World Map mood tones
+  - [ ] walking villagers show residents' recent community posts as speech bubbles: "nickname: text" with the kind icon, about 40 characters, tap opens the post; never Safety posts; hidden, reported and expired posts drop out (same server function as the newspaper); at most 2–3 bubbles at a time
+- **Definition of Done**
+  - [ ] requirement §7.2–7.4 (and §9, §11, §12.2 where Vitality appears) updated with changelog entries
+  - [ ] checked on screen (desktop and phone) for a new, a small and a large community
   - [ ] user has looked at it
 
 ### M16 — Deploy & Playtest ⬜
@@ -601,7 +618,7 @@ M0 ─┬─ M1 ── M2 ─┐
 ---
 
 ## After launch — checklist for the user to review
-**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
+**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
 
 **Growth (already modules)**
 - [ ] M17 Return Reminders — email (opted-in players) + web push (`requirement.md` §22.7a.1)
