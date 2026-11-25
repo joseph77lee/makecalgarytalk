@@ -220,12 +220,14 @@ describe('houses, villagers, mood', () => {
     for (const m of v) if (m.assetKey === 'mini-villager') expect(walk.has(tileKey(m.startTile))).toBe(true);
   });
 
-  it('mood decorations follow Vitality; null is Normal', () => {
-    const decor = (vitality: number | null) => buildIslandLayout(MAH, stateWith({ vitality, landStage: 2 })).objects.map((o) => o.assetKey);
-    expect(decor(80)).toContain('flowers');
-    expect(decor(10)).toContain('snow-pile');
-    expect(decor(45)).not.toContain('flowers');
-    expect(decor(null)).not.toContain('snow-pile');
+  it('flower patches are the same on every island whatever its Vitality (requirement v1.40 §7.4)', () => {
+    const flowerTiles = (vitality: number | null) =>
+      buildIslandLayout(MAH, stateWith({ vitality, landStage: 2 }))
+        .objects.filter((o) => o.assetKey === 'flowers')
+        .map((o) => `${o.x},${o.z}`);
+    expect(flowerTiles(80).length).toBeGreaterThan(0);
+    for (const v of [10, 45, null]) expect(flowerTiles(v)).toEqual(flowerTiles(80));
+    expect(buildIslandLayout(MAH, stateWith({ vitality: 10, landStage: 2 })).objects.map((o) => o.assetKey)).not.toContain('snow-pile');
   });
 
   it('works for an unusual shape (Diamond Cove) on every stage', () => {

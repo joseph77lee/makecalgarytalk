@@ -39,7 +39,7 @@ function mulberry32(seed: number) {
 }
 
 function MiniVillager({ index, startTile, colorIndex }: { index: number; startTile: Tile; colorIndex: number }) {
-  const { palette, mood, walkableKeys, villagerBubbles, crowd } = useIslandCtx();
+  const { villagerSpeed, mood, walkableKeys, villagerBubbles, crowd } = useIslandCtx();
   const meId = `villager:${index}`;
   useEffect(() => () => crowd.release(meId), [crowd, meId]);
   const group = useRef<Group>(null);
@@ -83,7 +83,7 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
         if (s.rng() < restChance) s.pause = (1.2 + s.rng() * (mood === 'sleepy' ? 5 : 3)) * me.restFactor;
       }
     } else {
-      s.t = Math.min(1, s.t + dt * palette.villagerSpeed * me.speedFactor);
+      s.t = Math.min(1, s.t + dt * villagerSpeed * me.speedFactor);
     }
 
     crowd.claim(meId, claimedTiles(s.from, s.to, s.t < 1));
@@ -103,7 +103,7 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
     if (body.current) body.current.position.y = sitting ? -0.16 : 0;
     // arms and legs follow: walking pace, sitting, or both arms up when the community cheers
     const m = motion.current;
-    m.speed = moving ? palette.villagerSpeed * me.speedFactor : 0;
+    m.speed = moving ? villagerSpeed * me.speedFactor : 0;
     m.sit = sitting;
     m.cheer = cheering;
   });

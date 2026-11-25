@@ -12,6 +12,60 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.75
+**Changed:** M20 Weather & Time of Day ✅ Done (user confirmed on an iPad); header "Current module" → M21 Living Community.
+
+**Why:** The user looked at M20 and asked to merge it; the villager-count and wildlife feedback is in M21.
+
+**Previous:**
+- Header: `| Plan version | v1.74 |`, `| Current module | M20 Weather & Time of Day 🟨 Ready for playtest (then M21 Living Community) |`
+- Module table: `| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | 🟨 |`
+- M20 title: `### M20 — Weather & Time of Day 🟨`; DoD: `  - [ ] user has looked at it`
+
+### 2026-11-24 — v1.74
+**Changed:** M21 Living Community scope: the mini-villager item adds that the smallest islands start with 0–1 villagers; new item "wildlife by where the community is and how big its island is" (downtown/inner city rarely, near the city edge often, fewer on small islands, fewer geese and jackrabbits overall). M20 (still 🟨): the future-land outline is now nearly invisible at night and dimmer in storms (playtest fix, no plan text change).
+
+**Why:** Operator playtest on an iPad (2026-11-24): 3 villagers on a stage-1 island and many geese/jackrabbits looked like too many; wildlife should depend on the community's location; the translucent future-land tiles stood out at night.
+
+**Previous:**
+- Header: `| Plan version | v1.73 |`
+- M21 villager item (verbatim): `  - [ ] mini villagers appear naturally at random (scaled by island size, fewer at night and in bad weather), not from player counts or activity; never named, never pretending to be players (§7.3); action replay stays real`
+- M21: no wildlife item.
+
+### 2026-11-24 — v1.73
+**Changed:** M20 Weather & Time of Day → 🟨 Ready for playtest: in-scope items and the screen check ticked, the dev-override item reworded (overrides in the game, no weather buttons in the gallery), Handoff note added. Header, module table and the lighting open item updated.
+
+**Why:** M20 work finished on `module/m20-weather-time`; waiting for the user's playtest.
+
+**Previous:**
+- Header: `| Plan version | v1.72 |`, `| Current module | M20 Weather & Time of Day 🟦 (then M21 Living Community) |`
+- Module table: `| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | 🟦 |`
+- M20 title: `### M20 — Weather & Time of Day 🟦`; all in-scope boxes unticked; dev item (verbatim): `  - [ ] dev overrides \`?weather=<state>&time=<phase>\` and weather buttons in the \`?gallery\``; DoD screen check unticked; no Handoff.
+- After launch (verbatim): `- [ ] Pastel palette and lighting values — palette set in M19 (\`ART\` in \`voxel/samples.ts\`); lighting values in M20`
+
+### 2026-11-24 — v1.72
+**Changed:** M20 Weather & Time of Day 🟦 In progress with its scope planned with the user (mood-free scenery, Environment Canada weather module, states and wind, settling snow, weather chip, real sun, night lights, phone budget, dev overrides). New module **M21 Living Community** after M20 and before M16 (random mini villagers, houses fill the land with every resident keeping "My house", Vitality as development, villagers speaking community posts except Safety). M16 now depends on M21; header, table, graph and the "Before opening" line updated. Based on `requirement.md` v1.40.
+
+**Why:** Planning session with the operator (2026-11-24): the sleepy mood's snowy dusk clashed with real weather and time; the villager/house/Vitality redesign is big enough for its own module.
+
+**Previous:**
+- Header: `| Plan version | v1.71 |`, `| Based on | `requirement.md` v1.39 |`, `| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |`
+- Module table (verbatim): `| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ⬜ |` / `| M16 | Deploy & Playtest | All + operator accounts | | M20 | ⬜ |`
+- Graph: `(all) ── M14 ── M19 ── M20 ── M16 ── M17 ── M18`
+- After launch: `**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M16 Deploy & Playtest`
+- M20 (verbatim):
+  > ### M20 — Weather & Time of Day ⬜
+  > **Goal:** Each community shows the real Calgary weather and the time of day (`requirement.md` v1.38 §10.4). Built after M19, **before M16**.
+  > - **In scope** (details planned with the user before work starts)
+  >   - [ ] real weather from the server (city-wide, cached, free public source): rain, snow, wind, overcast
+  >   - [ ] snow settles on roofs, trees and ground while it snows (carried over from M19)
+  >   - [ ] time of day: light from the sun's real direction (moving shadows), dawn/dusk tints, night sky, street lamps and windows lit at night
+  >   - [ ] no time-zone math in the client (§7.5): the server sends the instant / sun data
+  >   - [ ] effects within the phone budget (§20.3a), reduced further in low-quality mode
+  > - **Definition of Done**
+  >   - [ ] each weather state and day/night phase checked on screen (and on a phone)
+  >   - [ ] user has looked at it
+
 ### 2026-11-24 — v1.71
 **Changed:** M19 Art Pass 🔁 Reopened (`fix/m19-props-and-crowds`): new In-scope item "nobody walks through things": street props and mood decorations now block walking (placed only where they cut nobody off, never on paths, the plaza, track or building lots); cars park only beside the road (nose-in in a driveway, else along the road); the avatar, villagers and animals claim tiles so they never walk through each other (the avatar waits, then walks around). Wild flower dots became a few single-colour patches. The gallery's label errors are fixed. Handoff note updated (the street-props line no longer says "never block").
 

@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.71 |
+| Plan version | v1.75 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
-| Based on | `requirement.md` v1.39 |
-| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |
+| Based on | `requirement.md` v1.40 |
+| Current module | M21 Living Community (next; M20 ✅ Done) |
 
 ---
 
@@ -55,8 +55,9 @@
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
-| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ⬜ |
-| M16 | Deploy & Playtest | All + operator accounts | | M20 | ⬜ |
+| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
+| M21 | Living Community | FE + BE | | M20 | ⬜ |
+| M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -77,7 +78,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -546,16 +547,40 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Walking animation:** `assets/voxel/rigs.ts` splits a model into a body and parts turning at their joints (`personRig`: head, armL/R, legL/R; `animalRig`: legs `fl fr bl br` or `hind front` / `legL legR`, head, tail; left = −z, animals face +x). `assets/voxel/gaits.ts` holds pure, tested pose functions (`personPose`, `animalPose`, `ANIMAL_STYLE` with walk/run/stalk/hop/waddle and strides, `advancePhase` by distance so feet do not slide). `assets/RigView.tsx` draws a rig and calls a pose callback each frame; `VoxelPerson` (props `motion`, `headTilt`) and `VoxelAnimal` (`motion` = speed + running) read a motion ref the caller writes in its own `useFrame`. Cost: a person is 6 instanced meshes instead of 2 (≤ 21 people ≈ 126 small meshes), an animal 5–7.
   - **Gotchas:** the gallery camera always zooms to the centre, so it has view preset buttons; never give files in one folder names that differ only in case.
 
-### M20 — Weather & Time of Day ⬜
-**Goal:** Each community shows the real Calgary weather and the time of day (`requirement.md` v1.38 §10.4). Built after M19, **before M16**.
-- **In scope** (details planned with the user before work starts)
-  - [ ] real weather from the server (city-wide, cached, free public source): rain, snow, wind, overcast
-  - [ ] snow settles on roofs, trees and ground while it snows (carried over from M19)
-  - [ ] time of day: light from the sun's real direction (moving shadows), dawn/dusk tints, night sky, street lamps and windows lit at night
-  - [ ] no time-zone math in the client (§7.5): the server sends the instant / sun data
-  - [ ] effects within the phone budget (§20.3a), reduced further in low-quality mode
+### M20 — Weather & Time of Day ✅
+**Goal:** Each community shows the real Calgary weather and the time of day (`requirement.md` v1.40 §10.4), and every island has the same full look instead of mood scenery (§7.4). Built after M19, **before M21 and M16**.
+- **In scope** (planned with the user 2026-11-24)
+  - [x] island scenery no longer follows the Vitality mood: one full look (deep green, flowers, lamps) for every community; mini villagers still follow the mood until M21
+  - [x] `weather` module (own schema): pg_cron + pg_net read Environment Canada's Calgary conditions (`api.weather.gc.ca` citypageweather `ab-52`) every 15 minutes into an append-only readings table; `public.weather_current()` returns state, wind, temperature, snow cover and the server instant (clear when no reading in the last 3 hours)
+  - [x] weather states: clear, partly cloudy, overcast, rain, snow, rain and snow, fog, thunderstorm (lightning flashes); wind calm / breezy / windy (slanted rain and snow, swaying trees and flags, faster clouds)
+  - [x] snow settles on roofs, trees and ground while it snows and stays until about 6 hours above +5 °C or rain (computed on read from the readings); flowers hide under snow
+  - [x] weather chip (icon + temperature; tap → "Data source: Environment and Climate Change Canada")
+  - [x] time of day: sun direction from the server instant and Calgary's coordinates (moving shadows, drawn height ≥ ~22°), dawn/dusk tints and night sky blended by sun height; street lamps and public windows lit at night, houses only when active today
+  - [x] no time-zone math in the client (§7.5): the client only offsets its clock by the server instant
+  - [x] effects within the phone budget (§20.3a): ≤ ~1,500 particles, ≤ ~400 and no lightning in low-quality mode
+  - [x] dev overrides `?weather=<state>&wind=<level>&time=<preset>&snow=1&temp=<°C>` (dev builds only); the `?gallery` shares the night lights but has no weather buttons (the overrides cover it, see Handoff)
 - **Definition of Done**
-  - [ ] each weather state and day/night phase checked on screen (and on a phone)
+  - [x] each weather state and day/night phase checked on screen (desktop 1280 px and 390 px phone viewport; real phone in M16)
+  - [x] user has looked at it (confirmed 2026-11-24 on an iPad; villager count and wildlife feedback moved to M21)
+- **Handoff**
+  - **Server:** `supabase/migrations/20261124120000_weather.sql` — schema `weather` (`readings` keyed by `observed_at`, `requests` for pending pg_net calls). `weather.fetch()` (cron `weather-fetch`, `*/15`) stores the **previous** run's answer (`weather.collect`) and sends a new request, so data lags ≤ 15 min; ECCC observes hourly, duplicates are ignored. Condition text → state in `weather.state_for` (icon code fallback); wind level in `weather.wind_level` (≥ 30 km/h or gusts ≥ 50 → windy, ≥ 10 → breezy). Snow cover is computed on read in `weather.current_at`. No caching table: the read is ≤ ~340 rows. Production needs the `pg_net` extension enabled (the migration creates it) — check after the M16 deploy that `weather.readings` fills.
+  - **Client:** `frontend/src/modules/weather/` (`sun.ts` low-precision solar position in UTC; `store.ts` keeps the weather, the server clock offset and the sun, refreshes every 15 min and when the tab comes back, ticks the sun every 30 s; `WeatherChip.tsx`). `IslandView` takes an optional `environment` prop (`IslandEnvironment`, `NOON_CLEAR`); without it it uses `useLiveWeather()` and shows the chip (so the first-visit island is live too). `scene/sky.ts` (pure, tested) turns sun + weather into light direction, colours, stars, fog, lamps on; keyframes are the gallery's day/dawn/dusk/night. `assets/environmentParts.ts` (`withLights`, `withSnow`) is applied in `BoxAsset` to every box model; parts carry `tag: 'roof' | 'house-window'`. Wind sway is a `sway` layer (`scene/wind.ts` shader uniforms written once per frame by `WindDriver`). Rain/snow: `scene/Precipitation.tsx`, GPU-only Points. Lightning flickers the hemisphere light and a white DOM overlay through a channel (no React state per frame).
+  - **Mood:** `scenePalette(snow)` replaces `MOOD_PALETTES[mood]` for scenery; `MOOD_PALETTES` stays for the World Map and `villagerSpeed` (ctx `villagerSpeed`, `mood`) until M21. The HUD still shows "Lively · 72" (M21 redefines Vitality).
+  - **Deviations:** the gallery got no weather buttons (the game's dev overrides show every state on a real island); birds, flying geese and the balloon stay away at night or in heavy cloud (not asked, looked wrong flying in the dark); when snow starts while the island is open, the ground turns white after 45 s of falling snow (`useShownSnow`).
+  - **Not tested / known gaps:** real phone and the low-quality mode on screen (particle caps are unit-tested only); the 45 s settling delay (hook, not unit-tested, not watched on screen); production cron/pg_net; summer sun on screen (unit-tested); rain streaks are vertical on screen even in wind (the drops' positions slant, the streak sprite does not); sway is subtle at full-island zoom (≈ 2 px).
+  - **Tests:** `supabase/tests/database/weather_rules.test.sql` (34: mapping, wind, storing, collecting answers, snow cover/melt), `weather/sun.test.ts` (solstices, equinox, sunrise azimuth, midnight from geometry), `weather/weather.test.ts`, `scene/sky.test.ts`, `assets/environmentParts.test.ts`; layout flower test now checks mood-independence. 899 frontend tests, 525 DB tests.
+
+### M21 — Living Community ⬜
+**Goal:** Communities look naturally alive whatever the number of players, every resident keeps "My house", and Vitality becomes community development (`requirement.md` v1.40 §22.6 step 6b; the detailed requirement text is written into §7.2–7.4 when the work starts). Built after M20, **before M16**.
+- **In scope** (decided with the user 2026-11-24; details planned when the work starts)
+  - [ ] mini villagers appear naturally at random (scaled by island size, fewer at night and in bad weather), not from player counts or activity; never named, never pretending to be players (§7.3); action replay stays real. The smallest islands start with 0–1 villagers (operator feedback 2026-11-24: 3 on a stage-1 island looked like too many; today §7.3 sets a minimum of 2–3)
+  - [ ] wildlife by where the community is and how big its island is (operator feedback 2026-11-24): downtown and inner-city communities rarely see wild animals (an occasional jackrabbit), communities near the city edge see them often (distance from the city centre, from the community boundaries); small islands get fewer animals; geese and jackrabbits are fewer overall (today: jackrabbits 60 %, ground geese 50 % by water, deer 40 %, wherever the community is)
+  - [ ] houses fill the land as the community grows (unnamed background houses), and every Verified Resident still has their own house among them with "My house", nickname on tap and lit windows when active (needed later for interior decorating, §22.3)
+  - [ ] Vitality redefined as community development (new buildings): replaces the sleepy streak text, the Revival effect (→ building completion celebration) and the World Map mood tones
+  - [ ] walking villagers show residents' recent community posts as speech bubbles: "nickname: text" with the kind icon, about 40 characters, tap opens the post; never Safety posts; hidden, reported and expired posts drop out (same server function as the newspaper); at most 2–3 bubbles at a time
+- **Definition of Done**
+  - [ ] requirement §7.2–7.4 (and §9, §11, §12.2 where Vitality appears) updated with changelog entries
+  - [ ] checked on screen (desktop and phone) for a new, a small and a large community
   - [ ] user has looked at it
 
 ### M16 — Deploy & Playtest ⬜
@@ -601,7 +626,7 @@ M0 ─┬─ M1 ── M2 ─┐
 ---
 
 ## After launch — checklist for the user to review
-**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
+**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
 
 **Growth (already modules)**
 - [ ] M17 Return Reminders — email (opted-in players) + web push (`requirement.md` §22.7a.1)
@@ -636,7 +661,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - [ ] Apartments/condos (multi-resident buildings) for very large communities
 
 **Open numbers and wording** (§22.8; starting values, tune with data)
-- [ ] Pastel palette and lighting values — palette set in M19 (`ART` in `voxel/samples.ts`); lighting values in M20
+- [ ] Pastel palette and lighting values — palette set in M19 (`ART` in `voxel/samples.ts`); lighting keyframes set in M20 (`scene/sky.ts`)
 - [ ] Island shape parameters and lot plan tuning
 - [ ] Building tree numbers (conditions, stage multipliers)
 - [ ] Vitality smoothing (rise/fall speed)

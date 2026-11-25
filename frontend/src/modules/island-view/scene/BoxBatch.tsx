@@ -1,11 +1,16 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, Euler, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
 import type { BoxPart, Layer } from '../assets/boxes';
+import { swayCompile } from './wind';
+
+const swayKey = () => 'island-sway';
 
 interface Props {
   parts: BoxPart[];
   castShadow?: boolean;
   receiveShadow?: boolean;
+  /** Opacity of the faint `mist` layer (future land; dimmed at night so it does not glow). */
+  mistOpacity?: number;
 }
 
 /**
@@ -13,9 +18,9 @@ interface Props {
  * (instead of drei <Instances>) because drei re-uploads every instance matrix on
  * every frame; these boxes are static, so they are uploaded only when parts change.
  */
-export function BoxBatch({ parts, castShadow = true, receiveShadow = true }: Props) {
+export function BoxBatch({ parts, castShadow = true, receiveShadow = true, mistOpacity = 0.16 }: Props) {
   const byLayer = useMemo(() => {
-    const m: Record<Layer, BoxPart[]> = { solid: [], glow: [], ghost: [], mist: [] };
+    const m: Record<Layer, BoxPart[]> = { solid: [], glow: [], ghost: [], mist: [], sway: [] };
     for (const p of parts) m[p.layer].push(p);
     return m;
   }, [parts]);
@@ -27,6 +32,11 @@ export function BoxBatch({ parts, castShadow = true, receiveShadow = true }: Pro
           <meshStandardMaterial roughness={0.95} metalness={0} />
         </LayerMesh>
       )}
+      {byLayer.sway.length > 0 && (
+        <LayerMesh parts={byLayer.sway} castShadow={castShadow} receiveShadow={receiveShadow}>
+          <meshStandardMaterial roughness={0.95} metalness={0} onBeforeCompile={swayCompile} customProgramCacheKey={swayKey} />
+        </LayerMesh>
+      )}
       {byLayer.glow.length > 0 && (
         <LayerMesh parts={byLayer.glow} castShadow={false} receiveShadow={false}>
           <meshBasicMaterial toneMapped={false} />
@@ -34,7 +44,7 @@ export function BoxBatch({ parts, castShadow = true, receiveShadow = true }: Pro
       )}
       {byLayer.mist.length > 0 && (
         <LayerMesh parts={byLayer.mist} castShadow={false} receiveShadow={false}>
-          <meshBasicMaterial transparent opacity={0.16} depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial transparent opacity={mistOpacity} depthWrite={false} toneMapped={false} />
         </LayerMesh>
       )}
       {byLayer.ghost.length > 0 && (

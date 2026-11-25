@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import type { ObjectOf } from '../layout';
-import { MOOD_PALETTES } from '../mood';
+import { scenePalette } from '../mood';
 import { feature } from '../assets/models';
 import { FEATURE_VARIANTS } from '../assets/voxel/features';
 import { BUILDING_TREE } from './buildingTree';
@@ -68,11 +68,11 @@ describe('feature models (Art Pass)', () => {
     assetKey: 'feature', id: 'f', x: 0, z: 0, stage: 0, w: 2, d: 2, facing, variant, featureKey, name: null,
   });
 
-  it.each(FEATURE_KEYS.map((k) => [k]))('%s: every design stays inside its 2×2 lot in every facing and mood', (key) => {
-    for (const mood of ['lively', 'normal', 'sleepy'] as const) {
+  it.each(FEATURE_KEYS.map((k) => [k]))('%s: every design stays inside its 2×2 lot in every facing, with and without snow', (key) => {
+    for (const snow of [false, true]) {
       for (let facing = 0; facing < 4; facing++) {
         for (let variant = 0; variant < FEATURE_VARIANTS[key]; variant++) {
-          const parts = feature(item(key, facing, variant), { mood, palette: MOOD_PALETTES[mood] });
+          const parts = feature(item(key, facing, variant), { snow, palette: scenePalette(snow) });
           expect(parts.length).toBeGreaterThan(8);
           for (const p of parts) {
             expect(Math.abs(p.p[0]) + p.s[0] / 2, `${key} f${facing} v${variant} x`).toBeLessThanOrEqual(1.01);
@@ -86,7 +86,7 @@ describe('feature models (Art Pass)', () => {
 
   it('designs differ per community (variant)', () => {
     for (const key of FEATURE_KEYS) {
-      const ctx = { mood: 'normal' as const, palette: MOOD_PALETTES.normal };
+      const ctx = { snow: false, palette: scenePalette(false) };
       expect(JSON.stringify(feature(item(key, 0, 0), ctx)), key).not.toBe(JSON.stringify(feature(item(key, 0, 1), ctx)));
     }
   });

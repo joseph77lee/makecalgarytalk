@@ -35,15 +35,15 @@ const duck = (x: number, z: number, y: number): BoxPart[] => [
   vb(x + 1.8, y + 1.1, z + 0.35, x + 2.3, y + 1.35, z + 0.65, '#f2a43a'),
 ];
 
-const pond: Model = (variant, { palette, mood }) => {
-  const water = mood === 'sleepy' ? ICE : WATER;
-  const deep = mood === 'sleepy' ? shade(ICE, -0.05) : WATER_DEEP;
+const pond: Model = (variant, { palette, snow }) => {
+  const water = snow ? ICE : WATER;
+  const deep = snow ? shade(ICE, -0.05) : WATER_DEEP;
   const parts: BoxPart[] = [vb(-11.5, 0, -11.5, 11.5, 0.3, 11.5, palette.grass[0])];
   for (const [x, half] of blob(-10, 10, 8, 1.2, variant)) {
-    parts.push(vb(x, 0.1, -half - 1, x + 1, 0.45, half + 1, mood === 'sleepy' ? SNOW : SAND));
+    parts.push(vb(x, 0.1, -half - 1, x + 1, 0.45, half + 1, snow ? SNOW : SAND));
     parts.push(vb(x, 0.2, -half, x + 1, 0.55, half, Math.abs(x) < 5 && half > 4 ? deep : water));
   }
-  if (mood !== 'sleepy') {
+  if (!snow) {
     parts.push(...duck(-3, -1, 0.55), ...duck(2, 2.5, 0.55));
     for (const [x, z] of [[-6, 3], [4, -4], [1, 5]]) parts.push(vb(x, 0.55, z, x + 1.4, 0.65, z + 1.2, '#7fb85a'));
   }
@@ -54,9 +54,9 @@ const pond: Model = (variant, { palette, mood }) => {
   return parts;
 };
 
-const hill: Model = (variant, { palette, mood }) => {
-  const g = mood === 'sleepy' ? SNOW : palette.grass[0];
-  const top = mood === 'sleepy' ? shade(SNOW, -0.02) : palette.leaves[1];
+const hill: Model = (variant, { palette, snow }) => {
+  const g = snow ? SNOW : palette.grass[0];
+  const top = snow ? shade(SNOW, -0.02) : palette.leaves[1];
   const parts: BoxPart[] = [];
   const layers = 7;
   for (let i = 0; i < layers; i++) {
@@ -70,17 +70,17 @@ const hill: Model = (variant, { palette, mood }) => {
   const topY = layers * 1.4;
   parts.push(vb(-3.5, topY, 0.5, 0, topY + 0.5, 1.6, ART.wood), vb(-3.5, topY + 0.5, 0.5, 0, topY + 1.8, 0.9, ART.wood));
   parts.push(...vmove(variant % 2 === 0 ? spruce(variant) : leafyTree(variant), -4, topY, -3));
-  if (mood !== 'sleepy') for (let i = 0; i < 6; i++) parts.push(vb(-10 + i * 3.4, 1.4, 6 + (i % 2), -9.4 + i * 3.4, 2.1, 6.6 + (i % 2), ['#e9c46a', '#ffffff', '#e3a1a6'][i % 3]));
+  if (!snow) for (let i = 0; i < 6; i++) parts.push(vb(-10 + i * 3.4, 1.4, 6 + (i % 2), -9.4 + i * 3.4, 2.1, 6.6 + (i % 2), ['#e9c46a', '#ffffff', '#e3a1a6'][i % 3]));
   return parts;
 };
 
-const creek: Model = (variant, { palette, mood }) => {
-  const water = mood === 'sleepy' ? ICE : WATER;
+const creek: Model = (variant, { palette, snow }) => {
+  const water = snow ? ICE : WATER;
   const parts: BoxPart[] = [vb(-11.5, 0, -11.5, 11.5, 0.3, 11.5, palette.grass[1])];
   // a winding creek from the back-left to the front-right, one column per voxel
   for (let x = -12; x < 12; x++) {
     const zc = Math.sin((x + variant) * 0.28) * 4 - x * 0.35;
-    parts.push(vb(x, 0.1, zc - 3.2, x + 1, 0.4, zc + 3.2, mood === 'sleepy' ? SNOW : '#b8a37a'));
+    parts.push(vb(x, 0.1, zc - 3.2, x + 1, 0.4, zc + 3.2, snow ? SNOW : '#b8a37a'));
     parts.push(vb(x, 0.15, zc - 2.2, x + 1, 0.5, zc + 2.2, x % 4 === 0 ? shade(water, 0.06) : water));
   }
   for (const [x, z] of [[-9, 6], [-4, -4], [5, 6.5], [8, -3]]) parts.push(vb(x, 0.3, z, x + 1.6, 1.2, z + 1.2, STONE), vb(x + 0.3, 1.2, z + 0.2, x + 1.2, 1.6, z + 1, shade(STONE, 0.08)));

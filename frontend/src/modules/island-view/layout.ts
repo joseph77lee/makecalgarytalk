@@ -452,7 +452,7 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
     occupied.add(tileKey(t));
   }
 
-  // Street props (Art Pass, "busier communities") and mood decorations. They stand on their
+  // Street props (Art Pass, "busier communities") and flower patches. They stand on their
   // tile, so walkers go around them: a prop is only placed where it cuts nobody off (every tile
   // that could be reached on foot before stays reachable), never on paths, the plaza or track.
   const baseWalkable = walkableTiles(plan, landStage, houseTiles, usedLots);
@@ -510,16 +510,14 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
     props++;
   }
 
-  // Mood decorations on free grass: a few wild flower patches (lively) or snow piles (sleepy).
-  if (mood !== 'normal') {
-    for (const t of land) {
-      const k = tileKey(t);
-      if (!free(k) || hash01(t.x, t.z, 2) >= 0.05 || cutsOff(k)) continue;
-      const decor = { id: `decor:${k}`, x: t.x + 0.5, z: t.z + 0.5, stage: t.stage, variant: Math.floor(hash01(t.x, t.z, 4) * 4) };
-      objects.push(mood === 'lively' ? { ...decor, assetKey: 'flowers' } : { ...decor, assetKey: 'snow-pile' });
-      occupied.add(k);
-      standing.add(k);
-    }
+  // A few wild flower patches on free grass, on every island whatever its mood (requirement.md
+  // v1.40 §7.4); under snow the model draws a little snow pile instead (§10.4).
+  for (const t of land) {
+    const k = tileKey(t);
+    if (!free(k) || hash01(t.x, t.z, 2) >= 0.05 || cutsOff(k)) continue;
+    objects.push({ assetKey: 'flowers', id: `decor:${k}`, x: t.x + 0.5, z: t.z + 0.5, stage: t.stage, variant: Math.floor(hash01(t.x, t.z, 4) * 4) });
+    occupied.add(k);
+    standing.add(k);
   }
 
   const walkable = baseWalkable.filter((t) => !standing.has(tileKey(t)));

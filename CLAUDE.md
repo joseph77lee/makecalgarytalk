@@ -168,3 +168,6 @@ Each module is usually worked on in a **new session** with no memory of earlier 
 - 2026-11-24: moved the island clouds and checked them only in still screenshots, so they ended up almost not moving → for anything animated, compare two screenshots a few seconds apart (or measure its speed) before calling it verified
 - 2026-11-24: started the walking-animation edits on `main` right after a merge (caught before committing) → create the module/fix branch before the first edit
 - 2026-11-24: a dev tab left open hot-loaded half-finished edits (a name used before it was declared), threw every frame and hung Vite → close the browser tab before multi-file edits and reopen it once the code type-checks
+- 2026-11-24: ran a throwaway vitest with `--root /`, which crawled the whole disk until it timed out → put throwaway tests inside `frontend/src`, run them normally and delete them right after
+- 2026-11-24: chased "missing tree crowns" on the mock island, which simply has no trees at its land stage → before debugging rendering, confirm the object is in the layout (count asset keys, or raise the land stage in Dev tools)
+- 2026-11-24: fixed escaped backticks in a new changelog entry with a file-wide `sed`, which also rewrote older entries (`\`` is the convention for nested code) → edit only the new entry; never run file-wide replacements on changelogs

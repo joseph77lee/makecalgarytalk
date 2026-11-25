@@ -12,6 +12,31 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.40
+**Changed:** 10.4 filled in with the details planned with the operator: Environment Canada as the weather source (server, every 15 minutes, attribution), the weather states and wind levels, snow that settles and melts with warmth or rain, a weather chip, the sun computed from the server instant with phases by sun height and a minimum drawn height, lamps and public windows lit at night (houses only when active today), particle caps. 7.4: the island scenery no longer follows the Vitality mood (every island has the same full look, changed only by weather and time); the mood now drives the mini villagers; 2 and 7.8 follow. 19.1 light comes from the real sun. 22.3: decorating my house's interior with activity rewards (so "My house" must always exist). 22.6: new step 6b Living community (random mini villagers, houses fill the land with every resident keeping "My house", Vitality as development, villagers speaking community posts except Safety).
+
+**Why:** Operator decisions (2026-11-24): a snowy dusk for sleepy communities clashed with the real weather and time; every community should look its best and change with the weather. Mini villagers, houses and Vitality get their own module (M21) after M20. "My house" stays because it gives belonging and will hold interior decorating.
+
+**Previous:**
+- Header: `| Document version | v1.39 |`
+- 2 (verbatim): `- When a community develops, its mini villagers are happy and the scenery becomes beautiful; when neglected, they get sleepy and the scenery turns snowy and quiet.`
+- 7.8 (verbatim): `- **The island never shrinks.** Inactivity is shown through Vitality (mood/scenery), not size.`
+- 7.4 table (verbatim):
+  > | Vitality | Mood | Scenery |
+  > |---|---|---|
+  > | 60–100 | Lively | Flowers, lights, clean streets, many mini villagers |
+  > | 30–59 | Normal | Ordinary look |
+  > | 0–29 | Sleepy | A quiet snowy winter evening: fresh snow on the ground and trees, icy water, a soft lavender-pink dusk sky, villagers mostly resting. Pastel, never grey or dark |
+- 19.1 (verbatim): `- Light from top-left, gentle ambient light, no harsh contrast`
+- 22.3 (verbatim): `- **Enter buildings and decorate my own house** (idea, not planned yet): tap a building or my house to go inside a small interior scene; residents decorate their own house. The fixed house lot (7.2) is what makes "my house" stable for this`
+- 22.6 step 6a (verbatim): `| 6a | **Real weather and time of day** on the islands (10.4) |`
+- 10.4 (verbatim):
+  > ### 10.4 Living community: real weather and time of day (before launch)
+  > - **Weather follows real Calgary weather**: rain falls when it rains, snow when it snows, trees, flags and smoke move with the wind, clouds when it is overcast. One city-wide reading, fetched on the **server** from a free public weather source and cached (a few times an hour, never per player; 20.3); the island only shows it
+  > - **Time of day follows the real sun**: the light comes from the sun's real direction, so shadows move through the day; dawn and dusk tints; at night the **street lamps and windows light up** and the sky darkens. Time comes from the server (no time-zone math in the client, 7.5); the sun's direction may be computed from the current instant and Calgary's coordinates
+  > - Effects stay within the phone budget (20.3a): particle counts capped, the low-quality mode (M14) reduces them further
+  > - Details (which weather states, look of each effect, data source) are planned with the operator before the work starts
+
 ### 2026-11-24 — v1.39
 **Changed:** 7.2 my own house's marker reads "My house". 10.1 labels toggle: my own avatar's name tag and my house marker always stay visible; the toggle hides everything else.
 
