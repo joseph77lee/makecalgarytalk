@@ -20,6 +20,8 @@ export interface IslandCtx extends BuildCtx {
   landStage: number;
   /** Speech bubble text per mini villager index. */
   villagerBubbles: Map<number, string>;
+  /** Tap handlers for villager bubbles that open something (today's posts). */
+  villagerBubbleTaps: Map<number, () => void>;
   /** Tiles claimed by walkers (avatar, villagers, animals), so nobody walks through anybody. */
   crowd: Crowd;
 }

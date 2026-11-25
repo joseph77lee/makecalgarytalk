@@ -6,7 +6,7 @@ import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } fr
 import { AdminDashboard } from '../modules/admin';
 import { track } from '../modules/analytics';
 import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, arrivedByInvite, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
-import { NewspaperPanel, newsBuildingKeys, newsReady, useNews } from '../modules/news';
+import { NewspaperPanel, newsBuildingKeys, newsReady, useNews, useTodayPostBubbles } from '../modules/news';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import { useRanking, weeklyAnnouncement, weeklyCardTitle } from '../modules/ranking';
 import { ShareCardDialog, type ShareCard } from '../modules/share-cards';
@@ -149,6 +149,7 @@ function LiveApp() {
             <Island
               plan={plan}
               state={view}
+              communityId={server.community.id}
               showAvatar={server.me?.member === true}
               newsBuildings={(() => {
                 const built = view.buildings.filter((b) => b.status === 'built' || b.level > 1).map((b) => b.key);
@@ -337,16 +338,28 @@ function Island({
   showAvatar = true,
   newsBuildings = [],
   onBuildingTap,
+  communityId = null,
 }: {
   plan: IslandPlan;
   state: CommunityViewState;
+  /** Community shown (today's local posts ride on the mini villagers, §7.3); null in previews. */
+  communityId?: string | null;
   showAvatar?: boolean;
   newsBuildings?: string[];
   onBuildingTap?: (key: string) => void;
 }) {
   const profile = useIdentity((s) => s.profile);
+  const postBubbles = useTodayPostBubbles(communityId);
   return (
-    <IslandView plan={plan} state={state} onTileTap={showAvatar ? moveTo : undefined} onBuildingTap={onBuildingTap} newsBuildingKeys={newsBuildings}>
+    <IslandView
+      plan={plan}
+      state={state}
+      onTileTap={showAvatar ? moveTo : undefined}
+      onBuildingTap={onBuildingTap}
+      newsBuildingKeys={newsBuildings}
+      postBubbles={postBubbles}
+      onPostTap={communityId ? () => void useNews.getState().show(communityId) : undefined}
+    >
       {showAvatar && <Avatar nickname={profile?.nickname ?? 'You'} shirtColor={shirtColor(profile?.shirt)} />}
     </IslandView>
   );

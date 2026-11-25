@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { seededRandom, villagerCount, villagersOutside } from './villagers';
+import { pickPostBubbles, seededRandom, villagerCount, villagersOutside } from './villagers';
 
 // Walkable tiles per land stage measured on Mahogany, Beltline, Tuscany, Diamond Cove: ≈ 40, 114, 214, 348, 609, 860.
 const STAGES = [40, 114, 214, 348, 609, 860];
@@ -22,9 +22,10 @@ describe('villagerCount (operator feedback 2026-11-24: 3 on a stage-1 island loo
     expect(villagerCount(5000, () => 0.99)).toBe(20);
   });
 
-  it('keeps one villager when there is an action to replay or a post to carry', () => {
+  it('keeps one villager per real story: action replay, today\'s posts', () => {
     expect(villagerCount(STAGES[0], () => 0)).toBe(0);
-    expect(villagerCount(STAGES[0], () => 0, true)).toBe(1);
+    expect(villagerCount(STAGES[0], () => 0, 1)).toBe(1);
+    expect(villagerCount(STAGES[0], () => 0, 2)).toBe(2);
   });
 
   it('is random per visit but steady for one seed', () => {
@@ -42,6 +43,30 @@ describe('villagersOutside', () => {
     expect(villagersOutside(10, { weather: 'rain', nightness: 0 })).toBe(5);
     expect(villagersOutside(10, { weather: 'snow', nightness: 1 })).toBe(2);
     expect(villagersOutside(1, { weather: 'snow', nightness: 1 })).toBe(0);
-    expect(villagersOutside(1, { weather: 'snow', nightness: 1 }, true)).toBe(1);
+    expect(villagersOutside(1, { weather: 'snow', nightness: 1 }, 1)).toBe(1);
+    expect(villagersOutside(2, { weather: 'snow', nightness: 1 }, 2)).toBe(2);
+  });
+});
+
+describe('pickPostBubbles', () => {
+  it('every post comes round, even with one free villager', () => {
+    const seen = new Set<string>();
+    for (let tick = 0; tick < 4; tick++) for (const p of pickPostBubbles(['a', 'b', 'c'], 2, new Set([0]), tick, 2)) seen.add(p.post);
+    expect([...seen].sort()).toEqual(['a', 'b', 'c']);
+  });
+
+  it('at most `max` at once, never on a busy villager, never twice on one villager', () => {
+    for (let tick = 0; tick < 10; tick++) {
+      const picks = pickPostBubbles(['a', 'b', 'c', 'd'], 5, new Set([1, 3]), tick, 2);
+      expect(picks.length).toBe(2);
+      for (const p of picks) expect([1, 3]).not.toContain(p.villager);
+      expect(new Set(picks.map((p) => p.villager)).size).toBe(picks.length);
+    }
+  });
+
+  it('nothing without posts, villagers or free villagers', () => {
+    expect(pickPostBubbles([], 3, new Set(), 0, 2)).toEqual([]);
+    expect(pickPostBubbles(['a'], 0, new Set(), 0, 2)).toEqual([]);
+    expect(pickPostBubbles(['a'], 1, new Set([0]), 0, 2)).toEqual([]);
   });
 });
