@@ -1,7 +1,7 @@
 import { Html, OrbitControls, OrthographicCamera } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useState } from 'react';
-import type { OrthographicCamera as OrthoCam } from 'three';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { DirectionalLight, OrthographicCamera as OrthoCam } from 'three';
 import { translate, type BoxPart } from '../assets/boxes';
 import { boxHouse, rail, track } from '../assets/models';
 import { FEATURE_VOXELS, ctrainCarParts, stationPlatformParts } from '../assets/voxel/features';
@@ -46,8 +46,8 @@ import { rnd, shade, vb, vmove, vturn } from '../assets/voxel/voxel';
 import { BoxBatch } from '../scene/BoxBatch';
 import { useHtmlPortal } from '../scene/htmlPortal';
 import { GalleryLife } from './GalleryLife';
-import { LowpolyLots } from './LowpolyLots';
-import { LowpolyShowcase } from './LowpolyShowcase';
+import { PolyforkGallery } from './PolyforkGallery';
+import { PF_VIEWS, type PfSection } from './polyforkSections';
 
 interface Item {
   label: string;
@@ -69,15 +69,11 @@ const VIEWS = {
   Clouds: { target: [3, -0.5], zoom: 70, y: 4 },
   Features: { target: [12, -1], zoom: 85 },
   CTrain: { target: [12.5, 6.5], zoom: 120 },
-  'Polyfork houses': { target: [34, 0], zoom: 110 },
-  'Polyfork towers': { target: [40, 3.5], zoom: 46 },
-  'Polyfork trees & cars': { target: [40, 8], zoom: 60 },
-  'Polyfork props': { target: [40, 10.5], zoom: 150 },
-  'Polyfork people': { target: [36.5, 12.8], zoom: 380 },
-  'Polyfork lots A': { target: [76, 5], zoom: 55 },
-  'Polyfork lots B': { target: [76, 19], zoom: 55 },
 } as const;
-type ViewName = keyof typeof VIEWS;
+/** The box-model diorama's presets, then the Polyfork side's (M23). */
+const ALL_VIEWS: Record<string, { target: readonly [number, number]; zoom: number; y?: number }> = { ...VIEWS, ...PF_VIEWS };
+type ViewName = keyof typeof VIEWS | PfSection;
+const isPf = (v: ViewName): v is PfSection => v in PF_VIEWS;
 
 /** Moves the orbit target and zoom when a preset is chosen (keeps the viewing angle). */
 function ViewRig({ view }: { view: ViewName }) {
@@ -87,8 +83,8 @@ function ViewRig({ view }: { view: ViewName }) {
     const orbit = controls as unknown as { target: { set: (x: number, y: number, z: number) => void; x: number; y: number; z: number }; update: () => void } | null;
     if (!orbit) return;
     const cam = camera as OrthoCam;
-    const v = VIEWS[view];
-    const ty = 'y' in v ? v.y : 0.5;
+    const v = ALL_VIEWS[view];
+    const ty = v.y ?? 0.5;
     const d = [cam.position.x - orbit.target.x, cam.position.y - orbit.target.y, cam.position.z - orbit.target.z];
     orbit.target.set(v.target[0], ty, v.target[1]);
     cam.position.set(v.target[0] + d[0], ty + d[1], v.target[1] + d[2]);
@@ -120,6 +116,45 @@ const WEATHERS: [IslandEnvironment['weather'], string][] = [
   ['thunderstorm', '⛈️'],
 ];
 const WINDS: IslandEnvironment['wind'][] = ['calm', 'breezy', 'windy'];
+
+/**
+ * The sun, aimed at the section being viewed so the Polyfork plates (40+ tiles away) get the same
+ * shadows as the box diorama (the shadow box is 40 tiles wide around `centre`).
+ */
+function SunLight({ centre, dir, color, intensity }: { centre: readonly [number, number]; dir: [number, number, number]; color: string; intensity: number }) {
+  const light = useRef<DirectionalLight>(null);
+  const scene = useThree((st) => st.scene);
+  const [cx, cz] = centre;
+  const [dx, dy, dz] = dir;
+  useEffect(() => {
+    const l = light.current;
+    if (!l) return;
+    scene.add(l.target);
+    l.target.position.set(cx, 0, cz);
+    l.position.set(cx + dx * 40, dy * 40, cz + dz * 40);
+    l.target.updateMatrixWorld();
+    return () => {
+      scene.remove(l.target);
+    };
+  }, [scene, cx, cz, dx, dy, dz]);
+  return (
+    <directionalLight
+      ref={light}
+      color={color}
+      intensity={intensity}
+      castShadow
+      shadow-mapSize={[2048, 2048]}
+      shadow-bias={-0.0004}
+      shadow-normalBias={0.02}
+      shadow-camera-left={-20}
+      shadow-camera-right={20}
+      shadow-camera-top={20}
+      shadow-camera-bottom={-20}
+      shadow-camera-near={1}
+      shadow-camera-far={120}
+    />
+  );
+}
 
 /** Wind for the swaying trees and flags, written once per frame. */
 function GalleryWind({ wind }: { wind: { x: number; z: number; strength: number } }) {
@@ -236,45 +271,35 @@ export function AssetGallery() {
         </button>
       </div>
       <SoundBoard scene={{ weather, wind: windLevel, nightness: look.nightness > 0.5 ? 1 : 0, hasWater: true, campfire: true, construction: true }} />
-      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 flex-wrap justify-center gap-1.5">
-        {(Object.keys(VIEWS) as ViewName[]).map((v) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => setView(v)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow ${v === view ? 'bg-indigo-500 text-white' : 'bg-white/90 text-slate-700'}`}
-          >
-            {v}
-          </button>
+      <div className="absolute bottom-4 left-1/2 z-10 flex w-[min(96vw,60rem)] -translate-x-1/2 flex-col items-center gap-1.5">
+        {([['Now (voxel)', Object.keys(VIEWS) as ViewName[]], ['Polyfork (M23)', Object.keys(PF_VIEWS) as ViewName[]]] as const).map(([title, views]) => (
+          <div key={title} className="flex flex-wrap items-center justify-center gap-1.5">
+            <span className="rounded-full bg-slate-800/80 px-2.5 py-1 text-[11px] font-bold text-white">{title}</span>
+            {views.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow ${v === view ? 'bg-indigo-500 text-white' : 'bg-white/90 text-slate-700'}`}
+              >
+                {v.replace(/^Polyfork (.)/, (_, c: string) => c.toUpperCase())}
+              </button>
+            ))}
+          </div>
         ))}
       </div>
       <Canvas flat shadows dpr={[1, 2]} gl={{ antialias: true }}>
         <OrthographicCamera makeDefault position={[22, 24, 22]} zoom={42} near={0.1} far={400} />
-        <OrbitControls makeDefault target={[0, 0, 0.5]} enablePan minZoom={15} maxZoom={200} />
+        <OrbitControls makeDefault target={[0, 0, 0.5]} enablePan minZoom={15} maxZoom={420} />
         <hemisphereLight color={look.hemiSky} groundColor={look.hemiGround} intensity={look.ambientIntensity} />
-        <directionalLight
-          position={[dx * 40, dy * 40, dz * 40]}
-          color={look.sunColor}
-          intensity={look.sunIntensity}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-          shadow-bias={-0.0004}
-          shadow-normalBias={0.02}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-20}
-          shadow-camera-near={1}
-          shadow-camera-far={120}
-        />
+        <SunLight centre={isPf(view) ? PF_VIEWS[view].target : [0, 0]} dir={[dx, dy, dz]} color={look.sunColor} intensity={look.sunIntensity} />
         {look.fog > 0 && <fog attach="fog" args={[look.bg[2], 30 - 12 * look.fog, 75 - 30 * look.fog]} />}
         <GalleryWind wind={wind} />
         {precip && <Precipitation kind={precip.kind} count={precip.count} radius={14} wind={wind} />}
         <ViewRig view={view} />
         <GalleryLife />
         <BoxBatch parts={parts} />
-        <LowpolyShowcase snow={snow} lightsOn={look.lightsOn} />
-        <LowpolyLots snow={snow} lightsOn={look.lightsOn} />
+        <PolyforkGallery snow={snow} lightsOn={look.lightsOn} section={isPf(view) ? view : null} />
         {items
           .filter((i) => i.label)
           .map((i) => (
