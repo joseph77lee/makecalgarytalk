@@ -12,6 +12,7 @@ import { useLiveWeather, WeatherChip, isSnowing, type LiveWeather } from '../../
 import { Precipitation } from './Precipitation';
 import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, futureLandOpacity, type SkyLook } from './sky';
 import { setWind } from './wind';
+import { ambienceMix, musicFor, playSound, setAmbience, setMusic } from '../../sound';
 import { pickPostBubbles, seededRandom, villagerCount, villagersOutside } from './villagers';
 import { BloomBurst } from './BloomBurst';
 import { BoxBatch } from './BoxBatch';
@@ -191,6 +192,11 @@ function IslandScene({
   const stages = useMemo(() => stageMap(plan), [plan]);
   const stageOf = (t: Tile) => stages.get(tileKey(t)) ?? 99;
 
+  // new land rises with a sparkle (§10.5)
+  useEffect(() => {
+    if (growing) playSound('land-rise');
+  }, [growing]);
+
   // Action replay: today's real actions, one at a time, over the villagers (§7.3).
   const replay = state.replay ?? [];
   // fewer villagers outside at night and in rain or snow (§7.3)
@@ -224,6 +230,16 @@ function IslandScene({
   // Vitality, requirement.md v1.41 §7.3).
   const wet = env.weather === 'rain' || env.weather === 'snow' || env.weather === 'mix' || env.weather === 'thunderstorm';
   const villagerMood = look.nightness > 0.5 ? 'sleepy' : wet ? 'normal' : 'lively';
+
+  // a soft pop the first time each of today's posts appears on a villager (§10.5)
+  const poppedPosts = useRef(new Set<string>());
+  useEffect(() => {
+    for (const { post } of pickPostBubbles(postBubbles, villagerCount, new Set(replayIndex >= 0 ? [replayIndex] : []), postTick, MAX_POST_BUBBLES)) {
+      if (poppedPosts.current.has(post.id)) continue;
+      poppedPosts.current.add(post.id);
+      playSound('bubble-pop');
+    }
+  }, [postBubbles, villagerCount, replayIndex, postTick]);
 
   // one crowd per island view: walkers claim tiles in it every frame
   const [crowd] = useState(() => new Crowd());
@@ -292,6 +308,7 @@ function IslandScene({
     }
     const house = target?.kind === 'house' ? target.id : null;
     setSelectedHouse(house && house !== selectedHouse ? house : null);
+    if (house && house !== selectedHouse) playSound('house-knock');
     if (target?.kind === 'building') onBuildingTap?.(target.id);
     else if (!house && onLand) onTileTap?.(tile);
   };
@@ -319,6 +336,7 @@ function IslandScene({
   const fogFar = CAMERA_DISTANCE + R + R * (7 - 5.5 * look.fog);
 
   const finishGrowth = () => {
+    playSound('crowd-cheer');
     setSettled(layout.landStage);
     useSceneFx.setState({ celebrateUntil: performance.now() + CHEER_MS });
   };
@@ -336,6 +354,7 @@ function IslandScene({
       <Lights look={look} radius={layout.landRadius} storm={env.weather === 'thunderstorm' && !lowQuality} flash={flash} />
       {look.fog > 0 && <fog attach="fog" args={[look.bg[2], fogNear, fogFar]} />}
       <WindDriver wind={wind} />
+      <IslandSound env={env} look={look} layout={layout} hasWater={plan.water.length > 0} />
       {precip && <Precipitation kind={precip.kind} count={precip.count} radius={layout.landRadius + 5} wind={wind} />}
 
       <BoxBatch parts={future} castShadow={false} receiveShadow={false} mistOpacity={futureLandOpacity(look)} />
@@ -360,6 +379,7 @@ function IslandScene({
         cloudSpeed={env.wind === 'windy' ? 3 : env.wind === 'breezy' ? 1.8 : 1}
         cloudGrey={look.cloudiness}
         quiet={look.nightness > 0.5 || look.cloudiness >= 0.75}
+        night={look.nightness > 0.5}
       />
       <BloomBurst layout={layout} />
       <IslandLabels
@@ -533,6 +553,8 @@ function Lights({ look, radius, storm, flash }: { look: SkyLook; radius: number;
     const s = strike.current;
     const f = storm ? lightningFlash(clock.elapsedTime, s) : 0;
     if (hemi.current) hemi.current.intensity = look.ambientIntensity + f * 2.2;
+    // thunder follows the flash after a moment (the storm is a little way off)
+    if (f > 0.9 && s.last < 0.5) playSound('thunder', { delay: 0.8 + Math.random() * 1.2 });
     if (f !== s.last) flash.emit(f);
     s.last = f;
   });
@@ -576,6 +598,23 @@ function FlashOverlay({ channel }: { channel: AngleChannel }) {
     [channel],
   );
   return <div ref={el} className="pointer-events-none absolute inset-0 bg-white" style={{ opacity: 0 }} />;
+}
+
+/**
+ * What the island sounds like (§10.5): ambience loops and the music track from the weather, the
+ * time of day and what is on the island. Ambience stops when the island closes; music carries on.
+ */
+function IslandSound({ env, look, layout, hasWater }: { env: IslandEnvironment; look: SkyLook; layout: IslandLayout; hasWater: boolean }) {
+  const campfire = layout.objects.some((o) => o.assetKey === 'building.fire-pit');
+  const construction = layout.objects.some((o) => o.assetKey === 'construction-site');
+  const night = look.nightness > 0.5 ? 1 : 0;
+  useEffect(() => {
+    const scene = { weather: env.weather, wind: env.wind, nightness: night, hasWater, campfire, construction };
+    setAmbience(ambienceMix(scene));
+    setMusic(musicFor(scene));
+  }, [env.weather, env.wind, night, hasWater, campfire, construction]);
+  useEffect(() => () => setAmbience({}), []);
+  return null;
 }
 
 /** Writes time and wind into the shared sway uniforms once per frame (no re-render). */

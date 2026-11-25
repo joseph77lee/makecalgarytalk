@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { LocalNews } from '../posts';
+import { playSound } from '../sound';
 import { useNews } from './liveStore';
 import { yesterdayLabel } from './newsText';
 
@@ -11,6 +13,10 @@ export function NewspaperPanel() {
   const close = useNews((s) => s.close);
   const show = useNews((s) => s.show);
   const communityId = useNews((s) => s.communityId);
+  // a page turn when the paper opens (§10.5)
+  useEffect(() => {
+    if (open) playSound('paper-open');
+  }, [open]);
   if (!open) return null;
 
   return (

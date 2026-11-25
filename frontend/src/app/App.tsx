@@ -6,6 +6,7 @@ import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } fr
 import { AdminDashboard } from '../modules/admin';
 import { track } from '../modules/analytics';
 import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, arrivedByInvite, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
+import { installSound, playSound } from '../modules/sound';
 import { NewspaperPanel, newsBuildingKeys, newsReady, useNews, useTodayPostBubbles } from '../modules/news';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import { useRanking, weeklyAnnouncement, weeklyCardTitle } from '../modules/ranking';
@@ -35,6 +36,8 @@ const adminMode = params.has('admin');
 const galleryMode = params.has('gallery');
 
 export function App() {
+  // sound starts on the first tap and pauses while the page is hidden (§10.5)
+  useEffect(() => installSound(), []);
   if (galleryMode) return <AssetGallery />;
   return mockMode ? <MockApp /> : <IdentityGate />;
 }
@@ -189,7 +192,10 @@ function LiveApp() {
               <StreakBar
                 streak={server.streak}
                 nextLandResidents={server.community.next_land_residents}
-                onOpenMap={() => setMapOpen(true)}
+                onOpenMap={() => {
+                  playSound('ui-click');
+                  setMapOpen(true);
+                }}
                 onInvite={server.me?.member ? invite : undefined}
               >
                 <ResidencyChip />
@@ -247,7 +253,10 @@ function LiveApp() {
               community={server.community}
               streakDays={server.streak.days}
               buildings={view.buildings}
-              onClose={() => setMapOpen(false)}
+              onClose={() => {
+                playSound('ui-close');
+                setMapOpen(false);
+              }}
               onInvite={server.me?.member ? invite : undefined}
               extraResidents={server.hidden_houses}
               upcoming={plan ? upcomingIdentity(plan, server.community.land_stage) : null}

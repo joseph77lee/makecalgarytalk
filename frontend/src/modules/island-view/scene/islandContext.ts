@@ -1,9 +1,15 @@
 import { createContext, useContext } from 'react';
 import { create } from 'zustand';
+import { playSound } from '../../sound';
 import type { BuildCtx } from '../assets/models';
 import type { Tile } from '../layout';
 import type { VitalityMood } from '../mood';
 import type { Crowd } from './crowd';
+
+/** Whether snow lies on the island (footsteps sound different, §10.5). */
+export function useIslandSnow(): boolean {
+  return useIslandCtx().snow;
+}
 
 export interface IslandCtx extends BuildCtx {
   /** Vitality mood: drives only the mini villagers now (requirement.md v1.40 §7.4). */
@@ -58,6 +64,8 @@ export function celebrateIsland(ms = 1500): void {
 
 /** A new building (requirement.md v1.41 §7.4, §12.2): villagers cheer and flowers bloom for `ms`. */
 export function celebrateNewBuilding(ms = 7000): void {
+  playSound('celebrate-built');
+  playSound('crowd-cheer', { delay: 0.6 });
   const until = performance.now() + ms;
   useSceneFx.setState({ celebrateUntil: until, bloomUntil: until });
 }

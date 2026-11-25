@@ -2,7 +2,7 @@
 import { getSupabaseClient, readSupabaseConfig } from '../common';
 import { moveTo, playWork, useAvatarStore } from '../avatar';
 import { buildIslandLayout, buildingSiteTile, celebrateIsland, loadIslandPlan } from '../island-view';
-import { playHelpSound } from './sound';
+import { playSound, workSound } from '../sound';
 import { createDailyActionsStore } from './store';
 
 function safeStorage(): Storage | null {
@@ -40,11 +40,15 @@ export const useDailyActions = createDailyActionsStore({
   },
   loadPlan: loadIslandPlan,
   siteTile: (plan, view, key) => buildingSiteTile(buildIslandLayout(plan, view), key),
-  onHelped: (site) => {
+  onHelped: (site, buildingKey) => {
     playWork(site);
     celebrateIsland(1200);
-    playHelpSound();
+    // the work sound for what is built, then the success chime (§10.5)
+    const work = workSound(buildingKey);
+    playSound(work, work === 'construction-hammer-roof' ? { offset: 2, duration: 1.1 } : {});
+    playSound('ui-confirm', { delay: 0.9 });
   },
+  feedback: (kind) => playSound(kind === 'tap' ? 'ui-select' : 'ui-error'),
   randomId: () => crypto.randomUUID(),
   now: () => new Date(),
   setTimer: (fn, ms) => setTimeout(fn, ms),

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MOOD_PALETTES } from '../island-view';
+import { playSound } from '../sound';
 import { getSupabaseClient, readSupabaseConfig } from '../common';
 import { RankingSheet, useRanking, type RankEntry } from '../ranking';
 import { fetchStatuses, loadShapes, type CommunityStatus } from './api';
@@ -46,6 +47,8 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
   const [statuses, setStatuses] = useState<Map<string, CommunityStatus>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  // the map opens with a soft whoosh (§10.5)
+  useEffect(() => playSound('map-whoosh'), []);
   const [query, setQuery] = useState('');
   const [rankingOpen, setRankingOpen] = useState(false);
   // Last week's #1 wears the crown for the whole week (requirement.md v1.31 §12.1).
@@ -295,6 +298,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
       if (at && moved < TAP_PX && pointers.size === 0) {
         const v = view.current;
         const hit = communityAt(prepared, (at.x - v.ox) / v.scale, (at.y - v.oy) / v.scale);
+        if (hit) playSound('ui-select');
         setSelected(hit?.code ?? null);
         if (hit) animTo.current(frameBox(bbox(hit), rect.width, rect.height, MAX_SCALE * 0.5));
       }
@@ -336,6 +340,7 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
   const results = useMemo(() => searchCommunities(shapes?.communities ?? [], query), [shapes, query]);
   const choose = (c: MapCommunity) => {
     setQuery('');
+    playSound('ui-select');
     setSelected(c.code);
     const r = canvasRef.current?.getBoundingClientRect();
     if (r) animTo.current(frameBox(bbox(c), r.width, r.height, MAX_SCALE * 0.5));
@@ -366,13 +371,16 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
         </div>
         <button
           type="button"
-          onClick={() => setRankingOpen(true)}
+          onClick={() => {
+            playSound('ui-click');
+            setRankingOpen(true);
+          }}
           aria-label="Weekly ranking"
           className="rounded-full bg-white/95 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
         >
           🏆
         </button>
-        <button type="button" onClick={onClose} aria-label="Close the map" className="rounded-full bg-white/95 px-3 py-2 text-sm text-slate-700 shadow-sm">
+        <button type="button" onClick={() => { playSound('ui-close'); onClose(); }} aria-label="Close the map" className="rounded-full bg-white/95 px-3 py-2 text-sm text-slate-700 shadow-sm">
           ✕
         </button>
       </header>
@@ -402,7 +410,10 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
             {selStatus && (
               <button
                 type="button"
-                onClick={() => onEnter(selStatus.id)}
+                onClick={() => {
+                  playSound('map-whoosh');
+                  onEnter(selStatus.id);
+                }}
                 className="mt-3 w-full rounded-2xl bg-indigo-500 py-2.5 text-sm font-semibold text-white active:scale-[0.98]"
               >
                 {sel.c.code === myCode ? 'Back to my community' : 'Visit this community'}

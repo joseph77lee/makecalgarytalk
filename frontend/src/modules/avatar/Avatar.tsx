@@ -2,7 +2,8 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import type { Group } from 'three';
-import { VoxelPerson, type PersonMotion, clearCameraFocus, useIslandCrowd, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
+import { VoxelPerson, type PersonMotion, clearCameraFocus, useIslandCrowd, useIslandSnow, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
+import { playSound } from '../sound';
 import { useAvatarStore } from './avatarStore';
 import { stepCandidates } from './keyboard';
 import { usePressedKeys } from './usePressedKeys';
@@ -24,6 +25,8 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
   const nickSeed = useMemo(() => [...nickname].reduce((h, ch) => Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0, 2166136261), [nickname]);
   const { walkable, walkableKeys } = useIslandWalkable();
   const crowd = useIslandCrowd();
+  const snow = useIslandSnow();
+  const lastStep = useRef('');
   useEffect(() => () => crowd.release('avatar'), [crowd]);
   const portal = useHtmlPortal();
   const walker = useRef<AvatarWalker | null>(null);
@@ -75,6 +78,10 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
     // the avatar claims its tiles too, so villagers and animals never walk through it
     crowd.claim('avatar', f.moving ? [`${w.from.x},${w.from.z}`, `${w.to.x},${w.to.z}`] : [`${w.to.x},${w.to.z}`]);
     if (f.arrivedSeq !== null) useAvatarStore.getState().reportArrival(f.arrivedSeq, w.tile);
+    // a footstep for every tile walked onto: grass, or snow when it lies (§10.5)
+    const stepKey = `${w.to.x},${w.to.z}`;
+    if (f.moving && stepKey !== lastStep.current) playSound(snow ? 'footsteps-snow' : 'footsteps', { rate: 0.95 + Math.random() * 0.1 });
+    lastStep.current = f.moving ? stepKey : '';
 
     const time = clock.elapsedTime;
     const { workUntil, workFacing } = useAvatarStore.getState();

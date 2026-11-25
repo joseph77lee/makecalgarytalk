@@ -19,6 +19,7 @@ import { lifePlan } from './lifePlan';
 import { claimedTiles, freeSteps } from './steps';
 import { BoxBatch } from './BoxBatch';
 import { mixHex } from './sky';
+import { playSound } from '../../sound';
 import { useIslandCtx } from './islandContext';
 
 /** Peak cloud drift speed in tiles per second (slow, but visibly moving). */
@@ -92,6 +93,33 @@ function Wanderer({ kind, speed, seed }: { kind: AnimalKind; speed: number; seed
   );
 }
 
+/**
+ * Sounds of island life (§10.5), in step with the movers below: geese honk as their V starts to
+ * cross (every 45 s), a plane hums as it comes over, and at night an owl hoots every 40–90 s.
+ */
+function LifeSounds({ planeEvery, geese, night }: { planeEvery: number; geese: boolean; night: boolean }) {
+  const last = useRef({ geese: -1, plane: -1, owlAt: 30 + Math.floor(planeEvery % 7) * 5 });
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    const l = last.current;
+    const g = Math.floor((t - 2) / 45);
+    if (g !== l.geese) {
+      if (l.geese >= 0 && geese) playSound('geese-honk');
+      l.geese = g;
+    }
+    const p = Math.floor((t - 2) / planeEvery);
+    if (p !== l.plane) {
+      if (l.plane >= 0) playSound('plane-flyby');
+      l.plane = p;
+    }
+    if (t > l.owlAt) {
+      if (night) playSound('owl');
+      l.owlAt = t + 40 + ((Math.floor(t) * 7919) % 50);
+    }
+  });
+  return null;
+}
+
 interface Props {
   code: string;
   features: FeatureKey[];
@@ -108,9 +136,11 @@ interface Props {
   cloudGrey?: number;
   /** Night or bad weather: birds, flying geese and the balloon stay away (planes still fly). */
   quiet?: boolean;
+  /** Night: an owl hoots now and then (§10.5). */
+  night?: boolean;
 }
 
-export function IslandLife({ code, features, hasWater, landTiles, radius, extent, azimuth, cloudSpeed = 1, cloudGrey = 0, quiet = false }: Props) {
+export function IslandLife({ code, features, hasWater, landTiles, radius, extent, azimuth, cloudSpeed = 1, cloudGrey = 0, quiet = false, night = false }: Props) {
   // screen right and towards-the-camera directions on the ground
   const rx = Math.cos(azimuth);
   const rz = -Math.sin(azimuth);
@@ -132,6 +162,7 @@ export function IslandLife({ code, features, hasWater, landTiles, radius, extent
 
   return (
     <>
+      <LifeSounds planeEvery={plan.planeEvery} geese={!quiet} night={night} />
       {clouds.map((c, i) => (
         // Clouds hug the island like it floats on them: tucked against the real left and right
         // edges just below the ground, and one under the front cliff. They drift a little along
