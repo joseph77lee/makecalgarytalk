@@ -10,7 +10,7 @@ import { stageMap, type IslandPlan } from '../plan/islandPlan';
 import type { CommunityViewState, IslandEnvironment } from '../types';
 import { useLiveWeather, WeatherChip, isSnowing, type LiveWeather } from '../../weather';
 import { Precipitation } from './Precipitation';
-import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, type SkyLook } from './sky';
+import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, futureLandOpacity, type SkyLook } from './sky';
 import { setWind } from './wind';
 import { BloomBurst } from './BloomBurst';
 import { BoxBatch } from './BoxBatch';
@@ -291,7 +291,7 @@ function IslandScene({
       <WindDriver wind={wind} />
       {precip && <Precipitation kind={precip.kind} count={precip.count} radius={layout.landRadius + 5} wind={wind} />}
 
-      <BoxBatch parts={future} castShadow={false} receiveShadow={false} mistOpacity={0.16 * (1 - 0.7 * look.nightness)} />
+      <BoxBatch parts={future} castShadow={false} receiveShadow={false} mistOpacity={futureLandOpacity(look)} />
       <BoxBatch parts={settledTerrain} castShadow={false} />
       {growing && (
         <RisingGroup key={layout.landStage} onDone={finishGrowth}>

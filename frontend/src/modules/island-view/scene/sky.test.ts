@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NOON_CLEAR, type IslandEnvironment } from '../types';
-import { MIN_SUN_HEIGHT, mixHex, precipitation, skyLook, towards, windVector } from './sky';
+import { futureLandOpacity, MIN_SUN_HEIGHT, mixHex, precipitation, skyLook, towards, windVector } from './sky';
 
 const env = (el: number, az = 180, weather: IslandEnvironment['weather'] = 'clear'): IslandEnvironment => ({
   ...NOON_CLEAR,
@@ -137,5 +137,14 @@ describe('mixHex', () => {
     expect(mixHex('#000000', '#ffffff', 0.5)).toBe('#808080');
     expect(mixHex('#102030', '#ffffff', -1)).toBe('#102030');
     expect(mixHex('#102030', '#ffffff', 2)).toBe('#ffffff');
+  });
+});
+
+describe('futureLandOpacity', () => {
+  it('clear by day, nearly gone at night and in storms', () => {
+    expect(futureLandOpacity(skyLook(env(15)))).toBeCloseTo(0.16);
+    expect(futureLandOpacity(skyLook(env(-30, 0)))).toBeLessThan(0.025);
+    expect(futureLandOpacity(skyLook(env(15, 180, 'thunderstorm')))).toBeLessThan(0.1);
+    expect(futureLandOpacity(skyLook(env(15, 180, 'overcast')))).toBeGreaterThan(0.12);
   });
 });

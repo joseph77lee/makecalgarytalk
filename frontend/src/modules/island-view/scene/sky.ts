@@ -143,6 +143,15 @@ export function skyLook(env: IslandEnvironment): SkyLook {
   };
 }
 
+/**
+ * Faint outline of the land still to come: clear by day, nearly gone at night and in dark storms
+ * (white boxes stand out against a dark sky).
+ */
+export function futureLandOpacity(look: Pick<SkyLook, 'nightness' | 'cloudiness'>): number {
+  const dark = Math.max(look.nightness, (look.cloudiness - 0.6) * 1.5);
+  return 0.16 * (1 - 0.88 * Math.min(1, Math.max(0, dark)));
+}
+
 /** CSS background for the sky behind the canvas. */
 export function skyBackground(look: SkyLook): string {
   return `linear-gradient(to bottom, ${look.bg[0]} 0%, ${look.bg[1]} 58%, ${look.bg[2]} 100%)`;
