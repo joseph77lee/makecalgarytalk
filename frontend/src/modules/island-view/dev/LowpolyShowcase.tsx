@@ -17,6 +17,7 @@ const ROWS: [LpCategory, number][] = [
   ['tower', 3.5],
   ['tree', 7],
   ['car', 9],
+  ['prop', 10.5],
 ];
 const STEP = 2.4;
 

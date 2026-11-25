@@ -8,7 +8,7 @@ import type { ComponentType } from 'react';
 import type { BuildingObject, FixedAssetKey, ObjectOf } from '../layout';
 import { boxAsset, type ItemsProps } from './BoxAsset';
 import { lowpolyAsset } from './lowpoly/lowpolyAsset';
-import { placeHouse, placeProp, placeTree } from './lowpoly/islandModels';
+import { lampPool, placeHouse, placeLamp, placeProp, placeSnowPile, placeTree } from './lowpoly/islandModels';
 import { MiniVillagers } from './MiniVillagers';
 import { building, constructionSite, feature, flowers, house, lamp, prop, rail, railEnd, reservedPlot, silhouette, snowPile, station, track, tree } from './models';
 
@@ -16,9 +16,9 @@ export const ASSET_REGISTRY: { [K in FixedAssetKey]: ComponentType<ItemsProps<Ob
   // Polyfork low-poly models (M23, §19.1); box models while they load or if a file fails
   house: lowpolyAsset(placeHouse, house),
   tree: lowpolyAsset(placeTree, tree),
-  lamp: boxAsset(lamp),
+  lamp: lowpolyAsset(placeLamp, lamp, lampPool),
   flowers: boxAsset(flowers),
-  'snow-pile': boxAsset(snowPile),
+  'snow-pile': lowpolyAsset(placeSnowPile, snowPile),
   'mini-villager': MiniVillagers,
   'construction-site': boxAsset(constructionSite),
   silhouette: boxAsset(silhouette),

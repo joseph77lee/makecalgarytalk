@@ -24,6 +24,8 @@ export interface LpPlacement {
 
 export interface PlaceCtx extends BuildCtx {
   lowQuality: boolean;
+  /** Lamps and public windows on (night, storms). */
+  lightsOn: boolean;
 }
 
 const UP = new Vector3(0, 1, 0);

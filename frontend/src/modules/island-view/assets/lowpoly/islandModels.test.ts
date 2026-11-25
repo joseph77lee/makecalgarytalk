@@ -3,17 +3,17 @@ import type { ObjectOf } from '../../layout';
 import { MOOD_PALETTES } from '../../mood';
 import { HOUSE_TYPES } from '../voxel/houses';
 import { LP_HEIGHTS, LP_MODELS, type LpName } from './catalogue';
-import { CAR_MODELS, HOUSE_MODELS, TREE_MODELS, houseLook, houseModelHeight, placeHouse, placeProp, placeTree } from './islandModels';
+import { BENCH_MODELS, CAR_MODELS, HOUSE_MODELS, LAMP_MODELS, TREE_MODELS, houseLook, houseModelHeight, placeHouse, placeProp, placeTree } from './islandModels';
 
 const house = (over: Partial<ObjectOf<'house'>> = {}): ObjectOf<'house'> => ({
   assetKey: 'house', id: 'h', houseId: 'h', x: 4.5, z: 2.5, stage: 0, nickname: 'A', activeToday: false, colorIndex: 7,
   founding: false, mine: false, houseType: 'bungalow', facing: 1, height: 1, ...over,
 });
-const ctx = { palette: MOOD_PALETTES.lively, snow: false, lowQuality: false };
+const ctx = { palette: MOOD_PALETTES.lively, snow: false, lowQuality: false, lightsOn: false };
 
 describe('island models', () => {
   it('uses every house and tower pick, and every tree and car pick', () => {
-    const used = new Set<LpName>([...Object.values(HOUSE_MODELS).flat(), ...TREE_MODELS.leafy, ...TREE_MODELS.evergreen, ...CAR_MODELS]);
+    const used = new Set<LpName>([...Object.values(HOUSE_MODELS).flat(), ...TREE_MODELS.leafy, ...TREE_MODELS.evergreen, ...CAR_MODELS, ...BENCH_MODELS, ...LAMP_MODELS, 'mailbox', 'snowman']);
     for (const name of Object.keys(LP_MODELS) as LpName[]) expect(used, name).toContain(name);
   });
   it('gives each house a fixed look and a label height from its model', () => {
@@ -64,6 +64,8 @@ describe('island models', () => {
     }
     const prop = (kind: ObjectOf<'prop'>['kind']) => placeProp({ assetKey: 'prop', id: 'p', x: 1, z: 1, stage: 0, kind, facing: 0, seed: 5 });
     expect(CAR_MODELS).toContain(prop('car')![0].model);
-    expect(prop('bench')).toBeNull();
+    expect(BENCH_MODELS).toContain(prop('bench')![0].model);
+    expect(prop('mailbox')![0].model).toBe('mailbox');
+    expect(prop('flowers')).toBeNull();
   });
 });

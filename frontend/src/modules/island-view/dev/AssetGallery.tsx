@@ -71,6 +71,7 @@ const VIEWS = {
   'Polyfork houses': { target: [34, 0], zoom: 110 },
   'Polyfork towers': { target: [40, 3.5], zoom: 46 },
   'Polyfork trees & cars': { target: [40, 8], zoom: 60 },
+  'Polyfork props': { target: [40, 10.5], zoom: 150 },
 } as const;
 type ViewName = keyof typeof VIEWS;
 

@@ -12,6 +12,7 @@ import type { HouseType } from '../voxel/houses';
 import { ART } from '../voxel/samples';
 import { rnd } from '../voxel/voxel';
 import { LP_HEIGHTS, type LpName } from './catalogue';
+import type { BoxPart } from '../boxes';
 import type { LpPlacement, PlaceCtx } from './placement';
 
 /** House models per house type (requirement.md §7.2 mix by community style picks the type). */
@@ -99,9 +100,37 @@ export function placeTree(item: ObjectOf<'tree'>): LpPlacement[] {
 }
 
 export const CAR_MODELS: LpName[] = ['suv', 'minivan', 'pickup', 'hatchback', 'townCar'];
+export const BENCH_MODELS: LpName[] = ['parkBench', 'parkBench', 'alpineBench'];
+export const LAMP_MODELS: LpName[] = ['streetLamp', 'garlandLamp', 'cobraLight'];
 
-/** Parked cars become Polyfork cars; other props keep their box models for now. */
+/** Parked cars, benches and mailboxes; flower beds keep their box models. */
 export function placeProp(item: ObjectOf<'prop'>): LpPlacement[] | null {
-  if (item.kind !== 'car') return null;
-  return [{ model: pick(CAR_MODELS, rnd(item.seed, 51)), x: item.x, z: item.z, turn: (item.facing * Math.PI) / 2 }];
+  const turn = (item.facing * Math.PI) / 2;
+  const model = item.kind === 'car' ? pick(CAR_MODELS, rnd(item.seed, 51)) : item.kind === 'bench' ? pick(BENCH_MODELS, rnd(item.seed, 52)) : item.kind === 'mailbox' ? 'mailbox' : null;
+  return model ? [{ model, x: item.x, z: item.z, turn }] : null;
+}
+
+/** Where a path lamp stands in its tile (the corner, like the box lamp). */
+export const LAMP_SPOT = 0.38;
+
+/** Path lamps: one model per island style is calmer than a mix, so it is picked per lamp row (x + z). */
+export function placeLamp(item: ObjectOf<'lamp'>): LpPlacement[] {
+  const seed = Math.round(item.x * 131 + item.z * 977);
+  return [{ model: pick(LAMP_MODELS, rnd(Math.floor(item.x + item.z), 61)), x: item.x + LAMP_SPOT, z: item.z + LAMP_SPOT, turn: Math.floor(rnd(seed, 62) * 4) * (Math.PI / 2), lit: 1 }];
+}
+
+/** A soft warm pool on the ground under a lit lamp (same look as under box lamps). */
+export function lampPool(_item: ObjectOf<'lamp'>, ctx: PlaceCtx): BoxPart[] {
+  if (!ctx.lightsOn) return [];
+  return [
+    { layer: 'mist', p: [LAMP_SPOT, 0.02, LAMP_SPOT], s: [1.6, 0.02, 1.6], c: '#ffd27a' },
+    { layer: 'mist', p: [LAMP_SPOT, 0.03, LAMP_SPOT], s: [0.9, 0.02, 0.9], c: '#ffe2a0' },
+  ];
+}
+
+/** About one snow pile in four is a snowman (winter launch theme, §19.1). */
+export function placeSnowPile(item: ObjectOf<'snow-pile'>): LpPlacement[] | null {
+  if (item.variant % 4 !== 0) return null;
+  const seed = Math.round(item.x * 131 + item.z * 977);
+  return [{ model: 'snowman', x: item.x, z: item.z, turn: rnd(seed, 71) * Math.PI * 2 }];
 }

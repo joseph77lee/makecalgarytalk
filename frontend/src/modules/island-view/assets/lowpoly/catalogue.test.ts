@@ -24,7 +24,7 @@ function parse(name: LpName): Promise<{ model: LpModel; door: boolean }> {
       (gltf) => {
         const meshes = sourceMeshes(gltf.scene);
         const spec = LP_MODELS[name];
-        ok({ model: normalise(meshes, spec.cat, spec.fit), door: meshes.some((m) => m.door) });
+        ok({ model: normalise(meshes, spec.cat, spec.fit, spec), door: meshes.some((m) => m.door) });
       },
       fail,
     ),
@@ -55,6 +55,7 @@ describe('Polyfork catalogue', () => {
     expect(model.triangles).toBeLessThan(12000);
     // label and tap heights come from this table (layout is pure and cannot load files)
     expect(LP_HEIGHTS[name], `LP_HEIGHTS.${name} should be ${model.size.y.toFixed(2)}`).toBeCloseTo(model.size.y, 1);
+    if ('lamp' in spec && spec.lamp) expect(sum(model.geometry.getAttribute('aGlass').array), 'bulbs found (they light at night)').toBeGreaterThan(0);
     if (spec.cat === 'house' || spec.cat === 'tower') {
       const g = model.geometry;
       if (!OWN_ROOF.has(name)) expect(sum(g.getAttribute('aRoof').array), 'roof colour found').toBeGreaterThan(0);

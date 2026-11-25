@@ -31,6 +31,8 @@ export interface SourceMesh {
 }
 
 const KEEP = ['position', 'normal', 'color'];
+/** A lamp's bulb by day (our box lamps use the same off colour). */
+const LAMP_OFF_COLOUR = '#f1ece0';
 const linearToSrgb = (v: number) => (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055);
 const byte = (v: number) => Math.min(255, Math.max(0, Math.round(v * 255)));
 const hexOf = (r: number, g: number, b: number) =>
@@ -104,7 +106,7 @@ export function fitScale(fit: LpFit, size: Vector3): number {
 
 const painted = (cat: LpCategory) => cat === 'house' || cat === 'tower' || cat === 'building';
 
-export function normalise(meshes: SourceMesh[], cat: LpCategory, fit: LpFit): LpModel {
+export function normalise(meshes: SourceMesh[], cat: LpCategory, fit: LpFit, opts: { yaw?: number; lamp?: boolean } = {}): LpModel {
   if (meshes.length === 0) throw new Error('model has no meshes');
   let door: Box3 | null = null;
   const geos = meshes.map((m) => {
@@ -131,14 +133,14 @@ export function normalise(meshes: SourceMesh[], cat: LpCategory, fit: LpFit): Lp
     yaw = s.z > s.x ? Math.PI / 2 : 0; // length along x (our car convention)
   }
   geometry.applyMatrix4(new Matrix4().makeTranslation(-centre.x, -box.min.y, -centre.z));
-  geometry.applyMatrix4(new Matrix4().makeRotationY(yaw));
+  geometry.applyMatrix4(new Matrix4().makeRotationY(yaw + (opts.yaw ?? 0)));
   const turned = new Box3().setFromBufferAttribute(geometry.getAttribute('position') as BufferAttribute).getSize(new Vector3());
   const s = fitScale(fit, turned);
   geometry.applyMatrix4(new Matrix4().makeScale(s, s, s));
 
   const hint = geometry.getAttribute('aHint').array as Float32Array;
   geometry.deleteAttribute('aHint');
-  repaint(geometry, cat, hint);
+  repaint(geometry, cat, hint, !!opts.lamp);
   geometry.computeBoundingBox();
   const size = geometry.boundingBox!.getSize(new Vector3());
   return { geometry, size, triangles: geometry.getAttribute('position').count / 3 };
@@ -218,15 +220,30 @@ export function classifyColours(byHex: Map<string, FaceStats>): { glass: Set<str
   return { glass: pick((g) => glassG.has(g)), roof: pick((g) => roofG.has(g)), wall: pick((g) => g === wallG) };
 }
 
+/** A lamp's bulbs: light or warm-yellow colours in the top third of the model. */
+export function bulbColours(pos: BufferAttribute, hexes: string[]): Set<string> {
+  let height = 0;
+  for (let i = 0; i < pos.count; i++) height = Math.max(height, pos.getY(i));
+  const out = new Set<string>();
+  for (let i = 0; i < pos.count; i++) {
+    if (pos.getY(i) < height * 0.66) continue;
+    const { h, s, l } = hslOf(hexes[i]);
+    if (l > 0.62 || (h > 0.09 && h < 0.18 && s > 0.45 && l > 0.5)) out.add(hexes[i]);
+  }
+  // a colour that also paints the lower post is not a bulb
+  for (let i = 0; i < pos.count; i++) if (pos.getY(i) < height * 0.4) out.delete(hexes[i]);
+  return out;
+}
+
 /** Pastel colours and the glass / roof / wall flags (see the file header). */
-function repaint(geometry: BufferGeometry, cat: LpCategory, hint: Float32Array): void {
+function repaint(geometry: BufferGeometry, cat: LpCategory, hint: Float32Array, lamp: boolean): void {
   const col = geometry.getAttribute('color') as BufferAttribute;
   const pos = geometry.getAttribute('position') as BufferAttribute;
   const n = col.count;
   const hexes: string[] = new Array(n);
   for (let i = 0; i < n; i++) hexes[i] = hexOf(col.getX(i), col.getY(i), col.getZ(i));
   const none = new Set<string>();
-  const { glass, roof, wall } = painted(cat) ? classifyColours(faceStats(pos, hexes, hint)) : { glass: none, roof: none, wall: none };
+  const { glass, roof, wall } = painted(cat) ? classifyColours(faceStats(pos, hexes, hint)) : { glass: lamp ? bulbColours(pos, hexes) : none, roof: none, wall: none };
 
   const colours = new Float32Array(n * 3);
   const aGlass = new Float32Array(n);
@@ -238,7 +255,7 @@ function repaint(geometry: BufferGeometry, cat: LpCategory, hint: Float32Array):
     const h = hexes[i];
     let p = pastel.get(h);
     if (!p) pastel.set(h, (p = pastelize(h)));
-    c.set(glass.has(h) ? ART.glass : p); // Color.set converts sRGB hex to linear
+    c.set(glass.has(h) ? (lamp ? LAMP_OFF_COLOUR : ART.glass) : p); // Color.set converts sRGB hex to linear
     colours[i * 3] = c.r;
     colours[i * 3 + 1] = c.g;
     colours[i * 3 + 2] = c.b;

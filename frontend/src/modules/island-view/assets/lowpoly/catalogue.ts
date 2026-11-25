@@ -16,6 +16,10 @@ export interface LpSpec {
   file: string;
   cat: LpCategory;
   fit: LpFit;
+  /** Extra turn (radians) so the model's front faces +z like our box model (props without a door). */
+  yaw?: number;
+  /** A lamp: light colours near the top are its bulbs, lit at night like windows. */
+  lamp?: boolean;
 }
 
 /** Tiles per metre for `metres` fits (a car is about half a tile long, like our own). */
@@ -25,6 +29,7 @@ const house = (file: string, footprint = 0.92): LpSpec => ({ file, cat: 'house',
 const tower = (file: string, footprint = 0.94): LpSpec => ({ file, cat: 'tower', fit: { footprint } });
 const tree = (file: string, height: number): LpSpec => ({ file, cat: 'tree', fit: { height } });
 const car = (file: string): LpSpec => ({ file, cat: 'car', fit: { metres: true } });
+const prop = (file: string, fit: LpFit, extra: Partial<LpSpec> = {}): LpSpec => ({ file, cat: 'prop', fit, ...extra });
 
 export const LP_MODELS = {
   // Suburb houses
@@ -67,6 +72,14 @@ export const LP_MODELS = {
   pickup: car('suburban-pickup-truck-d15ea2'),
   hatchback: car('compact-hatchback-386417'),
   townCar: car('town-car-56eeb6'),
+  // Street props, sized like our box models (bench 0.5 wide, lamp 0.9 tall, mailbox 0.38 tall)
+  parkBench: prop('park-bench-dc8b62', { footprint: 0.5 }),
+  alpineBench: prop('alpine-bench-32fa62', { footprint: 0.5 }),
+  streetLamp: prop('street-lamp-29f365', { height: 0.9 }, { lamp: true }),
+  garlandLamp: prop('garland-lamp-post-af02f0', { height: 0.9 }, { lamp: true }),
+  cobraLight: prop('cobra-head-street-light-3e25b8', { height: 1.0 }, { lamp: true }),
+  mailbox: prop('curbside-mailbox-0e0736', { height: 0.38 }),
+  snowman: prop('snowman-18c02d', { height: 0.42 }),
 } as const satisfies Record<string, LpSpec>;
 
 export type LpName = keyof typeof LP_MODELS;
@@ -112,4 +125,11 @@ export const LP_HEIGHTS: Record<LpName, number> = {
   pickup: 0.19,
   hatchback: 0.16,
   townCar: 0.15,
+  parkBench: 0.26,
+  alpineBench: 0.26,
+  streetLamp: 0.9,
+  garlandLamp: 0.9,
+  cobraLight: 1.0,
+  mailbox: 0.38,
+  snowman: 0.42,
 };

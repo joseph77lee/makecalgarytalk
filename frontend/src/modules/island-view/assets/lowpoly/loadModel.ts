@@ -36,7 +36,7 @@ export function loadLpModel(name: LpName): Promise<LpModel | null> {
     p = loader
       .loadAsync(lpUrl(name))
       .then((gltf) => {
-        return normalise(sourceMeshes(gltf.scene), spec.cat, spec.fit);
+        return normalise(sourceMeshes(gltf.scene), spec.cat, spec.fit, spec);
       })
       .then((m): LpModel | null => m)
       .catch((err: unknown) => {
