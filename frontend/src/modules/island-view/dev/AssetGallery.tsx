@@ -38,6 +38,7 @@ import {
 } from '../assets/voxel/samples';
 import { rnd, shade, vb, vmove, vturn } from '../assets/voxel/voxel';
 import { BoxBatch } from '../scene/BoxBatch';
+import { useHtmlPortal } from '../scene/htmlPortal';
 import { GalleryLife } from './GalleryLife';
 
 interface Item {
@@ -233,12 +234,23 @@ export function AssetGallery() {
         {items
           .filter((i) => i.label)
           .map((i) => (
-            <Html key={i.label} position={[i.at[0], topOf(i.parts) + 0.35, i.at[1]]} center style={{ pointerEvents: 'none' }}>
-              <span className="whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-slate-700 shadow-sm">{i.label}</span>
-            </Html>
+            <GalleryLabel key={`${i.label}@${i.at.join(',')}`} text={i.label} position={[i.at[0], topOf(i.parts) + 0.35, i.at[1]]} />
           ))}
       </Canvas>
     </div>
+  );
+}
+
+/**
+ * A sample's name above it. Uses the fixed overlay container like the game's labels; without it
+ * drei rebuilds each label's React root right after mounting ("synchronously unmount a root").
+ */
+function GalleryLabel({ text, position }: { text: string; position: [number, number, number] }) {
+  const portal = useHtmlPortal();
+  return (
+    <Html portal={portal} position={position} center style={{ pointerEvents: 'none' }}>
+      <span className="whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-slate-700 shadow-sm">{text}</span>
+    </Html>
   );
 }
 

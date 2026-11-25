@@ -12,6 +12,17 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.71
+**Changed:** M19 Art Pass 🔁 Reopened (`fix/m19-props-and-crowds`): new In-scope item "nobody walks through things": street props and mood decorations now block walking (placed only where they cut nobody off, never on paths, the plaza, track or building lots); cars park only beside the road (nose-in in a driveway, else along the road); the avatar, villagers and animals claim tiles so they never walk through each other (the avatar waits, then walks around). Wild flower dots became a few single-colour patches. The gallery's label errors are fixed. Handoff note updated (the street-props line no longer says "never block").
+
+**Why:** Operator request (2026-11-24): flower dots looked noisy, people walked over cars, animals and flower beds, cars must park by houses or the roadside, and the gallery showed console errors.
+
+**Previous:**
+- Header: `| Plan version | v1.70 |`, `| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |`
+- Module table: `| M19 | Art Pass | FE (R3F) | | M14 | ✅ |`
+- M19 title: `### M19 — Art Pass ✅`
+- M19 Handoff, layout (verbatim): `Street props: \`assetKey 'prop'\`, non-blocking, ≤ \`MAX_PROPS = 70\`.`
+
 ### 2026-11-24 — v1.70
 **Changed:** M19 Art Pass 🔁 Reopened for walking animation (`fix/m19-walk-animation`): new In-scope item "people and animals move like they walk" (avatar and villagers swing arms and legs, sit, cheer, hammer; deer walk and sometimes bound, cougars stalk and sometimes dash, jackrabbits hop, geese waddle; resting deer and geese graze); Handoff note gains the rig/gait code.
 

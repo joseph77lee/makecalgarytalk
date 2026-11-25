@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -6,8 +6,9 @@ import { MAX_PROPS, buildIslandLayout, buildingSiteTile, tileKey, type BuildingO
 import mock from './mockCommunityState.json';
 import { parseCommunityViewState } from './parseState';
 import { featuresFor, type CommunityFeature } from './plan/features';
-import { decodePlan, houseLotOrder, lotTiles, type IslandPlan } from './plan/islandPlan';
+import { PLAZA, decodePlan, houseLotOrder, lotTiles, type IslandPlan } from './plan/islandPlan';
 import type { BuildingView, CommunityViewState } from './types';
+import { prop } from './assets/models';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../public/islands');
 const planOf = (code: string): IslandPlan => decodePlan(JSON.parse(readFileSync(join(DIR, `${code}.json`), 'utf8')));
@@ -289,17 +290,84 @@ describe('signature features (feature library, requirement.md §7.9)', () => {
   });
 });
 
-describe('street props (M19 busier communities)', () => {
-  it('stay on free grass, never block walking, and are capped', () => {
-    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, houses: residents(40) }), []);
-    const props = l.objects.filter((o) => o.assetKey === 'prop');
-    expect(props.length).toBeGreaterThan(5);
-    expect(props.length).toBeLessThanOrEqual(MAX_PROPS);
-    const blocked = new Set([...MAH.paths, ...MAH.water, ...MAH.houses].map(tileKey));
-    for (const o of props) expect(blocked.has(tileKey({ x: Math.floor(o.x), z: Math.floor(o.z) })), o.id).toBe(false);
-    const without = buildIslandLayout(MAH, stateWith({ landStage: 5, houses: residents(40) }), []);
-    expect(l.walkable.length).toBe(without.walkable.length);
-    const walk = new Set(l.walkable.map(tileKey));
-    expect(props.some((o) => walk.has(tileKey({ x: Math.floor(o.x), z: Math.floor(o.z) })))).toBe(true);
+describe('street props and decorations (M19 busier communities)', () => {
+  const codes = ['MAH', 'BLN', ...readdirSync(DIR).filter((f) => f.endsWith('.json')).slice(0, 10).map((f) => f.replace('.json', ''))];
+  const layouts = codes.map((code) => {
+    const plan = planOf(code);
+    return { code, plan, l: buildIslandLayout(plan, stateWith({ landStage: 5, houses: residents(40), vitality: 90 }), []) };
+  });
+  const cell = (o: { x: number; z: number }) => tileKey({ x: Math.floor(o.x), z: Math.floor(o.z) });
+  const standing = (l: ReturnType<typeof buildIslandLayout>) => l.objects.filter((o) => o.assetKey === 'prop' || o.assetKey === 'flowers' || o.assetKey === 'snow-pile');
+
+  it('stand on free grass (never on paths, the plaza, water, track or houses) and are capped', () => {
+    for (const { code, plan, l } of layouts) {
+      const props = l.objects.filter((o) => o.assetKey === 'prop');
+      expect(props.length, code).toBeLessThanOrEqual(MAX_PROPS);
+      const blocked = new Set([...PLAZA, ...plan.paths, ...plan.water, ...plan.houses, ...plan.rail.flatMap((r) => r.tiles)].map(tileKey));
+      for (const o of standing(l)) expect(blocked.has(cell(o)), `${code} ${o.id}`).toBe(false);
+    }
+    expect(layouts[0].l.objects.filter((o) => o.assetKey === 'prop').length).toBeGreaterThan(5);
+  });
+
+  it('block walking, yet every walkable tile stays reachable from the plaza', () => {
+    for (const { code, l } of layouts) {
+      const walk = new Set(l.walkable.map(tileKey));
+      for (const o of standing(l)) expect(walk.has(cell(o)), `${code} ${o.id}`).toBe(false);
+      // flood fill from the plaza over the walkable tiles reaches all of them
+      const seen = new Set(PLAZA.map(tileKey).filter((k) => walk.has(k)));
+      const queue = [...seen];
+      while (queue.length) {
+        const [x, z] = (queue.pop() as string).split(',').map(Number);
+        for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const n = `${x + dx},${z + dz}`;
+          if (walk.has(n) && !seen.has(n)) {
+            seen.add(n);
+            queue.push(n);
+          }
+        }
+      }
+      expect(seen.size, code).toBe(walk.size);
+    }
+  });
+
+  it('park cars only beside the road: nose-in towards the house in a driveway, else along the road', () => {
+    let driveways = 0;
+    let roadside = 0;
+    for (const { code, plan, l } of layouts) {
+      const paths = new Set([...PLAZA, ...plan.paths].map(tileKey));
+      const houses = new Set(l.objects.filter((o) => o.assetKey === 'house').map(cell));
+      for (const o of l.objects) {
+        if (o.assetKey !== 'prop' || o.kind !== 'car') continue;
+        const [x, z] = cell(o).split(',').map(Number);
+        const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        const pathDirs = sides.filter(([dx, dz]) => paths.has(`${x + dx},${z + dz}`));
+        const houseDirs = sides.filter(([dx, dz]) => houses.has(`${x + dx},${z + dz}`));
+        expect(pathDirs.length, `${code} ${o.id} beside a road`).toBeGreaterThan(0);
+        // the front of the car is where its headlights are
+        const lights = prop(o).filter((p) => p.layer === 'glow');
+        const fx = lights.reduce((a, p) => a + p.p[0], 0) / lights.length;
+        const fz = lights.reduce((a, p) => a + p.p[2], 0) / lights.length;
+        const front = Math.abs(fx) > Math.abs(fz) ? [Math.sign(fx), 0] : [0, Math.sign(fz)];
+        if (houseDirs.length > 0) {
+          driveways++;
+          expect(houseDirs.some(([dx, dz]) => dx === front[0] && dz === front[1]), `${code} ${o.id} nose to the house`).toBe(true);
+        } else {
+          roadside++;
+          // along the road: the road is to the car's side, not ahead or behind
+          expect(pathDirs.some(([dx, dz]) => dx * front[0] + dz * front[1] === 0), `${code} ${o.id} along the road`).toBe(true);
+        }
+      }
+    }
+    expect(driveways).toBeGreaterThan(0);
+    expect(roadside).toBeGreaterThan(0);
+  });
+
+  it('lively communities get a few wild flower patches, not a scatter of dots', () => {
+    for (const { code, l } of layouts) {
+      const patches = l.objects.filter((o) => o.assetKey === 'flowers');
+      const land = l.tiles.filter((t) => t.kind !== 'water').length;
+      expect(patches.length / land, code).toBeLessThan(0.07);
+    }
+    expect(layouts.some(({ l }) => l.objects.some((o) => o.assetKey === 'flowers'))).toBe(true);
   });
 });

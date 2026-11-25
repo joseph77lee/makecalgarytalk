@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import { create } from 'zustand';
 import type { BuildCtx } from '../assets/models';
 import type { Tile } from '../layout';
+import type { Crowd } from './crowd';
 
 export interface IslandCtx extends BuildCtx {
   /** Tiles reachable on foot that are currently shown (not still rising after growth). */
@@ -12,6 +13,8 @@ export interface IslandCtx extends BuildCtx {
   landStage: number;
   /** Speech bubble text per mini villager index. */
   villagerBubbles: Map<number, string>;
+  /** Tiles claimed by walkers (avatar, villagers, animals), so nobody walks through anybody. */
+  crowd: Crowd;
 }
 
 export const IslandContext = createContext<IslandCtx | null>(null);
@@ -20,6 +23,11 @@ export const IslandContext = createContext<IslandCtx | null>(null);
 export function useIslandWalkable(): Pick<IslandCtx, 'walkable' | 'walkableKeys' | 'landStage'> {
   const { walkable, walkableKeys, landStage } = useIslandCtx();
   return { walkable, walkableKeys, landStage };
+}
+
+/** The island's crowd, for walkers drawn inside <IslandView> by other modules (the avatar). */
+export function useIslandCrowd(): Crowd {
+  return useIslandCtx().crowd;
 }
 
 export function useIslandCtx(): IslandCtx {

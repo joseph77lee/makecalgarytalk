@@ -452,43 +452,77 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
     occupied.add(tileKey(t));
   }
 
-  // Street props (Art Pass, "busier communities"): benches along paths, flower beds near the plaza
-  // and paths, parked cars and mailboxes beside houses. Decoration only: they never block walking.
+  // Street props (Art Pass, "busier communities") and mood decorations. They stand on their
+  // tile, so walkers go around them: a prop is only placed where it cuts nobody off (every tile
+  // that could be reached on foot before stays reachable), never on paths, the plaza or track.
+  const baseWalkable = walkableTiles(plan, landStage, houseTiles, usedLots);
+  const standing = new Set<string>(); // tiles with a prop or decoration on them
+  const cutsOff = (k: string) => {
+    const open = new Set(baseWalkable.map(tileKey));
+    if (!open.has(k)) return false;
+    for (const b of standing) open.delete(b);
+    open.delete(k);
+    return reachableFromPlaza(open) < open.size;
+  };
+  const railKeys = new Set(plan.rail.flatMap((r) => r.tiles).map(tileKey));
+  // building lots stay clear even while empty: a building will stand there one day
+  const buildingLotKeys = new Set(Object.values(plan.lots).flatMap((r) => lotTiles(r)).map(tileKey));
+  const free = (k: string) =>
+    !pathKeys.has(k) && !waterKeys.has(k) && !occupied.has(k) && !houseLotKeys.has(k) && !railKeys.has(k) && !buildingLotKeys.has(k);
   const houseKeys = new Set(houseTiles);
   let props = 0;
   for (const t of land) {
     if (props >= MAX_PROPS) break;
     const k = tileKey(t);
-    if (pathKeys.has(k) || waterKeys.has(k) || occupied.has(k) || houseLotKeys.has(k)) continue;
+    if (!free(k)) continue;
     const near = (keys: Set<string>) => N4.findIndex((d) => keys.has(tileKey({ x: t.x + d.x, z: t.z + d.z })));
     const pathSide = near(pathKeys);
     const houseSide = near(houseKeys);
     const r = hash01(t.x, t.z, 11);
     const plazaNear = Math.hypot(t.x + 0.5, t.z + 0.5) < 5;
-    let kind: PropKind | null = null;
-    if (houseSide >= 0 && r < 0.14) kind = style === 'downtown' || r < 0.08 ? 'car' : 'mailbox';
-    else if (pathSide >= 0 && r < 0.1) kind = 'bench';
-    else if ((pathSide >= 0 && r < 0.17) || (plazaNear && r < 0.35)) kind = 'flowers';
-    if (!kind) continue;
-    const towards = kind === 'bench' ? pathSide : houseSide >= 0 ? houseSide : pathSide;
     // N4 order is +x, −x, +z, −z; facing order is +z, +x, −z, −x
-    const facing = towards < 0 ? 0 : [1, 3, 0, 2][towards];
+    const facingOf = (side: number) => (side < 0 ? 0 : [1, 3, 0, 2][side]);
+    let kind: PropKind | null = null;
+    let facing = 0;
+    if (houseSide >= 0 && pathSide >= 0 && r < 0.14) {
+      // in a driveway between the house and the road: a car nose-in (its front is the model's +x),
+      // or the mailbox by the road
+      kind = style === 'downtown' || r < 0.08 ? 'car' : 'mailbox';
+      facing = kind === 'car' ? (facingOf(houseSide) + 3) % 4 : facingOf(pathSide);
+    } else if (houseSide >= 0 && r < 0.05) {
+      kind = 'mailbox';
+      facing = facingOf(houseSide);
+    } else if (pathSide >= 0 && r < (style === 'downtown' ? 0.09 : 0.04)) {
+      // parked at the roadside, along the road
+      kind = 'car';
+      facing = facingOf(pathSide);
+    } else if (pathSide >= 0 && r < 0.12) {
+      kind = 'bench';
+      facing = facingOf(pathSide);
+    } else if ((pathSide >= 0 && r < 0.18) || (plazaNear && r < 0.35)) {
+      kind = 'flowers';
+      facing = facingOf(houseSide >= 0 ? houseSide : pathSide);
+    }
+    if (!kind || cutsOff(k)) continue;
     objects.push({ assetKey: 'prop', id: `prop:${k}`, x: t.x + 0.5, z: t.z + 0.5, stage: t.stage, kind, facing, seed: hashString(k) });
     occupied.add(k);
+    standing.add(k);
     props++;
   }
 
-  // Mood decorations on free grass (never blocking).
+  // Mood decorations on free grass: a few wild flower patches (lively) or snow piles (sleepy).
   if (mood !== 'normal') {
     for (const t of land) {
       const k = tileKey(t);
-      if (pathKeys.has(k) || waterKeys.has(k) || occupied.has(k) || houseLotKeys.has(k) || hash01(t.x, t.z, 2) >= 0.12) continue;
+      if (!free(k) || hash01(t.x, t.z, 2) >= 0.05 || cutsOff(k)) continue;
       const decor = { id: `decor:${k}`, x: t.x + 0.5, z: t.z + 0.5, stage: t.stage, variant: Math.floor(hash01(t.x, t.z, 4) * 4) };
       objects.push(mood === 'lively' ? { ...decor, assetKey: 'flowers' } : { ...decor, assetKey: 'snow-pile' });
+      occupied.add(k);
+      standing.add(k);
     }
   }
 
-  const walkable = walkableTiles(plan, landStage, houseTiles, usedLots);
+  const walkable = baseWalkable.filter((t) => !standing.has(tileKey(t)));
 
   // Mini villagers start on the paths and plaza.
   const walkKeys = new Set(walkable.map(tileKey));
@@ -511,6 +545,24 @@ export function buildIslandLayout(plan: IslandPlan, state: CommunityViewState, f
     landRadius,
     hiddenHouseCount: offLand + (state.extraResidents ?? 0) + hiddenUnknown,
   };
+}
+
+/** How many of the `open` tiles can be reached on foot from the plaza (4-connected). */
+function reachableFromPlaza(open: Set<string>): number {
+  const seen = new Set<string>();
+  const queue = PLAZA.map(tileKey).filter((k) => open.has(k));
+  queue.forEach((k) => seen.add(k));
+  while (queue.length > 0) {
+    const [x, z] = (queue.pop() as string).split(',').map(Number);
+    for (const d of N4) {
+      const n = `${x + d.x},${z + d.z}`;
+      if (open.has(n) && !seen.has(n)) {
+        seen.add(n);
+        queue.push(n);
+      }
+    }
+  }
+  return seen.size;
 }
 
 /**

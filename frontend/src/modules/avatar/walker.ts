@@ -20,6 +20,9 @@ export interface WalkFrame {
   arrivedSeq: number | null;
 }
 
+/** Seconds the avatar waits behind someone before walking around them. */
+export const DETOUR_AFTER = 1.2;
+
 export class AvatarWalker {
   from: Tile;
   to: Tile;
@@ -31,6 +34,8 @@ export class AvatarWalker {
   private arrivalPending = false;
   private walkable: ReadonlySet<string> = new Set();
   private walkableList: readonly Tile[] = [];
+  /** Seconds spent waiting for someone to clear the next tile. */
+  private waited = 0;
 
   constructor(start: Tile) {
     this.from = start;
@@ -81,6 +86,15 @@ export class AvatarWalker {
     return goal;
   }
 
+  /** A path to the destination around tiles other walkers stand on (kept if there is none). */
+  private detour(isTaken: (key: string) => boolean): void {
+    if (!this.destination) return;
+    const free = new Set([...this.walkable].filter((k) => !isTaken(k)));
+    free.add(key(this.to));
+    const path = findPath(free, this.to, this.destination);
+    if (path !== null && path.length > 0) this.path = path;
+  }
+
   /** Try one keyboard step: the first candidate direction that is allowed. Only when idle. */
   tryStep(candidates: readonly Tile[], seq: number): Tile | null {
     if (this.t < 1 || this.path.length > 0) return null;
@@ -94,8 +108,12 @@ export class AvatarWalker {
     return next;
   }
 
-  /** Advance by dt seconds at `speed` tiles per second. */
-  update(dt: number, speed: number): WalkFrame {
+  /**
+   * Advance by dt seconds at `speed` tiles per second. `isTaken` tells whether another walker
+   * (villager, animal) stands on a tile: the avatar waits for it to clear, and after
+   * DETOUR_AFTER seconds looks for a way around it.
+   */
+  update(dt: number, speed: number, isTaken?: (key: string) => boolean): WalkFrame {
     let arrivedSeq: number | null = null;
     let budget = dt * speed;
     while (budget > 0) {
@@ -108,6 +126,16 @@ export class AvatarWalker {
           if (this.destination) this.planTo(this.destination);
           break;
         }
+        if (isTaken?.(key(next))) {
+          this.path.unshift(next);
+          this.waited += dt;
+          if (this.waited >= DETOUR_AFTER) {
+            this.waited = 0;
+            this.detour(isTaken);
+          }
+          break;
+        }
+        this.waited = 0;
         this.from = this.to;
         this.to = next;
         this.t = 0;

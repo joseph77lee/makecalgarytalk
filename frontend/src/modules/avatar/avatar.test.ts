@@ -6,7 +6,7 @@ import { buildIslandLayout, decodePlan, parseCommunityViewState, tileKey, type C
 import { moveTo, useAvatarStore } from './avatarStore';
 import { stepCandidates, type MoveKey } from './keyboard';
 import { canStep, findPath, nearestWalkable } from './pathfinding';
-import { AvatarWalker } from './walker';
+import { AvatarWalker, DETOUR_AFTER } from './walker';
 
 /** Grid from ASCII: '.' walkable, '#' blocked. Row = z, column = x, origin top-left. */
 function grid(rows: string[]): Set<string> {
@@ -253,5 +253,48 @@ describe('AvatarWalker on real islands', () => {
     w.plan(t(1, 0), 9);
     expect(walk(w).arrived).toBe(9);
     expect(w.update(1, 2.2).arrivedSeq).toBeNull();
+  });
+});
+
+describe('AvatarWalker and other walkers (nobody walks through anybody)', () => {
+  // an open 5×3 field: rows z = 0..2, columns x = 0..4
+  const field: Tile[] = [];
+  for (let x = 0; x < 5; x++) for (let z = 0; z < 3; z++) field.push(t(x, z));
+  const keys = new Set(field.map(tileKey));
+
+  it('waits while someone stands on the next tile, then walks on once it clears', () => {
+    const w = new AvatarWalker(t(0, 1));
+    w.setWalkable(keys, field);
+    w.plan(t(4, 1), 1);
+    let taken = true;
+    const isTaken = (k: string) => taken && k === '1,1';
+    for (let i = 0; i < 5; i++) w.update(0.1, 2, isTaken); // 0.5 s: shorter than DETOUR_AFTER
+    expect(w.tile).toEqual(t(0, 1));
+    taken = false;
+    for (let i = 0; i < 40; i++) w.update(0.1, 2, isTaken);
+    expect(w.tile).toEqual(t(4, 1));
+  });
+
+  it('walks around someone who stays put after waiting DETOUR_AFTER seconds', () => {
+    const w = new AvatarWalker(t(0, 1));
+    w.setWalkable(keys, field);
+    w.plan(t(4, 1), 1);
+    const isTaken = (k: string) => k === '1,1';
+    const visited: string[] = [];
+    for (let i = 0; i < 80; i++) {
+      w.update(0.1, 2, isTaken);
+      visited.push(tileKey(w.tile));
+    }
+    expect(w.tile).toEqual(t(4, 1));
+    expect(visited).not.toContain('1,1');
+    expect(DETOUR_AFTER).toBeGreaterThan(0.5);
+  });
+
+  it('keeps waiting when the destination itself is taken (no way around it)', () => {
+    const w = new AvatarWalker(t(3, 1));
+    w.setWalkable(keys, field);
+    w.plan(t(4, 1), 1);
+    for (let i = 0; i < 40; i++) w.update(0.1, 2, (k) => k === '4,1');
+    expect(w.tile).toEqual(t(3, 1));
   });
 });

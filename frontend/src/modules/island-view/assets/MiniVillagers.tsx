@@ -1,6 +1,6 @@
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Group } from 'three';
 import type { Tile } from '../layout';
 import { ACCENTS } from '../mood';
@@ -13,6 +13,7 @@ import { SpeechBubbleLabel } from '../scene/Labels';
 import { VoxelPerson, type PersonMotion } from './VoxelPerson';
 import { BUBBLE_Z } from '../scene/labelText';
 import { useHtmlPortal } from '../scene/htmlPortal';
+import { claimedTiles, freeSteps } from '../scene/steps';
 
 /** Ambient mini villagers wandering the walkable tiles (requirement.md §7.3). */
 export function MiniVillagers({ items }: ItemsProps<ObjectOf<'mini-villager'>>) {
@@ -37,15 +38,10 @@ function mulberry32(seed: number) {
   };
 }
 
-const STEPS: Tile[] = [
-  { x: 1, z: 0 },
-  { x: -1, z: 0 },
-  { x: 0, z: 1 },
-  { x: 0, z: -1 },
-];
-
 function MiniVillager({ index, startTile, colorIndex }: { index: number; startTile: Tile; colorIndex: number }) {
-  const { palette, mood, walkableKeys, villagerBubbles } = useIslandCtx();
+  const { palette, mood, walkableKeys, villagerBubbles, crowd } = useIslandCtx();
+  const meId = `villager:${index}`;
+  useEffect(() => () => crowd.release(meId), [crowd, meId]);
   const group = useRef<Group>(null);
   const headTilt = useRef(0);
   const motion = useRef<PersonMotion>({ speed: 0 });
@@ -73,16 +69,15 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
       if (s.pause > 0 || cheering) {
         s.pause -= dt;
       } else {
-        const options = STEPS.map((d) => ({ x: s.to.x + d.x, z: s.to.z + d.z })).filter((n) =>
-          walkableKeys.has(`${n.x},${n.z}`),
-        );
+        // never step onto a tile someone else (avatar, villager, animal) stands on or is entering
+        const options = freeSteps(s.to, walkableKeys, crowd, meId);
         const forward = options.filter((n) => n.x !== s.from.x || n.z !== s.from.z);
         const pool = forward.length > 0 ? forward : options;
         if (pool.length > 0) {
           s.from = s.to;
           s.to = pool[Math.floor(s.rng() * pool.length)];
           s.t = 0;
-        }
+        } else s.pause = 0.4; // boxed in for now: wait a moment and look again
         // Villagers stroll and often stop to look around; sleepy ones mostly sit.
         const restChance = (mood === 'sleepy' ? 0.5 : mood === 'normal' ? 0.3 : 0.22) * me.restFactor;
         if (s.rng() < restChance) s.pause = (1.2 + s.rng() * (mood === 'sleepy' ? 5 : 3)) * me.restFactor;
@@ -91,6 +86,7 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
       s.t = Math.min(1, s.t + dt * palette.villagerSpeed * me.speedFactor);
     }
 
+    crowd.claim(meId, claimedTiles(s.from, s.to, s.t < 1));
     const x = s.from.x + (s.to.x - s.from.x) * s.t + 0.5;
     const z = s.from.z + (s.to.z - s.from.z) * s.t + 0.5;
     const moving = s.t < 1;

@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.70 |
+| Plan version | v1.71 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-24 |
 | Based on | `requirement.md` v1.39 |
-| Current module | M20 Weather & Time of Day (next; M19 ✅ Done) |
+| Current module | M19 Art Pass 🔁 Reopened (props and crowds, `fix/m19-props-and-crowds`), then M20 |
 
 ---
 
@@ -54,7 +54,7 @@
 | M12 | Invites | FE + BE | | M6, M7 | ✅ |
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
-| M19 | Art Pass | FE (R3F) | | M14 | ✅ |
+| M19 | Art Pass | FE (R3F) | | M14 | 🔁 |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ⬜ |
 | M16 | Deploy & Playtest | All + operator accounts | | M20 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
@@ -516,7 +516,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Launch steps:** `docs/launch.md` lists every operator step (Supabase project in Canada Central, link + `db push`, auth settings, Cloudflare Pages env vars, Turnstile, Google OAuth, email routing, adding an operator, deletion requests, Pro before public launch).
   - **Legal text** is a template-based first version written from what the game actually stores; professional review once revenue starts (§18). If the Supabase region is not Canada, update the Privacy Policy.
 
-### M19 — Art Pass ✅
+### M19 — Art Pass 🔁
 **Goal:** Every community looks worth playing and feels **busy** before anyone sees it (`requirement.md` v1.39 §19.0, §22.2, §22.6). Built **before M16** (deploy and playtest).
 - **In scope** (planned with the user 2026-11-24: own code-built voxel assets, warm pastel colours matching `docs/references/`)
   - [x] the details decided together: own voxel assets (12 voxels per tile) first, buy or redo only if the user does not like them; downtown = towers, other communities = a mix of house types; warm pastel palette
@@ -527,6 +527,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] people: avatar and mini villagers are one voxel person at the same size; my avatar's name always shows, my house says "My house" (requirement v1.39)
   - [x] busier communities without fake players (§7.3): street props (benches, flower beds, cars, mailboxes) and island life (clouds beside the island, birds, Canada geese, planes — more often in NE — hot-air balloon, visiting deer, jackrabbits, rare cougars)
   - [x] people and animals move like they walk (operator request 2026-11-24): avatar and villagers swing arms and legs (sit, cheer, hammer too); deer walk and sometimes bound, cougars stalk low and sometimes dash, jackrabbits hop, geese waddle; resting deer and geese graze
+  - [x] nobody walks through things (operator request 2026-11-24): props and flower patches block walking; cars park only beside the road (driveway nose-in or along the road; cars do not drive yet — if they ever do, only on paths); the avatar, villagers and animals never walk through each other; wild flowers are a few single-colour patches instead of dots
   - [x] island ground: grass/path colour variation, grass tufts, stepping stones, layered soil edge
   - [x] asset gallery `?gallery` with times of day (dawn, morning, noon, sunset, night)
   - **Priority: looks first** (operator decision 2026-11-24): detail and amounts are chosen for the best look. Performance work is limited to changes that keep the look identical (e.g. merging touching voxels into one box); slow phones are covered by the M14 low-quality mode; one real-phone check before the launch (M16). Rendering cost depends on each player's phone and the island's content, not on the number of players.
@@ -537,7 +538,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] user has looked at it (confirmed 2026-11-24; visual polish and walking animation confirmed 2026-11-24)
 - **Handoff**
   - **Code:** voxel kit in `island-view/assets/voxel/` — `voxel.ts` (`V = 12`, `vb`, `vturn` quarter turns 0=+z 1=+x 2=−z 3=−x, `gableRoof`, `hipRoof`, `windowZ/X`, `shade`), `samples.ts` (`ART` palette and every sample model), `houses.ts` (`houseStyleFor(code)`: downtown set DNC, DNE, DNW, EAU, CHN, BLN; Centre sector from the community CSV → inner; others → suburb; `HOUSE_MIX`), `buildings.ts` (`BUILDING_VOXELS`, `BUILDING_VARIANTS`; authored at the canonical lot, turned lots swap w/d), `features.ts` (features + CTrain parts). `assets/VoxelPerson.tsx` (`PERSON_SCALE = 0.72`) is shared by `avatar/Avatar.tsx` and `MiniVillagers`. `models.ts` maps asset keys to these; `registry.ts` adds `feature`, `rail`, `track`, `station`, `rail-end`, `prop`.
-  - **Layout:** objects now carry `facing` and `variant` (`Look`); design = `hashString(\`${code}:${key}\`)`, colours picked by `variant % n` (hash picks collided). `houseFacing` / `lotFacing` / `platformFacing` exported from `layout.ts`. House objects carry `houseType` and `height`; labels and tap boxes follow the height. Street props: `assetKey 'prop'`, non-blocking, ≤ `MAX_PROPS = 70`.
+  - **Layout:** objects now carry `facing` and `variant` (`Look`); design = `hashString(\`${code}:${key}\`)`, colours picked by `variant % n` (hash picks collided). `houseFacing` / `lotFacing` / `platformFacing` exported from `layout.ts`. House objects carry `houseType` and `height`; labels and tap boxes follow the height. Street props: `assetKey 'prop'`, ≤ `MAX_PROPS = 70`; props and mood decorations (flower patches, snow piles) **block walking** and are placed only where every tile reachable before stays reachable (`reachableFromPlaza`), never on paths, the plaza, track or building lots (even empty ones). Cars need a road beside them: in a driveway (house and road beside) they face the house nose-in, otherwise they park along the road; the car model's front is +x, so its length runs across `facing`. **Crowd:** `scene/crowd.ts` (`Crowd` in the island context, `useIslandCrowd()` for the avatar): every walker claims its tile (and the next one while stepping); villagers and animals pick steps with `freeSteps` (`scene/steps.ts`); the avatar (`walker.update(dt, speed, isTaken)`) waits, then after `DETOUR_AFTER` = 1.2 s walks around, and keeps waiting if the destination itself is taken.
   - **Island life:** `scene/IslandLife.tsx` + `scene/lifePlan.ts` (`lifePlan(code, features, hasWater, rand)`, random per session): plane every 22 s in NE vs 75 s elsewhere; geese only with water; deer with park/hill/creek or water; cougar 8 % with park/hill/creek; balloon 35 %. Clouds are tucked against the real island edges (`landExtent` in `scene/camera.ts`: left, right, under the front cliff), below the ground, never over the land (they hid houses when over it, and pulled the eye away when far off). All movement in `useFrame` with refs.
   - **Ground:** `scene/terrainParts.ts` — kept calm like the reference: faint checker (palette pairs differ < 5 luminance), grass clumps about two voxels wide on ~12 % of grass, stepping stones on ~20 % of path tiles, no specks smaller than a voxel, 4-layer edge soil. Construction sites: low soft fence (≤ 2 voxels), orange only on the gate cones, scaffold shape = `variant % 3`.
   - **Tests:** `voxel.test.ts`, `houses.test.ts`, `lifePlan.test.ts`; `models.test.ts` (every design × facing fits its lot, designs differ, construction fits all lot sizes), `features.test.ts`, `ctrain.test.ts` (every platform faces its track), street-prop case in `layout.test.ts`. 828 frontend tests.
