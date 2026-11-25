@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.80
+**Changed:** M22 Sound → 🟨 Ready for playtest: in-scope items ticked, the first DoD item reworded to what could be checked without hearing (loading, first tap, switches), Handoff note added.
+
+**Why:** M22 work finished on `module/m22-sound`; waiting for the user to listen.
+
+**Previous:**
+- Header: `| Plan version | v1.79 |`, `| Current module | M22 Sound 🟦 (then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟦 |`
+- M22 title `### M22 — Sound 🟦`; all boxes unticked; DoD (verbatim): `  - [ ] every sound heard on desktop and a phone, switches remembered, nothing plays before the first tap`; no Handoff.
+
 ### 2026-11-25 — v1.79
 **Changed:** New module **M22 Sound** 🟦 after M21 and before M16 (sound engine, 🔊 switches, action effects, island ambience by weather and time, World Map sounds, background music, credits). M16 now depends on M22; header, table, graph and the "Before opening" line updated. Based on `requirement.md` v1.43.
 
