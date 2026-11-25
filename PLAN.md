@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.86 |
+| Plan version | v1.88 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
 | Based on | `requirement.md` v1.44 |
-| Current module | M16 Deploy & Playtest (next; M22 ✅ Done) |
+| Current module | M16 Deploy & Playtest (next; M20 fix ✅) |
 
 ---
 
@@ -555,6 +555,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] `weather` module (own schema): pg_cron + pg_net read Environment Canada's Calgary conditions (`api.weather.gc.ca` citypageweather `ab-52`) every 15 minutes into an append-only readings table; `public.weather_current()` returns state, wind, temperature, snow cover and the server instant (clear when no reading in the last 3 hours)
   - [x] weather states: clear, partly cloudy, overcast, rain, snow, rain and snow, fog, thunderstorm (lightning flashes); wind calm / breezy / windy (slanted rain and snow, swaying trees and flags, faster clouds)
   - [x] snow settles on roofs, trees and ground while it snows and stays until about 6 hours above +5 °C or rain (computed on read from the readings); flowers hide under snow
+  - [x] fix (2026-11-25, user confirmed): snow already lying when the island opens vanished after 10 s for 45 s while it kept snowing; only snow that starts while the island is open waits (`scene/snowCover.ts`, tested)
   - [x] weather chip (icon + temperature; tap → "Data source: Environment and Climate Change Canada")
   - [x] time of day: sun direction from the server instant and Calgary's coordinates (moving shadows, drawn height ≥ ~22°), dawn/dusk tints and night sky blended by sun height; street lamps and public windows lit at night, houses only when active today
   - [x] no time-zone math in the client (§7.5): the client only offsets its clock by the server instant
