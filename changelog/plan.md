@@ -12,6 +12,17 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.73
+**Changed:** M20 Weather & Time of Day → 🟨 Ready for playtest: in-scope items and the screen check ticked, the dev-override item reworded (overrides in the game, no weather buttons in the gallery), Handoff note added. Header, module table and the lighting open item updated.
+
+**Why:** M20 work finished on `module/m20-weather-time`; waiting for the user's playtest.
+
+**Previous:**
+- Header: `| Plan version | v1.72 |`, `| Current module | M20 Weather & Time of Day 🟦 (then M21 Living Community) |`
+- Module table: `| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | 🟦 |`
+- M20 title: `### M20 — Weather & Time of Day 🟦`; all in-scope boxes unticked; dev item (verbatim): `  - [ ] dev overrides \`?weather=<state>&time=<phase>\` and weather buttons in the \`?gallery\``; DoD screen check unticked; no Handoff.
+- After launch (verbatim): `- [ ] Pastel palette and lighting values — palette set in M19 (\`ART\` in \`voxel/samples.ts\`); lighting values in M20`
+
 ### 2026-11-24 — v1.72
 **Changed:** M20 Weather & Time of Day 🟦 In progress with its scope planned with the user (mood-free scenery, Environment Canada weather module, states and wind, settling snow, weather chip, real sun, night lights, phone budget, dev overrides). New module **M21 Living Community** after M20 and before M16 (random mini villagers, houses fill the land with every resident keeping "My house", Vitality as development, villagers speaking community posts except Safety). M16 now depends on M21; header, table, graph and the "Before opening" line updated. Based on `requirement.md` v1.40.
 
