@@ -625,8 +625,8 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] houses with variety: many models and variants (Polyfork remix GLBs), mirrored/turned, yard extras, size mix by community type (suburb / inner city / downtown) (2026-11-25: all 22 house/tower picks pooled per house type, roof/wall per house, mirrored, row-unit pairs, yard trees; remix GLB variants not used yet)
   - [x] trees, street props and cars (2026-11-25: trees, parked cars, benches, mailboxes, path lamps with bulbs lit at night and a light pool, a snowman for one snow pile in four; flower beds stay ours)
   - [x] buildings of the tree and features (rink, hall, playground, park, school, …); CTrain and Calgary-specific parts stay ours, repainted to match (2026-11-25: Polyfork arch, fire-pit stones, hut, hall, play equipment, park shelter/trees/benches/fountain, garden shed/bed, school, big-park trees on our box-part ground, flames, flags and flowers; rinks, frozen pond, sledding hill, dog park and CTrain stay ours; ice-rink-tile, rink-board-run and movie-theater picks not used yet)
-  - [ ] people (avatar, villagers) and animals with our own walking from the rigs
-  - [ ] gallery shows every new model with weather and times
+  - [x] people (avatar, villagers) and animals with our own walking from the rigs (2026-11-25: all 7 people for villagers, 3 grown-ups for the avatar with the player's shirt colour; deer, buck (reindeer) and jackrabbit (rabbit/hare) posed by our gaits, the files' clips never played; cougar and goose stay ours; farm dog not used yet)
+  - [x] gallery shows every new model with weather and times (2026-11-25: `?gallery` views Polyfork houses / towers / trees & cars / props / people / lots A–B; `?meter` shows fps, triangles and draw calls on any island)
 - **Definition of Done**
   - [ ] checked on screen (desktop and phone) for a new, a small and a grown community, suburb and downtown, every weather and time
   - [ ] real-phone frame rate checked with the spike meter (or its successor)

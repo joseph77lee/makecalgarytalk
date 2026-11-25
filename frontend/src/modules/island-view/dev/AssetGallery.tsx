@@ -73,6 +73,7 @@ const VIEWS = {
   'Polyfork towers': { target: [40, 3.5], zoom: 46 },
   'Polyfork trees & cars': { target: [40, 8], zoom: 60 },
   'Polyfork props': { target: [40, 10.5], zoom: 150 },
+  'Polyfork people': { target: [36.5, 12.8], zoom: 380 },
   'Polyfork lots A': { target: [76, 5], zoom: 55 },
   'Polyfork lots B': { target: [76, 19], zoom: 55 },
 } as const;

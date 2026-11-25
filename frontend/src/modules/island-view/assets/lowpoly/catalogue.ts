@@ -110,6 +110,12 @@ export const LP_MODELS = {
 
 export type LpName = keyof typeof LP_MODELS;
 
+/**
+ * Whether a model casts a shadow: cars and small props do not (§20.3a modest shadows: they add
+ * many triangles to the shadow pass for shadows too small to see at island zoom).
+ */
+export const castsShadow = (name: LpName): boolean => LP_MODELS[name].cat !== 'car' && LP_MODELS[name].cat !== 'prop';
+
 /** The URL a model is served from (static file, cached by the CDN). */
 export const lpUrl = (name: LpName): string => `/models/pf/${LP_MODELS[name].file}.glb`;
 

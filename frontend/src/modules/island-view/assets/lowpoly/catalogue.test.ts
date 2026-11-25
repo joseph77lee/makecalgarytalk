@@ -6,11 +6,13 @@
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import type { Bone, Object3D, SkinnedMesh } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { describe, expect, it } from 'vitest';
 import { LP_HEIGHTS, LP_MODELS, type LpName } from './catalogue';
 import { sourceMeshes } from './loadModel';
 import { normalise, type LpModel } from './normalise';
+import { RIGGED, type RiggedName } from './rigged';
 
 const PUBLIC = resolve(__dirname, '../../../../../public/models/pf');
 
@@ -63,5 +65,24 @@ describe('Polyfork catalogue', () => {
       if (!NO_GLASS.has(name)) expect(sum(g.getAttribute('aGlass').array), 'windows found (they light at night)').toBeGreaterThan(0);
       if (spec.cat === 'house') expect(door, 'door tells the front').toBe(true);
     }
+  });
+});
+
+describe('Polyfork rigged figures', () => {
+  const PERSON = ['LeftUpLeg', 'RightUpLeg', 'LeftLeg', 'RightLeg', 'LeftArm', 'RightArm', 'Head', 'Spine'];
+  const ANIMAL = ['LeftFrontUpLeg', 'RightFrontUpLeg', 'LeftHindUpLeg', 'RightHindUpLeg', 'Neck', 'Tail'];
+  it.each(Object.keys(RIGGED) as RiggedName[])('%s has the bones our gaits pose and vertex colours', async (name) => {
+    const buf = readFileSync(`${PUBLIC}/${RIGGED[name].file}.glb`);
+    const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    const scene = await new Promise<Object3D>((ok, fail) => new GLTFLoader().parse(ab, '', (g) => ok(g.scene), fail));
+    const bones = new Set<string>();
+    let coloured = true;
+    scene.traverse((o) => {
+      if ((o as Bone).isBone) bones.add(o.name);
+      const m = o as SkinnedMesh;
+      if (m.isSkinnedMesh && !m.geometry.getAttribute('color')) coloured = false;
+    });
+    for (const b of RIGGED[name].kind === 'person' ? PERSON : ANIMAL) expect(bones, b).toContain(b);
+    expect(coloured).toBe(true);
   });
 });

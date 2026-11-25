@@ -10,7 +10,7 @@ import { translate, type BoxPart } from '../boxes';
 import type { ItemsProps } from '../BoxAsset';
 import { withLights, withSnow } from '../environmentParts';
 import type { BuildCtx } from '../models';
-import { LP_MODELS } from './catalogue';
+import { LP_MODELS, castsShadow } from './catalogue';
 import { useLpModels } from './loadModel';
 import { Instanced } from './LowpolyMeshes';
 import { useLpUniforms } from './material';
@@ -50,7 +50,7 @@ export function lowpolyAsset<T extends PlacedObject>(
         {models &&
           [...groups].map(([key, g]) => {
             const model = models.get(g.model);
-            return model ? <Instanced key={key} model={model} placements={g.list} sway={LP_MODELS[g.model].cat === 'tree'} mirror={g.mirror} /> : null;
+            return model ? <Instanced key={key} model={model} placements={g.list} sway={LP_MODELS[g.model].cat === 'tree'} mirror={g.mirror} castShadow={castsShadow(g.model)} /> : null;
           })}
         {parts.length > 0 && <BoxBatch parts={parts} />}
       </>

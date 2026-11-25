@@ -9,7 +9,8 @@ import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Group } from 'three';
 import type { BoxPart } from '../assets/boxes';
-import { VoxelAnimal, type AnimalMotion } from '../assets/VoxelAnimal';
+import type { AnimalMotion } from '../assets/VoxelAnimal';
+import { Animal } from '../assets/lowpoly/RiggedFigures';
 import { ANIMAL_STYLE } from '../assets/voxel/gaits';
 import type { AnimalKind } from '../assets/voxel/rigs';
 import { airplane, birdBody, birdWing, cloud, gooseFlyingBody, gooseWing, hotAirBalloon } from '../assets/voxel/samples';
@@ -87,7 +88,7 @@ function Wanderer({ kind, speed, seed }: { kind: AnimalKind; speed: number; seed
   return (
     <group ref={ref}>
       <group scale={0.85}>
-        <VoxelAnimal kind={kind} motion={motion} seed={seed} />
+        <Animal kind={kind} motion={motion} seed={seed} />
       </group>
     </group>
   );

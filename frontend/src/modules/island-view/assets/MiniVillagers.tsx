@@ -10,7 +10,9 @@ import type { ItemsProps } from './BoxAsset';
 import { villagerPersonality } from './villagerPersonality';
 import { useIslandUi } from '../uiStore';
 import { SpeechBubbleLabel } from '../scene/Labels';
-import { VoxelPerson, type PersonMotion } from './VoxelPerson';
+import type { PersonMotion } from './VoxelPerson';
+import { Person } from './lowpoly/RiggedFigures';
+import { villagerModel } from './lowpoly/rigged';
 import { BUBBLE_Z } from '../scene/labelText';
 import { useHtmlPortal } from '../scene/htmlPortal';
 import { claimedTiles, freeSteps } from '../scene/steps';
@@ -112,7 +114,7 @@ function MiniVillager({ index, startTile, colorIndex }: { index: number; startTi
   return (
     <group ref={group} position={[startTile.x + 0.5, 0, startTile.z + 0.5]}>
       <group ref={body}>
-        <VoxelPerson seed={index * 7 + 3} shirt={ACCENTS[colorIndex % ACCENTS.length]} motion={motion} headTilt={headTilt} />
+        <Person model={villagerModel(index)} seed={index * 7 + 3} shirt={ACCENTS[colorIndex % ACCENTS.length]} motion={motion} headTilt={headTilt} />
       </group>
       {bubble && (
         <Html portal={portal} position={[0, 0.85, 0]} center zIndexRange={BUBBLE_Z} style={{ pointerEvents: onBubbleTap ? 'auto' : 'none' }}>

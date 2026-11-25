@@ -1,7 +1,7 @@
 /** Instanced drawing of low-poly placements (M23): one InstancedMesh per model and mirroring. */
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, InstancedBufferAttribute, type InstancedMesh } from 'three';
-import { LP_MODELS } from './catalogue';
+import { LP_MODELS, castsShadow } from './catalogue';
 import { useLpModels } from './loadModel';
 import { MATERIALS, useLpUniforms } from './material';
 import type { LpModel } from './normalise';
@@ -14,7 +14,7 @@ function writePaint(target: Float32Array, i: number, hex: string | undefined): v
   target.set([colour.r, colour.g, colour.b, 1], i * 4);
 }
 
-export function Instanced({ model, placements, sway, mirror }: { model: LpModel; placements: LpPlacement[]; sway: boolean; mirror: boolean }) {
+export function Instanced({ model, placements, sway, mirror, castShadow = true }: { model: LpModel; placements: LpPlacement[]; sway: boolean; mirror: boolean; castShadow?: boolean }) {
   const ref = useRef<InstancedMesh>(null);
   // one geometry per mesh (per-instance attributes live on it); memoised so the mesh is not rebuilt each render
   const geometry = useMemo(() => model.geometry.clone(), [model]);
@@ -38,7 +38,7 @@ export function Instanced({ model, placements, sway, mirror }: { model: LpModel;
     mesh.count = placements.length;
   }, [placements, geometry]);
   const mat = sway ? (mirror ? MATERIALS.swayMirror : MATERIALS.sway) : mirror ? MATERIALS.solidMirror : MATERIALS.solid;
-  return <instancedMesh key={placements.length} ref={ref} args={[geometry, mat, Math.max(1, placements.length)]} castShadow receiveShadow frustumCulled={false} />;
+  return <instancedMesh key={placements.length} ref={ref} args={[geometry, mat, Math.max(1, placements.length)]} castShadow={castShadow} receiveShadow frustumCulled={false} />;
 }
 
 /** Placements drawn as they are, outside an island (asset gallery). */
@@ -52,7 +52,7 @@ export function LowpolyMeshes({ placements, snow, lightsOn }: { placements: LpPl
     <>
       {[...groups].map(([key, g]) => {
         const model = models.get(g.model);
-        return model ? <Instanced key={key} model={model} placements={g.list} sway={LP_MODELS[g.model].cat === 'tree'} mirror={g.mirror} /> : null;
+        return model ? <Instanced key={key} model={model} placements={g.list} sway={LP_MODELS[g.model].cat === 'tree'} mirror={g.mirror} castShadow={castsShadow(g.model)} /> : null;
       })}
     </>
   );

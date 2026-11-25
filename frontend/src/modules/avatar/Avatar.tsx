@@ -2,7 +2,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import type { Group } from 'three';
-import { VoxelPerson, type PersonMotion, clearCameraFocus, useIslandCrowd, useIslandSnow, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
+import { Person, avatarModel, type PersonMotion, clearCameraFocus, useIslandCrowd, useIslandSnow, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
 import { playSound } from '../sound';
 import { useAvatarStore } from './avatarStore';
 import { stepCandidates } from './keyboard';
@@ -122,7 +122,7 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
     <>
       <group ref={group} position={[SPAWN.x + 0.5, 0, SPAWN.z + 0.5]}>
         <group ref={body}>
-          <VoxelPerson seed={nickSeed} shirt={shirtColor} motion={motion} />
+          <Person model={avatarModel(nickSeed)} seed={nickSeed} shirt={shirtColor} motion={motion} />
         </group>
         {/* My own name always shows (even with labels off), so I can find myself on screen. */}
         <Html portal={portal} position={[0, 1.05, 0]} center zIndexRange={[28, 21]} style={{ pointerEvents: 'none' }}>
