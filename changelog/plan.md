@@ -12,6 +12,17 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.89
+**Changed:** New module **M23 Art Pass 2 (Polyfork low-poly)** 🟦 after M22 and before M16 (foundation, catalogue picks, varied houses, trees/props/cars, buildings and features, people and animals, gallery). M16 now depends on M23; header, table, graph and the "Before opening" line updated. Based on `requirement.md` v1.45.
+
+**Why:** Operator decision after the `spike/polyfork` comparison (2026-11-25): option B, pastel low-poly with variety.
+
+**Previous:**
+- Header: `| Plan version | v1.88 |`, `| Based on | \`requirement.md\` v1.44 |`, `| Current module | M16 Deploy & Playtest (next; M20 fix ✅) |`
+- Module table: `| M16 | Deploy & Playtest | All + operator accounts | | M22 | ⬜ |`
+- Graph: `(all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M16 ── M17 ── M18`
+- After launch: `M22 Sound → M16 Deploy & Playtest`
+
 ### 2026-11-25 — v1.88
 **Changed:** M20 ✅ Done again: the lying-snow fix is confirmed (fix item ticked); header current module back to M16.
 

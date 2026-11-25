@@ -12,6 +12,35 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.45
+**Changed:** 19.1/19.2 art policy: pastel **low-poly** models from Polyfork (repainted in our palette, varied, weather-aware; GLB mesh files only, CC BY credits generated; animation our own; Calgary-specific things made in code or requested) instead of the pastel voxel style; the island ground stays tiles. 10.1 and the 20.1 stack follow. 22.6 gains step 6d Art Pass 2.
+
+**Why:** Operator decision (2026-11-25) after the `spike/polyfork` comparison of a grown community (our voxels, voxelised Polyfork, low-poly Polyfork): low-poly looked cleanest, was lighter than voxelised (≈ 2× vs 5.5× today's triangles), and Polyfork's kits cover people, animals and many buildings. The voxel houses looked patterned; variety becomes a rule.
+
+**Previous:**
+- Header: `| Document version | v1.44 |`
+- 10.1 (verbatim): `- **Pastel colours, flat-shaded voxel/box objects**, soft shadows`
+- 20.1 (verbatim): `| Voxel modelling | MagicaVoxel |`
+- 22.6: no step 6d
+- 19.1–19.2 (verbatim):
+  > ### 19.1 Style guide (target)
+  > - **Pastel voxel style**: everything built from blocks/boxes, flat-shaded, soft shadows
+  > - **Floating square diorama island** with layered dirt underneath, soft pastel sky background
+  > - **Isometric orthographic view**
+  > - **One fixed pastel palette** (to be defined; e.g. soft greens for grass, warm sand paths, coral/lavender/sky-blue roofs)
+  > - Light from the sun's real direction (10.4), gentle ambient light, no harsh contrast
+  > - Small, cute characters with HTML speech bubbles and name labels
+  > - **Launch theme: winter** (snow-covered island, chimney smoke, window lights)
+  > - Reference: `docs/references/` (VibeBase "Voxel Village" screenshots)
+  >
+  > ### 19.2 Production
+  > - No outsourcing; made in-house
+  > - **Simple objects built in code** from boxes (trees, houses, stalls, fences, lamps)
+  > - **Detailed objects** made in **MagicaVoxel** (free) and exported (e.g. `.glb`/`.obj`)
+  > - Free/CC0 voxel or low-poly asset packs may be used — **check licences for commercial use**
+  > - AI is used for concepts/ideas only (AI is weak at clean voxel 3D models)
+  > - Test consistency with a small set first, then scale
+
 ### 2026-11-25 — v1.44
 **Changed:** 10.5: the sound panel has music, ambience and effects each with an on/off switch and a volume slider (was: music and effects switches only); tapping an animal or a mini villager makes it hop and play its sound.
 

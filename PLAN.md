@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.88 |
+| Plan version | v1.89 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
-| Based on | `requirement.md` v1.44 |
-| Current module | M16 Deploy & Playtest (next; M20 fix ✅) |
+| Based on | `requirement.md` v1.45 |
+| Current module | M23 Art Pass 2 🟦 (then M16) |
 
 ---
 
@@ -58,7 +58,8 @@
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
 | M21 | Living Community | FE + BE | | M20 | ✅ |
 | M22 | Sound | FE | | M21 | ✅ |
-| M16 | Deploy & Playtest | All + operator accounts | | M22 | ⬜ |
+| M23 | Art Pass 2 (Polyfork) | FE (R3F) | | M22 | 🟦 |
+| M16 | Deploy & Playtest | All + operator accounts | | M23 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -79,7 +80,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -616,6 +617,21 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Gallery (`?gallery`):** time presets are sun positions lit by `skyLook` (the M19 hand-made looks are gone, so gallery and game match); weather (8), wind (3) and snow-on-ground buttons with rain/snow particles, fog, sway and snowy roofs; `dev/SoundBoard.tsx` plays every effect (lists unknown ones under "Other"), ambience automatic or by hand, music auto/day/night/snow/off, plus the volume panel; animals and people in `GalleryLife` hop and sound when tapped (`Tappable`, same crowd ids as the game). No lightning in the gallery (thunder is on the board).
   - **Tests:** `sound/sound.test.ts` (mix, music, work sound, settings incl. migration, required files exist, optional ones have a fallback), walker taps in `crowd.test.ts`. 934 frontend tests.
 
+### M23 — Art Pass 2 (Polyfork low-poly) 🟦
+**Goal:** Every community looks clean, varied and alive with pastel low-poly models from Polyfork, under the real weather and time (`requirement.md` v1.45 §19.1–19.2). Built after M22, **before M16**. Option B of the `spike/polyfork` comparison (2026-11-25).
+- **In scope** (decided with the user 2026-11-25; picks shown for review)
+  - [ ] foundation: GLB loading per island (only what it needs, cached), one instanced mesh per model, pastel repaint (roof/wall per house, kit colours mapped to our palette), shader weather (snow on upward faces, lit windows, swaying crowns), triangle budget and low-quality fallback, CC BY credits generated from the files
+  - [ ] catalogue picks: a table of Polyfork candidates per asset key (houses by community type, buildings of the tree, features, trees, props, cars, people, animals)
+  - [ ] houses with variety: many models and variants (Polyfork remix GLBs), mirrored/turned, yard extras, size mix by community type (suburb / inner city / downtown)
+  - [ ] trees, street props and cars
+  - [ ] buildings of the tree and features (rink, hall, playground, park, school, …); CTrain and Calgary-specific parts stay ours, repainted to match
+  - [ ] people (avatar, villagers) and animals with our own walking from the rigs
+  - [ ] gallery shows every new model with weather and times
+- **Definition of Done**
+  - [ ] checked on screen (desktop and phone) for a new, a small and a grown community, suburb and downtown, every weather and time
+  - [ ] real-phone frame rate checked with the spike meter (or its successor)
+  - [ ] user has looked at it
+
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
 - **In scope** (`docs/launch.md` has every step; most need the operator's accounts)
@@ -659,7 +675,7 @@ M0 ─┬─ M1 ── M2 ─┐
 ---
 
 ## After launch — checklist for the user to review
-**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M22 Sound → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
+**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M22 Sound → M23 Art Pass 2 → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
 
 **Growth (already modules)**
 - [ ] M17 Return Reminders — email (opted-in players) + web push (`requirement.md` §22.7a.1)
