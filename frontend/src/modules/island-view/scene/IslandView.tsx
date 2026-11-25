@@ -13,6 +13,7 @@ import { Precipitation } from './Precipitation';
 import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, futureLandOpacity, type SkyLook } from './sky';
 import { setWind } from './wind';
 import { PfSwitch, pfAssetFor } from '../spike/PfAssets';
+import { initialSnowMemo, nextSnowMemo, snowVisible } from './snowCover';
 import { ambienceMix, musicFor, playSound, setAmbience, setMusic } from '../../sound';
 import { pickPostBubbles, seededRandom, villagerCount, villagersOutside } from './villagers';
 import { BloomBurst } from './BloomBurst';
@@ -79,18 +80,22 @@ function liveEnvironment(live: LiveWeather): IslandEnvironment {
 function useShownSnow(cover: boolean, snowing: boolean): boolean {
   // the first answer after opening counts as "already there"
   const [justOpened, setJustOpened] = useState(true);
-  const [settled, setSettled] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setJustOpened(false), 10_000);
     return () => clearTimeout(t);
   }, []);
-  const waiting = cover && snowing && !justOpened && !settled;
+  const [memo, setMemo] = useState(() => initialSnowMemo(cover));
+  const next = nextSnowMemo(memo, cover, snowing, justOpened);
+  if (next !== memo) setMemo(next); // remembered from the previous render (React's recommended pattern)
+  const [settledEpisode, setSettledEpisode] = useState(0);
+  const waiting = next.late && settledEpisode !== next.episode;
   useEffect(() => {
     if (!waiting) return;
-    const t = setTimeout(() => setSettled(true), SNOW_SETTLE_MS);
+    const episode = next.episode;
+    const t = setTimeout(() => setSettledEpisode(episode), SNOW_SETTLE_MS);
     return () => clearTimeout(t);
-  }, [waiting]);
-  return cover && !waiting;
+  }, [waiting, next.episode]);
+  return snowVisible(next, settledEpisode);
 }
 
 /** The 3D voxel island for one community, rendered purely from its plan and `state`. */

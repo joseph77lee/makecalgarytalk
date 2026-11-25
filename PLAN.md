@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.86 |
+| Plan version | v1.87 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
 | Based on | `requirement.md` v1.44 |
-| Current module | M16 Deploy & Playtest (next; M22 ✅ Done) |
+| Current module | M20 🔁 fix (`fix/m20-snow-settle`), then M16 Deploy & Playtest |
 
 ---
 
@@ -55,7 +55,7 @@
 | M13 | Feature Library | FE + data | | M1 | ✅ |
 | M14 | Launch Prep | All | | All above | ✅ |
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
-| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
+| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | 🔁 |
 | M21 | Living Community | FE + BE | | M20 | ✅ |
 | M22 | Sound | FE | | M21 | ✅ |
 | M16 | Deploy & Playtest | All + operator accounts | | M22 | ⬜ |
@@ -548,13 +548,14 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Walking animation:** `assets/voxel/rigs.ts` splits a model into a body and parts turning at their joints (`personRig`: head, armL/R, legL/R; `animalRig`: legs `fl fr bl br` or `hind front` / `legL legR`, head, tail; left = −z, animals face +x). `assets/voxel/gaits.ts` holds pure, tested pose functions (`personPose`, `animalPose`, `ANIMAL_STYLE` with walk/run/stalk/hop/waddle and strides, `advancePhase` by distance so feet do not slide). `assets/RigView.tsx` draws a rig and calls a pose callback each frame; `VoxelPerson` (props `motion`, `headTilt`) and `VoxelAnimal` (`motion` = speed + running) read a motion ref the caller writes in its own `useFrame`. Cost: a person is 6 instanced meshes instead of 2 (≤ 21 people ≈ 126 small meshes), an animal 5–7.
   - **Gotchas:** the gallery camera always zooms to the centre, so it has view preset buttons; never give files in one folder names that differ only in case.
 
-### M20 — Weather & Time of Day ✅
+### M20 — Weather & Time of Day 🔁
 **Goal:** Each community shows the real Calgary weather and the time of day (`requirement.md` v1.40 §10.4), and every island has the same full look instead of mood scenery (§7.4). Built after M19, **before M21 and M16**.
 - **In scope** (planned with the user 2026-11-24)
   - [x] island scenery no longer follows the Vitality mood: one full look (deep green, flowers, lamps) for every community; mini villagers still follow the mood until M21
   - [x] `weather` module (own schema): pg_cron + pg_net read Environment Canada's Calgary conditions (`api.weather.gc.ca` citypageweather `ab-52`) every 15 minutes into an append-only readings table; `public.weather_current()` returns state, wind, temperature, snow cover and the server instant (clear when no reading in the last 3 hours)
   - [x] weather states: clear, partly cloudy, overcast, rain, snow, rain and snow, fog, thunderstorm (lightning flashes); wind calm / breezy / windy (slanted rain and snow, swaying trees and flags, faster clouds)
   - [x] snow settles on roofs, trees and ground while it snows and stays until about 6 hours above +5 °C or rain (computed on read from the readings); flowers hide under snow
+  - [ ] fix (2026-11-25): snow already lying when the island opens vanished after 10 s for 45 s while it kept snowing; only snow that starts while the island is open waits (`scene/snowCover.ts`, tested)
   - [x] weather chip (icon + temperature; tap → "Data source: Environment and Climate Change Canada")
   - [x] time of day: sun direction from the server instant and Calgary's coordinates (moving shadows, drawn height ≥ ~22°), dawn/dusk tints and night sky blended by sun height; street lamps and public windows lit at night, houses only when active today
   - [x] no time-zone math in the client (§7.5): the client only offsets its clock by the server instant
