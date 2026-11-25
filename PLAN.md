@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.89 |
+| Plan version | v1.90 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
 | Based on | `requirement.md` v1.45 |
@@ -621,7 +621,7 @@ M0 ─┬─ M1 ── M2 ─┐
 **Goal:** Every community looks clean, varied and alive with pastel low-poly models from Polyfork, under the real weather and time (`requirement.md` v1.45 §19.1–19.2). Built after M22, **before M16**. Option B of the `spike/polyfork` comparison (2026-11-25).
 - **In scope** (decided with the user 2026-11-25; picks shown for review)
   - [ ] foundation: GLB loading per island (only what it needs, cached), one instanced mesh per model, pastel repaint (roof/wall per house, kit colours mapped to our palette), shader weather (snow on upward faces, lit windows, swaying crowns), triangle budget and low-quality fallback, CC BY credits generated from the files
-  - [ ] catalogue picks: a table of Polyfork candidates per asset key (houses by community type, buildings of the tree, features, trees, props, cars, people, animals)
+  - [x] catalogue picks: 82 Polyfork candidates in 12 groups (`docs/polyfork-picks.json`, review page https://claude.ai/artifact/HB5iNMcE1ASturtPeTeza4); the user chose to use **all of them, mixed sensibly per group** (2026-11-25). No goose, cougar or moose in the catalogue: keep ours or request them
   - [ ] houses with variety: many models and variants (Polyfork remix GLBs), mirrored/turned, yard extras, size mix by community type (suburb / inner city / downtown)
   - [ ] trees, street props and cars
   - [ ] buildings of the tree and features (rink, hall, playground, park, school, …); CTrain and Calgary-specific parts stay ours, repainted to match

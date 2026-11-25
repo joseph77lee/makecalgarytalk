@@ -12,6 +12,15 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.90
+**Changed:** M23 catalogue-picks item ticked: 82 candidates in 12 groups saved as `docs/polyfork-picks.json`; the user chose to use all of them, mixed sensibly per group.
+
+**Why:** User decision (2026-11-25): "just pick all and mix them well".
+
+**Previous:**
+- Header: `| Plan version | v1.89 |`
+- M23 (verbatim): `- [ ] catalogue picks: a table of Polyfork candidates per asset key (houses by community type, buildings of the tree, features, trees, props, cars, people, animals)`
+
 ### 2026-11-25 — v1.89
 **Changed:** New module **M23 Art Pass 2 (Polyfork low-poly)** 🟦 after M22 and before M16 (foundation, catalogue picks, varied houses, trees/props/cars, buildings and features, people and animals, gallery). M16 now depends on M23; header, table, graph and the "Before opening" line updated. Based on `requirement.md` v1.45.
 
