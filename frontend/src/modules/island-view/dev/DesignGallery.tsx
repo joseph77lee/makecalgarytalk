@@ -1,13 +1,13 @@
 /**
  * Asset gallery: the new voxel designs (M23 rework, operator decision 2026-11-25: stay voxel and
- * take shapes from Polyfork as reference). Layout in `designLayout.ts`; this draws it under the
+ * take shapes from Polyfork as reference), each beside the model the game draws now. Layout in
+ * `designLayout.ts`; this draws it under the
  * gallery's sun, shadows and weather, plus the varied voxel people. Labels show only for the
  * section being viewed.
  */
 import { Html } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
 import { withLights, withSnow } from '../assets/environmentParts';
-import { LowpolyMeshes } from '../assets/lowpoly/LowpolyMeshes';
 import { VoxelPerson, type PersonMotion } from '../assets/VoxelPerson';
 import { ART } from '../assets/voxel/samples';
 import { BoxBatch } from '../scene/BoxBatch';
@@ -46,13 +46,12 @@ export function DesignGallery({ snow, lightsOn, section }: { snow: boolean; ligh
   return (
     <>
       <BoxBatch parts={parts} />
-      <LowpolyMeshes placements={scene.placements} snow={snow} lightsOn={lightsOn} />
       <People showLabels={section === 'New people'} />
       {scene.labels
         .filter((l) => l.section === section)
         .map((l) => (
           <Html key={`${l.text}@${l.at.join(',')}`} portal={portal} position={l.at} center style={{ pointerEvents: 'none' }}>
-            <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm ${l.ref ? 'bg-slate-600/70 text-white' : 'bg-indigo-500 text-white'}`}>{l.text}</span>
+            <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm ${l.now ? 'bg-slate-600/70 text-white' : 'bg-indigo-500 text-white'}`}>{l.text}</span>
           </Html>
         ))}
     </>

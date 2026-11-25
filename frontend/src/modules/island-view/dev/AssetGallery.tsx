@@ -170,6 +170,23 @@ export function AssetGallery() {
   const [weather, setWeather] = useState<IslandEnvironment['weather']>('clear');
   const [windLevel, setWindLevel] = useState<IslandEnvironment['wind']>('calm');
   const [snow, setSnow] = useState(false);
+  // labels (name bubbles) on or off, remembered in this browser
+  const [labels, setLabels] = useState(() => {
+    try {
+      return localStorage.getItem('mct.gallery.labels') !== 'off';
+    } catch {
+      return true;
+    }
+  });
+  const toggleLabels = () => {
+    const next = !labels;
+    setLabels(next);
+    try {
+      localStorage.setItem('mct.gallery.labels', next ? 'on' : 'off');
+    } catch {
+      // private mode: the switch still works for this visit
+    }
+  };
   const env: IslandEnvironment = { sun: TIMES[time], weather, wind: windLevel, windFromDeg: 270, snowCover: snow };
   const look = skyLook(env);
   const wind = windVector(env);
@@ -270,6 +287,9 @@ export function AssetGallery() {
         <button type="button" onClick={() => setSnow(!snow)} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${snow ? 'bg-slate-600 text-white' : 'text-slate-700'}`}>
           ⛄ snow on ground
         </button>
+        <button type="button" onClick={toggleLabels} aria-pressed={labels} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${labels ? 'bg-indigo-500 text-white' : 'text-slate-700'}`}>
+          💬 labels {labels ? 'on' : 'off'}
+        </button>
       </div>
       <CameraPad />
       <SoundBoard scene={{ weather, wind: windLevel, nightness: look.nightness > 0.5 ? 1 : 0, hasWater: true, campfire: true, construction: true }} />
@@ -301,9 +321,10 @@ export function AssetGallery() {
         <ViewRig view={view} />
         <GalleryLife />
         <BoxBatch parts={parts} />
-        <DesignGallery snow={snow} lightsOn={look.lightsOn} section={isDesign(view) ? view : null} />
+        <DesignGallery snow={snow} lightsOn={look.lightsOn} section={labels && isDesign(view) ? view : null} />
         <CameraPadBridge />
-        {items
+        {labels &&
+          items
           .filter((i) => i.label)
           .map((i) => (
             <GalleryLabel key={`${i.label}@${i.at.join(',')}`} text={i.label} position={[i.at[0], topOf(i.parts) + 0.35, i.at[1]]} />

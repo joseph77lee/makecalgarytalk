@@ -1,117 +1,122 @@
 /**
  * Layout of the gallery's "New voxel designs" (M23 rework): every new voxel design next to the
- * Polyfork model it was drawn from (left: reference, right: ours), row by row on grass plates
- * sized to what stands on them. Pure (no React), so the camera presets can use the plate sizes.
+ * closest model the game draws now (left: now, right: new), so size and volume can be compared,
+ * row by row on grass plates sized to what stands on them. Pure (no React), so the camera presets
+ * can use the plate sizes.
  */
 import { translate, type BoxPart } from '../assets/boxes';
-import type { LpName } from '../assets/lowpoly/catalogue';
-import type { LpPlacement } from '../assets/lowpoly/placement';
+import { BUILDING_VOXELS } from '../assets/voxel/buildings';
+import { FEATURE_VOXELS } from '../assets/voxel/features';
+import { MOOD_PALETTES } from '../mood';
 import * as D from '../assets/voxel/designs';
 import * as C from '../assets/voxel/designsCivic';
 import * as S from '../assets/voxel/designsStreet';
-import { ART } from '../assets/voxel/samples';
+import { ART, apartment, artDecoTower, bench, brickMidrise, bungalow, car, communityHall, condoTower, flowerBed, infill, lampPost, leafyTree, loft, mailbox, officeTower, semiDetached, spruce, townhouses, twoStoreyGarage } from '../assets/voxel/samples';
 import { rnd, shade } from '../assets/voxel/voxel';
 
 interface Pair {
-  /** The Polyfork model the design was drawn from (null when it is not in our catalogue). */
-  ref: LpName | null;
+  /** The closest model the game draws now (null when there is none to compare with). */
+  now: BoxPart[] | null;
   label: string;
   voxel: BoxPart[];
-  /** Footprint in tiles (cell size). */
+  /** Cell size in tiles (the larger of the two models). */
   size: number;
   /** Label height in tiles. */
   h: number;
 }
 
-const p = (ref: LpName | null, label: string, voxel: BoxPart[], size = 1, h = 1.3): Pair => ({ ref, label, voxel, size, h });
+const CTX = { palette: MOOD_PALETTES.lively, snow: false };
+/** A building of the tree as drawn now, on its lot (w × d tiles). */
+const lot = (key: string, variant: number, w: number, d: number): BoxPart[] => BUILDING_VOXELS[key]({ w, d, level: 1, variant }, CTX);
+const p = (now: BoxPart[] | null, label: string, voxel: BoxPart[], size = 1, h = 1.3): Pair => ({ now, label, voxel, size, h });
 
 const PAIRS: Record<Exclude<DesignSection, 'New people'>, { perRow: number; pairs: Pair[] }> = {
   'New houses': {
     perRow: 5,
     pairs: [
-      p('porchCottage', 'porch cottage', D.porchCottage(3)),
-      p('ranch', 'ranch house', D.ranchHouse(5)),
-      p('splitLevel', 'split level', D.splitLevel(7)),
-      p('twoStorey', 'family house', D.familyHouse(9)),
-      p('townhouse', 'row units', D.rowUnits(11)),
-      p('cubeHouse', 'modern cube', D.modernCube(13)),
-      p('gableHouse', 'modern gable', D.modernGable(15)),
-      p('lighthouseCottage', 'lighthouse cottage', D.lighthouseCottage(17), 1, 1.6),
-      p('crossingCottage', 'keeper cottage', D.keeperCottage(19)),
-      p('thatchedCottage', 'thatched cottage', D.thatchedCottage(21)),
-      p('porchLogCabin', 'porch log cabin', D.porchLogCabin(23)),
-      p('aFrame', 'A-frame cabin', D.aFrameCabin(25)),
-      p('logCabin', 'log cabin', D.logCabin(27)),
+      p(bungalow(3), 'porch cottage', D.porchCottage(3)),
+      p(bungalow(5), 'ranch house', D.ranchHouse(5)),
+      p(semiDetached(7), 'split level', D.splitLevel(7)),
+      p(twoStoreyGarage(9), 'family house', D.familyHouse(9)),
+      p(townhouses(11), 'row units', D.rowUnits(11)),
+      p(infill(13), 'modern cube', D.modernCube(13)),
+      p(infill(15), 'modern gable', D.modernGable(15)),
+      p(bungalow(17), 'lighthouse cottage', D.lighthouseCottage(17), 1, 1.6),
+      p(bungalow(19), 'keeper cottage', D.keeperCottage(19)),
+      p(bungalow(21), 'thatched cottage', D.thatchedCottage(21)),
+      p(bungalow(23), 'porch log cabin', D.porchLogCabin(23)),
+      p(bungalow(25), 'A-frame cabin', D.aFrameCabin(25)),
+      p(bungalow(27), 'log cabin', D.logCabin(27)),
     ],
   },
   'New downtown': {
     perRow: 5,
     pairs: [
-      p('brownstone', 'brownstone', D.brownstone(3), 1, 2),
-      p('prewarApartment', 'prewar apartment', D.prewarApartment(5), 1, 2.8),
-      p('postwarSlab', 'postwar slab', D.postwarSlab(7), 1, 3.2),
-      p('apartmentBlock', 'apartment block', D.apartmentBlock(9), 1, 1.5),
-      p('tenement', 'tenement', D.tenement(11), 1, 2.5),
-      p('slabBlock', 'slab tower', D.slabTower(13), 1, 2.8),
-      p('officeTower', 'glass office', D.glassOffice(15), 1, 3.6),
-      p('artDecoTower', 'deco setback', D.decoSetback(17), 1, 3.8),
-      p('monolithTower', 'monolith', D.monolithTower(19), 1, 2.8),
+      p(brickMidrise(1), 'brownstone', D.brownstone(3), 1, 2),
+      p(apartment(3), 'prewar apartment', D.prewarApartment(5), 1, 2.8),
+      p(condoTower(1), 'postwar slab', D.postwarSlab(7), 1, 3.2),
+      p(apartment(5), 'apartment block', D.apartmentBlock(9), 1, 1.5),
+      p(brickMidrise(2), 'tenement', D.tenement(11), 1, 2.5),
+      p(loft(2), 'slab tower', D.slabTower(13), 1, 2.8),
+      p(officeTower(1), 'glass office', D.glassOffice(15), 1, 3.6),
+      p(artDecoTower(), 'deco setback', D.decoSetback(17), 1, 3.8),
+      p(officeTower(2), 'monolith', D.monolithTower(19), 1, 2.8),
     ],
   },
   'New buildings': {
     perRow: 4,
     pairs: [
-      p('townArch', 'welcome arch', C.welcomeArch(1)),
-      p('gateArch', 'lodge gate', C.lodgeGate(2)),
-      p('parkArch', 'fun arch', C.funArch(3), 1, 1.6),
-      p('picnicShelter', 'picnic shelter', C.picnicShelter(4)),
-      p('pisteHut', 'patrol hut', C.patrolHut(), 2, 2.2),
-      p('refugeHut', 'refuge hut', C.refugeHut(5), 2, 1.6),
-      p('countryStation', 'station hall', C.stationHall(6), 2.5, 1.8),
-      p('audienceHall', 'grand hall', C.grandHall(7), 2.5, 1.8),
-      p('toyTownSchool', 'toy-block hall', C.toyBlockHall(8), 2.5, 1.9),
-      p('santasWorkshop', 'workshop hall', C.workshopHall(), 2.5, 2.2),
-      p('publicSchool', 'brick school', C.brickSchool(9), 2, 1.3),
-      p('oneRoomSchool', 'schoolhouse', C.schoolhouse(), 2, 1.6),
-      p(null, 'movie theatre (no reference loaded)', C.movieTheatre(10), 2, 1.6),
-      p('stoneFirePit', 'fire pit 1', S.firePitRing(0)),
-      p('ringCampfire', 'fire pit 2', S.firePitRing(1)),
-      p('clearedFirePit', 'fire pit 3', S.firePitRing(2)),
-      p('gardenShed', 'garden shed', C.gardenShed(11)),
-      p('gardenBed', 'garden bed', S.gardenBed(12), 1, 0.6),
+      p(lot('welcome-sign', 0, 1, 1), 'welcome arch', C.welcomeArch(1)),
+      p(lot('gateway-arch', 0, 1, 1), 'lodge gate', C.lodgeGate(2)),
+      p(lot('gateway-arch', 1, 1, 1), 'fun arch', C.funArch(3), 1, 1.6),
+      p(null, 'picnic shelter', C.picnicShelter(4)),
+      p(lot('warming-hut', 0, 3, 3), 'patrol hut', C.patrolHut(), 3, 2.2),
+      p(lot('warming-hut', 1, 3, 3), 'refuge hut', C.refugeHut(5), 3, 1.6),
+      p(lot('community-hall', 0, 3, 3), 'station hall', C.stationHall(6), 3, 1.8),
+      p(lot('community-hall', 2, 3, 3), 'grand hall', C.grandHall(7), 3, 1.8),
+      p(lot('community-hall', 1, 3, 3), 'toy-block hall', C.toyBlockHall(8), 3, 1.9),
+      p(communityHall(1), 'workshop hall', C.workshopHall(), 3, 2.2),
+      p(FEATURE_VOXELS.school(0, CTX), 'brick school', C.brickSchool(9), 2, 1.3),
+      p(FEATURE_VOXELS.school(1, CTX), 'schoolhouse', C.schoolhouse(), 2, 1.6),
+      p(null, 'movie theatre', C.movieTheatre(10), 2, 1.6),
+      p(lot('fire-pit', 0, 3, 3), 'fire pit 1', S.firePitRing(0), 3),
+      p(null, 'fire pit 2', S.firePitRing(1)),
+      p(null, 'fire pit 3', S.firePitRing(2)),
+      p(null, 'garden shed', C.gardenShed(11)),
+      p(flowerBed(12), 'garden bed', S.gardenBed(12), 1, 0.6),
     ],
   },
   'New street & trees': {
     perRow: 6,
     pairs: [
-      p('tallPine', 'tall pine', S.tallPine(1), 1, 1.6),
-      p('youngPine', 'young pine', S.youngPine(2)),
-      p('fir', 'fir', S.firTree(3), 1, 1.3),
-      p('shadeTree', 'shade tree', S.shadeTree(4)),
-      p('ornamentalTree', 'ornamental tree', S.ornamentalTree(5)),
-      p('evergreenShrub', 'column shrub', S.columnShrub(6)),
-      p('oliveTree', 'olive tree', S.oliveTree(7)),
-      p('lollipopTree', 'lollipop tree', S.lollipopTree(8)),
-      p('coneTree', 'cone tree', S.coneTree(9)),
-      p('suv', 'SUV', S.suv(1), 1, 0.7),
-      p('minivan', 'minivan', S.minivan(2), 1, 0.7),
-      p('pickup', 'pickup', S.pickupTruck(3), 1, 0.7),
-      p('hatchback', 'hatchback', S.hatchback(4), 1, 0.7),
-      p('townCar', 'town car', S.townCar(5), 1, 0.7),
+      p(spruce(1), 'tall pine', S.tallPine(1), 1, 1.6),
+      p(spruce(2), 'young pine', S.youngPine(2)),
+      p(spruce(3), 'fir', S.firTree(3), 1, 1.3),
+      p(leafyTree(4), 'shade tree', S.shadeTree(4)),
+      p(leafyTree(5), 'ornamental tree', S.ornamentalTree(5)),
+      p(spruce(6), 'column shrub', S.columnShrub(6)),
+      p(leafyTree(7), 'olive tree', S.oliveTree(7)),
+      p(leafyTree(8), 'lollipop tree', S.lollipopTree(8)),
+      p(spruce(9), 'cone tree', S.coneTree(9)),
+      p(car(1), 'SUV', S.suv(1), 1, 0.7),
+      p(car(2), 'minivan', S.minivan(2), 1, 0.7),
+      p(car(3, true), 'pickup', S.pickupTruck(3), 1, 0.7),
+      p(car(4), 'hatchback', S.hatchback(4), 1, 0.7),
+      p(car(5), 'town car', S.townCar(5), 1, 0.7),
       p(null, 'school bus', S.schoolBus(), 1.5, 0.8),
       p(null, 'city tram', S.cityTram(), 2, 1),
-      p('parkBench', 'park bench', S.parkBench(), 1, 0.6),
-      p('alpineBench', 'log bench', S.logBench(), 1, 0.6),
-      p('streetLamp', 'arm lamp', S.armLamp()),
-      p('garlandLamp', 'garland lamp', S.garlandLamp()),
-      p('cobraLight', 'cobra light', S.cobraLight(), 1, 1.2),
-      p('mailbox', 'mailbox', S.curbMailbox(1), 1, 0.7),
-      p('snowman', 'snowman', S.snowman(2), 1, 0.9),
-      p('drinkingFountain', 'drinking fountain', S.drinkingFountain(), 1, 0.6),
-      p('playgroundSlide', 'slide', S.slide('#ef9b7f', '#e9c46a'), 1, 0.7),
-      p('roundabout', 'roundabout', S.roundabout('#9fd0bd', '#b9a6e2'), 1, 0.5),
-      p('springRider', 'spring rider', S.springRider('#e9c46a'), 1, 0.6),
-      p('teeterTotter', 'seesaw', S.teeterTotter('#ef9b7f', '#5b8fd6'), 1, 0.5),
+      p(bench(), 'park bench', S.parkBench(), 1, 0.6),
+      p(bench(), 'log bench', S.logBench(), 1, 0.6),
+      p(lampPost(), 'arm lamp', S.armLamp()),
+      p(lampPost(), 'garland lamp', S.garlandLamp()),
+      p(lampPost(), 'cobra light', S.cobraLight(), 1, 1.2),
+      p(mailbox(), 'mailbox', S.curbMailbox(1), 1, 0.7),
+      p(null, 'snowman', S.snowman(2), 1, 0.9),
+      p(null, 'drinking fountain', S.drinkingFountain(), 1, 0.6),
+      p(null, 'slide', S.slide('#ef9b7f', '#e9c46a'), 1, 0.7),
+      p(null, 'roundabout', S.roundabout('#9fd0bd', '#b9a6e2'), 1, 0.5),
+      p(null, 'spring rider', S.springRider('#e9c46a'), 1, 0.6),
+      p(null, 'seesaw', S.teeterTotter('#ef9b7f', '#5b8fd6'), 1, 0.5),
     ],
   },
 };
@@ -130,7 +135,8 @@ export interface Label {
   section: DesignSection;
   text: string;
   at: [number, number, number];
-  ref?: boolean;
+  /** The label under the model drawn now (grey). */
+  now?: boolean;
 }
 
 function plate(x0: number, z0: number, w: number, d: number): BoxPart[] {
@@ -143,7 +149,6 @@ function plate(x0: number, z0: number, w: number, d: number): BoxPart[] {
 }
 
 export interface DesignScene {
-  placements: LpPlacement[];
   parts: BoxPart[];
   labels: Label[];
   /** Plate of each section (x0, z0, w, d in tiles), sized to what stands on it. */
@@ -152,7 +157,6 @@ export interface DesignScene {
 
 /** Lays out every pair (Polyfork reference, then our design) row by row inside its section. */
 export function buildDesignScene(): DesignScene {
-  const placements: LpPlacement[] = [];
   const parts: BoxPart[] = [];
   const labels: Label[] = [];
   const plates = {} as DesignScene['plates'];
@@ -172,9 +176,9 @@ export function buildDesignScene(): DesignScene {
       const refX = x + cell / 2;
       const voxX = refX + cell + 0.3;
       const cz = z + cell / 2;
-      if (pair.ref) {
-        placements.push({ model: pair.ref, x: refX, z: cz, turn: 0, lit: 1, roof: ART.roofs[(i * 3) % ART.roofs.length], wall: ART.walls[(i * 5) % ART.walls.length] });
-        labels.push({ section, text: 'ref', at: [refX, 0.05, cz + cell / 2 + 0.25], ref: true });
+      if (pair.now) {
+        parts.push(...translate(pair.now, refX, cz));
+        labels.push({ section, text: 'now', at: [refX, 0.05, cz + cell / 2 + 0.25], now: true });
       }
       parts.push(...translate(pair.voxel, voxX, cz));
       labels.push({ section, text: pair.label, at: [voxX, pair.h + 0.25, cz] });
@@ -187,7 +191,7 @@ export function buildDesignScene(): DesignScene {
   const people = DESIGN_SECTIONS['New people'];
   plates['New people'] = { x0: people.x0, z0: people.z0, w: PEOPLE_COLS + 2, d: Math.ceil(PEOPLE_ROWS * 2.2 + 1) };
   for (const pl of Object.values(plates)) parts.push(...plate(pl.x0, pl.z0, pl.w, pl.d));
-  return { placements, parts, labels, plates };
+  return { parts, labels, plates };
 }
 
 /** Varied people shown: columns × rows (one tile apart, rows 2.2 tiles apart). */
