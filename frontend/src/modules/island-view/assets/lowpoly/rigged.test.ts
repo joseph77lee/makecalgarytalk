@@ -48,8 +48,9 @@ describe('posing rigs in the figure frame', () => {
 });
 
 describe('figure choices', () => {
-  it('spreads villagers over all seven people and keeps avatars grown-up', () => {
-    expect(new Set(Array.from({ length: 7 }, (_, i) => villagerModel(i)))).toEqual(new Set(VILLAGER_MODELS));
+  it('spreads villagers over every villager model and keeps avatars grown-up', () => {
+    expect(new Set(Array.from({ length: VILLAGER_MODELS.length }, (_, i) => villagerModel(i)))).toEqual(new Set(VILLAGER_MODELS));
+    expect(VILLAGER_MODELS).not.toContain('commuter');
     for (let s = -5; s < 50; s++) expect(AVATAR_MODELS).toContain(avatarModel(s));
     for (const m of [...VILLAGER_MODELS, ...AVATAR_MODELS]) expect(RIGGED[m].kind).toBe('person');
   });

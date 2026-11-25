@@ -61,12 +61,13 @@ export function animalModel(kind: AnimalKind, seed: number): RiggedName | null {
   return null;
 }
 
-/** People the villagers are drawn with, spread by villager index (all seven picks). */
-export const VILLAGER_MODELS: RiggedName[] = ['resident', 'child', 'commuter', 'student', 'ranger', 'wavingChild', 'scooterKid'];
+/** People the villagers are drawn with, spread by villager index. */
+/** `commuter` (Polyfork city-commuter) is left out: its mushroom-shaped head does not read as a person (operator, 2026-11-25). */
+export const VILLAGER_MODELS: RiggedName[] = ['resident', 'child', 'student', 'ranger', 'wavingChild', 'scooterKid'];
 /** Grown-up figures for the avatar (its shirt is the player's colour). */
 export const AVATAR_MODELS: RiggedName[] = ['resident', 'ranger', 'student'];
 
-export const villagerModel = (index: number): RiggedName => VILLAGER_MODELS[(index * 3) % VILLAGER_MODELS.length];
+export const villagerModel = (index: number): RiggedName => VILLAGER_MODELS[(index * 5) % VILLAGER_MODELS.length];
 export const avatarModel = (seed: number): RiggedName => AVATAR_MODELS[Math.abs(seed) % AVATAR_MODELS.length];
 
 export const riggedUrl = (name: RiggedName): string => `/models/pf/${RIGGED[name].file}.glb`;
