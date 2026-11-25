@@ -12,6 +12,15 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.43
+**Changed:** New 10.5 Sound (effects for player actions, island ambience following weather and time, World Map sounds, quiet background music by time and weather, separate music/effects switches, on by default, loaded only when needed, credits for CC BY files). 22.6 gains step 6c Sound before the deploy.
+
+**Why:** Operator request (2026-11-25): a full sound design before the playtest; the operator collected the sound and music files (`frontend/public/sfx/`).
+
+**Previous:**
+- Header: `| Document version | v1.42 |`
+- No 10.5 section; 22.6 had no step 6c (sound was only "short sound effect" in 8).
+
 ### 2026-11-24 — v1.42
 **Changed:** 7.3: always one mini villager per real story (today's action replay, today's posts), even on the smallest islands.
 

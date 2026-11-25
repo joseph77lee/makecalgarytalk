@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.78 |
+| Plan version | v1.79 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
-| Based on | `requirement.md` v1.42 |
-| Current module | M16 Deploy & Playtest (next; M21 ✅ Done) |
+| Based on | `requirement.md` v1.43 |
+| Current module | M22 Sound 🟦 (then M16) |
 
 ---
 
@@ -57,7 +57,8 @@
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
 | M21 | Living Community | FE + BE | | M20 | ✅ |
-| M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |
+| M22 | Sound | FE | | M21 | 🟦 |
+| M16 | Deploy & Playtest | All + operator accounts | | M22 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -78,7 +79,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M21 ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -591,6 +592,19 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** real phone; post bubbles refresh only when the island is reopened (a post written meanwhile shows on the next visit); bubbles can overlap other labels on small phones; analytics still accepts the old `revival` share detail (no new events); requirement §5.1 onboarding text not reviewed for "mood".
   - **Tests:** `villagers.test.ts`, `lifePlan.test.ts` (downtown vs edge, small vs big), `development.test.ts`, `posts/bubbles.test.ts`, layout village-house cases, village night lights in `environmentParts.test.ts`; community-state and share-card tests updated. 919 frontend tests.
 
+### M22 — Sound 🟦
+**Goal:** The game sounds alive and satisfying: action effects, island ambience by weather and time, World Map sounds, background music, and music/effects switches (`requirement.md` v1.43 §10.5). Built after M21, **before M16**.
+- **In scope** (planned with the user 2026-11-25; files collected by the user in `frontend/public/sfx/`)
+  - [ ] `sound` module: Web Audio engine with music / ambience / effects buses, started on the first tap, paused while hidden, files loaded on demand, missing files skipped
+  - [ ] 🔊 button: music and effects on/off separately, remembered on the device, both on by default (music quiet)
+  - [ ] action effects: project tap, work at the site (hammer / shovel / broom by building), success, error, footsteps (grass/snow), house knock, newspaper, post bubble pop, new building fanfare + cheer, island growth sparkle + cheer
+  - [ ] island ambience by weather and time (birds, wind, rain, winter night, water, campfire, construction; max 3 loops) and events (CTrain, geese, plane, owl at night, thunder with lightning)
+  - [ ] World Map sounds (tap a community, enter, open/close) and background music by time and weather (day / night / snow) with crossfades
+  - [ ] credits page lists the sound and music sources (CC BY credited) and Environment Canada (missing since M20); `sfx/README.md` in English
+- **Definition of Done**
+  - [ ] every sound heard on desktop and a phone, switches remembered, nothing plays before the first tap
+  - [ ] user has listened to it
+
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
 - **In scope** (`docs/launch.md` has every step; most need the operator's accounts)
@@ -634,7 +648,7 @@ M0 ─┬─ M1 ── M2 ─┐
 ---
 
 ## After launch — checklist for the user to review
-**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
+**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M22 Sound → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
 
 **Growth (already modules)**
 - [ ] M17 Return Reminders — email (opted-in players) + web push (`requirement.md` §22.7a.1)

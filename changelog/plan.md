@@ -12,6 +12,17 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.79
+**Changed:** New module **M22 Sound** 🟦 after M21 and before M16 (sound engine, 🔊 switches, action effects, island ambience by weather and time, World Map sounds, background music, credits). M16 now depends on M22; header, table, graph and the "Before opening" line updated. Based on `requirement.md` v1.43.
+
+**Why:** Operator request (2026-11-25): a full sound design before the playtest; the operator collected the files.
+
+**Previous:**
+- Header: `| Plan version | v1.78 |`, `| Based on | \`requirement.md\` v1.42 |`, `| Current module | M16 Deploy & Playtest (next; M21 ✅ Done) |`
+- Module table: `| M16 | Deploy & Playtest | All + operator accounts | | M21 | ⬜ |`
+- Graph: `(all) ── M14 ── M19 ── M20 ── M21 ── M16 ── M17 ── M18`
+- After launch: `M21 Living Community → M16 Deploy & Playtest`
+
 ### 2026-11-25 — v1.78
 **Changed:** M21 Living Community ✅ Done (user confirmed); header "Current module" → M16 Deploy & Playtest; last updated 2026-11-25.
 
