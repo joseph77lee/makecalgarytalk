@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.86
+**Changed:** M22 Sound ✅ Done (user confirmed); header "Current module" → M16 Deploy & Playtest.
+
+**Why:** The user listened to M22 and asked to merge it.
+
+**Previous:**
+- Header: `| Plan version | v1.85 |`, `| Current module | M22 Sound 🟨 Ready for playtest (then M16) |`
+- Module table: `| M22 | Sound | FE | | M21 | 🟨 |`
+- M22 title `### M22 — Sound 🟨`; DoD: `  - [ ] user has listened to it`
+
 ### 2026-11-25 — v1.85
 **Changed:** M22 Sound → 🟨 Ready for playtest again: gallery upgrade ticked, Handoff gains the gallery note.
 

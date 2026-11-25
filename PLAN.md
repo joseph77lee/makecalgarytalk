@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.85 |
+| Plan version | v1.86 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
 | Based on | `requirement.md` v1.44 |
-| Current module | M22 Sound 🟨 Ready for playtest (then M16) |
+| Current module | M16 Deploy & Playtest (next; M22 ✅ Done) |
 
 ---
 
@@ -57,7 +57,7 @@
 | M19 | Art Pass | FE (R3F) | | M14 | ✅ |
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
 | M21 | Living Community | FE + BE | | M20 | ✅ |
-| M22 | Sound | FE | | M21 | 🟨 |
+| M22 | Sound | FE | | M21 | ✅ |
 | M16 | Deploy & Playtest | All + operator accounts | | M22 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
@@ -592,7 +592,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested / known gaps:** real phone; post bubbles refresh only when the island is reopened (a post written meanwhile shows on the next visit); bubbles can overlap other labels on small phones; analytics still accepts the old `revival` share detail (no new events); requirement §5.1 onboarding text not reviewed for "mood".
   - **Tests:** `villagers.test.ts`, `lifePlan.test.ts` (downtown vs edge, small vs big), `development.test.ts`, `posts/bubbles.test.ts`, layout village-house cases, village night lights in `environmentParts.test.ts`; community-state and share-card tests updated. 919 frontend tests.
 
-### M22 — Sound 🟨
+### M22 — Sound ✅
 **Goal:** The game sounds alive and satisfying: action effects, island ambience by weather and time, World Map sounds, background music, and music/effects switches (`requirement.md` v1.44 §10.5). Built after M21, **before M16**.
 - **In scope** (planned with the user 2026-11-25; files collected by the user in `frontend/public/sfx/`)
   - [x] `sound` module: Web Audio engine with music / ambience / effects buses, started on the first tap, paused while hidden, files loaded on demand, missing files skipped
@@ -605,7 +605,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] credits page lists the sound and music sources (CC BY credited) and Environment Canada (missing since M20); `sfx/README.md` in English
 - **Definition of Done**
   - [x] nothing loads or plays before the first tap, only the needed files load after it, switches remembered (checked in the browser by the loaded files and storage; I cannot hear audio, so every sound still needs the user's ears)
-  - [ ] user has listened to it
+  - [x] user has listened to it (confirmed 2026-11-25)
 - **Handoff**
   - **Code:** `frontend/src/modules/sound/` — `catalog.ts` (every file name, relative volumes, minimum gaps), `engine.ts` (one AudioContext created on the first pointerdown/keydown by `installSound()` in `App`; buses music 0.22 / ambience 0.8 / effects 0.9 under a master; `playSound(name, {volume, delay, offset, duration, rate})`, `setAmbience(mix)` with 1.5 s fades, `setMusic(track)` with 2.5 s crossfades; suspended while hidden; ≤ 8 effects at once), `mix.ts` (pure, tested: `ambienceMix` ≤ 3 loops, `musicFor`, `workSound`), `settings.ts` (`mct.sound` in localStorage, both on by default), `SoundToggle.tsx` (in `IslandHud`).
   - **Hooks:** daily-actions deps gained `feedback(tap|refused)` and `onHelped(site, buildingKey)` (work sound, then the confirm chime; the synthesized chime `daily-actions/sound.ts` is gone). `IslandView` has `IslandSound` (ambience + music; ambience stops when the island closes, music carries on), house knock, land rise + cheer, thunder 0.8–2 s after each lightning flash, a pop the first time each post shows. `IslandLife` `LifeSounds` (geese every 45 s when not quiet, plane per its period, owl at night every 40–90 s), `Trains` (tram when a train enters), `Avatar` footsteps per tile (snow variant), `celebrateNewBuilding` (fanfare + cheer), `NewspaperPanel` (page turn), `WorldMap` (whoosh on open/enter, select, close, ranking click), build-map open/close clicks.
