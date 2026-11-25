@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.87
+**Changed:** M20 Weather & Time of Day 🔁 Reopened (`fix/m20-snow-settle`): new in-scope fix item (lying snow vanished 10 s after opening for 45 s while it kept snowing). Header current module updated.
+
+**Why:** Found during the Polyfork spike (2026-11-25): a snowy island turned green after 10 seconds.
+
+**Previous:**
+- Header: `| Plan version | v1.86 |`, `| Current module | M16 Deploy & Playtest (next; M22 ✅ Done) |`
+- Module table: `| M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |`
+- M20 title: `### M20 — Weather & Time of Day ✅`; no fix item.
+
 ### 2026-11-25 — v1.86
 **Changed:** M22 Sound ✅ Done (user confirmed); header "Current module" → M16 Deploy & Playtest.
 
