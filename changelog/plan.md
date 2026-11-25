@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-24 — v1.74
+**Changed:** M21 Living Community scope: the mini-villager item adds that the smallest islands start with 0–1 villagers; new item "wildlife by where the community is and how big its island is" (downtown/inner city rarely, near the city edge often, fewer on small islands, fewer geese and jackrabbits overall). M20 (still 🟨): the future-land outline is now nearly invisible at night and dimmer in storms (playtest fix, no plan text change).
+
+**Why:** Operator playtest on an iPad (2026-11-24): 3 villagers on a stage-1 island and many geese/jackrabbits looked like too many; wildlife should depend on the community's location; the translucent future-land tiles stood out at night.
+
+**Previous:**
+- Header: `| Plan version | v1.73 |`
+- M21 villager item (verbatim): `  - [ ] mini villagers appear naturally at random (scaled by island size, fewer at night and in bad weather), not from player counts or activity; never named, never pretending to be players (§7.3); action replay stays real`
+- M21: no wildlife item.
+
 ### 2026-11-24 — v1.73
 **Changed:** M20 Weather & Time of Day → 🟨 Ready for playtest: in-scope items and the screen check ticked, the dev-override item reworded (overrides in the game, no weather buttons in the gallery), Handoff note added. Header, module table and the lighting open item updated.
 
