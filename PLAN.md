@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.92 |
+| Plan version | v1.93 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-25 |
-| Based on | `requirement.md` v1.46 |
-| Current module | M16 Deploy & Playtest (next; build map and community growth redesign under discussion first) |
+| Last updated | 2026-11-26 |
+| Based on | `requirement.md` v1.47 |
+| Current module | M24 Community Identity (next; then M16) |
 
 ---
 
@@ -59,7 +59,9 @@
 | M21 | Living Community | FE + BE | | M20 | ✅ |
 | M22 | Sound | FE | | M21 | ✅ |
 | M23 | Art Pass 2 (voxel variety) | FE (R3F) | | M22 | ✅ |
-| M16 | Deploy & Playtest | All + operator accounts | | M23 | ⬜ |
+| M24 | Community Identity | BE + FE (R3F) + data | | M23 | ⬜ |
+| M25 | Terrain (decide after M24) | FE (R3F) + data | | M24 | ⬜ |
+| M16 | Deploy & Playtest | All + operator accounts | | M24 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -80,7 +82,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M16 ── M17 ── M18
 ```
 
 ---
@@ -634,6 +636,28 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not used yet:** movie theatre and school bus designs (no slot on the islands); the city tram was dropped (the CTrain covers it).
   - **Dev tools kept from the Polyfork attempt:** `?meter` render readout (fps, triangles, draw calls), gallery camera pad and labels switch.
 
+
+### M24 — Community Identity ⬜
+**Goal:** Each island grows into a beautiful place with its own signature places and landmarks (`requirement.md` v1.47 §7.2, §7.4, §7.6–§7.9): a build map of three tracks built in order, houses as scenery with only "My house" personal, places laid out by meaning. Built after M23, **before M16**. Design and gallery work so far: `docs/community-identity-handoff.md`, branch `spike/model-library` (place library, 31 unique landmarks), `supabase/data/community_personas.csv`.
+- **In scope**
+  - [ ] persona and landmark list per community as data (from `community_personas.csv`; landmark order 1–3, signature = 1)
+  - [ ] build map as data and server rules: three tracks, conditions (previous step + residents/streak + land that fits the footprint), step multipliers, decoration steps; replaces the building tree and upgrades in place (`gamecore`/`communitystate` functions and DB tests rewritten)
+  - [ ] island plan generator v2: residential zones, place lots by site (shore, riverbank, hilltop, street, park, plaza) and footprint, a zone per land stage, lots reserved to match step conditions; **all 223 plans regenerated**
+  - [ ] house rule: scenery houses in zones (growing up), "My house" fixed lot seen only by its owner, shared lots when full, no names/tap/"+N", every house lit at night
+  - [ ] place library and unique landmarks moved from the spike into the island renderer by asset key (rivers/bridges get a crossing-site rule), placeholders for unknown keys
+  - [ ] build map screen: finished island picture, next step of each track with what it needs, progress, landmarks, completion %
+  - [ ] development level from the build map; World Map landmark icon at level 4
+  - [ ] "What changed since yesterday", share cards and invites name the new places and landmarks
+- **Out of scope:** terrain (M25), more unique landmarks beyond the 31 (data-only additions later), interiors (22.3)
+- **Definition of Done**
+  - [ ] DB tests for every condition (track order, residents, streak, land fit, at most 3 constructions, day boundary), plan generator tests (zones, sites, no overlap, every lot reachable)
+  - [ ] simulated islands at 1, 3, 10, 26, 60 residents look right for the three prototypes (Inglewood, Lake Bonavista, McKenzie Towne) and a downtown one, by day, at night and with snow, on desktop and a phone
+  - [ ] user has played it
+
+### M25 — Terrain ⬜ (decide after M24)
+**Goal:** Hills, escarpments and ravines as levels of the island floor (handoff §4.1; gallery concept on `spike/terrain-concept`). Whether it comes before M16 is decided after playing M24.
+- **In scope (draft):** up to 4 levels from elevation data with an operator override, cliffs facing the camera, stairs/ramps so every level is reachable (avatar and villager pathfinding with height), building lots flat on one level, CTrain on one level
+- **Definition of Done:** to be written when the module is planned
 
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.

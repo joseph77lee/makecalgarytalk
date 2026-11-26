@@ -2,8 +2,9 @@
 
 Everything agreed (and still open) with the operator about redesigning how a community island grows,
 so a new session can continue without the chat history. Read this before touching the build map,
-house rules, island plans, terrain or personas. Requirement and plan changes described here are
-**not made yet** (requirement is still v1.46, PLAN v1.92).
+house rules, island plans, terrain or personas. **Requirement v1.47 and PLAN v1.93 (2026-11-26) now
+carry these decisions** (new module M24 Community Identity, M25 Terrain to decide after M24); the
+requirement wins where this document differs.
 
 ---
 
@@ -51,6 +52,12 @@ Agreed in the follow-up session (2026-11-25), answering §4:
 10. **Unique landmarks (C):** about 30 priority communities at launch, but aim to give **every** community its own landmark over time (data-only swaps after launch). Claude proposes the 30 candidates from the CSV (landmark specificity + population).
 11. **Houses (replaces proposal D):** houses are **scenery**, placed and counted for beauty (2–4 residential zones, a cap, growing up instead of out), not one per resident. **Only "My house" is personal:** each Verified Resident keeps a **fixed lot** inside a residential zone, assigned by the server (stable position, ready for later visits); the owner sees it with the "My house" marker, everyone else sees an ordinary house. **No owner tap, no names, no "+N more residents"** on other houses (cooperative async game, not a live online world). **Windows are not tied to activity:** at night **every** house has lit windows (it looks prettier); this replaces the "active today → warm lights" rule of §7.2.
 12. **A, E, F, G, H accepted** as proposed in §4.
+
+Agreed 2026-11-26:
+
+13. **Several landmarks per community, at most 3** (order 1 = signature landmark on the World Map; 2 and 3 later on the persona track, at 26 and 51 residents). **One landmark model = one real building**: never bundle two real landmarks (DNC was split into the observation tower and the crescent glass tower); streets and shops around a landmark are only lot dressing.
+14. **Starting values** for the build map conditions as written in requirement v1.47 §7.6 (signature landmark: 11 residents + 14-day streak).
+15. **Terrain is a separate module (M25)**; whether it comes before the launch is decided after playing M24.
 
 ---
 
@@ -157,7 +164,7 @@ Gallery tools (on `main`): labels switch, camera pad (arrows/WASD pan, +/− zoo
 1. ~~**Terrain gallery mock-up**~~ built on `spike/terrain-concept` (gallery → Concept → hill / escarpment / ravine / waterfall), waiting for the operator's review. Finding: the camera sees only the +x and +z sides, so cliffs and waterfalls must face the viewer (high ground towards the back of the island); one level reads weakly for an escarpment, two levels read well.
 2. ~~**CSV cleanup → English data file**~~ done 2026-11-26 (§5.4); remaining: operator's replacement photos (§5.3). Original note:, e.g. `supabase/data/community_personas.csv`: `code, persona (one of ~10), persona_secondary, signature_landmark (generic English name), landmark_reference (real place, for the operator), track_steps, nature_terrain, source, confidence`; fix the yacht mentions; generalise brands; keep the operator's Korean file as their working copy.
 3. **Model library**: persona-pattern places (≈ 30–40 voxel models) → unique landmarks for the 20–30 priority communities as photos arrive → gallery review; tests for lot fit, snow and night lights (follow `assets/voxel/designFit.ts` style).
-4. **Requirement change** (changelog first, operator approval) + **PLAN**: a new module (e.g. M24 Community Identity) before M16; plan change entry in `changelog/plan.md`.
+4. ~~**Requirement change**~~ done 2026-11-26 (requirement v1.47, PLAN v1.93). Original note: **Requirement change** (changelog first, operator approval) + **PLAN**: a new module (e.g. M24 Community Identity) before M16; plan change entry in `changelog/plan.md`.
 5. **Implementation**: island plan generator (zones, terrain, sites by meaning), building-tree data as tracks, house rule, build-map screen, World Map landmark icons; regenerate all island plans.
 
 Process reminders: CLAUDE.md rules (ask → plan → implement; requirement/plan changes via changelogs; one branch per piece of work; English in the repo; status words; Mistake Log). Within a module, proceed on recommendations and stop only for reviews and merges (memory).

@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.46 |
+| Document version | v1.47 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-25 |
+| Last updated | 2026-11-26 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -44,7 +44,7 @@ This document will keep changing during development. To never lose the reasons b
 - Number of active communities (at least 1 verified resident)
 
 ### 1.4 Growth strategy (product principle)
-The service grows in this order; features are judged by how they serve it. The **building tree (7.6) connects every step.**
+The service grows in this order; features are judged by how they serve it. The **build map (7.6) connects every step.**
 1. **Show the finished neighbourhood** → "I want to build that" (a completed example on the first visit, 5.1)
 2. **Daily visit + one action**, repeated, to complete it (near goals, next-day reveals, streaks)
 3. **Fun and useful local information** once people visit often (newspaper, notices, events; unlocked by buildings, 7.6 / 11)
@@ -90,7 +90,7 @@ The service grows in this order; features are judged by how they serve it. The *
 4. First action click → **immediate visible change**
    - Empty community: fog clears, "You are the Founding Resident!"
    - Existing community: construction progress bar rises, mini villagers cheer
-5. The next goal from the building tree, e.g. "2 more neighbours and the frozen pond becomes a skating rink" + **Invite button**
+5. The next goal from the build map, e.g. "2 more neighbours to build our skating rink" or "11 neighbours to build our landmark" + **Invite button**
    - Shown as a **welcome card** right after the first counted check-in ("Welcome to <community>! N more neighbours and the island grows") with Invite neighbours / Look around first; "N more neighbours" goals elsewhere (streak bar, build map) also open the invite
    - A floating **Invite** button is always visible at the bottom right of my community; a small × hides it for the rest of the Calgary day. At good moments (the island or a building is 1–2 neighbours away, something was built, the island grew) it shows a one-line nudge, at most once a day and not on a hidden day
    - The first-visit example says that a community can only be finished together ("You can't finish it alone")
@@ -157,18 +157,16 @@ Goal: moving never punishes the person who moves or the residents who stay.
 
 ### 7.1 Community states
 - **Unsettled**: 0 residents. Covered by fog/clouds on the World Map
-- **Settled**: the community's **Welcome sign** (first building of the tree, 7.6) is built → fog clears on the World Map; the first resident (the community's **first Verified Resident**) gets the "Founding Resident" badge. A first resident can build it on their first day
+- **Settled**: the community's **Welcome sign** (first place of the community track, 7.6) is built → fog clears on the World Map; the first resident (the community's **first Verified Resident**) gets the "Founding Resident" badge. A first resident can build it on their first day
 
-### 7.2 Houses: resident houses among the village houses
-- **Houses fill the land as the community grows** (operator decision 2026-11-24): every house lot on the risen land (7.8) has a house, so a community never looks empty however many people play. The houses are not a count of players
-- **Every Verified Resident has their own house among them** ("My house"), the base for decorating its interior later (22.3). **Tapping a resident's house** shows whose it is: "<nickname>'s house", active today or not, and the Founding Resident badge if they have it. No name tags floating over houses; **my own house always has a small "My house" marker**, and the labels toggle can show every resident house's name at once
-- The other houses are **village houses** with no owner: no name, nothing happens when tapped (they never pretend to be players, like mini villagers in 7.3)
-- Residents active today: **warm window lights** (no chimney smoke: with many houses it would look like factories); residents not active today: lights off. At night about half of the village houses have lit windows too (10.4), so the village looks cosy
-- **Each resident keeps a fixed house lot** in their community: given once, the first free lot in the stored lot plan (lots ordered by land stage, then plan order, so growing the island never moves a house). It stays theirs while their house is archived, unless all lots are taken: then the lots of archived residents go to new residents, and a returning resident gets a free lot. If even active residents exceed the lots, extra houses are not drawn and the village shows "+N more residents". Moving gives a lot in the new community. Lots are assigned while building the shared state (no extra request)
-- **Last active day** = the later of the resident's last action day and their verification day (so a newly verified resident who has not acted yet still has a house)
-- **No activity for 30+ days** (last active day is not within the last 30 Calgary days, including today): the house becomes an ordinary village house (archived: no name, not lit); it becomes theirs again when they return
-- Houses are not something individuals grow; they show "I live in this community"
-- Houses have **no relation to real addresses/locations**
+### 7.2 Houses: scenery, and my own house
+- **Houses are scenery** (operator decision 2026-11-25): they are placed to make a beautiful island, not one per resident, and never stand for players. They stand in **2–4 residential zones** of the island plan (7.8), together at most about 30 % of the land, each zone filling as its land rises. As the community grows, houses grow **up** inside the zones (townhouses, small apartments) instead of spreading over the island
+- **My house:** every Verified Resident has a **fixed lot** inside a residential zone, assigned once by the server while building the shared state (the first free lot in the stored plan, lots ordered by land stage then plan order, so growing the island never moves a house). **Only the owner sees it as theirs**, with the small "My house" marker that always stays visible; to everyone else it is an ordinary house. It is the base for decorating its interior later (22.3). Moving gives a lot in the new community
+- **No owners shown on other houses:** no tap, no names, no labels, no "+N more residents" (a cooperative game played at different times, not a live online world)
+- When every lot of the risen zones has an owner, new residents **share** lots: the house is drawn once and each owner sees their own marker on it (no one sees whose house it is, so nothing looks wrong). Lots are never taken back
+- **At night every house lights its windows** (10.4): it looks prettiest that way. Lights do not follow activity; quiet communities show in the streak (7.5)
+- **Last active day** = the later of the resident's last action day and their verification day (used by Vitality, 7.4)
+- Houses are not something individuals grow; they have **no relation to real addresses/locations**
 
 ### 7.3 Mini villagers and wildlife (ambient life)
 - **Ambient characters that make every island feel lived in**, whatever the number of players (operator decision 2026-11-24); they never pretend to be real players (no names, not counted as residents)
@@ -181,12 +179,12 @@ Goal: moving never punishes the person who moves or the residents who stay.
 - **Wildlife** (jackrabbits, deer, Canada geese, rarely a cougar) **depends on where the community is**: downtown and inner-city communities rarely see wild animals (an occasional jackrabbit), communities near the city edge often do (measured by the distance of the community from the city centre); small islands get fewer animals. Deer and cougars need a park, hill, creek or water nearby; geese need water
 
 ### 7.4 Community development (Vitality is internal)
-- **Players see their community's development, not an activity score** (operator decision 2026-11-24): the **development level 0–4** from built buildings (the same level as the World Map, 9) is shown next to the community name, e.g. "Mahogany · Lv 2". It never goes down; development means new buildings (7.6) and, later, things to do inside them (22.3)
+- **Players see their community's development, not an activity score** (operator decision 2026-11-24): the **development level 0–4** from the build map (7.6; the same level as the World Map, 9) is shown next to the community name, e.g. "Mahogany · Lv 2": **1** Welcome sign built, **2** the first persona place built, **3** Community hall built, **4** the signature landmark built. It never goes down; development means new places (7.6) and, later, things to do inside them (22.3)
 - **Vitality stays as an internal operator metric** (dashboard, 21), not shown to players and not changing the island:
   - Definition: 7-day average of the "daily active resident ratio" × 100
   - Daily active resident ratio = (Verified Residents who acted that day) ÷ (**Verified Residents whose last active day (7.2) is within the last 30 Calgary days, including that day**, excluding residents with a move in progress, 6.4); the ratio therefore never exceeds 1; 0 if the denominator is 0
   - Vitality = 100 × **max(average ratio of the last 3 days, average ratio of the last 7 days)**, rounded; finished Calgary days only, days since the community's first resident
-- No mood levels, no sleepy text and no "Community Revival" effect any more: quiet communities are shown by the streak (7.5) and dark resident houses (7.2), and a new building is what gets celebrated (12.2)
+- No mood levels, no sleepy text and no "Community Revival" effect any more: quiet communities are shown by the streak (7.5), and a new place is what gets celebrated (12.2)
 
 ### 7.5 Community Streak
 - **Active Verified Resident (7-day)** = a Verified Resident who took at least one action within the **last 7 Calgary days, including today**. Residents inactive longer (including those whose houses are archived after 30 days) are **not** counted, so dormant residents cannot make the streak impossible.
@@ -201,52 +199,54 @@ Goal: moving never punishes the person who moves or the residents who stay.
   - The boundary is computed **only on the server**; clients receive the current Calgary day and the next midnight instant from the server (browser tzdata may be outdated)
 - UI example: "Mahogany 5-day streak! Today 2/6 active residents — 1 more keeps it going" (6 = Active Verified Residents)
 
-### 7.6 Building tree (MVP)
-Community unlock buildings and construction projects are **one building tree**. Each building: conditions met → a construction project everyone helps with → built (stays where it was built, forever) → opens its children. Starting values; the tree is **data** (see 7.6b) and grows after launch.
+### 7.6 Build map (MVP)
+Community places and construction projects are **one build map** of **three tracks**, each built **in order**: a step opens when the step before it in the same track is built and the community meets the step's conditions; residents build it together with their daily actions (8); it stays where it was built, forever, on **its own lot** (no building replaces another on the same lot). The tracks run side by side, so a track waiting for neighbours never stops the others. Starting values; the build map is **data** (7.6b) and grows after launch.
 
-**Three seeds that grow in place** (a later building replaces the earlier one on the same lot, which is reserved at its final size) **plus branches** (new lots):
+| Track | Steps (starting content) |
+|---|---|
+| 🏘️ **Community** (every community) | Welcome sign → Fire pit → Warming hut → Skating rink → Community hall → Neighbourhood park |
+| ⭐ **Persona** (from the community's persona, 7.9) | 4 places of its persona (the 4th is the persona's landmark, replaced by the community's own signature landmark where it has one), then the community's **further landmarks** (7.9) |
+| 🌳 **Nature & leisure** (every community) | Playground → Sledding hill → Off-leash dog park → Community garden → Pathway lights → then **decoration steps that keep going** (tree lanes, flower beds, benches, small gardens), so there is always something to build |
 
-| Stage (actions ×) | Building | Opens when | On the island | Lot |
-|---|---|---|---|---|
-| 1. First day (×0.3) | Welcome sign | From the start | Community name at the entrance; community becomes Settled on the World Map (7.1) | Entrance |
-| | Fire pit | From the start | Villagers gather to warm up; first meeting spot | Lot A |
-| | Frozen pond | From the start | Villagers slide on the ice | Lot B |
-| 2. First week (×1) | Warming hut | Fire pit + 3-day streak | Smoke from the hut, villagers come and go; **community board** (operator announcements, events, 11) | Lot A (grows) |
-| | Playground | Welcome sign + 3-day streak | Kids swing and slide | New lot |
-| | Sledding hill | Frozen pond + 3-day streak | Villagers sled down the hill | New lot |
-| 3. Together (×1.5) | Skating rink | Frozen pond + 3 residents | Villagers skate; **the avatar glides on the ice** | Lot B (grows) |
-| | Gateway arch | Welcome sign + 3 residents | Grand entrance arch | Entrance (grows) |
-| | Off-leash dog park | Playground + 3 residents | Dogs run around | New lot |
-| | Pathway lights | Gateway arch + 5-day streak | The paths glow; the community glows on the World Map at night | Along paths |
-| 4. Community (×2) | Community hall | Warming hut + 5 residents + 7-day streak | **Newspaper and board move in**, events; opens the Main Street (22.4) | Lot A (grows) |
-| | Lit hockey rink | Skating rink + 6 residents + 7-day streak | Evening hockey with villager fans | Lot B (grows) |
-| | Community garden | Warming hut + 5 residents + 5-day streak | A garden that changes with the seasons | New lot |
-| 5. Pride (×3) | Neighbourhood park | Community hall + 10 residents + 30-day streak | Picnics and festivals; park icon on the World Map | New lot (large) |
-| Phase 3 | Landmark / custom sign | Community hall + 60-day streak + resident photo petition (16.2) | The community's own building | New lot |
+The Gateway arch and Lit hockey rink models stay in the library for later steps.
 
-- **Required actions** = base × stage multiplier; base = **5 per active resident, minimum 10** (active resident = last active day within the last 30 Calgary days, 7.4); stage 1 needs at least 3, so **a single resident finishes a first building on day one** (shown the next morning)
-- Resident counts are **cumulative Verified Residents** (same basis as island size, 7.8); built buildings and opened conditions never re-lock
-- **At most 3 constructions at a time**; other opened buildings wait in tree order
-- When every opened building is built, projects **upgrade built buildings in place** (Lv 2, 3, …; ×1.25 per level), so there is always something to do
+**Conditions** (previous step of the same track built, plus):
+
+| Step | Actions × | Community and Nature tracks | Persona track |
+|---|---|---|---|
+| 1 | ×0.3 | — | — |
+| 2 | ×1 | 3-day streak | 3-day streak |
+| 3 | ×1.5 | 3 residents | 3 residents |
+| 4 | ×2 | 6 residents + 7-day streak | 6 residents + 7-day streak |
+| 5 | ×2.5 | 10 residents + 14-day streak | ⭐ **signature landmark** (×3): 11 residents + 14-day streak |
+| 6 | ×3 | 20 residents + 30-day streak | ⭐ 2nd landmark (×3): 26 residents + 21-day streak |
+| 7+ | ×3 | decoration steps: no new condition | ⭐ 3rd landmark (×3): 51 residents + 30-day streak |
+
+- **Every step also needs land:** it opens only when the risen land (7.8) has a free lot that fits its footprint and site, so a big ground (e.g. a 5 × 5 ball diamond) never lands on a young island
+- **Required actions** = base × step multiplier; base = **5 per active resident, minimum 10** (active resident = last active day within the last 30 Calgary days, 7.4); step 1 needs at least 3, so **a single resident finishes a first place on day one** (shown the next morning)
+- Resident counts are **cumulative Verified Residents** (same basis as island size, 7.8); built places and opened steps never re-lock
+- **At most 3 constructions at a time**; other opened steps wait, taking turns between the tracks
 - Construction progress is **applied the next day**; visuals: scaffolding → frame → complete
-- Each stage adds one new kind of condition: actions → streak → residents → residents + streak → long-term
-- **Locked buildings are not drawn on the island** (their lot is plain, walkable land, so the island stays tidy and new buildings are a surprise); the build map (7.6a) shows them with what is missing (e.g. "2 more neighbours", "1 more streak day", "Build the Frozen pond first"). A building whose conditions are met appears on its lot as a faded silhouette marked ✨ "Ready to build"
-- Names are generic (no trademarks)
+- The newspaper opens from the **Welcome sign**, the **Warming hut** adds the community board, the **Community hall** takes both over (11)
+- **Locked steps are not drawn on the island** (their lot is plain, walkable land, so the island stays tidy and new places are a surprise); the build map screen (7.6a) shows them with what is missing (e.g. "2 more neighbours", "1 more streak day", "Build the Warming hut first"). A step whose conditions are met appears on its lot as a faded silhouette marked ✨ "Ready to build"
+- Names are generic (no trademarks); landmark rules in 7.9
 - Community level is permanent (separate from the weekly ranking)
 
-### 7.6a Village build map (MVP)
-- A screen opened from the community view that shows the **building tree** with done / building / opened / locked, **remaining conditions and progress bars**, the island size track ("N more neighbours"), and an overall **completion %** of the community
+### 7.6a Build map screen (MVP)
+- A screen opened from the community view with **a picture of the community's finished island** in the middle (its own plan with every place built, drawn from the same data), so residents see what they are building towards
+- On top: the **next step of each track** with what it still needs ("2 more neighbours", "1 more streak day", "Build the Warming hut first", "Needs more land: 3 more neighbours"), the constructions in progress with their progress bars, the island size track ("N more neighbours"), the community's landmarks (generic names, silhouettes until built) and an overall **completion %**
 - A "See a finished example" button reopens the completed-neighbourhood example (5.1)
-- Read-only, built from server-computed values (streak, cumulative Verified Residents, building status); no game rules on the client
+- Read-only, built from server-computed values (streak, cumulative Verified Residents, step status); no game rules on the client
 - Shares one screen with the personal growth view (13.3, Phase 2) as tabs: **Village | Me**
 
-### 7.6b Extensible buildings
-- The tree (buildings, stages, conditions, multipliers, footprints) is **data in the database**; adding a building = a data row + a model, no rule code changes
-- A client that does not know a building yet draws a **generic placeholder model**, never an error
-- Every island keeps **spare lots for future buildings** and separate **Main Street lots** (22.4)
+### 7.6b Extensible places
+- The build map (tracks, steps, conditions, multipliers, footprints, sites) and **each community's persona and landmark list** (7.9; source `supabase/data/community_personas.csv`) are **data in the database**; adding a place or a landmark = a data row + a model, no rule code changes
+- Every place has a **footprint in tiles fitting its real size** (one tile ≈ a house lot, 12–15 m, slightly compressed; big grounds take their real share, buildings come with their yard, forecourt and trees) and a **site** where it belongs (shore, riverbank, hilltop, slope, street, park, plaza)
+- A client that does not know a place yet draws a **generic placeholder model**, never an error
+- Every island keeps **spare lots for future places** and separate **Main Street lots** (22.4)
 
 ### 7.7 Projects (construction)
-- A project is the construction (or upgrade) of one building of the tree (7.6); residents **choose** which active project to help with each action
+- A project is the construction of one step of the build map (7.6); residents **choose** which active project to help with each action
 - Progress is counted from the append-only action log (never a stored counter)
 
 ### 7.8 Island shape and size (grows with residents)
@@ -265,10 +265,10 @@ Community unlock buildings and construction projects are **one building tree**. 
 | 51+ | all (~1,024) |
 
 - Growth effect: new land **rises at the island edge**, mini villagers cheer, share card generated.
-- **The island never shrinks.** Inactivity is shown by the streak and dark resident houses (7.2, 7.5), not by size or scenery.
-- **Positions never change.** Each community's lot plan (building lots, house lots, spare lots, Main Street lots, paths) is generated **once** and stored; later algorithm changes apply only to new communities or newly added lots.
-- Buildings opened by the tree always have land: their resident conditions match the land available at that resident count.
-- First-stage buildings sit around the plaza (a cosy village centre); later buildings get lots in the **newly grown outer land, spread in different directions**, so every growth brings new building spots.
+- **The island never shrinks.** Inactivity is shown by the streak (7.5), not by size or scenery.
+- **Positions never change.** Each community's lot plan (place lots, residential zones and house lots, spare lots, Main Street lots, paths) is generated **once** and stored; later algorithm changes apply only to new communities or newly added lots. **One exception before launch:** every plan is regenerated once for the build map (7.6) and the new house rule (7.2), since no player has a house yet (operator decision 2026-11-25).
+- **Places are laid out by meaning**, not by track: community places around the plaza (a cosy village centre), persona places beside their nature (lake shore, riverbank, hilltop, main street), nature and decoration along the paths between them, residential zones spread out. Each land stage opens a new **zone** with a mix of tracks, so every growth brings new spots in different directions. The plan reserves lots so that each step's resident condition (7.6) matches the land risen at that count.
+- **Terrain** (hills, escarpments, ravines as levels of the island floor) is a later step (22.6); MVP islands are flat apart from real water.
 - **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings; if water would cut the land apart, a small bridge path keeps every part reachable. Land amounts count dry land only; where water sits next to the plaza, the first two stages get a little more dry land (up to 112 / 176 tiles) so the first buildings and Main Street fit.
 - **Map orientation:** every island opens with the same diagonal camera angle, keeping the World Map's orientation (east to the lower right, north to the upper right), so a community looks like its outline on the map (9). A small compass shows where north is and turns when the player rotates the view.
 - UI shows the next growth goal (e.g. "2 more neighbours until the island grows").
@@ -276,7 +276,7 @@ Community unlock buildings and construction projects are **one building tree**. 
 ### 7.9 Community identity & feature library
 Each community gets its identity from its **real shape** (7.8) and from:
 - **Name sign** at the island entrance
-  - The **Welcome sign** is the first building of the tree (7.6) and grows into a Gateway arch; every community uses the same voxel models with its own name
+  - The **Welcome sign** is the first place of the community track (7.6); every community uses the same voxel model with its own name
   - A **custom sign** comes only from a resident photo petition (16.2, Phase 3): the real entrance sign's shape, colours and materials **reinterpreted in voxel style**, showing only the community name — **no developer logos or branding**
 - **Real water** at its real position (7.8)
 - **Signature features** from a reusable **feature library** (not real size/position — symbolic; e.g. hills, CTrain station, mall, school, large parks), placed on spare lots:
@@ -289,7 +289,15 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - Track that runs along the outline (lines often run in road medians that are community boundaries) is drawn on the edge row
   - A community next to a station but without track inside keeps the symbolic **CTrain station** block; only operating stations count (planned lines are not shown)
   - Track and stations appear with their land, like everything else
-- **Community landmarks** (Phase 3): a community-specific landmark model (e.g. a lakeside clubhouse), made only from a resident photo petition (16.2); until then communities use shared library blocks only
+- **Persona and landmarks (MVP**, operator decisions 2026-11-25/26):
+  - Every community has a **persona**, one of 10 patterns: lake, river, downtown, historic main street, golf, new suburb, hill view, food street, mature suburb, special district. It picks the community's persona track (7.6)
+  - Every community has a **list of landmarks, at most 3** (more would leave no land for houses and places): order 1 is its **signature landmark** (shown on the World Map, 9, and on share cards), 2 and 3 come later on the persona track (7.6)
+  - **One landmark = one real building or place.** Two real landmarks are never bundled into one model; streets or shops around a landmark are only its lot's dressing
+  - Landmark models are **voxel reinterpretations from reference photos** (shape, colours, materials); **no logos, sign text or business names**. Third-party photos are reference only and never committed
+  - **Each landmark belongs to one community only** (a landmark on a boundary goes to one of them; the other uses its next landmark)
+  - At launch the **31 priority communities** have a unique model for their signature landmark; every other landmark without a model yet uses the persona's landmark with the community name, replaced later by data only (7.6b). The aim is a unique landmark for every community over time
+  - Places of worship and cemeteries may appear as scenery but are **never build goals**
+  - Resident photo petitions (16.2, Phase 3) can propose landmarks later
 - Source data for feature suggestions: City of Calgary Open Data (e.g. hydrology water bodies) and OpenStreetMap; features stay symbolic (presence, not real size/position)
 - **Activity-based feature upgrades** (Phase 2): features evolve with activity (e.g. Mahogany's lake → boat dock → lakeside trail)
 - **Resident petitions** (Phase 3): see 16.2
@@ -314,15 +322,15 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Not 3D: rendering ~200 islands at once is too heavy for phones. Keeps the first screen light.
 - **Each community polygon shows its development with small illustrations inside it**, not just a colour (prototype demo built 2026-11-16):
 
-| Development level | Built buildings (7.6) | Shown inside the polygon |
+| Development level | Build map (7.4, 7.6) | Shown inside the polygon |
 |---|---|---|
 | Unsettled | no Welcome sign | Grey dashed boundary, a cloud, empty ground |
 | 1 | Welcome sign | A couple of small houses + welcome sign |
-| 2 | + Playground or Skating rink | More houses + playground / skating rink |
+| 2 | + first persona place | More houses + that persona place |
 | 3 | + Community hall | Houses + community hall with flag |
-| 4 | + Neighbourhood park | Dense houses + community hall + neighbourhood park |
+| 4 | + signature landmark | Houses + community hall + the community's **landmark icon** |
 
-  - Level comes from the community's built buildings (same data as the island; 7.6, 7.8); the map loads the shapes as a static file and the levels and resident counts in one request
+  - Level comes from the community's built places (same data as the island; 7.6, 7.8); the map loads the shapes as a static file and the levels and resident counts in one request
   - Shown for the 223 residential communities
   - **Colour tone follows the level** (more developed = richer green); grey = unsettled. No mood tones (7.4)
   - Crown on this week's #1 community
@@ -351,9 +359,9 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - A **floating island in the community's real shape** (7.8; outline visible from day one, land grows inside it) with visible layered dirt underneath, on a soft pastel sky background
 - **Isometric view** (orthographic camera); user can rotate/zoom within limits
 - **Pastel colours, flat-shaded voxel/box objects on a tiled island** (19.1), soft shadows
-- Contents: buildings of the tree (7.6) and their construction sites, locked-building silhouettes, resident houses, mini villagers, signature features (7.9), Main Street shops (22.4, Phase 4)
+- Contents: places of the build map (7.6) and their construction sites, ready-to-build silhouettes, landmarks (7.9), houses (scenery, my own house marked, 7.2), mini villagers, signature features (7.9), Main Street shops (22.4, Phase 4)
 - Speech bubbles and name labels are **HTML overlays** positioned over 3D objects (crisp text, Korean/English supported)
-  - A **labels toggle** shows or hides all island overlays (speech bubbles, name tags, construction progress, locked-building hints) so the scene can be viewed without clutter. On by default; the choice is remembered on the device. My own avatar's name tag and my house marker always stay visible, so I can find myself
+  - A **labels toggle** shows or hides all island overlays (speech bubbles, name tags, construction progress, ready-to-build hints) so the scene can be viewed without clutter. On by default; the choice is remembered on the device. My own avatar's name tag and my house marker always stay visible, so I can find myself
   - Mini villagers stroll slowly, each with its own pace and resting habits (not in lockstep)
 - On entry, show **"What changed since yesterday"** (construction progress, new residents, trees planted, etc.)
 - Show community streak status, remaining conditions for the next unlock, and the next island growth goal
@@ -365,7 +373,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - No virtual joystick (conflicts with camera drag on phones)
 - Camera gently follows the avatar
 - **Action buttons stay at the bottom**: pressing an action makes the avatar run to the related spot (e.g. construction site) and perform it. Walking up and tapping the spot directly is also allowed (Art Pass polish)
-- Tap a building/resident house to see info (e.g. Welcome sign / Community hall → newspaper; house → resident nickname and streak)
+- Tap a place to see info (e.g. Welcome sign / Community hall → newspaper); other houses do nothing when tapped (7.2)
 - **MVP: choose a shirt colour** from a small palette on first visit (changeable later); more customization (hats, accessories, emotes) is earned through ranks (13.3, Phase 2)
 - Movement is driven by **destination events** ("avatar X moves to tile (5,7)"), not per-frame positions, so the same events can be broadcast for real-time presence later (22.3)
 
@@ -383,7 +391,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Time of day follows the real sun**: the light comes from the sun's real direction, so shadows move through the day; dawn and dusk tints; at night the sky darkens to a soft starry night (pastel, never black)
   - The sun's direction is computed from the **server's current instant** and Calgary's coordinates (no time zones, 7.5). Phases come from the sun's height: **day**, **dawn/dusk** (sun within 6° of the horizon), **night**
   - The drawn sun is kept at least about 22° high so low winter sun does not shade the whole island; only its direction is real
-  - At night the **street lamps and public buildings' windows light up**, about half of the village houses too; residents' houses light their windows only when the resident was active today (7.2)
+  - At night the **street lamps, public buildings' and every house's windows light up** (7.2)
 - Effects stay within the phone budget (20.3a): rain and snow particles capped (about 1,500), the low-quality mode (M14) reduces them further (about 400) and drops lightning
 
 
@@ -597,7 +605,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Island growth: new edge tiles rise with a tween
 
 ### 19.4 Asset list (draft)
-- MVP (code boxes): island tiles (grass, path, snow), dirt layers, trees, resident house (roof/wall colour variants via code), buildings of the tree (7.6: welcome sign → gateway arch, fire pit → warming hut → community hall, frozen pond → skating rink → lit hockey rink, playground, sledding hill, dog park, pathway lights, community garden, neighbourhood park) + construction stages (scaffolding/frame/complete) + silhouettes + generic placeholder, avatar, mini villagers
+- MVP (code boxes): island tiles (grass, path, snow), dirt layers, trees, houses (roof/wall colour variants via code), places of the build map (7.6: community and nature tracks, a place library of 10 persona tracks, each place sized to its real footprint) and unique landmark models (7.9) + construction stages (scaffolding/frame/complete) + silhouettes + generic placeholder, avatar, mini villagers
 - Art Pass: refined buildings, feature-library blocks (lake, creek, hill, ravine, dog park, CTrain station, mall, school), props (lamps, fences, fields, stalls, benches), character variants with simple animation, surprise characters (e.g. moose), World Map assets (development icons matching island buildings, animated rivers, moving CTrain trains on the map (the lines themselves are drawn since M13), landmark buildings such as Calgary Tower and Peace Bridge, mountains), crown/flag
 
 ---
@@ -688,12 +696,12 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Anonymous account + Turnstile + Google linking
 - Location-based community detection, 3-of-7-days resident verification
 - Calgary World Map from **real community boundary polygons**, each showing **small development illustrations** (houses, welcome sign, playground, community hall, park by level) with Vitality mood, #1 crown, tap-to-zoom and invite for unsettled communities
-- Community view as a **box-built three.js voxel diorama island in the community's real shape** (outline from day one, land growth by residents, building tree, resident houses, mini villagers, 3 Vitality levels, action replay with speech bubbles, a few signature features from the feature library)
+- Community view as a **box-built three.js voxel diorama island in the community's real shape** (outline from day one, land growth by residents, build map, houses as scenery with my own house, persona places and landmarks, mini villagers, 3 Vitality levels, action replay with speech bubbles, a few signature features from the feature library)
 - Completed-neighbourhood example on the first visit (5.1)
 - **My avatar**: tap/click to move with pathfinding; action buttons make the avatar run to the spot and act
 - 3 daily energy + project choice + satisfying click feedback + a few surprises
-- Community streak, **building tree** (7.6: three seeds, branches, upgrades in place), locked-building silhouettes
-- **Village build map** (7.6a): the whole growth path with remaining conditions
+- Community streak, **build map** (7.6: three tracks built in order, persona places, up to 3 landmarks per community), ready-to-build silhouettes
+- **Build map screen** (7.6a): the finished island picture, the next step of each track and its remaining conditions
 - Avatar shirt colour choice (10.2)
 - Next-day construction progress + "What changed since yesterday"
 - Auto community newspaper + roadmap notice + "Coming soon"
@@ -721,7 +729,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### 22.3 Phase 3
 - Seasonal events (Rodeo Season, winter aurora, etc.), collections
 - Visitor mode (interactions when visiting other communities)
-- Community landmark (building tree stage after the Community hall: 60-day streak + resident photo petition, 7.6 / 16.2)
+- More landmarks proposed by residents through photo petitions (7.9 / 16.2); landmarks themselves are in the MVP (7.9)
 - Aurora events
 - **Real-time presence**: other online residents' avatars visible and moving in the same island (broadcast destination events per community channel, e.g. Supabase Realtime; cap ~30 visible avatars per island; distinct label colour for online residents; simple emoji greetings)
 - Community petitions (16.2)
@@ -761,6 +769,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 6b | **Living community** (decided with the operator 2026-11-24, details in 7.2–7.4): mini villagers appear naturally at random instead of from player counts; houses fill the land as the community grows, and every Verified Resident still has their own house among them ("My house"); Vitality is redefined as community development (new buildings); walking villagers show residents' recent community posts (14; never Safety posts) as speech bubbles credited by nickname |
 | 6c | **Sound** (10.5): effects, island ambience by weather and time, World Map sounds, background music, music/effects on-off |
 | 6d | **Art Pass 2** (19.1, 19.2): more voxel designs (shapes after free catalogues such as Polyfork, sized like today's models) for houses, buildings, trees, cars and props, and varied people, weather-aware |
+| 6e | **Community identity** (decided with the operator 2026-11-25/26, details in 7.2, 7.6–7.9): a build map of three tracks built in order (community, persona, nature & leisure), personas and up to 3 landmarks per community (31 unique signature landmarks at launch), houses as scenery with only my own house personal, places laid out by meaning and every island plan regenerated |
+| 6f | **Terrain** (hills, escarpments, ravines as island levels): a separate step after 6e; whether it comes before the launch is decided after playing 6e |
 | 7 | Deploy with **all communities open** → family/friends playtest → public launch |
 
 ### 22.7 Launch
@@ -778,7 +788,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - [ ] Pastel palette and lighting values (before the Art Pass); save reference screenshots in `docs/references/`
 - [x] Feature library list and community → feature mapping (decided 2026-11-23, see 7.9: 6 blocks, all communities, at most 3 each)
 - [ ] Island shape conversion parameters (smoothing, minimum width, centre choice) and lot plan generation per community (tuning)
-- [ ] Building tree numbers (conditions, stage multipliers) and models for the new buildings
+- [ ] Build map numbers (conditions, step multipliers, footprints), the landmark list of each community and the models still missing
 - [x] Project list and required actions per project (decided 2026-11-18, see 7.7)
 - [x] Vitality smoothing details (2026-11-24: Vitality is no longer shown to players, 7.4)
 - [ ] Random surprise types and probabilities
@@ -798,7 +808,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Resident | A user who belongs to a community |
 | Newcomer | A user who has not finished resident verification |
 | Verified Resident | A user who opened the site from inside their community on 3 different days within 7 days |
-| House | One per Verified Resident in the community view; a presence marker, not something the user grows |
+| House | Scenery in the residential zones of an island (7.2); only "My house" is personal, and only its owner sees it as theirs |
 | Mini villager | Ambient voxel character that makes the island feel lived in (random count by island size); never represents or impersonates a real player |
 | Avatar | The user's own controllable character in their community's island (tap/click to move) |
 | Destination event | Avatar movement expressed as "move to tile (x, y)"; local-only in the MVP, broadcastable for real-time presence later |
@@ -807,19 +817,20 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Petition | Residents' request to add a feature-library block to their island; operator decides monthly |
 | Action replay | Mini villagers re-enacting real actions residents took today, with a system speech bubble |
 | Energy | Daily action allowance (3 per day) |
-| Project | The construction or upgrade of one building of the tree, which residents contribute actions to |
+| Project | The construction of one step of the build map, which residents contribute actions to |
 | Vitality | 0–100 score of recent community activity; internal operator metric, not shown to players (7.4) |
-| Development level | 0–4 from built buildings; shown next to the community name and on the World Map (7.4, 9) |
-| Village house | A house with no owner that fills a house lot on the risen land (7.2) |
+| Development level | 0–4 from the build map (Welcome sign, first persona place, Community hall, signature landmark); shown next to the community name and on the World Map (7.4, 9) |
+| Persona | One of 10 community patterns (lake, river, downtown, …) that picks a community's persona track (7.9) |
+| Landmark | One real building or place of a community, reinterpreted in voxels; at most 3 per community, order 1 is the signature landmark (7.9) |
 | Community Streak | Consecutive days on which at least half of the Active Verified Residents took an action |
 | Active Verified Resident | A Verified Resident who took at least one action within the last 7 Calgary days (including today); denominator for the streak (Vitality uses the 30-day basis, 7.4) |
 | Last active day | The later of a Verified Resident's last action day and verification day; decides whether their house is shown (30 days) and the Vitality denominator |
 | Move | A Verified Resident changing community: user-started, re-verification in the new community, no limbo, auto-cancel after 7 days, 90-day cooldown, one free correction within 14 days of first verification (6.4) |
 | Cumulative Verified Residents | Distinct people who have ever been Verified Residents of a community; never decreases (movers stay counted, returners are not counted twice) |
-| Building tree | The data-driven tree of community buildings: conditions (parent building, residents, streak) open a building, residents build it, it opens the next ones (7.6) |
-| Unlock | A building of the tree whose conditions are met (it can now be built) |
+| Build map | The data-driven community places in three tracks (community, persona, nature & leisure), each built in order: the previous step plus residents, streak and land open a step, residents build it (7.6) |
+| Unlock | A build map step whose conditions are met (it can now be built) |
 | Main Street | Reserved temporary lots for local business shops (Phase 4, 22.4) |
-| Silhouette | Faded preview of a locked building |
+| Silhouette | Faded preview of a step that is ready to build |
 | World Map | Top-down 2D map of real Calgary community boundaries showing each community's development |
 | Community view | The 3D voxel diorama island screen of a single community |
 | Village Notice Board / Community newspaper | Auto-generated daily news of what happened in the community |
