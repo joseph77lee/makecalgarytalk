@@ -11,6 +11,10 @@ const PERSONAS: [Persona, string][] = [
   ['river', 'River'],
   ['hill_view', 'Hill view'],
   ['historic_main_street', 'Main street'],
+  ['downtown', 'Downtown'],
+  ['golf', 'Golf'],
+  ['food_street', 'Food street'],
+  ['special_district', 'Ranch & rail'],
 ];
 
 export interface PlaceLabel {

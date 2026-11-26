@@ -9,6 +9,8 @@ import type { BoxPart } from '../boxes';
 import { extent } from './designFit';
 import { vmove } from './voxel';
 import { beachHouse, boardwalk, lakeLighthouse, sailboat, sailingDock } from './landmarks';
+import { foodHall, foodTrucks, glassOffice, lanternStreet, marketStalls, pocketPlaza, signatureTower, skywalk } from './placesCity';
+import { cartBarn, clubhouse, drivingRange, hayField, heritageRailway, horseCorral, puttingGreen, redBarn } from './placesGreen';
 import { brickStorefront, cafePatio, heritageTheatre, sandstoneSchool } from './placesMainStreet';
 import { archFootbridge, canoeLaunch, kiteHill, lookoutTower, riversidePathway, riversideTeahouse, telescopeDeck, trailhead } from './placesRiverHill';
 import { ballDiamond, communityGarden, communityHub, gazeboSquare, leisureCentre, outdoorRink, stoneGate, stormPond } from './placesSuburb';
@@ -71,6 +73,26 @@ const LIBRARY = {
   'place.main-street.brick-storefront': { label: 'Brick storefront', persona: 'historic_main_street', step: 2, tiles: [2, 1], site: 'street', build: brickStorefront },
   'place.main-street.sandstone-school': { label: 'Sandstone school', persona: 'historic_main_street', step: 3, tiles: [3, 2], site: 'street', build: sandstoneSchool },
   'place.main-street.heritage-theatre': { label: 'Heritage theatre', persona: 'historic_main_street', step: 4, tiles: [2, 2], site: 'street', build: heritageTheatre },
+  // downtown
+  'place.downtown.pocket-plaza': { label: 'Pocket plaza', persona: 'downtown', step: 1, tiles: [2, 2], site: 'plaza', build: pocketPlaza },
+  'place.downtown.skywalk': { label: 'Skywalk', persona: 'downtown', step: 2, tiles: [3, 1], site: 'street', build: skywalk },
+  'place.downtown.glass-office': { label: 'Glass office', persona: 'downtown', step: 3, tiles: [2, 2], site: 'street', build: glassOffice },
+  'place.downtown.signature-tower': { label: 'Signature tower', persona: 'downtown', step: 4, tiles: [2, 2], site: 'plaza', build: signatureTower },
+  // golf
+  'place.golf.putting-green': { label: 'Putting green', persona: 'golf', step: 1, tiles: [2, 2], site: 'park', build: puttingGreen },
+  'place.golf.driving-range': { label: 'Driving range', persona: 'golf', step: 2, tiles: [3, 2], site: 'park', build: drivingRange },
+  'place.golf.cart-barn': { label: 'Cart barn', persona: 'golf', step: 3, tiles: [2, 1], site: 'park', build: cartBarn },
+  'place.golf.clubhouse': { label: 'Clubhouse', persona: 'golf', step: 4, tiles: [3, 2], site: 'park', build: clubhouse },
+  // food street
+  'place.food-street.food-trucks': { label: 'Food trucks', persona: 'food_street', step: 1, tiles: [2, 2], site: 'street', build: foodTrucks },
+  'place.food-street.market-stalls': { label: 'Market stalls', persona: 'food_street', step: 2, tiles: [2, 2], site: 'plaza', build: marketStalls },
+  'place.food-street.lantern-street': { label: 'Lantern street', persona: 'food_street', step: 3, tiles: [2, 1], site: 'street', build: lanternStreet },
+  'place.food-street.food-hall': { label: 'Food hall', persona: 'food_street', step: 4, tiles: [3, 2], site: 'street', build: foodHall },
+  // special district (ranch and heritage rail)
+  'place.special-district.hay-field': { label: 'Hay field', persona: 'special_district', step: 1, tiles: [2, 2], site: 'park', build: hayField },
+  'place.special-district.horse-corral': { label: 'Horse corral', persona: 'special_district', step: 2, tiles: [2, 2], site: 'park', build: horseCorral },
+  'place.special-district.red-barn': { label: 'Red barn', persona: 'special_district', step: 3, tiles: [2, 2], site: 'park', build: redBarn },
+  'place.special-district.heritage-railway': { label: 'Heritage railway', persona: 'special_district', step: 4, tiles: [3, 2], site: 'park', build: heritageRailway },
 } as const satisfies Record<string, PlaceModel>;
 
 export type PlaceKey = keyof typeof LIBRARY;

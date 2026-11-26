@@ -6,7 +6,7 @@ import { V } from './voxel';
 const KEYS = Object.keys(PLACE_LIBRARY) as PlaceKey[];
 /** Planks of the older lake pieces stick out a fraction of a voxel. */
 const SLACK = 0.25;
-const BUILT_PERSONAS: Persona[] = ['lake', 'mature_suburb', 'new_suburb', 'river', 'hill_view', 'historic_main_street'];
+const BUILT_PERSONAS: Persona[] = ['lake', 'river', 'downtown', 'historic_main_street', 'golf', 'new_suburb', 'hill_view', 'food_street', 'mature_suburb', 'special_district'];
 
 describe('place library', () => {
   it.each(KEYS)('%s stays inside its footprint and stands on the ground', (key) => {
