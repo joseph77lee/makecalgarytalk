@@ -1,5 +1,6 @@
 /** Layout of the gallery's place library (community-identity build map, 2026-11-26): one row per persona. */
 import { box, translate, type BoxPart } from '../assets/boxes';
+import { LANDMARK_LIBRARY, type LandmarkKey } from '../assets/voxel/landmarkLibrary';
 import { PLACE_LIBRARY, personaTrack, type Persona } from '../assets/voxel/placeLibrary';
 
 export const PLACE_ORIGIN: [number, number] = [240, 0];
@@ -48,6 +49,26 @@ function buildScene(): { parts: BoxPart[]; labels: PlaceLabel[]; rows: Record<st
     rows[title] = [(X0 + x) / 2, z + depth / 2];
     z += depth + ROW_GAP;
   });
+  // unique landmarks of the priority communities, five to a row
+  const keys = Object.keys(LANDMARK_LIBRARY) as LandmarkKey[];
+  z += 3;
+  for (let r = 0; r * 5 < keys.length; r++) {
+    const rowKeys = keys.slice(r * 5, r * 5 + 5);
+    const depth = Math.max(...rowKeys.map((k) => LANDMARK_LIBRARY[k].tiles[1]));
+    let x = X0;
+    for (const key of rowKeys) {
+      const lm = LANDMARK_LIBRARY[key];
+      const [w, d] = lm.tiles;
+      const cx = x + w / 2;
+      const cz = z + d / 2;
+      parts.push(box('solid', cx, -0.3, cz, w + 0.6, 0.3, d + 0.6, '#9fd47a'), box('solid', cx, -0.6, cz, w + 0.6, 0.3, d + 0.6, '#c49a6c'));
+      parts.push(...translate(lm.build(7), cx, cz));
+      labels.push({ text: `★ ${lm.code} · ${lm.label}`, at: [cx, 0.2, cz + d / 2 + 0.6], landmark: true });
+      x += w + 1.6;
+    }
+    rows[`Landmarks ${rowKeys[0].slice(9).toUpperCase()}–${rowKeys[rowKeys.length - 1].slice(9).toUpperCase()}`] = [(X0 + x) / 2, z + depth / 2];
+    z += depth + ROW_GAP + 1;
+  }
   return { parts, labels, rows };
 }
 
@@ -56,6 +77,11 @@ export const PLACE_SCENE = buildScene();
 /** Camera presets: each persona row, and everything. */
 export const PLACE_VIEWS: Record<string, { target: [number, number]; zoom: number }> = {
   'Places: all': { target: [PLACE_ORIGIN[0] + 9, PLACE_ORIGIN[1] + 24], zoom: 20 },
-  ...Object.fromEntries(Object.entries(PLACE_SCENE.rows).map(([title, t]) => [`Places: ${title}`, { target: t, zoom: 62 }])),
+  ...Object.fromEntries(Object.entries(PLACE_SCENE.rows).filter(([title]) => !title.startsWith('Landmarks')).map(([title, t]) => [`Places: ${title}`, { target: t, zoom: 62 }])),
 };
+
+/** Camera presets for the unique landmarks, one per row. */
+export const LANDMARK_VIEWS: Record<string, { target: [number, number]; zoom: number }> = Object.fromEntries(
+  Object.entries(PLACE_SCENE.rows).filter(([title]) => title.startsWith('Landmarks')).map(([title, t]) => [`Places: ${title.replace('Landmarks ', '★ ')}`, { target: t, zoom: 40 }]),
+);
 
