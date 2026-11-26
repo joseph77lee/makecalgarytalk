@@ -12,6 +12,35 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-26 — v1.94
+**Changed:** M24 scope follows requirement v1.48: the Welcome sign as root, no place twice, persona hall/park designs; plan generator places face their site, pond fallback and a report; models without drawn water and finished on all sides; a new free-camera item; the build map screen as a skill tree. Header: plan version, `Based on` v1.48.
+
+**Why:** Requirement v1.48 (operator decisions 2026-11-26).
+
+**Previous:**
+- Header (verbatim): `| Plan version | v1.93 |`
+- Header (verbatim):
+  > | Based on | `requirement.md` v1.47 |
+- M24 scope (verbatim): `  - [ ] build map as data and server rules: three tracks, conditions`
+- M24 scope (verbatim): `  - [ ] island plan generator v2: residential zones, place lots by site (shore, riverbank, hilltop, street, park, plaza) and footprint, a zone per land stage, lots reserved to match step conditions; **all 223 plans regenerated**`
+- M24 scope (verbatim): `  - [ ] place library and unique landmarks moved from the spike into the island renderer by asset key (rivers/bridges get a crossing-site rule), placeholders for unknown keys`
+- M24 scope (verbatim): `  - [ ] build map screen: finished island picture, next step of each track with what it needs, progress, landmarks, completion %`
+
+### 2026-11-26 — v1.93
+**Changed:** New module **M24 Community Identity** before M16 (build map of three tracks, personas and landmarks, scenery houses, plan generator v2 with all plans regenerated, build map screen, World Map landmark icon); **M25 Terrain** added after it, to be decided after playing M24; M16 now depends on M24. Header: plan version, `Based on` v1.47, current module; table and diagram.
+
+**Why:** Requirement v1.47 (community identity redesign, operator decisions 2026-11-25/26; approved "셋 다 추천대로 진행해줘").
+
+**Previous:**
+- Header (verbatim): `| Plan version | v1.92 |`
+- Header (verbatim): `| Last updated | 2026-11-25 |`
+- Header (verbatim):
+  > | Based on | `requirement.md` v1.46 |
+- Header (verbatim): `| Current module | M16 Deploy & Playtest (next; build map and community growth redesign under discussion first) |`
+- Table (verbatim): `| M16 | Deploy & Playtest | All + operator accounts | | M23 | ⬜ |`
+- Diagram (verbatim): `    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M16 ── M17 ── M18`
+- M16 heading (M24 and M25 sections inserted before it) (verbatim): `### M16 — Deploy & Playtest ⬜`
+
 ### 2026-11-25 — v1.92
 **Changed:** M23 ✅ (user approved the models, merged to `main`); its DoD ticked with notes. Current module: M16 next, after a discussion of the build map and community growth (the user found the finished community's layout and building tree weak).
 
