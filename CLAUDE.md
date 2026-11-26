@@ -50,6 +50,7 @@ These rules apply to every task in this repository. Read this file and `requirem
 - Get the user's approval before any requirement change.
 
 ### Language
+- **Always talk with the user in Korean** (every reply, report, question and plan in the conversation, including long reports and after context summaries). Only what goes into the repository is English.
 - All code, comments, commit messages, docs, and identifiers in **English**. No Korean in code or comments.
 - Use the terms defined in `requirement.md` §23 Glossary for names in code (e.g. `Vitality`, `CommunityStreak`, `VerifiedResident`).
 
@@ -176,3 +177,4 @@ Each module is usually worked on in a **new session** with no memory of earlier 
 - 2026-11-25: M20's snow-settling hook hid already-lying snow 10 s after opening (the 'just opened' flag expiring made it look like a late start); I had only checked the first seconds on screen → for anything time-based, look again after every timer in it has fired (here 10 s and 45 s), and put the state logic in a pure tested function
 - 2026-11-25: split `LowpolyAsset.tsx` into a new `lowpolyAsset.tsx` and then deleted the old file, which on macOS deleted the new one too (the foundation commit went out without it) → when splitting a file, give the new files names that differ from the old one by more than case, and run `git status` to confirm every new file exists before committing
 - 2026-11-26: bundled two real landmarks (observation tower, crescent tower) and generic towers into one DNC model → one landmark model = one real building; a community's other landmarks are separate entries (`order` 2, 3), surrounding streets/shops are only the lot's dressing
+- 2026-11-26: replied to the user in English several times (the last time in a long step report) although they asked for Korean → every message to the user is in Korean (§2 Language); check the language before sending, especially after long English tool work
