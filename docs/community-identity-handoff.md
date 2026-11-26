@@ -117,6 +117,11 @@ Built from the operator's CSV and the photo index (the generating script stays o
 | `photo_status`, `notes` | `direct` / `substitute` from the index, or the review flags above |
 Not included yet: track steps per persona (comes with the model library), a secondary persona, confidence.
 
+### 5.5 Place library (branch `spike/model-library`, 2026-11-26)
+40 voxel places as asset keys `place.<persona>.<name>` in `assets/voxel/placeLibrary.ts`: each of the 10 personas has a 4-step track, the last step being the pattern landmark (gallery → Place library). Each model has a footprint in tiles and a site (shore, riverbank, hilltop, slope, street, park, plaza) for placement by meaning.
+- **Operator decision (2026-11-26): big grounds take real space.** Ball diamond 5×5, short golf hole 5×3, driving range 5×3, clubhouse 4×3, hay field and horse corral 3×3. **For the island plan generator:** a place may open only when the risen land has room for its footprint (a land-tier condition on top of the build-map conditions), so a 25-tile ball diamond never lands on a 64-tile young island.
+- Known weak spots: the special-district track is ranch/heritage rail and does not suit all six special districts (brewery, university, business park); give those unique landmarks later.
+
 ## 6. Current growth rules vs. the vision (requirement v1.46)
 
 | Rule | Now | Direction |
