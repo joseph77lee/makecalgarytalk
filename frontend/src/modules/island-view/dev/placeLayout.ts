@@ -66,7 +66,7 @@ function buildScene(): { parts: BoxPart[]; labels: PlaceLabel[]; rows: Record<st
       labels.push({ text: `★ ${lm.code} · ${lm.label}`, at: [cx, 0.2, cz + d / 2 + 0.6], landmark: true });
       x += w + 1.6;
     }
-    rows[`Landmarks ${rowKeys[0].slice(9).toUpperCase()}–${rowKeys[rowKeys.length - 1].slice(9).toUpperCase()}`] = [(X0 + x) / 2, z + depth / 2];
+    rows[`Landmarks ${[...new Set([rowKeys[0], rowKeys[rowKeys.length - 1]])].map((k) => k.slice(9).toUpperCase()).join('–')}`] = [(X0 + x) / 2, z + depth / 2];
     z += depth + ROW_GAP + 1;
   }
   return { parts, labels, rows };
