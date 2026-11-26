@@ -7,6 +7,7 @@ import type { BoxPart } from '../boxes';
 import { extent } from './designFit';
 import type { PlaceModel } from './placeLibrary';
 import { caboosePark, curvedLibrary, domedCulturalCentre, footballStadium, heritageRedBarn, lionArchBridge, redSpiralBridge, signalHillStones, skiJumpTower, stoneArchGate } from './uniqueLandmarks';
+import { cornerTowerStreet, highStreetClockTower, islandInTheLake, lagoonTeahouse, lakeBeachClub, ringPylonBridge, smallBoatMarina, twinMansards, waterfallHillLake, welcomeArchStreet } from './uniqueLandmarksTwo';
 import { vmove } from './voxel';
 
 export interface LandmarkModel extends Omit<PlaceModel, 'step'> {
@@ -24,13 +25,24 @@ const LIBRARY = {
   'landmark.sig': { code: 'SIG', label: 'Stone numbers on the hillside', persona: 'hill_view', tiles: [4, 3], site: 'slope', build: signalHillStones },
   'landmark.cre': { code: 'CRE', label: 'Lion arch bridge', persona: 'hill_view', tiles: [5, 1], site: 'riverbank', build: lionArchBridge },
   'landmark.eau': { code: 'EAU', label: 'Red spiral footbridge', persona: 'downtown', tiles: [5, 1], site: 'riverbank', build: redSpiralBridge },
-  'landmark.wsp': { code: 'WSP', label: 'Ski jump tower', persona: 'mature_suburb', tiles: [3, 5], site: 'slope', build: skiJumpTower },
+  'landmark.wsp': { code: 'WSP', label: 'Ski jump tower', persona: 'hill_view', tiles: [3, 5], site: 'slope', build: skiJumpTower },
   'landmark.dne': { code: 'DNE', label: 'Curved library', persona: 'downtown', tiles: [4, 3], site: 'plaza', build: curvedLibrary },
   'landmark.chn': { code: 'CHN', label: 'Domed cultural centre', persona: 'food_street', tiles: [3, 3], site: 'plaza', build: domedCulturalCentre },
   'landmark.leg': { code: 'LEG', label: 'Stone arches and clock-tower gate', persona: 'new_suburb', tiles: [3, 2], site: 'street', build: stoneArchGate },
   'landmark.ogd': { code: 'OGD', label: 'Caboose park', persona: 'river', tiles: [3, 2], site: 'park', build: caboosePark },
   'landmark.shn': { code: 'SHN', label: '1915 red barn', persona: 'mature_suburb', tiles: [3, 3], site: 'park', build: heritageRedBarn },
-  'landmark.sta': { code: 'STA', label: 'Football stadium', persona: 'historic_main_street', tiles: [6, 5], site: 'park', build: footballStadium },
+  'landmark.sta': { code: 'STA', label: 'Football stadium', persona: 'special_district', tiles: [6, 5], site: 'park', build: footballStadium },
+  // second batch
+  'landmark.mct': { code: 'MCT', label: 'High-street clock tower', persona: 'new_suburb', tiles: [3, 3], site: 'street', build: highStreetClockTower },
+  'landmark.ing': { code: 'ING', label: 'Twin mansard buildings', persona: 'historic_main_street', tiles: [3, 2], site: 'street', build: twinMansards },
+  'landmark.hil': { code: 'HIL', label: 'Corner tower street', persona: 'historic_main_street', tiles: [3, 2], site: 'street', build: cornerTowerStreet },
+  'landmark.alt': { code: 'ALT', label: 'Main-street welcome arch', persona: 'historic_main_street', tiles: [3, 2], site: 'street', build: welcomeArchStreet },
+  'landmark.mah': { code: 'MAH', label: 'Lake beach club', persona: 'lake', tiles: [5, 4], site: 'shore', build: lakeBeachClub },
+  'landmark.lkb': { code: 'LKB', label: 'Lake with a waterfall hill', persona: 'lake', tiles: [4, 4], site: 'shore', build: waterfallHillLake },
+  'landmark.mck': { code: 'MCK', label: 'Island in the lake', persona: 'lake', tiles: [4, 4], site: 'shore', build: islandInTheLake },
+  'landmark.byv': { code: 'BYV', label: 'Small-boat marina', persona: 'lake', tiles: [4, 3], site: 'shore', build: smallBoatMarina },
+  'landmark.bow': { code: 'BOW', label: 'Lagoon teahouse', persona: 'river', tiles: [4, 3], site: 'riverbank', build: lagoonTeahouse },
+  'landmark.poi': { code: 'POI', label: 'Footbridge with ring pylons', persona: 'river', tiles: [5, 1], site: 'riverbank', build: ringPylonBridge },
 } as const satisfies Record<string, LandmarkModel>;
 
 export type LandmarkKey = keyof typeof LIBRARY;
