@@ -25,18 +25,21 @@ const PLAN = decodePlan(JSON.parse(readFileSync(join(dirname(fileURLToPath(impor
 const DAY = '2026-12-01';
 const NEXT = '2026-12-02T06:00:00+00:00';
 
+/** Build-map fields the mapping does not use (requirement v1.48 §7.6). */
+const STEP = { track: 'community' as const, step: 1, landmark_order: null, tiles: [3, 3] as [number, number], site: 'plaza' };
+
 function serverState(patch: Partial<ServerCommunityState> = {}): ServerCommunityState {
   return {
     calgary_day: DAY,
     next_day_start: NEXT,
-    community: { id: 'c1', code: 'MAH', name: 'Mahogany', sector: 'Southeast', population: 13860, residents: 4, land_stage: 1, settled: true, vitality: 64, mini_villagers: 5, next_land_residents: 2 },
+    community: { id: 'c1', code: 'MAH', name: 'Mahogany', sector: 'Southeast', population: 13860, residents: 4, land_stage: 1, settled: true, level: 1, persona: 'lake', vitality: 64, mini_villagers: 5, next_land_residents: 2 },
     buildings: [
-      { key: 'welcome-sign', name: 'Welcome sign', stage: 1, status: 'built', level: 2, progress: 1, remaining: null },
-      { key: 'fire-pit', name: 'Fire pit', stage: 1, status: 'building', level: 1, progress: 0.6, remaining: null },
-      { key: 'frozen-pond', name: 'Frozen pond', stage: 1, status: 'building', level: 1, progress: 0, remaining: null },
-      { key: 'gateway-arch', name: 'Gateway arch', stage: 2, status: 'building', level: 1, progress: 0.4, remaining: null },
-      { key: 'playground', name: 'Playground', stage: 2, status: 'locked', level: 1, progress: 0, remaining: { residents: 0, streak_days: 3, requires: [] } },
-      { key: 'warming-hut', name: 'Warming hut', stage: 2, status: 'locked', level: 1, progress: 0, remaining: { residents: 0, streak_days: 3, requires: ['fire-pit'] } },
+      { ...STEP, key: 'welcome-sign', name: 'Welcome sign', stage: 1, status: 'built', level: 2, progress: 1, remaining: null },
+      { ...STEP, key: 'fire-pit', name: 'Fire pit', stage: 1, status: 'building', level: 1, progress: 0.6, remaining: null },
+      { ...STEP, key: 'frozen-pond', name: 'Frozen pond', stage: 1, status: 'building', level: 1, progress: 0, remaining: null },
+      { ...STEP, key: 'gateway-arch', name: 'Gateway arch', stage: 2, status: 'building', level: 1, progress: 0.4, remaining: null },
+      { ...STEP, key: 'playground', name: 'Playground', stage: 2, status: 'locked', level: 1, progress: 0, remaining: { residents: 0, streak_days: 3, land_residents: 0, requires: [] } },
+      { ...STEP, key: 'warming-hut', name: 'Warming hut', stage: 2, status: 'locked', level: 1, progress: 0, remaining: { residents: 0, streak_days: 3, land_residents: 0, requires: ['fire-pit'] } },
     ],
     projects: [
       { id: 'p1', building_key: 'fire-pit', title: 'Fire pit', level: 1, required: 20, progress: 12, stage: 'frame' },

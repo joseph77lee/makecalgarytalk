@@ -1,0 +1,1239 @@
+{
+  "version": 2,
+  "about": "Build map (requirement.md v1.48 7.6, 7.6b, 7.9). Single source for the gamecore seed (supabase/data/build_map_seed.py) and the island plan generator (frontend/scripts/island_plans.py); a frontend test checks every key has a model with the same tiles and site. A step applies to a community when its persona/community match (missing = every community); among steps with the same track and step number the most specific wins (community > persona > every). tiles [0, 0] = no lot (drawn along the paths). Starting values; tune after launch.",
+  "stageMultipliers": {
+    "0": 0.3,
+    "1": 0.3,
+    "2": 1,
+    "3": 1.5,
+    "4": 2,
+    "5": 2.5,
+    "6": 3
+  },
+  "conditions": {
+    "common": [
+      {
+        "step": 1
+      },
+      {
+        "step": 2,
+        "streakDays": 3
+      },
+      {
+        "step": 3,
+        "residents": 3
+      },
+      {
+        "step": 4,
+        "residents": 6,
+        "streakDays": 7
+      },
+      {
+        "step": 5,
+        "residents": 10,
+        "streakDays": 14
+      },
+      {
+        "step": 6,
+        "residents": 20,
+        "streakDays": 30
+      }
+    ],
+    "landmarks": [
+      {
+        "order": 1,
+        "residents": 11,
+        "streakDays": 14
+      },
+      {
+        "order": 2,
+        "residents": 26,
+        "streakDays": 21
+      },
+      {
+        "order": 3,
+        "residents": 51,
+        "streakDays": 30
+      }
+    ]
+  },
+  "landTiers": [
+    {
+      "minResidents": 0,
+      "tiles": 64
+    },
+    {
+      "minResidents": 3,
+      "tiles": 144
+    },
+    {
+      "minResidents": 6,
+      "tiles": 256
+    },
+    {
+      "minResidents": 11,
+      "tiles": 400
+    },
+    {
+      "minResidents": 26,
+      "tiles": 676
+    },
+    {
+      "minResidents": 51,
+      "tiles": null
+    }
+  ],
+  "steps": [
+    {
+      "key": "welcome-sign",
+      "label": "Welcome sign",
+      "track": "root",
+      "step": 0,
+      "tiles": [
+        1,
+        1
+      ],
+      "site": "entrance"
+    },
+    {
+      "key": "fire-pit",
+      "label": "Fire pit",
+      "track": "community",
+      "step": 1,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "plaza"
+    },
+    {
+      "key": "warming-hut",
+      "label": "Warming hut",
+      "track": "community",
+      "step": 2,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "plaza"
+    },
+    {
+      "key": "skating-rink",
+      "label": "Skating rink",
+      "track": "community",
+      "step": 3,
+      "tiles": [
+        2,
+        3
+      ],
+      "site": "park"
+    },
+    {
+      "key": "community-hall",
+      "label": "Community hall",
+      "track": "community",
+      "step": 4,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "plaza"
+    },
+    {
+      "key": "neighbourhood-park",
+      "label": "Neighbourhood park",
+      "track": "community",
+      "step": 5,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "park"
+    },
+    {
+      "key": "playground",
+      "label": "Playground",
+      "track": "nature",
+      "step": 1,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "sledding-hill",
+      "label": "Sledding hill",
+      "track": "nature",
+      "step": 2,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "slope"
+    },
+    {
+      "key": "dog-park",
+      "label": "Off-leash dog park",
+      "track": "nature",
+      "step": 3,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "community-garden",
+      "label": "Community garden",
+      "track": "nature",
+      "step": 4,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "pathway-lights",
+      "label": "Pathway lights",
+      "track": "nature",
+      "step": 5,
+      "tiles": [
+        0,
+        0
+      ],
+      "site": "path"
+    },
+    {
+      "key": "decoration-1",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 6,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "decoration-2",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 7,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "decoration-3",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 8,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "decoration-4",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 9,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "decoration-5",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 10,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "decoration-6",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 11,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "decoration-7",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 12,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "decoration-8",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 13,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "decoration-9",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 14,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "decoration-10",
+      "label": "Decoration",
+      "track": "nature",
+      "step": 15,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park"
+    },
+    {
+      "key": "place.downtown.pocket-plaza",
+      "label": "Pocket plaza",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "plaza",
+      "persona": "downtown"
+    },
+    {
+      "key": "place.downtown.skywalk",
+      "label": "Skywalk",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        3,
+        1
+      ],
+      "site": "street",
+      "persona": "downtown"
+    },
+    {
+      "key": "place.downtown.glass-office",
+      "label": "Glass office",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "street",
+      "persona": "downtown"
+    },
+    {
+      "key": "place.downtown.signature-tower",
+      "label": "Signature tower",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "plaza",
+      "persona": "downtown"
+    },
+    {
+      "key": "place.food-street.food-trucks",
+      "label": "Food trucks",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "street",
+      "persona": "food_street"
+    },
+    {
+      "key": "place.food-street.market-stalls",
+      "label": "Market stalls",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "plaza",
+      "persona": "food_street"
+    },
+    {
+      "key": "place.food-street.lantern-street",
+      "label": "Lantern street",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        3,
+        1
+      ],
+      "site": "street",
+      "persona": "food_street"
+    },
+    {
+      "key": "place.food-street.food-hall",
+      "label": "Food hall",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "street",
+      "persona": "food_street"
+    },
+    {
+      "key": "place.golf.golf-hole",
+      "label": "Short golf hole",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        5,
+        3
+      ],
+      "site": "park",
+      "persona": "golf"
+    },
+    {
+      "key": "place.golf.driving-range",
+      "label": "Driving range",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        5,
+        3
+      ],
+      "site": "park",
+      "persona": "golf"
+    },
+    {
+      "key": "place.golf.cart-barn",
+      "label": "Cart barn",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        2,
+        1
+      ],
+      "site": "park",
+      "persona": "golf"
+    },
+    {
+      "key": "place.golf.clubhouse",
+      "label": "Clubhouse",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "park",
+      "persona": "golf"
+    },
+    {
+      "key": "place.hill-view.trailhead",
+      "label": "Trailhead",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        1,
+        1
+      ],
+      "site": "slope",
+      "persona": "hill_view"
+    },
+    {
+      "key": "place.hill-view.telescope-deck",
+      "label": "Telescope deck",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "hilltop",
+      "persona": "hill_view"
+    },
+    {
+      "key": "place.hill-view.kite-hill",
+      "label": "Kite hill",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "slope",
+      "persona": "hill_view"
+    },
+    {
+      "key": "place.hill-view.lookout-tower",
+      "label": "Lookout tower",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "hilltop",
+      "persona": "hill_view"
+    },
+    {
+      "key": "place.main-street.cafe-patio",
+      "label": "Caf\u00e9 patio",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        2,
+        1
+      ],
+      "site": "street",
+      "persona": "historic_main_street"
+    },
+    {
+      "key": "place.main-street.brick-storefront",
+      "label": "Brick storefront",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        2,
+        1
+      ],
+      "site": "street",
+      "persona": "historic_main_street"
+    },
+    {
+      "key": "place.main-street.sandstone-school",
+      "label": "Sandstone school",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "street",
+      "persona": "historic_main_street"
+    },
+    {
+      "key": "place.main-street.heritage-theatre",
+      "label": "Heritage theatre",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        2,
+        3
+      ],
+      "site": "street",
+      "persona": "historic_main_street"
+    },
+    {
+      "key": "place.lake.sailing-dock",
+      "label": "Sailing dock",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "shore",
+      "persona": "lake"
+    },
+    {
+      "key": "place.lake.boardwalk",
+      "label": "Boardwalk",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        3,
+        1
+      ],
+      "site": "shore",
+      "persona": "lake"
+    },
+    {
+      "key": "place.lake.beach-house",
+      "label": "Beach house",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "shore",
+      "persona": "lake"
+    },
+    {
+      "key": "place.lake.lighthouse",
+      "label": "Lakeside lighthouse",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "shore",
+      "persona": "lake"
+    },
+    {
+      "key": "place.mature-suburb.tennis-courts",
+      "label": "Tennis courts",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "park",
+      "persona": "mature_suburb"
+    },
+    {
+      "key": "place.mature-suburb.curling-club",
+      "label": "Curling club",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "plaza",
+      "persona": "mature_suburb"
+    },
+    {
+      "key": "place.mature-suburb.ball-diamond",
+      "label": "Ball diamond",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        5,
+        5
+      ],
+      "site": "park",
+      "persona": "mature_suburb"
+    },
+    {
+      "key": "place.mature-suburb.leisure-centre",
+      "label": "Leisure centre",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        4
+      ],
+      "site": "plaza",
+      "persona": "mature_suburb"
+    },
+    {
+      "key": "place.new-suburb.stone-gate",
+      "label": "Stone entrance gate",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        2,
+        1
+      ],
+      "site": "street",
+      "persona": "new_suburb"
+    },
+    {
+      "key": "place.new-suburb.storm-pond",
+      "label": "Storm pond",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "park",
+      "persona": "new_suburb"
+    },
+    {
+      "key": "place.new-suburb.gazebo-square",
+      "label": "Gazebo square",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "plaza",
+      "persona": "new_suburb"
+    },
+    {
+      "key": "place.new-suburb.community-hub",
+      "label": "Community hub",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "plaza",
+      "persona": "new_suburb"
+    },
+    {
+      "key": "place.river.pathway",
+      "label": "Riverside pathway",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        2,
+        1
+      ],
+      "site": "riverbank",
+      "persona": "river"
+    },
+    {
+      "key": "place.river.canoe-launch",
+      "label": "Canoe launch",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "riverbank",
+      "persona": "river"
+    },
+    {
+      "key": "place.river.footbridge",
+      "label": "Arched footbridge",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        3,
+        1
+      ],
+      "site": "riverbank",
+      "persona": "river"
+    },
+    {
+      "key": "place.river.teahouse",
+      "label": "Riverside teahouse",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "riverbank",
+      "persona": "river"
+    },
+    {
+      "key": "place.special-district.hay-field",
+      "label": "Hay field",
+      "track": "persona",
+      "step": 1,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "park",
+      "persona": "special_district"
+    },
+    {
+      "key": "place.special-district.horse-corral",
+      "label": "Horse corral",
+      "track": "persona",
+      "step": 2,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "park",
+      "persona": "special_district"
+    },
+    {
+      "key": "place.special-district.red-barn",
+      "label": "Red barn",
+      "track": "persona",
+      "step": 3,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "park",
+      "persona": "special_district"
+    },
+    {
+      "key": "place.special-district.heritage-railway",
+      "label": "Heritage railway",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        2
+      ],
+      "site": "park",
+      "persona": "special_district"
+    },
+    {
+      "key": "landmark-2",
+      "label": "Landmark 2",
+      "track": "persona",
+      "step": 5,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park",
+      "landmarkOrder": 2
+    },
+    {
+      "key": "landmark-3",
+      "label": "Landmark 3",
+      "track": "persona",
+      "step": 6,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "park",
+      "landmarkOrder": 3
+    },
+    {
+      "key": "landmark.sig",
+      "label": "Stone numbers on the hillside",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "slope",
+      "community": "SIG",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.cre",
+      "label": "Lion arch bridge",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        5,
+        1
+      ],
+      "site": "riverbank",
+      "community": "CRE",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.eau",
+      "label": "Red spiral footbridge",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        5,
+        1
+      ],
+      "site": "riverbank",
+      "community": "EAU",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.wsp",
+      "label": "Ski jump tower",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        5
+      ],
+      "site": "slope",
+      "community": "WSP",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.dne",
+      "label": "Curved library",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "plaza",
+      "community": "DNE",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.chn",
+      "label": "Domed cultural centre",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "plaza",
+      "community": "CHN",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.leg",
+      "label": "Stone arches and clock-tower gate",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "street",
+      "community": "LEG",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.ogd",
+      "label": "Caboose park",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "park",
+      "community": "OGD",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.shn",
+      "label": "1915 red barn",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "park",
+      "community": "SHN",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.sta",
+      "label": "Football stadium",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        6,
+        5
+      ],
+      "site": "park",
+      "community": "STA",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.mct",
+      "label": "High-street clock tower",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "street",
+      "community": "MCT",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.ing",
+      "label": "Twin mansard buildings",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "street",
+      "community": "ING",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.hil",
+      "label": "Corner tower street",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "street",
+      "community": "HIL",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.alt",
+      "label": "Main-street welcome arch",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "street",
+      "community": "ALT",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.mah",
+      "label": "Lake beach club",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        5,
+        4
+      ],
+      "site": "shore",
+      "community": "MAH",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.lkb",
+      "label": "Lake with a waterfall hill",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        4
+      ],
+      "site": "shore",
+      "community": "LKB",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.mck",
+      "label": "Island in the lake",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        4
+      ],
+      "site": "shore",
+      "community": "MCK",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.byv",
+      "label": "Small-boat marina",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "shore",
+      "community": "BYV",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.bow",
+      "label": "Lagoon teahouse",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "riverbank",
+      "community": "BOW",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.poi",
+      "label": "Footbridge with ring pylons",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        5,
+        1
+      ],
+      "site": "riverbank",
+      "community": "POI",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.ram",
+      "label": "Hilltop lookout over the city",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "slope",
+      "community": "RAM",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.umr",
+      "label": "Castle-style house",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "street",
+      "community": "UMR",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.cgr",
+      "label": "Cougar on the rock",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "park",
+      "community": "CGR",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.coa",
+      "label": "Stagecoach stone",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        2
+      ],
+      "site": "park",
+      "community": "COA",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.cur",
+      "label": "Old barracks stables",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "street",
+      "community": "CUR",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.sna",
+      "label": "1912 sandstone school",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "street",
+      "community": "SNA",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.dnc",
+      "label": "Observation tower",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        2,
+        2
+      ],
+      "site": "plaza",
+      "community": "DNC",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.dnc.2",
+      "label": "Crescent glass tower",
+      "track": "persona",
+      "step": 5,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "plaza",
+      "community": "DNC",
+      "landmarkOrder": 2
+    },
+    {
+      "key": "landmark.kca",
+      "label": "Stone tower entrance",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        2
+      ],
+      "site": "street",
+      "community": "KCA",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.rvw",
+      "label": "Red tractor and greenhouse",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        4,
+        3
+      ],
+      "site": "park",
+      "community": "RVW",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.roc",
+      "label": "Wave-roofed recreation centre",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        5,
+        3
+      ],
+      "site": "park",
+      "community": "ROC",
+      "landmarkOrder": 1
+    },
+    {
+      "key": "landmark.gag",
+      "label": "Peacekeeper memorial park",
+      "track": "persona",
+      "step": 4,
+      "tiles": [
+        3,
+        3
+      ],
+      "site": "plaza",
+      "community": "GAG",
+      "landmarkOrder": 1
+    }
+  ]
+}

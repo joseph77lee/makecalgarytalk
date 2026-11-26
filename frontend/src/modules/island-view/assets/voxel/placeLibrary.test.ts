@@ -52,7 +52,8 @@ describe('place library', () => {
     expect(area('place.mature-suburb.ball-diamond')).toBeGreaterThanOrEqual(25);
     expect(area('place.golf.golf-hole')).toBeGreaterThanOrEqual(15);
     expect(area('place.golf.driving-range')).toBeGreaterThanOrEqual(15);
-    for (const k of ['place.golf.clubhouse', 'place.special-district.hay-field', 'place.special-district.horse-corral', 'place.mature-suburb.outdoor-rink', 'place.new-suburb.storm-pond', 'place.mature-suburb.leisure-centre', 'place.main-street.sandstone-school', 'place.downtown.signature-tower', 'place.food-street.food-hall'] as const) expect(area(k)).toBeGreaterThanOrEqual(9);
+    expect(area('place.mature-suburb.tennis-courts')).toBeGreaterThanOrEqual(6);
+    for (const k of ['place.golf.clubhouse', 'place.special-district.hay-field', 'place.special-district.horse-corral', 'place.new-suburb.storm-pond', 'place.mature-suburb.leisure-centre', 'place.main-street.sandstone-school', 'place.downtown.signature-tower', 'place.food-street.food-hall'] as const) expect(area(k)).toBeGreaterThanOrEqual(9);
   });
 
   it('keys follow place.<persona>.<name>', () => {

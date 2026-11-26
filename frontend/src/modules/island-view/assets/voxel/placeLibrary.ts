@@ -19,7 +19,7 @@ import { foodHall, foodTrucks, glassOffice, lanternStreet, marketStalls, pocketP
 import { cartBarn, clubhouse, drivingRange, golfHole, hayField, heritageRailway, horseCorral, redBarn } from './placesGreen';
 import { brickStorefront, cafePatio, heritageTheatre, sandstoneSchool } from './placesMainStreet';
 import { archFootbridge, canoeLaunch, kiteHill, lookoutTower, riversidePathway, riversideTeahouse, telescopeDeck, trailhead } from './placesRiverHill';
-import { ballDiamond, communityGarden, communityHub, gazeboSquare, leisureCentre, outdoorRink, stoneGate, stormPond } from './placesSuburb';
+import { ballDiamond, communityHub, curlingClub, gazeboSquare, leisureCentre, stoneGate, stormPond, tennisCourts } from './placesSuburb';
 
 /** The ten personas of `supabase/data/community_personas.csv`. */
 export type Persona = 'lake' | 'river' | 'downtown' | 'historic_main_street' | 'golf' | 'new_suburb' | 'hill_view' | 'food_street' | 'mature_suburb' | 'special_district';
@@ -59,8 +59,8 @@ const LIBRARY = {
   'place.lake.beach-house': { label: 'Beach house', persona: 'lake', step: 3, tiles: [4, 3], site: 'shore', build: lot(beachHouse, 4, 3, { ...SAND, trees: 0.25 }) },
   'place.lake.lighthouse': { label: 'Lakeside lighthouse', persona: 'lake', step: 4, tiles: [3, 3], site: 'shore', build: lot(lakeLighthouse, 3, 3, SAND) },
   // mature suburb
-  'place.mature-suburb.community-garden': { label: 'Community garden', persona: 'mature_suburb', step: 1, tiles: [2, 2], site: 'park', build: communityGarden },
-  'place.mature-suburb.outdoor-rink': { label: 'Outdoor rink', persona: 'mature_suburb', step: 2, tiles: [4, 3], site: 'park', build: outdoorRink },
+  'place.mature-suburb.tennis-courts': { label: 'Tennis courts', persona: 'mature_suburb', step: 1, tiles: [3, 2], site: 'park', build: tennisCourts },
+  'place.mature-suburb.curling-club': { label: 'Curling club', persona: 'mature_suburb', step: 2, tiles: [3, 2], site: 'plaza', build: curlingClub },
   'place.mature-suburb.ball-diamond': { label: 'Ball diamond', persona: 'mature_suburb', step: 3, tiles: [5, 5], site: 'park', build: ballDiamond },
   'place.mature-suburb.leisure-centre': { label: 'Leisure centre', persona: 'mature_suburb', step: 4, tiles: [4, 4], site: 'plaza', build: lot(leisureCentre, 4, 4) },
   // new suburb

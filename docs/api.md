@@ -55,8 +55,8 @@ Residential Calgary communities (City of Calgary Open Data, see `docs/data-sourc
 State on the current Calgary day. The shared part comes from a **snapshot** per community,
 rebuilt every 5 minutes by pg_cron (`gamecore.refresh_snapshots()`), on the first read of a
 new Calgary day, and right after someone joins or leaves the community. Building the snapshot
-also updates the building tree (newly unlocked buildings are recorded as opened, new
-constructions start while fewer than 3 are active; these rows are written once). `streak` and
+also updates the build map (newly unlocked steps are recorded as opened, new constructions
+start while fewer than 3 are active; these rows are written once). `streak` and
 `me` are computed live on every read.
 
 ```json
@@ -64,8 +64,8 @@ constructions start while fewer than 3 are active; these rows are written once).
   "calgary_day": "2026-12-02",
   "next_day_start": "2026-12-03T06:00:00+00:00",
   "community": { "id": "uuid", "code": "MAH", "name": "Mahogany", "sector": "Southeast", "population": 13860,
-                 "residents": 4, "land_stage": 1, "next_land_residents": 2, "settled": true,
-                 "vitality": 64, "mini_villagers": 5 },
+                 "persona": "lake", "residents": 4, "land_stage": 1, "next_land_residents": 2, "settled": true,
+                 "level": 2, "vitality": 64, "mini_villagers": 5 },
   "streak": { "days": 5, "today": { "acted": 2, "active_residents": 6, "needed": 3, "attended": false } },
   "changes": {
     "actions": 4,
@@ -75,10 +75,13 @@ constructions start while fewer than 3 are active; these rows are written once).
     "new_residents": 1, "land_grew": false, "vitality_before": 58
   },
   "buildings": [
-    { "key": "welcome-sign", "name": "Welcome sign", "stage": 1, "status": "building", "level": 2, "progress": 0.25, "remaining": null },
-    { "key": "frozen-pond", "name": "Frozen pond", "stage": 1, "status": "built", "level": 1, "progress": 1, "remaining": null },
-    { "key": "warming-hut", "name": "Warming hut", "stage": 2, "status": "locked", "level": 1, "progress": 0,
-      "remaining": { "residents": 0, "streak_days": 3, "requires": ["fire-pit"] } }
+    { "key": "welcome-sign", "name": "Welcome sign", "track": "root", "step": 0, "stage": 0, "landmark_order": null,
+      "tiles": [1, 1], "site": "entrance", "status": "built", "level": 1, "progress": 1, "remaining": null },
+    { "key": "place.lake.sailing-dock", "name": "Sailing dock", "track": "persona", "step": 1, "stage": 1, "landmark_order": null,
+      "tiles": [2, 2], "site": "shore", "status": "building", "level": 1, "progress": 0.25, "remaining": null },
+    { "key": "warming-hut", "name": "Warming hut", "track": "community", "step": 2, "stage": 2, "landmark_order": null,
+      "tiles": [3, 3], "site": "plaza", "status": "locked", "level": 1, "progress": 0,
+      "remaining": { "residents": 0, "streak_days": 3, "land_residents": 0, "requires": ["fire-pit"] } }
   ],
   "projects": [
     { "id": "uuid", "building_key": "welcome-sign", "title": "Welcome sign", "level": 2,
@@ -100,16 +103,22 @@ constructions start while fewer than 3 are active; these rows are written once).
   day. `streak.today`: members who acted today, 7-day active residents, how many are needed
   (half, rounded up, at least 1), and whether today already counts.
 - `changes`: what changed since yesterday — yesterday's actions (total and per building
-  level), buildings that became built or reached a new level today, buildings unlocked since
-  yesterday (not the three seeds), new residents yesterday, whether the land grew, and
+  level), places that became built today, steps unlocked since yesterday (not the root), new residents yesterday, whether the land grew, and
   yesterday's Vitality.
-- `buildings`: every building of the tree, in tree order.
+- `community.persona`: one of 10 patterns (requirement §7.9). `community.level`: development
+  level 0–4 (§7.4): Welcome sign, first persona place, Community hall, signature landmark.
+- `buildings`: every step of this community's build map (requirement v1.48 §7.6), root first,
+  then the community, persona and nature tracks in step order.
+  - `track`, `step`: `root` (the Welcome sign, step 0) or a track and its place in it.
+    `landmark_order`: 1 signature landmark, 2 and 3 later landmarks, else null. `tiles`
+    (footprint; `[0, 0]` = no lot) and `site` place it on the island. `stage`: multiplier stage.
   - `status`: `locked` (conditions not met), `opened` (unlocked, waiting for a free
-    construction slot), `building` (a construction or upgrade is active), `built`.
-  - `level`: the level under construction, or the highest built level.
+    construction slot), `building` (a construction is active), `built`.
+  - `level`: always 1 (no upgrades in place any more).
   - `progress`: 0–1 while building, 1 when built.
-  - `remaining`: only for `locked`; what is still missing (`residents` and `streak_days` are
-    the shortfall, `requires` the buildings that are not yet built).
+  - `remaining`: only for `locked`; what is still missing (`residents`, `streak_days` and
+    `land_residents` — neighbours until the step's lot rises — are shortfalls, `requires` the
+    previous step when it is not built yet).
 - `projects`: the active constructions (at most 3); the ids to send to
   `gamecore_submit_actions`. `progress` counts actions from **before today** (today's
   actions show tomorrow), capped at `required`. `stage`: `scaffolding` below half, `frame`
@@ -133,7 +142,8 @@ constructions start while fewer than 3 are active; these rows are written once).
 ```
 One row per community that has a snapshot (communities with residents are rebuilt every 5
 minutes); any community not listed is unsettled. `level` (requirement §9): 0 no Welcome sign,
-1 Welcome sign, 2 + Playground or Skating rink, 3 + Community hall, 4 + Neighbourhood park. The
+1 Welcome sign, 2 + first persona place, 3 + Community hall, 4 + signature landmark (computed
+in the snapshot, `community.level`). The
 shapes come from the static file `frontend/public/worldmap/calgary.json` (generated by
 `frontend/scripts/world_map.py`; metres, simplified; 60 KB).
 
@@ -360,15 +370,19 @@ community (null for visitors). `champions` of last week wear the crown on the Wo
 
 ## Rules (starting values, `requirement.md` §7.7, §8, §22.8)
 - 3 energy per player per Calgary day; enforced by a database constraint (energy slots 1–3).
-- Building tree (`supabase/data/building_tree.json`, seeded into `gamecore.building_types`,
-  `requirement.md` §7.6b). A building **opens** when its required buildings are built and
-  the community has enough cumulative residents and streak days. Openings are recorded once,
-  so a building never locks again when residents leave.
-- At most 3 constructions at a time. Opened buildings start in tree order; when none is
-  waiting, the newest building of each growth chain is upgraded (lowest level first).
+- Build map (`supabase/data/build_map.json` + `community_personas.csv`, seeded into
+  `gamecore.building_types` and `gamecore.community_personas` by `supabase/data/build_map_seed.py`;
+  `requirement.md` v1.48 §7.6). A community's steps: per track and step number the most specific
+  applicable row (this community's landmark > its persona's place > every community). A step
+  **opens** when the previous step of its track is built (step 1: the Welcome sign), the
+  community has enough cumulative residents and streak days, and its lot has risen
+  (`gamecore.place_lots`, from the island plans; no row = no land condition). Openings are
+  recorded once, so a step never locks again when residents leave.
+- At most 3 constructions at a time. Opened steps start in the order they opened, then by step,
+  taking turns between the tracks. No upgrades in place.
 - Required actions, frozen when a construction starts:
-  `ceil(max(10, 5 × active residents) × stage multiplier × 1.25^(level−1))`, at least 3 for
-  stage-1 buildings. Stage multipliers: 1: 0.3, 2: 1, 3: 1.5, 4: 2, 5: 3.
+  `ceil(max(10, 5 × active residents) × stage multiplier)`, at least 3 for the root and first
+  steps. Stage multipliers: 0–1: 0.3, 2: 1, 3: 1.5, 4: 2, 5: 2.5, 6: 3 (landmarks and step 6).
   Active residents = members whose last active day (later of joining and last action) is
   within the last 30 Calgary days.
 - Land tiers (cumulative residents → land stage): 0, 3, 6, 11, 26, 51 → 0–5.

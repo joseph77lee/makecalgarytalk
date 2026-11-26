@@ -25,19 +25,31 @@ export interface ServerProject {
 
 export const SERVER_BUILDING_STATUSES = ['locked', 'opened', 'building', 'built'] as const;
 
-/** One building of the tree with its status for this community (requirement.md §7.6b). */
+export const SERVER_TRACKS = ['root', 'community', 'persona', 'nature'] as const;
+
+/** One step of the community's build map with its status (requirement.md v1.48 §7.6, §7.6b). */
 export interface ServerBuilding {
   key: string;
   name: string;
-  /** Tree stage 1–5. */
+  /** Root (the Welcome sign) or one of the three tracks. */
+  track: (typeof SERVER_TRACKS)[number];
+  /** Place in its track (root 0, then 1, 2, …). */
+  step: number;
+  /** Multiplier stage 0–6. */
   stage: number;
+  /** 1 = signature landmark, 2 and 3 later landmarks; null for other places. */
+  landmark_order: number | null;
+  /** Footprint in tiles; [0, 0] = no lot (drawn along the paths). */
+  tiles: [number, number];
+  /** Where it belongs on the island (shore, riverbank, hilltop, slope, street, park, plaza, entrance, path). */
+  site: string;
   status: (typeof SERVER_BUILDING_STATUSES)[number];
   /** Highest built level, or the level under construction. */
   level: number;
   /** 0..1 while building; 1 when built. */
   progress: number;
   /** What is still missing while locked; null otherwise. */
-  remaining: { residents: number; streak_days: number; requires: string[] } | null;
+  remaining: { residents: number; streak_days: number; land_residents: number; requires: string[] } | null;
 }
 
 export interface ServerCommunity extends CommunityListItem {
@@ -46,6 +58,10 @@ export interface ServerCommunity extends CommunityListItem {
   land_stage: number;
   /** True once the first building is built. */
   settled: boolean;
+  /** Development level 0–4 from the build map (§7.4), computed on the server. */
+  level: number;
+  /** One of 10 patterns (§7.9); null if the community has none. */
+  persona: string | null;
   /** 0–100 from finished days; null before the first finished day (§7.4). */
   vitality: number | null;
   /** Ambient villagers to show (3–20, §7.3). */
@@ -149,6 +165,8 @@ export function assertCommunityState(v: unknown): asserts v is ServerCommunitySt
   check(typeof v.calgary_day === 'string' && typeof v.next_day_start === 'string', 'state day info');
   check(isObj(v.community) && typeof v.community.id === 'string', 'state.community');
   check(Number.isInteger(v.community.land_stage) && (v.community.land_stage as number) >= 0, 'community.land_stage');
+  check(Number.isInteger(v.community.level) && (v.community.level as number) >= 0 && (v.community.level as number) <= 4, 'community.level');
+  check(v.community.persona === null || typeof v.community.persona === 'string', 'community.persona');
   check(Number.isInteger(v.community.residents) && (v.community.residents as number) >= 0, 'community.residents');
   const vit = v.community.vitality;
   check(vit === null || (Number.isInteger(vit) && (vit as number) >= 0 && (vit as number) <= 100), 'community.vitality');
@@ -168,11 +186,14 @@ export function assertCommunityState(v: unknown): asserts v is ServerCommunitySt
     check(isObj(b) && typeof b.key === 'string' && b.key.length > 0, 'building key');
     check((SERVER_BUILDING_STATUSES as readonly unknown[]).includes(b.status), 'building.status');
     check(Number.isInteger(b.level) && (b.level as number) >= 1, 'building.level');
+    check((SERVER_TRACKS as readonly unknown[]).includes(b.track) && isCount(b.step) && isCount(b.stage), 'building track/step');
+    check(b.landmark_order === null || [1, 2, 3].includes(b.landmark_order as number), 'building.landmark_order');
+    check(Array.isArray(b.tiles) && b.tiles.length === 2 && b.tiles.every((n) => isCount(n)) && typeof b.site === 'string', 'building tiles/site');
     check(typeof b.progress === 'number' && b.progress >= 0 && b.progress <= 1, 'building.progress');
     const r = b.remaining;
     check(
       r === null ||
-        (isObj(r) && Number.isInteger(r.residents) && Number.isInteger(r.streak_days) && Array.isArray(r.requires) && r.requires.every((k) => typeof k === 'string')),
+        (isObj(r) && Number.isInteger(r.residents) && Number.isInteger(r.streak_days) && isCount(r.land_residents) && Array.isArray(r.requires) && r.requires.every((k) => typeof k === 'string')),
       'building.remaining',
     );
   }

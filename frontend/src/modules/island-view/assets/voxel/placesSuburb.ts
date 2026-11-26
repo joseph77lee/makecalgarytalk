@@ -2,49 +2,78 @@
  * Place library: mature-suburb and new-suburb tracks (community-identity build map, 2026-11-26).
  * Generic places, no brands or sign text. Voxels (12 per tile), front towards +z, centred.
  */
-import { asSway, type BoxPart } from '../boxes';
+import type { BoxPart } from '../boxes';
 import { bench, fence, flowerBed, ICE, IRON, LAMP, lamp, PAVING, reeds, smallTree, STONE, WATER, WOOD, WOOD_DARK } from './placeParts';
 import { ART } from './samples';
 import { gableRoof, hipRoof, pick, rnd, shade, vb, windowX, windowZ } from './voxel';
 
 const G = ART.glass;
 
-// --- Mature suburb: community garden → outdoor rink → ball diamond → leisure centre -----------
+// --- Mature suburb: tennis courts → curling club → ball diamond → leisure centre --------------
+// (no place twice on one build map, requirement v1.48 §7.6: the garden and the rink belong to the
+// nature and community tracks, so the mature-suburb track has its own places)
 
-/** Community garden (2 × 2 tiles): raised beds of crops inside a picket fence, a tool shed, a compost bin. */
-export function communityGarden(seed: number): BoxPart[] {
-  const parts: BoxPart[] = [vb(-12, 0, -12, 12, 0.3, 12, '#c9b48e')];
-  parts.push(...fence(-11.5, -11.5, 11.5, -11.5), ...fence(-11.5, -11.5, -11.5, 11.5), ...fence(11.5, -11.5, 11.5, 11.5), ...fence(-11.5, 11.5, -2, 11.5), ...fence(2, 11.5, 11.5, 11.5));
-  const crops = ['#6fae4f', '#8cc867', '#e46a5c', '#f2c14e', '#a77bd1', '#79b85a'];
-  for (let i = 0; i < 6; i++) {
-    const x0 = -9 + (i % 3) * 6.2;
-    const z0 = i < 3 ? -2 : 4.5;
-    parts.push(vb(x0, 0, z0, x0 + 4.6, 1.4, z0 + 4, WOOD), vb(x0 + 0.4, 1.4, z0 + 0.4, x0 + 4.2, 1.8, z0 + 3.6, '#7a5638'));
-    for (let k = 0; k < 4; k++) parts.push(vb(x0 + 0.8 + k * 0.9, 1.8, z0 + 0.8, x0 + 1.4 + k * 0.9, 2.8 + rnd(seed, i, k), z0 + 3.2, pick(crops, rnd(seed, i, 7))));
+/** A flat ring of three crossed boxes (a curling house) at (x, z). */
+const flatRing = (x: number, z: number, r: number, y: number, c: string): BoxPart[] => [
+  vb(x - r, y, z - r * 0.42, x + r, y + 0.05, z + r * 0.42, c),
+  vb(x - r * 0.42, y, z - r, x + r * 0.42, y + 0.05, z + r, c),
+  vb(x - r * 0.72, y, z - r * 0.72, x + r * 0.72, y + 0.05, z + r * 0.72, c),
+];
+
+/** Tennis courts (3 × 2 tiles): two blue hard courts with white lines and nets inside a green chain-link fence, floodlights, a bench. */
+export function tennisCourts(seed: number): BoxPart[] {
+  const FENCE = '#2f5e45';
+  const parts: BoxPart[] = [vb(-18, 0, -12, 18, 0.3, 12, '#93cb6c'), vb(-17, 0.3, -11, 17, 0.4, 9, '#4f8a6a')];
+  for (const [x0, x1] of [[-16, -1], [1, 16]]) {
+    const cx = (x0 + x1) / 2;
+    parts.push(vb(x0, 0.4, -10, x1, 0.5, 8, '#4f7fb8'));
+    const line = (a: number, b: number, c: number, d: number) => parts.push(vb(a, 0.5, b, c, 0.55, d, '#f4f1ea'));
+    line(x0 + 0.4, -10, x0 + 0.8, 8);
+    line(x1 - 0.8, -10, x1 - 0.4, 8);
+    line(x0 + 2, -10, x0 + 2.3, 8);
+    line(x1 - 2.3, -10, x1 - 2, 8);
+    line(x0, -9.8, x1, -9.4);
+    line(x0, 7.4, x1, 7.8);
+    line(x0 + 2, -5.2, x1 - 2, -4.9);
+    line(x0 + 2, 2.9, x1 - 2, 3.2);
+    line(cx - 0.15, -5, cx + 0.15, 3);
+    // the net with its posts
+    parts.push(vb(x0 - 0.2, 0.5, -1.25, x0 + 0.2, 2.4, -0.75, IRON), vb(x1 - 0.2, 0.5, -1.25, x1 + 0.2, 2.4, -0.75, IRON));
+    parts.push(vb(x0, 0.6, -1.08, x1, 1.9, -0.92, '#3a3f48'), vb(x0, 1.9, -1.12, x1, 2.2, -0.88, '#f4f1ea'));
   }
-  // tool shed with a little gable roof
-  const roof = pick(ART.roofs, rnd(seed, 3));
-  parts.push(vb(-10, 0, -10.5, -3, 6, -5, '#d9c3a0'), ...gableRoof(-10, -3, -10.5, -5, 7, roof, '#d9c3a0', 0.6), vb(-7.5, 0, -5, -5.5, 4.5, -4.7, ART.door));
-  // compost bin, a watering can, a sunflower row
-  parts.push(vb(5, 0, -10, 10, 3, -6, WOOD_DARK), vb(5.4, 3, -9.6, 9.6, 3.3, -6.4, '#5a4030'), vb(1, 0, -6, 2.4, 1.4, -5, '#5b8fd6'));
-  for (let x = -1; x <= 3; x += 2) parts.push(vb(x, 0, -10.5, x + 0.3, 6, -10.2, '#6f9a4f'), ...asSway([vb(x - 0.7, 6, -10.6, x + 1, 7.4, -10.1, '#f2c14e')]));
+  // chain-link fence (gate at the front), floodlights, a bench and a ball bin
+  parts.push(...fence(-17, -11, 17, -11, FENCE, 5), ...fence(-17, -11, -17, 9, FENCE, 5), ...fence(17, -11, 17, 9, FENCE, 5), ...fence(-17, 9, -2, 9, FENCE, 5), ...fence(2, 9, 17, 9, FENCE, 5));
+  parts.push(...lamp(-15.6, -9.6, 12), ...lamp(15.6, -9.6, 12), ...lamp(0, -9.6, 12));
+  parts.push(...bench(-9, 10.6), ...bench(9, 10.6), vb(3.4, 0.3, 10, 5, 1.6, 11.6, '#e9c46a'), vb(3.6, 1.6, 10.2, 4.8, 2, 11.4, '#d9f06a'));
+  parts.push(...smallTree(-15.4, 9.6, seed, 7), ...smallTree(15.4, 9.6, seed + 1, 7));
   return parts;
 }
 
-/** Outdoor rink (4 × 3 tiles): a full-size rink of ice inside white boards, lines, two nets, a players' hut and floodlights. */
-export function outdoorRink(_seed: number): BoxPart[] {
-  const parts: BoxPart[] = [vb(-24, 0, -18, 24, 0.3, 18, '#e8e2d6'), vb(-21, 0.3, -11, 21, 0.6, 11, ICE)];
-  parts.push(vb(-21.5, 0, -11.5, 21.5, 2.2, -11, '#fbf8f2'), vb(-21.5, 0, 11, 21.5, 2.2, 11.5, '#fbf8f2'), vb(-21.5, 0, -11.5, -21, 2.2, 11.5, '#fbf8f2'), vb(21, 0, -11.5, 21.5, 2.2, 11.5, '#fbf8f2'));
-  parts.push(vb(-21.5, 0, -11.5, 21.5, 0.8, -11.2, '#5b8fd6'), vb(-21.5, 0, 11.2, 21.5, 0.8, 11.5, '#5b8fd6'));
-  parts.push(vb(-0.3, 0.6, -11, 0.3, 0.65, 11, '#e46a5c'), vb(-10.3, 0.6, -11, -9.7, 0.65, 11, '#5b8fd6'), vb(9.7, 0.6, -11, 10.3, 0.65, 11, '#5b8fd6'));
-  for (let a = 0; a < 16; a++) parts.push(vb(Math.cos((a / 16) * Math.PI * 2) * 3 - 0.3, 0.6, Math.sin((a / 16) * Math.PI * 2) * 3 - 0.3, Math.cos((a / 16) * Math.PI * 2) * 3 + 0.3, 0.65, Math.sin((a / 16) * Math.PI * 2) * 3 + 0.3, '#5b8fd6'));
-  for (const s of [-1, 1]) {
-    const x = s * 18;
-    parts.push(vb(x - 1, 0.6, -1.6, x + 1, 2.6, -1.3, '#e46a5c'), vb(x - 1, 0.6, 1.3, x + 1, 2.6, 1.6, '#e46a5c'), vb(x + s * 0.7, 0.6, -1.6, x + s * 1, 2.6, 1.6, '#e46a5c'), vb(x - 1, 2.4, -1.6, x + 1, 2.6, 1.6, '#e46a5c'));
+/**
+ * Curling club (3 × 2 tiles): a long low club building with a pitched roof and a window band, an
+ * entrance canopy, and an outdoor sheet in front with a red, white and blue house at each end and
+ * granite stones.
+ */
+export function curlingClub(seed: number): BoxPart[] {
+  const WALL = '#c9b8a0';
+  const parts: BoxPart[] = [vb(-18, 0, -12, 18, 0.3, 12, PAVING)];
+  // the club building
+  parts.push(vb(-17, 0.3, -11, 9, 8, -1, WALL), vb(-17.1, 0.3, -1, 9.1, 1.2, -0.8, shade(WALL, -0.2)), ...gableRoof(-17, 9, -11, -1, 8, '#7a4f3a', WALL, 0.5));
+  for (let x = -15; x < 6; x += 3.2) parts.push(...windowZ(x, x + 2.2, 3, 6, -1, G));
+  parts.push(...windowX(-9, -6, 3, 6, 9, G), ...windowX(-5, -2, 3, 6, 9, G));
+  parts.push(vb(-3.6, 0.3, -1, -0.4, 5.4, -0.7, ART.door), vb(-5, 5.6, -1, 1, 6.2, 1.8, '#5a5f6a'), vb(-4.6, 0.3, 1.4, -4.2, 5.6, 1.8, IRON), vb(0.2, 0.3, 1.4, 0.6, 5.6, 1.8, IRON));
+  parts.push(vb(-2.3, 4.4, -0.7, -1.7, 5.2, -0.3, LAMP, 'glow'));
+  // the outdoor sheet with two houses and stones
+  parts.push(vb(-17, 0.3, 3, 17, 0.6, 8.6, '#dff1fb'), vb(-17.2, 0.3, 2.8, 17.2, 1, 3.1, '#fbf8f2'), vb(-17.2, 0.3, 8.5, 17.2, 1, 8.8, '#fbf8f2'));
+  for (const hx of [-13, 13]) parts.push(...flatRing(hx, 5.8, 2.4, 0.6, '#3d6fbf'), ...flatRing(hx, 5.8, 1.6, 0.65, '#fbf8f2'), ...flatRing(hx, 5.8, 0.8, 0.7, '#d0453c'));
+  parts.push(vb(-11, 0.6, 3, -10.8, 0.65, 8.6, '#d0453c'), vb(10.8, 0.6, 3, 11, 0.65, 8.6, '#d0453c'), vb(-0.15, 0.6, 3, 0.15, 0.65, 8.6, '#3d6fbf'));
+  for (let i = 0; i < 6; i++) {
+    const x = 9 + rnd(seed, i, 1) * 6;
+    const z = 4 + rnd(seed, i, 2) * 3.4;
+    parts.push(vb(x - 0.6, 0.6, z - 0.6, x + 0.6, 1.3, z + 0.6, '#8a8d93'), vb(x - 0.2, 1.3, z - 0.4, x + 0.2, 1.6, z + 0.4, i % 2 ? '#d0453c' : '#f2c14e'));
   }
-  // players' hut and benches in front, floodlights at the corners
-  parts.push(vb(-7, 0, 12.5, 7, 5, 16, '#d9c3a0'), vb(-7.5, 5, 12, 7.5, 5.6, 16.5, '#8f9bc0'), vb(-6, 1.4, 12.5, 6, 1.8, 13.5, ART.wood), ...windowZ(-4, -1, 2.4, 4, 16, G), ...windowZ(1, 4, 2.4, 4, 16, G));
-  parts.push(...bench(-15, 14.5), ...bench(15, 14.5), ...lamp(-23, -17, 14), ...lamp(23, -17, 14), ...lamp(-23, 13, 14), ...lamp(23, 13, 14));
+  // a tree, a flower bed and a lamp by the club's side door, a bench at the sheet
+  parts.push(...smallTree(13.6, -8, seed, 9), ...flowerBed(11, -3.6, 6, 3, seed + 2), ...lamp(16.4, -1.4, 9), ...bench(0, 10.6));
   return parts;
 }
 
