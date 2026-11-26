@@ -96,6 +96,27 @@ Columns: original six + `특징` (character), `랜드마크` (landmarks), `주�
 
 ---
 
+### 5.3 Landmark photos (`docs/references/landmarks/`, git-ignored, 2026-11-26)
+The operator collected 222 reference photos (one per community; Twinhills has none) with `INDEX.csv` (code, pattern, structure, direct/substitute, source URL). Third-party images: reference only, never committed. Claude reviewed all of them on contact sheets:
+- About 70 show a clear, modelable landmark (e.g. Signal Hill stone numbers, Centre Street Bridge lions, Mahogany beach club, Lake Bonavista).
+- The rest show ordinary houses, neighbourhood aerials or skyline views: good for house style, not for a landmark.
+- Problems, recorded per community in `photo_status`: **replace** (MCT looks AI-generated; ING is an unrelated building; OAK, CSC, MPK, RED are placeholders or maps), **duplicate** (LKV = CHK, MAC = HUN, WHL and EAU both the Peace Bridge, UNI and STA both McMahon Stadium), **interior** (ACA, MAN, PIN, UOC), **brand** (BVD, RCK, MRL, VAR, GLA, SVO, SGH: model generic versions), **sensitive** (CAS, MRT, REN, MIS places of worship and QPK cemetery: scenery, not build goals).
+- Waiting on the operator: real photos for MCT and ING first (both are prototype islands), then the placeholders.
+
+### 5.4 `supabase/data/community_personas.csv` (English data, 2026-11-26)
+Built from the operator's CSV and the photo index (the generating script stays outside the repo because its keyword rules are in Korean). One row per community (223):
+| Column | Meaning |
+|---|---|
+| `code`, `name` | as in `calgary_communities.csv` |
+| `persona` | one of 10 patterns: `lake`, `river`, `downtown`, `historic_main_street`, `golf`, `new_suburb`, `hill_view`, `food_street`, `mature_suburb`, `special_district` (from the photo index; Twinhills → `new_suburb`) |
+| `signature_landmark` | generic English name of the community's signature structure, no brands or business names; "(scenery)" marks sensitive ones |
+| `landmark_reference` | the real place, for the operator and the modeller only (never shown as a sign or label in the game); hand-written for the priority list, otherwise the first landmark in the operator's CSV |
+| `landmark_tier` | `unique` (own model) or `pattern` (the persona's landmark + community name, replaced later by data only) |
+| `priority` | 1 = the launch list (31 communities, agreed 2026-11-26): SIG RAM UMR CGR COA · MAH LKB MCK BYV · BOW EAU CRE POI OGD · MCT HIL ING ALT CUR SNA · DNC DNE CHN · LEG KCA RVW ROC · WSP STA SHN GAG |
+| `terrain_hint` | `flat` / `hill` / `escarpment` / `ravine`: keyword hint from the operator's CSV, corrected from the photo review. **A hint only**: the real island floor will come from elevation data (§4.1) |
+| `photo_status`, `notes` | `direct` / `substitute` from the index, or the review flags above |
+Not included yet: track steps per persona (comes with the model library), a secondary persona, confidence.
+
 ## 6. Current growth rules vs. the vision (requirement v1.46)
 
 | Rule | Now | Direction |
@@ -126,8 +147,8 @@ Gallery tools (on `main`): labels switch, camera pad (arrows/WASD pan, +/− zoo
 ## 8. Next steps (recommended order)
 
 0. ~~Get the operator's answers to §4 (A–H)~~ done (§3 items 9–12); terrain §4.1 accepted as the next step. Reply in Korean (see memory), keep repo text English.
-1. **Terrain gallery mock-up** (three terrain types) — decides lot placement and where landmarks sit.
-2. **CSV cleanup → English data file**, e.g. `supabase/data/community_personas.csv`: `code, persona (one of ~10), persona_secondary, signature_landmark (generic English name), landmark_reference (real place, for the operator), track_steps, nature_terrain, source, confidence`; fix the yacht mentions; generalise brands; keep the operator's Korean file as their working copy.
+1. ~~**Terrain gallery mock-up**~~ built on `spike/terrain-concept` (gallery → Concept → hill / escarpment / ravine / waterfall), waiting for the operator's review. Finding: the camera sees only the +x and +z sides, so cliffs and waterfalls must face the viewer (high ground towards the back of the island); one level reads weakly for an escarpment, two levels read well.
+2. ~~**CSV cleanup → English data file**~~ done 2026-11-26 (§5.4); remaining: operator's replacement photos (§5.3). Original note:, e.g. `supabase/data/community_personas.csv`: `code, persona (one of ~10), persona_secondary, signature_landmark (generic English name), landmark_reference (real place, for the operator), track_steps, nature_terrain, source, confidence`; fix the yacht mentions; generalise brands; keep the operator's Korean file as their working copy.
 3. **Model library**: persona-pattern places (≈ 30–40 voxel models) → unique landmarks for the 20–30 priority communities as photos arrive → gallery review; tests for lot fit, snow and night lights (follow `assets/voxel/designFit.ts` style).
 4. **Requirement change** (changelog first, operator approval) + **PLAN**: a new module (e.g. M24 Community Identity) before M16; plan change entry in `changelog/plan.md`.
 5. **Implementation**: island plan generator (zones, terrain, sites by meaning), building-tree data as tracks, house rule, build-map screen, World Map landmark icons; regenerate all island plans.
