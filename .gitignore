@@ -24,3 +24,6 @@
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Reference photos: third-party images, never commit
+docs/references/landmarks/
