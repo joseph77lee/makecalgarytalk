@@ -12,6 +12,19 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-25 — v1.92
+**Changed:** M23 ✅ (user approved the models, merged to `main`); its DoD ticked with notes. Current module: M16 next, after a discussion of the build map and community growth (the user found the finished community's layout and building tree weak).
+
+**Why:** User confirmation (2026-11-25): "병합해도 돼".
+
+**Previous:**
+- Header: `| Plan version | v1.91 |`, `| Current module | M23 Art Pass 2 🟦 (voxel variety; then M16) |`
+- Table (verbatim): `| M23 | Art Pass 2 (voxel variety) | FE (R3F) | | M22 | 🟦 |`
+- M23 heading: `### M23 — Art Pass 2 (voxel variety) 🟦`
+- M23 DoD (verbatim):
+  >   - [ ] checked on screen (desktop and phone) for a new, a small and a grown community, suburb and downtown, every weather and time
+  >   - [ ] user has looked at it (mock first, 2026-11-25)
+
 ### 2026-11-25 — v1.91
 **Changed:** M23 reworked from "Polyfork low-poly" to **voxel variety** (title, goal, scope, DoD, handoff rewritten); status back to 🟦 until the user checks the mock. Header: plan version, `Based on` v1.46, current module; table row renamed.
 
