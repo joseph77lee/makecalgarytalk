@@ -1,7 +1,7 @@
 import { Html, OrbitControls, OrthographicCamera } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useState } from 'react';
-import type { OrthographicCamera as OrthoCam } from 'three';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { DirectionalLight, OrthographicCamera as OrthoCam } from 'three';
 import { translate, type BoxPart } from '../assets/boxes';
 import { boxHouse, rail, track } from '../assets/models';
 import { FEATURE_VOXELS, ctrainCarParts, stationPlatformParts } from '../assets/voxel/features';
@@ -46,6 +46,9 @@ import { rnd, shade, vb, vmove, vturn } from '../assets/voxel/voxel';
 import { BoxBatch } from '../scene/BoxBatch';
 import { useHtmlPortal } from '../scene/htmlPortal';
 import { GalleryLife } from './GalleryLife';
+import { DesignGallery } from './DesignGallery';
+import { DESIGN_VIEWS, type DesignSection } from './designSections';
+import { CameraPad, CameraPadBridge } from './CameraPad';
 
 interface Item {
   label: string;
@@ -68,7 +71,10 @@ const VIEWS = {
   Features: { target: [12, -1], zoom: 85 },
   CTrain: { target: [12.5, 6.5], zoom: 120 },
 } as const;
-type ViewName = keyof typeof VIEWS;
+/** The box-model diorama's presets, then the new voxel designs' (M23 rework). */
+const ALL_VIEWS: Record<string, { target: readonly [number, number]; zoom: number; y?: number }> = { ...VIEWS, ...DESIGN_VIEWS };
+type ViewName = keyof typeof VIEWS | DesignSection;
+const isDesign = (v: ViewName): v is DesignSection => v in DESIGN_VIEWS;
 
 /** Moves the orbit target and zoom when a preset is chosen (keeps the viewing angle). */
 function ViewRig({ view }: { view: ViewName }) {
@@ -78,8 +84,8 @@ function ViewRig({ view }: { view: ViewName }) {
     const orbit = controls as unknown as { target: { set: (x: number, y: number, z: number) => void; x: number; y: number; z: number }; update: () => void } | null;
     if (!orbit) return;
     const cam = camera as OrthoCam;
-    const v = VIEWS[view];
-    const ty = 'y' in v ? v.y : 0.5;
+    const v = ALL_VIEWS[view];
+    const ty = v.y ?? 0.5;
     const d = [cam.position.x - orbit.target.x, cam.position.y - orbit.target.y, cam.position.z - orbit.target.z];
     orbit.target.set(v.target[0], ty, v.target[1]);
     cam.position.set(v.target[0] + d[0], ty + d[1], v.target[1] + d[2]);
@@ -112,6 +118,45 @@ const WEATHERS: [IslandEnvironment['weather'], string][] = [
 ];
 const WINDS: IslandEnvironment['wind'][] = ['calm', 'breezy', 'windy'];
 
+/**
+ * The sun, aimed at the section being viewed so the design plates (40+ tiles away) get the same
+ * shadows as the box diorama (the shadow box is 40 tiles wide around `centre`).
+ */
+function SunLight({ centre, dir, color, intensity }: { centre: readonly [number, number]; dir: [number, number, number]; color: string; intensity: number }) {
+  const light = useRef<DirectionalLight>(null);
+  const scene = useThree((st) => st.scene);
+  const [cx, cz] = centre;
+  const [dx, dy, dz] = dir;
+  useEffect(() => {
+    const l = light.current;
+    if (!l) return;
+    scene.add(l.target);
+    l.target.position.set(cx, 0, cz);
+    l.position.set(cx + dx * 40, dy * 40, cz + dz * 40);
+    l.target.updateMatrixWorld();
+    return () => {
+      scene.remove(l.target);
+    };
+  }, [scene, cx, cz, dx, dy, dz]);
+  return (
+    <directionalLight
+      ref={light}
+      color={color}
+      intensity={intensity}
+      castShadow
+      shadow-mapSize={[2048, 2048]}
+      shadow-bias={-0.0004}
+      shadow-normalBias={0.02}
+      shadow-camera-left={-20}
+      shadow-camera-right={20}
+      shadow-camera-top={20}
+      shadow-camera-bottom={-20}
+      shadow-camera-near={1}
+      shadow-camera-far={120}
+    />
+  );
+}
+
 /** Wind for the swaying trees and flags, written once per frame. */
 function GalleryWind({ wind }: { wind: { x: number; z: number; strength: number } }) {
   useFrame(({ clock }) => setWind(clock.elapsedTime, wind.x, wind.z, wind.strength));
@@ -125,6 +170,23 @@ export function AssetGallery() {
   const [weather, setWeather] = useState<IslandEnvironment['weather']>('clear');
   const [windLevel, setWindLevel] = useState<IslandEnvironment['wind']>('calm');
   const [snow, setSnow] = useState(false);
+  // labels (name bubbles) on or off, remembered in this browser
+  const [labels, setLabels] = useState(() => {
+    try {
+      return localStorage.getItem('mct.gallery.labels') !== 'off';
+    } catch {
+      return true;
+    }
+  });
+  const toggleLabels = () => {
+    const next = !labels;
+    setLabels(next);
+    try {
+      localStorage.setItem('mct.gallery.labels', next ? 'on' : 'off');
+    } catch {
+      // private mode: the switch still works for this visit
+    }
+  };
   const env: IslandEnvironment = { sun: TIMES[time], weather, wind: windLevel, windFromDeg: 270, snowCover: snow };
   const look = skyLook(env);
   const wind = windVector(env);
@@ -225,46 +287,44 @@ export function AssetGallery() {
         <button type="button" onClick={() => setSnow(!snow)} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${snow ? 'bg-slate-600 text-white' : 'text-slate-700'}`}>
           ⛄ snow on ground
         </button>
+        <button type="button" onClick={toggleLabels} aria-pressed={labels} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${labels ? 'bg-indigo-500 text-white' : 'text-slate-700'}`}>
+          💬 labels {labels ? 'on' : 'off'}
+        </button>
       </div>
+      <CameraPad />
       <SoundBoard scene={{ weather, wind: windLevel, nightness: look.nightness > 0.5 ? 1 : 0, hasWater: true, campfire: true, construction: true }} />
-      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 flex-wrap justify-center gap-1.5">
-        {(Object.keys(VIEWS) as ViewName[]).map((v) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => setView(v)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow ${v === view ? 'bg-indigo-500 text-white' : 'bg-white/90 text-slate-700'}`}
-          >
-            {v}
-          </button>
+      <div className="absolute bottom-4 left-1/2 z-10 flex w-[min(96vw,60rem)] -translate-x-1/2 flex-col items-center gap-1.5">
+        {([['Now (voxel)', Object.keys(VIEWS) as ViewName[]], ['New voxel designs (M23)', Object.keys(DESIGN_VIEWS) as ViewName[]]] as const).map(([title, views]) => (
+          <div key={title} className="flex flex-wrap items-center justify-center gap-1.5">
+            <span className="rounded-full bg-slate-800/80 px-2.5 py-1 text-[11px] font-bold text-white">{title}</span>
+            {views.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow ${v === view ? 'bg-indigo-500 text-white' : 'bg-white/90 text-slate-700'}`}
+              >
+                {v.replace(/^New (.)/, (_, c: string) => c.toUpperCase())}
+              </button>
+            ))}
+          </div>
         ))}
       </div>
       <Canvas flat shadows dpr={[1, 2]} gl={{ antialias: true }}>
         <OrthographicCamera makeDefault position={[22, 24, 22]} zoom={42} near={0.1} far={400} />
-        <OrbitControls makeDefault target={[0, 0, 0.5]} enablePan minZoom={15} maxZoom={200} />
+        <OrbitControls makeDefault target={[0, 0, 0.5]} enablePan screenSpacePanning={false} minZoom={10} maxZoom={1200} />
         <hemisphereLight color={look.hemiSky} groundColor={look.hemiGround} intensity={look.ambientIntensity} />
-        <directionalLight
-          position={[dx * 40, dy * 40, dz * 40]}
-          color={look.sunColor}
-          intensity={look.sunIntensity}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-          shadow-bias={-0.0004}
-          shadow-normalBias={0.02}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-20}
-          shadow-camera-near={1}
-          shadow-camera-far={120}
-        />
+        <SunLight centre={isDesign(view) ? DESIGN_VIEWS[view].target : [0, 0]} dir={[dx, dy, dz]} color={look.sunColor} intensity={look.sunIntensity} />
         {look.fog > 0 && <fog attach="fog" args={[look.bg[2], 30 - 12 * look.fog, 75 - 30 * look.fog]} />}
         <GalleryWind wind={wind} />
         {precip && <Precipitation kind={precip.kind} count={precip.count} radius={14} wind={wind} />}
         <ViewRig view={view} />
         <GalleryLife />
         <BoxBatch parts={parts} />
-        {items
+        <DesignGallery snow={snow} lightsOn={look.lightsOn} section={labels && isDesign(view) ? view : null} />
+        <CameraPadBridge />
+        {labels &&
+          items
           .filter((i) => i.label)
           .map((i) => (
             <GalleryLabel key={`${i.label}@${i.at.join(',')}`} text={i.label} position={[i.at[0], topOf(i.parts) + 0.35, i.at[1]]} />

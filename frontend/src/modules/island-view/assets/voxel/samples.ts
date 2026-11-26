@@ -325,30 +325,109 @@ export function fence(): BoxPart[] {
 
 // --- People -----------------------------------------------------------------------------
 
-/** A voxel person (avatar / villager style), about 3/4 of a tile tall, facing +z. */
-export function person(seed: number, shirt?: string): BoxPart[] {
-  const skin = pick(ART.skin, rnd(seed, 19));
-  const hair = pick(ART.hair, rnd(seed, 20));
-  const top = shirt ?? pick(ART.shirts, rnd(seed, 21));
-  const pants = pick(['#3b4260', '#5a4636', '#6b7280', '#2f3448'], rnd(seed, 22));
-  const longHair = rnd(seed, 23) < 0.4;
-  return [
+/** Skin tones from light to deep, so a community looks like Calgary (M23). */
+export const SKIN_TONES = ['#f7dcc5', '#efc7a4', '#dcaa82', '#c08a60', '#91603f', '#64402b'] as const;
+const HAIR = ['#2a211c', '#3a2a20', '#5a3a22', '#7a4b2a', '#b5823f', '#d8b46a', '#a8432f'] as const;
+const GREY_HAIR = ['#cfcac2', '#e6e2da', '#9e9a94'] as const;
+export type PersonAge = 'child' | 'adult' | 'elder';
+export type HairStyle = 'short' | 'long' | 'bun' | 'curly' | 'ponytail' | 'bald' | 'headscarf';
+const HAIR_STYLES: HairStyle[] = ['short', 'short', 'long', 'bun', 'curly', 'ponytail', 'bald', 'headscarf'];
+
+export interface PersonLook {
+  age: PersonAge;
+  skin: string;
+  hair: string;
+  style: HairStyle;
+  top: string;
+  bottom: string;
+  /** Skirt or dress instead of trousers. */
+  skirt: boolean;
+  /** A long winter coat over the top. */
+  coat: boolean;
+  hat: 'none' | 'beanie' | 'cap';
+  glasses: boolean;
+  beard: boolean;
+}
+
+/** How a person looks, fixed by their seed: age, skin tone, hair, clothes and accessories (M23 variety). */
+export function personLook(seed: number, shirt?: string): PersonLook {
+  const ageR = rnd(seed, 24);
+  const age: PersonAge = ageR < 0.22 ? 'child' : ageR > 0.88 ? 'elder' : 'adult';
+  const style = pick(HAIR_STYLES, rnd(seed, 25));
+  return {
+    age,
+    skin: pick(SKIN_TONES, rnd(seed, 19)),
+    hair: age === 'elder' ? pick(GREY_HAIR, rnd(seed, 20)) : pick(HAIR, rnd(seed, 20)),
+    style: age === 'child' && style === 'bald' ? 'short' : style,
+    top: shirt ?? pick(ART.shirts, rnd(seed, 21)),
+    bottom: pick(['#3b4260', '#5a4636', '#6b7280', '#2f3448', '#8f9bc0', '#7a5538'], rnd(seed, 22)),
+    skirt: rnd(seed, 26) < 0.25,
+    coat: age !== 'child' && rnd(seed, 27) < 0.25,
+    hat: rnd(seed, 28) < 0.12 ? 'beanie' : rnd(seed, 28) < 0.2 ? 'cap' : 'none',
+    glasses: rnd(seed, 29) < (age === 'elder' ? 0.6 : 0.15),
+    beard: age !== 'child' && style !== 'headscarf' && rnd(seed, 30) < 0.15,
+  };
+}
+
+/** Drawn scale of a person by age (children are smaller, elders a little shorter). */
+export const AGE_SCALE: Record<PersonAge, number> = { child: 0.7, adult: 1, elder: 0.95 };
+
+/**
+ * A voxel person (avatar / villager style), about 3/4 of a tile tall, facing +z. The parts keep
+ * the same joints for every look (head above 6.6, arms beyond |x| 1.55, legs below 3.4), so the
+ * rig and gaits work for all; children are drawn smaller with `AGE_SCALE`.
+ */
+export function person(seed: number, shirt?: string, look: PersonLook = personLook(seed, shirt)): BoxPart[] {
+  const { skin, hair, top, bottom } = look;
+  const parts: BoxPart[] = [
     vb(-1.4, 0, -0.6, -0.2, 0.6, 1.2, '#2a2d36'),
     vb(0.2, 0, -0.6, 1.4, 0.6, 1.2, '#2a2d36'),
-    vb(-1.4, 0.6, -0.6, -0.2, 3.4, 0.6, pants),
-    vb(0.2, 0.6, -0.6, 1.4, 3.4, 0.6, pants),
+    vb(-1.4, 0.6, -0.6, -0.2, 3.4, 0.6, look.skirt ? skin : bottom),
+    vb(0.2, 0.6, -0.6, 1.4, 3.4, 0.6, look.skirt ? skin : bottom),
     vb(-1.6, 3.4, -0.8, 1.6, 6.6, 0.8, top),
-    vb(-2.4, 3.8, -0.6, -1.6, 6.4, 0.6, top),
-    vb(1.6, 3.8, -0.6, 2.4, 6.4, 0.6, top),
+    vb(-2.4, 3.8, -0.6, -1.6, 6.4, 0.6, look.coat ? bottom : top),
+    vb(1.6, 3.8, -0.6, 2.4, 6.4, 0.6, look.coat ? bottom : top),
     vb(-2.4, 3.2, -0.5, -1.6, 3.8, 0.5, skin),
     vb(1.6, 3.2, -0.5, 2.4, 3.8, 0.5, skin),
     vb(-1.4, 6.6, -1.2, 1.4, 9.2, 1.2, skin),
     vb(-0.8, 7.6, 1.15, -0.3, 8.1, 1.3, '#2a2d36'),
     vb(0.3, 7.6, 1.15, 0.8, 8.1, 1.3, '#2a2d36'),
-    vb(-1.6, 9.2, -1.4, 1.6, 10, 1.4, hair),
-    vb(-1.6, longHair ? 6.6 : 7.8, -1.4, 1.6, 9.2, -0.8, hair),
-    ...(longHair ? [vb(-1.6, 6.8, -1, -1.3, 9.2, 0.6, hair), vb(1.3, 6.8, -1, 1.6, 9.2, 0.6, hair)] : []),
   ];
+  // skirt or dress (a body part: it stays put while the legs swing beneath it)
+  if (look.skirt) parts.push(vb(-1.7, 1.8, -0.9, 1.7, 3.6, 0.9, bottom));
+  // a long coat: front panels over the top, down to the knees
+  if (look.coat) parts.push(vb(-1.75, 2, -0.95, 1.75, 6.5, 0.95, bottom), vb(-0.15, 2.2, 0.95, 0.15, 6.2, 1.05, shade(bottom, -0.25)));
+  // hair
+  switch (look.style) {
+    case 'short':
+      parts.push(vb(-1.6, 9.2, -1.4, 1.6, 10, 1.4, hair), vb(-1.6, 7.8, -1.4, 1.6, 9.2, -0.8, hair));
+      break;
+    case 'long':
+      parts.push(vb(-1.6, 9.2, -1.4, 1.6, 10, 1.4, hair), vb(-1.6, 6.6, -1.4, 1.6, 9.2, -0.8, hair), vb(-1.6, 6.8, -1, -1.3, 9.2, 0.6, hair), vb(1.3, 6.8, -1, 1.6, 9.2, 0.6, hair));
+      break;
+    case 'bun':
+      parts.push(vb(-1.6, 9.2, -1.4, 1.6, 9.9, 1.4, hair), vb(-1.6, 8, -1.4, 1.6, 9.2, -0.8, hair), vb(-0.8, 9.9, -1.2, 0.8, 11.2, 0.2, hair));
+      break;
+    case 'curly':
+      parts.push(vb(-1.65, 8.4, -1.6, 1.65, 10.8, 1.3, hair), vb(-1.2, 10.8, -1.2, 1.2, 11.3, 0.9, hair));
+      break;
+    case 'ponytail':
+      parts.push(vb(-1.6, 9.2, -1.4, 1.6, 10, 1.4, hair), vb(-1.6, 7.8, -1.4, 1.6, 9.2, -0.8, hair), vb(-0.5, 7, -2, 0.5, 9.4, -1.4, hair));
+      break;
+    case 'bald':
+      parts.push(vb(-1.5, 7.6, -1.3, 1.5, 8.6, -0.9, hair));
+      break;
+    case 'headscarf': {
+      const scarf = pick(['#a77bd1', '#5b8fd6', '#6fbf8a', '#e3a1a6', '#2f3448'], rnd(seed, 31));
+      parts.push(vb(-1.6, 6.4, -1.4, 1.6, 10, -0.8, scarf), vb(-1.6, 9.2, -1.4, 1.6, 10, 1.3, scarf), vb(-1.6, 6.4, -1, -1.35, 9.2, 1.2, scarf), vb(1.35, 6.4, -1, 1.6, 9.2, 1.2, scarf));
+      break;
+    }
+  }
+  if (look.hat === 'beanie') parts.push(vb(-1.65, 9.4, -1.5, 1.65, 10.8, 1.45, pick(['#e0453c', '#5b8fd6', '#f2c14e'], rnd(seed, 32))), vb(-0.4, 10.8, -0.4, 0.4, 11.4, 0.4, '#ffffff'));
+  if (look.hat === 'cap') parts.push(vb(-1.6, 9.4, -1.4, 1.6, 10.4, 1.4, pick(['#3b4260', '#e46a5c', '#6fbf8a'], rnd(seed, 33))), vb(-1.2, 9.4, 1.4, 1.2, 9.7, 2.4, pick(['#3b4260', '#e46a5c', '#6fbf8a'], rnd(seed, 33))));
+  if (look.glasses) parts.push(vb(-1, 7.5, 1.25, 1, 7.7, 1.35, '#2a2d36'), vb(-1, 7.5, 1.25, -0.15, 8.2, 1.35, '#2a2d36'), vb(0.15, 7.5, 1.25, 1, 8.2, 1.35, '#2a2d36'));
+  if (look.beard) parts.push(vb(-1.4, 6.6, 1, 1.4, 7.4, 1.35, hair));
+  return parts;
 }
 
 export { vmove };

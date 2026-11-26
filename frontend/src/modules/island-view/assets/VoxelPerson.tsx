@@ -2,6 +2,7 @@ import { useMemo, useRef, type RefObject } from 'react';
 import { RigView, type RigGroups } from './RigView';
 import { advancePhase, personPose, personStride, type PersonMotion } from './voxel/gaits';
 import { personRig } from './voxel/rigs';
+import { AGE_SCALE, personLook } from './voxel/samples';
 
 export type { PersonMotion } from './voxel/gaits';
 
@@ -18,6 +19,8 @@ const IDLE: PersonMotion = { speed: 0 };
  */
 export function VoxelPerson({ seed, shirt, motion, headTilt }: { seed: number; shirt: string; motion?: RefObject<PersonMotion>; headTilt?: RefObject<number> }) {
   const rig = useMemo(() => personRig(seed, shirt), [seed, shirt]);
+  // children are drawn smaller, elders a little shorter (the look is fixed by the seed)
+  const scale = PERSON_SCALE * AGE_SCALE[personLook(seed, shirt).age];
   const phase = useRef(seed % 7);
 
   const pose = ({ limbs }: RigGroups, time: number, dt: number) => {
@@ -34,7 +37,7 @@ export function VoxelPerson({ seed, shirt, motion, headTilt }: { seed: number; s
   };
 
   return (
-    <group scale={PERSON_SCALE}>
+    <group scale={scale}>
       <RigView rig={rig} onFrame={pose} />
     </group>
   );

@@ -7,21 +7,43 @@
 import communitiesCsv from '../../../../../../supabase/data/calgary_communities.csv?raw';
 import type { BoxPart } from '../boxes';
 import { apartment, ART, bungalow, infill, loft, semiDetached, townhouses, twoStoreyGarage } from './samples';
-import { rnd, vturn } from './voxel';
+import { VOXEL_DESIGNS as N } from './designFit';
+import { rnd, vmirrorX, vturn } from './voxel';
 
 export const HOUSE_TYPES = ['bungalow', 'twoStoreyGarage', 'semiDetached', 'townhouses', 'infill', 'apartment', 'loft'] as const;
 export type HouseType = (typeof HOUSE_TYPES)[number];
 export type HouseStyle = 'downtown' | 'inner' | 'suburb';
 
-const BUILDERS: Record<HouseType, (seed: number) => BoxPart[]> = {
-  bungalow,
-  twoStoreyGarage,
-  semiDetached,
-  townhouses,
-  infill,
-  apartment,
-  loft,
+/**
+ * The models of each house type: the first M19 design plus the M23 voxel designs (drawn after
+ * Polyfork shapes, fitted to the same size), so a grown community mixes many houses.
+ */
+export const HOUSE_DESIGNS: Record<HouseType, ((seed: number) => BoxPart[])[]> = {
+  bungalow: [bungalow, bungalow, N.porchCottage.build, N.ranchHouse.build, N.keeperCottage.build, N.thatchedCottage.build, N.porchLogCabin.build, N.aFrameCabin.build, N.logCabin.build, N.lighthouseCottage.build],
+  twoStoreyGarage: [twoStoreyGarage, twoStoreyGarage, N.familyHouse.build, N.splitLevel.build, N.modernGable.build],
+  semiDetached: [semiDetached, semiDetached, N.splitLevel.build],
+  townhouses: [townhouses, N.rowUnits.build],
+  infill: [infill, N.modernCube.build, N.modernGable.build],
+  apartment: [apartment, apartment, N.prewarApartment.build, N.postwarSlab.build, N.tenement.build, N.slabTower.build, N.glassOffice.build, N.decoSetback.build, N.monolithTower.build],
+  loft: [loft, loft, N.brownstone.build, N.apartmentBlock.build],
 };
+
+/** The house model for this seed: one of its type's designs, mirrored for half of the houses. */
+function houseModel(type: HouseType, seed: number): BoxPart[] {
+  const pool = HOUSE_DESIGNS[type];
+  const parts = withRoofTag(pool[Math.floor(rnd(seed, 41) * pool.length) % pool.length](seed));
+  return rnd(seed, 42) < 0.5 ? vmirrorX(parts) : parts;
+}
+
+/**
+ * Flat-roofed designs mark no roof: their topmost boxes become the roof, so snow settles on them
+ * like on every other house (§10.4). Models that already tag a roof are left alone.
+ */
+function withRoofTag(parts: BoxPart[]): BoxPart[] {
+  if (parts.some((b) => b.tag === 'roof')) return parts;
+  const top = Math.max(...parts.map((b) => b.p[1] + b.s[1] / 2));
+  return parts.map((b) => (b.layer === 'solid' && !WINDOWS.has(b.c) && b.p[1] + b.s[1] / 2 > top - 0.08 ? { ...b, tag: 'roof' } : b));
+}
 
 /** Downtown communities get buildings instead of detached houses (operator decision 2026-11-24). */
 const DOWNTOWN = new Set(['DNC', 'DNE', 'DNW', 'EAU', 'CHN', 'BLN']);
@@ -70,20 +92,27 @@ const WINDOWS = new Set<string>([ART.glass, ART.glassDark]);
 export function houseParts(type: HouseType, seed: number, facing: number, active: boolean, village = false): BoxPart[] {
   // about half of the village houses light up at night (§7.2); residents' only when active
   const nightTag = village && rnd(seed, 91) < 0.5 ? 'village-window' : 'house-window';
-  const parts = BUILDERS[type](seed).map((b): BoxPart =>
+  const parts = houseModel(type, seed).map((b): BoxPart =>
     !WINDOWS.has(b.c) ? b : active ? { ...b, layer: 'glow', c: '#ffd98a' } : { ...b, tag: nightTag },
   );
   return vturn(parts, facing);
 }
 
+const top = (parts: BoxPart[]) => parts.reduce((h, b) => Math.max(h, b.p[1] + b.s[1] / 2), 0);
+
 const heights = new Map<HouseType, number>();
-/** Height of the type's tallest variant in tiles (labels and tap boxes sit above it). */
+/** Height of the type's tallest design in tiles (an upper bound for any house of the type). */
 export function houseHeight(type: HouseType): number {
   let h = heights.get(type);
   if (h === undefined) {
     h = 0;
-    for (let s = 0; s < 12; s++) for (const b of BUILDERS[type](s)) h = Math.max(h, b.p[1] + b.s[1] / 2);
+    for (const build of HOUSE_DESIGNS[type]) for (let s = 0; s < 12; s++) h = Math.max(h, top(build(s)));
     heights.set(type, h);
   }
   return h;
+}
+
+/** Height of this house's own model in tiles (its label and tap box sit just above it). */
+export function houseModelHeight(type: HouseType, seed: number): number {
+  return top(houseModel(type, seed));
 }

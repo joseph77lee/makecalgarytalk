@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.88 |
+| Plan version | v1.92 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-25 |
-| Based on | `requirement.md` v1.44 |
-| Current module | M16 Deploy & Playtest (next; M20 fix ✅) |
+| Based on | `requirement.md` v1.46 |
+| Current module | M16 Deploy & Playtest (next; build map and community growth redesign under discussion first) |
 
 ---
 
@@ -58,7 +58,8 @@
 | M20 | Weather & Time of Day | BE + FE (R3F) | | M19 | ✅ |
 | M21 | Living Community | FE + BE | | M20 | ✅ |
 | M22 | Sound | FE | | M21 | ✅ |
-| M16 | Deploy & Playtest | All + operator accounts | | M22 | ⬜ |
+| M23 | Art Pass 2 (voxel variety) | FE (R3F) | | M22 | ✅ |
+| M16 | Deploy & Playtest | All + operator accounts | | M23 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -79,7 +80,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -616,6 +617,24 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Gallery (`?gallery`):** time presets are sun positions lit by `skyLook` (the M19 hand-made looks are gone, so gallery and game match); weather (8), wind (3) and snow-on-ground buttons with rain/snow particles, fog, sway and snowy roofs; `dev/SoundBoard.tsx` plays every effect (lists unknown ones under "Other"), ambience automatic or by hand, music auto/day/night/snow/off, plus the volume panel; animals and people in `GalleryLife` hop and sound when tapped (`Tappable`, same crowd ids as the game). No lightning in the gallery (thunder is on the board).
   - **Tests:** `sound/sound.test.ts` (mix, music, work sound, settings incl. migration, required files exist, optional ones have a fallback), walker taps in `crowd.test.ts`. 934 frontend tests.
 
+### M23 — Art Pass 2 (voxel variety) ✅
+**Goal:** Every community looks varied and alive in our pastel voxel style (`requirement.md` v1.46 §19.1–19.2): more voxel designs drawn after Polyfork shapes and sized like today's models, varied people. Built after M22, **before M16**. The low-poly Polyfork route (v1.45) was built and reviewed, then dropped by the operator (2026-11-25).
+- **In scope**
+  - [x] new voxel designs after Polyfork shapes: 13 suburb houses, 9 downtown buildings, 3 arches, 3 fire-pit rings, 2 huts, 4 halls, 2 schools, theatre, picnic shelter, shed, garden bed, 9 trees, 5 cars, school bus, benches, lamps, mailbox, snowman, drinking fountain, play equipment (`assets/voxel/designs*.ts`)
+  - [x] every new design fitted to the size of the matching model drawn now (`assets/voxel/designFit.ts`, tested)
+  - [x] islands mix them in: house types, trees, parked cars, benches, mailboxes, lamps (per row), snowmen, building and feature variants
+  - [x] varied voxel people: ages (children smaller), skin tones, hair styles incl. headscarves, skirts, coats, hats, glasses, beards
+  - [x] gallery: "New voxel designs" beside the current models, labels switch, pan and zoom pad
+  - [x] Polyfork runtime, files and credits removed
+- **Definition of Done**
+  - [x] checked on screen (desktop and phone) for a new, a small and a grown community, suburb and downtown (2026-11-25: Mahogany new on a phone at dusk, grown by day; Beltline grown at night and by day with snow; other weathers checked in the gallery, not on an island one by one)
+  - [x] user has looked at it (2026-11-25: models approved; the user found the finished community's layout and building tree weak, which is a game-design redesign to plan separately, not part of this art module)
+- **Handoff**
+  - **Code:** `assets/voxel/designs.ts` (houses, downtown), `designsStreet.ts` (props, trees, cars, play), `designsCivic.ts` (arches, huts, halls, schools, theatre, shelter, shed); `designFit.ts` fits each to a target box measured from today's models (`VOXEL_DESIGNS`); `houses.ts` `HOUSE_DESIGNS` mixes them per house type (mirrored half the time, flat roofs tagged as roof for snow, `houseModelHeight` for labels); `models.ts` tree/lamp/prop/snowPile pools; new variants in `voxel/buildings.ts` and `voxel/features.ts` (`BUILDING_VARIANTS`, `FEATURE_VARIANTS` raised).
+  - **Not used yet:** movie theatre and school bus designs (no slot on the islands); the city tram was dropped (the CTrain covers it).
+  - **Dev tools kept from the Polyfork attempt:** `?meter` render readout (fps, triangles, draw calls), gallery camera pad and labels switch.
+
+
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
 - **In scope** (`docs/launch.md` has every step; most need the operator's accounts)
@@ -659,7 +678,7 @@ M0 ─┬─ M1 ── M2 ─┐
 ---
 
 ## After launch — checklist for the user to review
-**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M22 Sound → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
+**Before opening:** M19 Art Pass → M20 Weather & Time of Day → M21 Living Community → M22 Sound → M23 Art Pass 2 → M16 Deploy & Playtest (all communities open, then the public launch). Everything below comes **after** the launch; nothing here is planned in detail yet. Tick or strike items as you decide; when one is picked, it becomes a module above.
 
 **Growth (already modules)**
 - [ ] M17 Return Reminders — email (opted-in players) + web push (`requirement.md` §22.7a.1)

@@ -69,3 +69,10 @@ describe('house generator (M19, requirement.md §7.2)', () => {
     expect(houseHeight('twoStoreyGarage')).toBeGreaterThan(houseHeight('bungalow'));
   });
 });
+
+describe('snow on every house design', () => {
+  it('every house model has a roof that takes snow (flat roofs included)', () => {
+    for (const type of HOUSE_TYPES)
+      for (let seed = 0; seed < 60; seed++) expect(houseParts(type, seed, 0, false).some((b) => b.tag === 'roof'), `${type} ${seed}`).toBe(true);
+  });
+});

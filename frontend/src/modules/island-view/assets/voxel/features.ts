@@ -3,10 +3,11 @@
  * (station platform, train car, track details). Feature blocks sit on 2×2 spare lots (voxels
  * x, z ∈ [-12, 12), front +z); `variant` picks a design per community.
  */
-import type { BoxPart } from '../boxes';
+import { asSway, type BoxPart } from '../boxes';
 import type { BuildCtx } from '../models';
 import type { FeatureKey } from '../../plan/features';
 import { ART, leafyTree, spruce } from './samples';
+import { VOXEL_DESIGNS as N } from './designFit';
 import { hipRoof, shade, vb, vmove, vturn, windowX, windowZ } from './voxel';
 
 type Model = (variant: number, ctx: BuildCtx) => BoxPart[];
@@ -99,7 +100,13 @@ const bigPark: Model = (variant, { palette }) => {
   const parts: BoxPart[] = [vb(-11.5, 0, -11.5, 11.5, 0.3, 11.5, palette.grass[0])];
   parts.push(vb(-11.5, 0.3, 1, 11.5, 0.5, 3.4, palette.path[0]));
   const trees: [number, number, boolean][] = variant % 2 === 0 ? [[-7, -7, false], [0, -8, true], [7, -6, false], [-8, 8, true], [8, 8, false]] : [[-6, -6, true], [6, -6.5, true], [-1, -7.5, false], [-7.5, 7, false], [7, 7, true]];
-  trees.forEach(([x, z, conifer], i) => parts.push(...vmove(conifer ? spruce(variant + i) : leafyTree(variant + i), x, 0.3, z)));
+  // M23 designs (variants 2–3) bring the newer tree shapes
+  const fresh = variant % 4 >= 2;
+  const leafy = [N.shadeTree, N.ornamentalTree, N.oliveTree];
+  const evergreen = [N.tallPine, N.firTree, N.coneTree];
+  trees.forEach(([x, z, conifer], i) =>
+    parts.push(...vmove(fresh ? asSway((conifer ? evergreen : leafy)[(variant + i) % 3].build(variant + i)) : conifer ? spruce(variant + i) : leafyTree(variant + i), x, 0.3, z)),
+  );
   // picnic table, bench and a frisbee on the grass
   parts.push(vb(-2.5, 1.6, 6, 2.5, 2, 9, ART.wood), vb(-2.5, 0.3, 5.2, 2.5, 1, 5.8, ART.wood), vb(-2.5, 0.3, 9.2, 2.5, 1, 9.8, ART.wood), vb(-0.3, 0.3, 7.2, 0.3, 1.6, 7.8, shade(ART.wood, -0.2)));
   parts.push(vb(4, 1.4, -1.8, 8, 1.8, -0.6, ART.wood), vb(4, 1.8, -1.8, 8, 3, -1.4, ART.wood));
@@ -120,10 +127,14 @@ const school: Model = (variant, { palette }) => {
   const wall = brick ? '#d98a6a' : '#f3dcc0';
   const roof = brick ? '#5a6d8a' : '#ef9b7f';
   const parts: BoxPart[] = [vb(-11.5, 0, -11.5, 11.5, 0.3, 11.5, palette.path[0])];
-  parts.push(vb(-11, 0.3, -11, 5, 9, -2, wall), vb(-11.4, 9, -11.4, 5.4, 9.6, -1.6, ART.trim), ...hipRoof(-11, 5, -11, -2, 10.6, roof, 0.6, 3));
-  for (const x of [-10, -6.5, 1]) parts.push(...windowZ(x, x + 2.5, 1.8, 4, -2, ART.glass), ...windowZ(x, x + 2.5, 5.4, 7.6, -2, ART.glass));
-  parts.push(...windowX(-9, -4, 1.8, 4, 5, ART.glass), ...windowX(-9, -4, 5.4, 7.6, 5, ART.glass));
-  parts.push(vb(-4, 0.3, -2, -1, 4.2, -1.6, ART.door), vb(-5, 4.4, -2, 0, 5, 1, shade(roof, -0.1)), vb(-4.6, 5.4, -1.9, -0.4, 7.2, -1.5, '#fff6e3'));
+  if (variant % 4 === 2) parts.push(...N.brickSchool.build(variant));
+  else if (variant % 4 === 3) parts.push(...N.schoolhouse.build(variant));
+  else {
+    parts.push(vb(-11, 0.3, -11, 5, 9, -2, wall), vb(-11.4, 9, -11.4, 5.4, 9.6, -1.6, ART.trim), ...hipRoof(-11, 5, -11, -2, 10.6, roof, 0.6, 3));
+    for (const x of [-10, -6.5, 1]) parts.push(...windowZ(x, x + 2.5, 1.8, 4, -2, ART.glass), ...windowZ(x, x + 2.5, 5.4, 7.6, -2, ART.glass));
+    parts.push(...windowX(-9, -4, 1.8, 4, 5, ART.glass), ...windowX(-9, -4, 5.4, 7.6, 5, ART.glass));
+    parts.push(vb(-4, 0.3, -2, -1, 4.2, -1.6, ART.door), vb(-5, 4.4, -2, 0, 5, 1, shade(roof, -0.1)), vb(-4.6, 5.4, -1.9, -0.4, 7.2, -1.5, '#fff6e3'));
+  }
   // playing field with a goal, a bike rack and the flag
   parts.push(vb(-11, 0.3, 2, 6, 0.5, 11, '#9fd08a'), vb(-11, 0.5, 6.3, 6, 0.55, 6.7, '#ffffff'), vb(4.6, 0.5, 4, 5, 3, 9, '#ffffff'));
   parts.push(vb(-10.6, 0.5, 4, -10.2, 3, 9, '#ffffff'), vb(-10.6, 2.6, 4, -10.2, 3, 9, '#ffffff'));
@@ -221,4 +232,4 @@ export function railEndSignParts(): BoxPart[] {
   return [vb(-0.3, 0, -0.3, 0.3, 7, 0.3, '#5d6470'), vb(-2.6, 5, -0.25, 2.6, 7.4, 0.25, '#ffffff'), vb(-2.4, 5.2, 0.2, 2.4, 7.2, 0.35, '#3b4260'), vb(1.2, 5.8, 0.3, 2.2, 6.6, 0.4, '#ffcc2e')];
 }
 
-export const FEATURE_VARIANTS: Record<FeatureKey, number> = { 'ctrain-station': 2, pond: 2, hill: 2, creek: 2, 'big-park': 2, school: 2 };
+export const FEATURE_VARIANTS: Record<FeatureKey, number> = { 'ctrain-station': 2, pond: 2, hill: 2, creek: 2, 'big-park': 4, school: 4 };

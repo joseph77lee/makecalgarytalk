@@ -12,6 +12,8 @@ import { useLiveWeather, WeatherChip, isSnowing, type LiveWeather } from '../../
 import { Precipitation } from './Precipitation';
 import { precipitation, skyBackground, skyLook, STARS, STARS_TILE, windVector, futureLandOpacity, type SkyLook } from './sky';
 import { setWind } from './wind';
+import { MeterProbe, MeterReadout } from '../dev/RenderMeter';
+import { METER_ON } from '../dev/meterFlag';
 import { initialSnowMemo, nextSnowMemo, snowVisible } from './snowCover';
 import { ambienceMix, musicFor, playSound, setAmbience, setMusic } from '../../sound';
 import { pickPostBubbles, seededRandom, villagerCount, villagersOutside } from './villagers';
@@ -149,9 +151,11 @@ export function IslandView({ plan, state, onTileTap, onBuildingTap, newsBuilding
           {children}
         </IslandScene>
         <CompassTracker channel={north} />
+        {METER_ON && <MeterProbe />}
       </Canvas>
       <FlashOverlay channel={flash} />
       <NorthArrow channel={north} />
+      {METER_ON && <MeterReadout lowQuality={lowQuality} />}
       {!environment && <WeatherChip weather={live.weather} night={look.nightness > 0.5} className="absolute bottom-[13.25rem] left-3 z-20" />}
     </div>
   );
