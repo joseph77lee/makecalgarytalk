@@ -7,8 +7,16 @@ import { ART } from '../assets/voxel/samples';
 import { BoxBatch } from '../scene/BoxBatch';
 import { useHtmlPortal } from '../scene/htmlPortal';
 import { buildMahoganyConcept } from './conceptMahogany';
+import { buildTerrainConcepts } from './conceptTerrain';
 
-const SCENE = buildMahoganyConcept();
+const MAHOGANY = buildMahoganyConcept();
+const TERRAIN = buildTerrainConcepts();
+/** Mahogany (people stand on the ground) plus the three terrain islands (people at their level). */
+const SCENE = {
+  parts: [...MAHOGANY.parts, ...TERRAIN.flatMap((t) => t.parts)],
+  labels: [...MAHOGANY.labels, ...TERRAIN.flatMap((t) => t.labels)],
+  people: [...MAHOGANY.people.map(([x, z]): [number, number, number] => [x, z, 0]), ...TERRAIN.flatMap((t) => t.people)],
+};
 
 export function ConceptIsland({ snow, lightsOn, showLabels }: { snow: boolean; lightsOn: boolean; showLabels: boolean }) {
   const portal = useHtmlPortal();
@@ -17,8 +25,8 @@ export function ConceptIsland({ snow, lightsOn, showLabels }: { snow: boolean; l
   return (
     <>
       <BoxBatch parts={parts} />
-      {SCENE.people.map(([x, z], i) => (
-        <group key={i} position={[x, 0, z]} rotation={[0, i * 1.3, 0]}>
+      {SCENE.people.map(([x, z, y], i) => (
+        <group key={i} position={[x, y, z]} rotation={[0, i * 1.3, 0]}>
           <VoxelPerson seed={i * 53 + 7} shirt={ART.shirts[i % ART.shirts.length]} motion={still} />
         </group>
       ))}

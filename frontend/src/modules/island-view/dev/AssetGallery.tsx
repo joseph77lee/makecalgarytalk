@@ -78,6 +78,10 @@ const CONCEPT_VIEWS = {
   'Concept: Mahogany': { target: [113, 11], zoom: 34 },
   'Concept: lake landmarks': { target: [116, 5.5], zoom: 70 },
   'Concept: town centre': { target: [14 + 100, 14], zoom: 70 },
+  'Concept: hill': { target: [150, 9], zoom: 44 },
+  'Concept: escarpment': { target: [175, 9], zoom: 44 },
+  'Concept: ravine': { target: [200, 9], zoom: 44 },
+  'Concept: waterfall': { target: [194.5, 10], zoom: 100 },
 } as const;
 const ALL_VIEWS: Record<string, { target: readonly [number, number]; zoom: number; y?: number }> = { ...VIEWS, ...DESIGN_VIEWS, ...CONCEPT_VIEWS };
 type ViewName = keyof typeof VIEWS | DesignSection | keyof typeof CONCEPT_VIEWS;
