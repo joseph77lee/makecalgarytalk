@@ -2,6 +2,7 @@
 import { box, translate, type BoxPart } from '../assets/boxes';
 import { LANDMARK_LIBRARY, type LandmarkKey } from '../assets/voxel/landmarkLibrary';
 import { PLACE_LIBRARY, personaTrack, type Persona } from '../assets/voxel/placeLibrary';
+import { addBuildMaps } from './buildMapLayout';
 
 export const PLACE_ORIGIN: [number, number] = [240, 0];
 const ROW_GAP = 2;
@@ -69,6 +70,7 @@ function buildScene(): { parts: BoxPart[]; labels: PlaceLabel[]; rows: Record<st
     rows[`Landmarks ${[...new Set([rowKeys[0], rowKeys[rowKeys.length - 1]])].map((k) => k.slice(9).toUpperCase()).join('–')}`] = [(X0 + x) / 2, z + depth / 2];
     z += depth + ROW_GAP + 1;
   }
+  addBuildMaps(parts, labels, rows, X0 + 2.4, z + 4);
   return { parts, labels, rows };
 }
 
@@ -77,7 +79,7 @@ export const PLACE_SCENE = buildScene();
 /** Camera presets: each persona row, and everything. */
 export const PLACE_VIEWS: Record<string, { target: [number, number]; zoom: number }> = {
   'Places: all': { target: [PLACE_ORIGIN[0] + 9, PLACE_ORIGIN[1] + 24], zoom: 20 },
-  ...Object.fromEntries(Object.entries(PLACE_SCENE.rows).filter(([title]) => !title.startsWith('Landmarks')).map(([title, t]) => [`Places: ${title}`, { target: t, zoom: 62 }])),
+  ...Object.fromEntries(Object.entries(PLACE_SCENE.rows).filter(([title]) => !title.startsWith('Landmarks') && !title.startsWith('Build map')).map(([title, t]) => [`Places: ${title}`, { target: t, zoom: 62 }])),
 };
 
 /** Camera presets for the unique landmarks, one per row. */
@@ -85,3 +87,7 @@ export const LANDMARK_VIEWS: Record<string, { target: [number, number]; zoom: nu
   Object.entries(PLACE_SCENE.rows).filter(([title]) => title.startsWith('Landmarks')).map(([title, t]) => [`Places: ${title.replace('Landmarks ', '★ ')}`, { target: t, zoom: 40 }]),
 );
 
+/** Camera presets for the build-map previews, one per sample community. */
+export const BUILD_MAP_VIEWS: Record<string, { target: [number, number]; zoom: number }> = Object.fromEntries(
+  Object.entries(PLACE_SCENE.rows).filter(([title]) => title.startsWith('Build map')).map(([title, t]) => [`Places: ${title}`, { target: t, zoom: 30 }]),
+);
