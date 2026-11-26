@@ -2,7 +2,7 @@
 
 Everything agreed (and still open) with the operator about redesigning how a community island grows,
 so a new session can continue without the chat history. Read this before touching the build map,
-house rules, island plans, terrain or personas. **Requirement v1.47 and PLAN v1.93 (2026-11-26) now
+house rules, island plans, terrain or personas. **Requirement v1.48 and PLAN v1.94 (2026-11-26) now
 carry these decisions** (new module M24 Community Identity, M25 Terrain to decide after M24); the
 requirement wins where this document differs.
 
@@ -58,6 +58,10 @@ Agreed 2026-11-26:
 13. **Several landmarks per community, at most 3** (order 1 = signature landmark on the World Map; 2 and 3 later on the persona track, at 26 and 51 residents). **One landmark model = one real building**: never bundle two real landmarks (DNC was split into the observation tower and the crescent glass tower); streets and shops around a landmark are only lot dressing.
 14. **Starting values** for the build map conditions as written in requirement v1.47 §7.6 (signature landmark: 11 residents + 14-day streak).
 15. **Terrain is a separate module (M25)**; whether it comes before the launch is decided after playing M24.
+16. **One root, then three branches** (requirement v1.48): the Welcome sign is the root, built on day one; all three tracks open after it.
+17. **Build map screen like an RPG skill tree**: three vertical lanes, resident-count bands, node states, gold landmark nodes; no branch choices; visitors can read other communities' trees.
+18. **Free camera** in M24: 360° turning, closer zoom, panning while zoomed in; so every model must be finished on all sides, and places face their site instead of the camera.
+19. **No place twice** on one build map; the Community hall and Neighbourhood park get persona designs.
 
 ---
 

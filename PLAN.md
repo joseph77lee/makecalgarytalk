@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.93 |
+| Plan version | v1.94 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-26 |
-| Based on | `requirement.md` v1.47 |
+| Based on | `requirement.md` v1.48 |
 | Current module | M24 Community Identity (next; then M16) |
 
 ---
@@ -641,11 +641,12 @@ M0 ─┬─ M1 ── M2 ─┐
 **Goal:** Each island grows into a beautiful place with its own signature places and landmarks (`requirement.md` v1.47 §7.2, §7.4, §7.6–§7.9): a build map of three tracks built in order, houses as scenery with only "My house" personal, places laid out by meaning. Built after M23, **before M16**. Design and gallery work so far: `docs/community-identity-handoff.md`, branch `spike/model-library` (place library, 31 unique landmarks), `supabase/data/community_personas.csv`.
 - **In scope**
   - [ ] persona and landmark list per community as data (from `community_personas.csv`; landmark order 1–3, signature = 1)
-  - [ ] build map as data and server rules: three tracks, conditions (previous step + residents/streak + land that fits the footprint), step multipliers, decoration steps; replaces the building tree and upgrades in place (`gamecore`/`communitystate` functions and DB tests rewritten)
-  - [ ] island plan generator v2: residential zones, place lots by site (shore, riverbank, hilltop, street, park, plaza) and footprint, a zone per land stage, lots reserved to match step conditions; **all 223 plans regenerated**
+  - [ ] build map as data and server rules: the Welcome sign as root, three tracks, no place twice, persona designs for the Community hall and Neighbourhood park, conditions (previous step + residents/streak + land that fits the footprint), step multipliers, decoration steps; replaces the building tree and upgrades in place (`gamecore`/`communitystate` functions and DB tests rewritten)
+  - [ ] island plan generator v2: residential zones, place lots by site (shore, riverbank, hilltop, street, park, plaza) and footprint, a zone per land stage, lots reserved to match step conditions, places facing their site (a beach club faces the real lake); a small pond (or the nearest water) when a water place finds no shore; a report of the islands where that happens; **all 223 plans regenerated**
   - [ ] house rule: scenery houses in zones (growing up), "My house" fixed lot seen only by its owner, shared lots when full, no names/tap/"+N", every house lit at night
-  - [ ] place library and unique landmarks moved from the spike into the island renderer by asset key (rivers/bridges get a crossing-site rule), placeholders for unknown keys
-  - [ ] build map screen: finished island picture, next step of each track with what it needs, progress, landmarks, completion %
+  - [ ] place library and unique landmarks moved from the spike into the island renderer by asset key (drawn water removed from the models so they sit on the real water; rivers/bridges get a crossing-site rule), **finished on all sides** (houses too), placeholders for unknown keys
+  - [ ] free camera: 360° turning, closer zoom, panning while zoomed in (kept within the island), compass reset, avatar follow that pauses while panning
+  - [ ] build map screen as a skill tree: root, three lanes, resident-count bands, node states, gold landmark nodes, node detail with "Help build it today", finished island picture, completion %; pre-rendered node pictures; read-only for visitors
   - [ ] development level from the build map; World Map landmark icon at level 4
   - [ ] "What changed since yesterday", share cards and invites name the new places and landmarks
 - **Out of scope:** terrain (M25), more unique landmarks beyond the 31 (data-only additions later), interiors (22.3)

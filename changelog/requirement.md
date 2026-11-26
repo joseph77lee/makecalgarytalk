@@ -12,6 +12,36 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-26 — v1.48
+**Changed:** 7.6 the build map gets **one root** (the Welcome sign, first day) that opens the three tracks (the community track starts at the Fire pit); **a place appears at most once** on a community's build map; the **Community hall and Neighbourhood park take a persona design**. 7.6a the build map screen is drawn **like an RPG skill tree** (root, three lanes, resident-count bands, node states, gold landmark nodes, pre-rendered node pictures, no branch choices, visitors read-only). 10.1 the camera **turns all the way round**, zooms in closer and pans while zoomed in; 7.8 the compass resets the view and places face their site, not the camera; 19.1 every model finished on all sides. 7.1, 7.9, 22.1, 22.6 (6e), 23 follow. Header version.
+
+**Why:** Operator decisions 2026-11-26 after the build-map preview in the gallery: residents should see their community's build map like a skill tree ("rpg 게임 처럼 기술 해금 하는 것처럼"); there is no need to start with three branches (a solo resident can only finish one place on day one anyway, and one root reads more like a skill tree); people should zoom in and look around freely ("사람들이 줌인해서 자유롭게 보길 원해"); the ACA preview showed the same places twice (garden, rink). Approved: "응 네 가지 다 추천대로 반영해줘".
+
+**Previous:**
+- Header (verbatim): `| Document version | v1.47 |`
+- 7.1 (verbatim): `the community's **Welcome sign** (first place of the community track, 7.6) is built`
+- 7.6 (verbatim): `Community places and construction projects are **one build map** of **three tracks**, each built **in order**: a step opens when the step before it in the same track is built and the community meets the step's conditions;`
+- 7.6 (verbatim): `| 🏘️ **Community** (every community) | Welcome sign → Fire pit → Warming hut → Skating rink → Community hall → Neighbourhood park |`
+- 7.6 (verbatim): `The Gateway arch and Lit hockey rink models stay in the library for later steps.`
+- 7.6 (verbatim): `**Conditions** (previous step of the same track built, plus):`
+- 7.6 (verbatim): `- **Required actions** = base × step multiplier; base = **5 per active resident, minimum 10** (active resident = last active day within the last 30 Calgary days, 7.4); step 1 needs at least 3, so **a single resident finishes a first place on day one** (shown the next morning)`
+- 7.6a (verbatim):
+  > ### 7.6a Build map screen (MVP)
+  > - A screen opened from the community view with **a picture of the community's finished island** in the middle (its own plan with every place built, drawn from the same data), so residents see what they are building towards
+  > - On top: the **next step of each track** with what it still needs ("2 more neighbours", "1 more streak day", "Build the Warming hut first", "Needs more land: 3 more neighbours"), the constructions in progress with their progress bars, the island size track ("N more neighbours"), the community's landmarks (generic names, silhouettes until built) and an overall **completion %**
+  > - A "See a finished example" button reopens the completed-neighbourhood example (5.1)
+  > - Read-only, built from server-computed values (streak, cumulative Verified Residents, step status); no game rules on the client
+  > - Shares one screen with the personal growth view (13.3, Phase 2) as tabs: **Village | Me**
+- 7.8 (verbatim): `- **Map orientation:** every island opens with the same diagonal camera angle, keeping the World Map's orientation (east to the lower right, north to the upper right), so a community looks like its outline on the map (9). A small compass shows where north is and turns when the player rotates the view.`
+- 7.9 (verbatim): `  - The **Welcome sign** is the first place of the community track (7.6); every community uses the same voxel model with its own name`
+- 10.1 (verbatim): `- **Isometric view** (orthographic camera); user can rotate/zoom within limits`
+- 19.1 (verbatim):
+  > - **Isometric orthographic view**
+- 22.1 (verbatim): `- Community streak, **build map** (7.6: three tracks built in order, persona places, up to 3 landmarks per community), ready-to-build silhouettes`
+- 22.1 (verbatim): `- **Build map screen** (7.6a): the finished island picture, the next step of each track and its remaining conditions`
+- 22.6 (verbatim): `| 6e | **Community identity** (decided with the operator 2026-11-25/26, details in 7.2, 7.6–7.9): a build map of three tracks built in order (community, persona, nature & leisure), personas and up to 3 landmarks per community (31 unique signature landmarks at launch), houses as scenery with only my own house personal, places laid out by meaning and every island plan regenerated |`
+- 23 (verbatim): `| Build map | The data-driven community places in three tracks (community, persona, nature & leisure), each built in order: the previous step plus residents, streak and land open a step, residents build it (7.6) |`
+
 ### 2026-11-26 — v1.47
 **Changed:** Community identity redesign. 7.6 **build map** of three tracks built in order (community, persona, nature & leisure) replaces the building tree (no more grow-in-place chains or upgrades in place; each step on its own lot; conditions = previous step + residents/streak + land that fits the footprint); 7.6a build map screen with the finished island picture and the next step of each track; 7.6b places and personas/landmarks as data, real-size footprints and sites; 7.2 houses become scenery in 2–4 residential zones, only "My house" is personal (fixed lot, seen only by its owner, lots shared when full), no names or "+N", every house lit at night; 7.4 development levels from the build map; 7.8 places laid out by meaning, one plan regeneration before launch, terrain later; 7.9 personas (10 patterns) and **up to 3 landmarks per community**, one landmark = one real building, 31 unique signature landmarks at launch (moved from Phase 3); 9 levels and landmark icon; 10.1/10.4, 19.4, 22.1, 22.3, 22.6 (steps 6e community identity, 6f terrain), 22.8, 23 follow. 1, 5, 7.1, 7.7 wording. Header.
 
