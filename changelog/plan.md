@@ -12,6 +12,17 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-26 — v1.95
+**Changed:** M24 Community Identity started (🟦): header, table row, heading.
+
+**Why:** User: "응 병합하고 M24 시작해줘" (docs merged to `main` as b809514).
+
+**Previous (verbatim):**
+- `| Plan version | v1.94 |`
+- `| Current module | M24 Community Identity (next; then M16) |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | ⬜ |`
+- `### M24 — Community Identity ⬜`
+
 ### 2026-11-26 — v1.94
 **Changed:** M24 scope follows requirement v1.48: the Welcome sign as root, no place twice, persona hall/park designs; plan generator places face their site, pond fallback and a report; models without drawn water and finished on all sides; a new free-camera item; the build map screen as a skill tree. Header: plan version, `Based on` v1.48.
 
