@@ -24,27 +24,12 @@ describe('withLights (night, storms)', () => {
     }
   });
 
-  it("a resident's windows never light by night: only being active today lights them (§7.2)", () => {
-    for (let seed = 0; seed < 12; seed++) {
-      const idle = houseParts('bungalow', seed, 0, false);
-      expect(idle.some((p) => p.tag === 'house-window')).toBe(true);
-      expect(withLights(idle, true).some((p) => p.layer === 'glow')).toBe(false);
-      const active = houseParts('bungalow', seed, 0, true);
-      expect(withLights(active, true).filter((p) => p.layer === 'glow').length).toBe(active.filter((p) => p.layer === 'glow').length);
-      expect(withLights(active, false).some((p) => p.layer === 'glow')).toBe(true);
-    }
-  });
-
-  it('about half of the village houses light up at night, none by day (v1.41 §7.2)', () => {
-    let lit = 0;
-    const n = 200;
-    for (let seed = 0; seed < n; seed++) {
-      const parts = houseParts('bungalow', seed * 7 + 1, 0, false, true);
-      if (withLights(parts, true).some((p) => p.layer === 'glow')) lit++;
+  it('every house lights its windows at night, none by day (requirement v1.48 §7.2)', () => {
+    for (let seed = 0; seed < 200; seed++) {
+      const parts = houseParts('bungalow', seed * 7 + 1, 0);
+      expect(withLights(parts, true).some((p) => p.layer === 'glow'), `house ${seed}`).toBe(true);
       expect(withLights(parts, false).some((p) => p.layer === 'glow')).toBe(false);
     }
-    expect(lit / n).toBeGreaterThan(0.35);
-    expect(lit / n).toBeLessThan(0.65);
   });
 
   it('public buildings light about 70 % of windows at night, none by day', () => {
@@ -65,7 +50,7 @@ describe('withLights (night, storms)', () => {
 
 describe('withSnow', () => {
   it('turns house roofs snowy and leaves walls alone', () => {
-    const parts = houseParts('twoStoreyGarage', 3, 1, false);
+    const parts = houseParts('twoStoreyGarage', 3, 1);
     const roofs = parts.filter((p) => p.tag === 'roof');
     expect(roofs.length).toBeGreaterThan(0);
     const snowy = withSnow(parts, true);

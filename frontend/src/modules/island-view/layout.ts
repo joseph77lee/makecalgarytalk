@@ -7,7 +7,7 @@
  * (§7.6): a construction site while a new building goes up, else the last built one (with a
  * small scaffold while it is upgraded in place), else a silhouette.
  */
-import { houseModelHeight, houseStyleFor, houseTypeFor, type HouseType } from './assets/voxel/houses';
+import { houseModelHeight, houseStyleFor, houseTypeGrown, type HouseType } from './assets/voxel/houses';
 import { vitalityMood, type VitalityMood } from './mood';
 import { buildingSpec, lotKind } from './plan/buildingTree';
 import { featuresFor, type CommunityFeature, type FeatureKey } from './plan/features';
@@ -430,7 +430,7 @@ export function buildIslandLayout(
     }
     houseTiles.push(tileKey(t));
     const colorIndex = hashString(h.id);
-    const houseType = houseTypeFor(style, colorIndex);
+    const houseType = houseTypeGrown(style, colorIndex, landStage);
     objects.push({
       assetKey: 'house',
       id: `house:${h.id}`,
@@ -456,7 +456,7 @@ export function buildIslandLayout(
     if (!on(t) || occupied.has(k)) continue;
     houseTiles.push(k);
     const colorIndex = hashString(`village:${plan.code}:${k}`);
-    const houseType = houseTypeFor(style, colorIndex);
+    const houseType = houseTypeGrown(style, colorIndex, landStage);
     objects.push({
       assetKey: 'house',
       id: `village:${k}`,

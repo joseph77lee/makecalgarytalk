@@ -33,8 +33,9 @@ export const NOON_CLEAR: IslandEnvironment = {
 export interface ResidentHouse {
   /** Stable house id (never a real address or user id). */
   id: string;
+  /** Empty for my own house (houses carry no names, requirement v1.48 §7.2); mock and test data may name them. */
   nickname: string;
-  /** Window lights when the resident acted today (requirement.md v1.26 §7.2). */
+  /** I helped today (kept for the client's own feedback; lights no longer follow activity). */
   activeToday: boolean;
   /** Fixed house lot from the server (slot order: `houseLotOrder`); mock/example data fills in order. */
   slot?: number;
@@ -59,6 +60,8 @@ export interface Remaining {
   streakDays: number;
   /** Buildings that must be built first (keys). */
   requires: string[];
+  /** Neighbours still needed until the place's lot rises (requirement v1.48 §7.6). */
+  landResidents?: number;
 }
 
 export interface BuildingView {

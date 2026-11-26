@@ -24,7 +24,7 @@ function water(x0: number, z0: number, x1: number, z1: number, inside: (x: numbe
 
 /** A lakehouse (one of the game's houses) whose windows light at night like every scenery house. */
 const lakehouse = (seed: number, facing: number, x: number, z: number): BoxPart[] =>
-  vmove(houseParts(houseTypeFor('suburb', seed), seed, facing, false, true).map((b) => (b.tag === 'house-window' ? { ...b, tag: 'village-window' as const } : b)), x, 0, z);
+  vmove(houseParts(houseTypeFor('suburb', seed), seed, facing), x, 0, z);
 
 /** A small rowboat along x. */
 const rowboat = (x: number, z: number, c: string): BoxPart[] => [vb(x - 2.4, 0.2, z - 0.9, x + 2.4, 1.2, z + 0.9, c), vb(x - 3, 0.3, z - 0.5, x + 3, 1, z + 0.5, c), vb(x - 1.8, 0.9, z - 0.7, x + 1.8, 1.1, z + 0.7, WOOD)];

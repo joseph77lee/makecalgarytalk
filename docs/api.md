@@ -87,8 +87,6 @@ start while fewer than 3 are active; these rows are written once). `streak` and
     { "id": "uuid", "building_key": "welcome-sign", "title": "Welcome sign", "level": 2,
       "required": 4, "progress": 1, "stage": "scaffolding" }
   ],
-  "houses": [{ "slot": 0, "nickname": "Snowy Moose", "active_today": true, "founding": true }],
-  "hidden_houses": 0,
   "today_actions": [{ "nickname": "Snowy Moose", "building_key": "fire-pit", "title": "Fire pit" }],
   "me": { "member": true, "pending": false, "energy_max": 3, "energy_left": 2, "house_slot": 0 }
 }
@@ -123,14 +121,15 @@ start while fewer than 3 are active; these rows are written once). `streak` and
   `gamecore_submit_actions`. `progress` counts actions from **before today** (today's
   actions show tomorrow), capped at `required`. `stage`: `scaffolding` below half, `frame`
   from half. A building is `built` the day after its goal was reached.
-- `houses` (§7.2): residents whose last active day is within 30 days (movers keep theirs until
-  the move completes). `slot` = fixed house lot 0..149, mapped by the client to the stored plan's
-  house lots ordered by land stage, then plan order (`houseLotOrder`). Lots are assigned while the
-  snapshot is built; archived residents keep theirs unless every lot is taken. No user ids.
-  `hidden_houses`: active residents beyond the lots (not drawn). Part of the 5-minute snapshot.
+- Houses are scenery (requirement v1.48 §7.2): the state lists no residents' houses. The island
+  draws a house on every house lot of the risen land.
 - `today_actions` (§7.3): today's real actions, newest first, at most 20, without times (live);
   pending help is left out. Mini villagers replay them.
-- `me.house_slot`: my house here, or `null`.
+- `me.house_slot`: my house here, or `null`: a fixed slot, mapped by the client to the stored
+  plan's house lots ordered by land stage, then plan order (`houseLotOrder`). Assigned once while
+  the snapshot is built (lowest free slot on risen land; when all have an owner, the least shared
+  slot — residents share lots, only the owner sees the marker). Never taken back; moving away
+  frees it. Lots per land stage: `gamecore.house_capacity`, from the island plans.
 - `me`: `null` for visitors (not signed in). `member`: this is the community I play in
   (otherwise I am only looking around and cannot act). `pending`: my actions here are saved but
   count only once I am a Verified Resident here (§6.3).

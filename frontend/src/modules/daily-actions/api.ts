@@ -88,13 +88,6 @@ export interface ServerChanges {
 }
 
 /** A resident's house (requirement.md v1.26 §7.2): fixed lot `slot`, no user id. */
-export interface ServerHouse {
-  slot: number;
-  nickname: string;
-  active_today: boolean;
-  founding: boolean;
-}
-
 export interface ServerCommunityState {
   calgary_day: string;
   next_day_start: string;
@@ -103,9 +96,6 @@ export interface ServerCommunityState {
   projects: ServerProject[];
   streak: ServerStreak;
   changes: ServerChanges;
-  houses: ServerHouse[];
-  /** Active residents beyond the 150 house lots (not drawn). */
-  hidden_houses: number;
   /** Today's real actions, newest first (at most 20), for the villagers' replay. */
   today_actions: { nickname: string; building_key: string; title: string }[];
   /** `member`: I play in this community; `pending`: my help here counts once I am verified (§6.3); `house_slot`: my house here. */
@@ -197,11 +187,6 @@ export function assertCommunityState(v: unknown): asserts v is ServerCommunitySt
       'building.remaining',
     );
   }
-  check(Array.isArray(v.houses), 'state.houses');
-  for (const h of v.houses as unknown[]) {
-    check(isObj(h) && isCount(h.slot) && (h.slot as number) < 150 && typeof h.nickname === 'string' && typeof h.active_today === 'boolean' && typeof h.founding === 'boolean', 'house');
-  }
-  check(isCount(v.hidden_houses), 'state.hidden_houses');
   check(Array.isArray(v.today_actions) && (v.today_actions as unknown[]).every((a) => isObj(a) && typeof a.nickname === 'string' && typeof a.title === 'string'), 'state.today_actions');
   check(v.me === null || (isObj(v.me) && (v.me.house_slot === null || isCount(v.me.house_slot))), 'state.me');
   check(Array.isArray(v.projects), 'state.projects');

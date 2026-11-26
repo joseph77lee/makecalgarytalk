@@ -40,8 +40,8 @@ describe('box helpers', () => {
 });
 
 describe('models', () => {
-  it('active houses have lit windows; inactive houses have none (requirement.md §7.2)', () => {
-    expect(house(houseItem(true)).filter((p) => p.layer === 'glow').length).toBeGreaterThanOrEqual(3);
+  it('no house glows by day, active or not: houses light up at night only (requirement v1.48 §7.2)', () => {
+    expect(house(houseItem(true)).filter((p) => p.layer === 'glow')).toHaveLength(0);
     expect(house(houseItem(false)).filter((p) => p.layer === 'glow')).toHaveLength(0);
   });
 

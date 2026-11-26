@@ -51,7 +51,7 @@ const roundCorners = (w: number, d: number, r = 2) => (x: number, z: number) =>
 
 /** Every window of a scenery house is lit at night (operator, 2026-11-25), so tag them all as village windows. */
 const sceneryHouse = (seed: number, facing: number) =>
-  houseParts(houseTypeFor('suburb', seed), seed, facing, false, true).map((b) => (b.tag === 'house-window' ? { ...b, tag: 'village-window' as const } : b));
+  houseParts(houseTypeFor('suburb', seed), seed, facing);
 
 /** Ground, cliffs, stairs, water, waterfalls and bridges for one spec, at origin (x0, z0). */
 function terrain(spec: Spec, x0: number, z0: number): { parts: BoxPart[]; used: Set<string> } {

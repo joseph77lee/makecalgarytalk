@@ -48,8 +48,6 @@ function serverState(patch: Partial<ServerCommunityState> = {}): ServerCommunity
     ],
     streak: { days: 2, today: { acted: 1, active_residents: 4, needed: 2, attended: false } },
     changes: { actions: 0, progress: [], built: [], opened: [], new_residents: 0, land_grew: false, vitality_before: null },
-    houses: [],
-    hidden_houses: 0,
     today_actions: [],
     me: { member: true, pending: false, energy_max: 3, energy_left: 3, house_slot: null },
     ...patch,
@@ -75,7 +73,7 @@ describe('toViewState (the server owns the building tree)', () => {
 
   it('maps what a locked building is still missing (snake_case → camelCase)', () => {
     const v = toViewState(serverState());
-    expect(v.buildings.find((x) => x.key === 'warming-hut')?.remaining).toEqual({ residents: 0, streakDays: 3, requires: ['fire-pit'] });
+    expect(v.buildings.find((x) => x.key === 'warming-hut')?.remaining).toEqual({ residents: 0, streakDays: 3, landResidents: 0, requires: ['fire-pit'] });
   });
 
   it('takes the land stage from the server and clamps it to the tiers this build knows', () => {
@@ -85,27 +83,17 @@ describe('toViewState (the server owns the building tree)', () => {
     expect(toViewState(big).landStage).toBe(BUILDING_TREE.landTiers.length - 1);
   });
 
-  it('takes houses on their fixed lots, my house, the replay and overflow from the server', () => {
+  it('marks only my own house on my fixed slot; nobody else\'s house is listed (houses are scenery, v1.48 §7.2)', () => {
     const v = toViewState(
       serverState({
-        houses: [
-          { slot: 0, nickname: 'Dev One', active_today: false, founding: true },
-          { slot: 3, nickname: 'Maple Fox', active_today: true, founding: false },
-        ],
-        hidden_houses: 2,
         today_actions: [{ nickname: 'Maple Fox', building_key: 'fire-pit', title: 'Fire pit' }],
-        me: { member: true, pending: false, energy_max: 3, energy_left: 3, house_slot: 0 },
+        me: { member: true, pending: false, energy_max: 3, energy_left: 3, house_slot: 4 },
       }),
     );
-    expect(v.houses).toEqual([
-      { id: 'slot-0', slot: 0, nickname: 'Dev One', activeToday: false, founding: true, mine: true },
-      { id: 'slot-3', slot: 3, nickname: 'Maple Fox', activeToday: true, founding: false, mine: false },
-    ]);
-    expect(v.extraResidents).toBe(2);
+    expect(v.houses).toEqual([{ id: 'my-house', slot: 4, nickname: '', activeToday: false, founding: false, mine: true }]);
+    expect(v.extraResidents).toBe(0);
     expect(v.replay).toEqual([{ nickname: 'Maple Fox', title: 'Fire pit' }]);
-    // I helped today: my window lights up before the next snapshot says so
-    const lit = toViewState(serverState({ houses: [{ slot: 0, nickname: 'Dev One', active_today: false, founding: true }], me: { member: true, pending: false, energy_max: 3, energy_left: 2, house_slot: 0 } }), true);
-    expect(lit.houses[0].activeToday).toBe(true);
+    expect(toViewState(serverState({ me: null })).houses).toEqual([]);
   });
 
   it('takes Vitality and the villager count from the server', () => {

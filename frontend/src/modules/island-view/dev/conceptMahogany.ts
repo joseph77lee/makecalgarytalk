@@ -130,7 +130,7 @@ export function buildMahoganyConcept(): ConceptScene {
   ];
   houses.forEach(([x, z, facing], i) => {
     const seed = 1000 + i * 37;
-    at(houseParts(houseTypeFor('suburb', seed), seed, facing, rnd(seed, 3) < 0.4), x + 0.5, z + 0.5);
+    at(houseParts(houseTypeFor('suburb', seed), seed, facing), x + 0.5, z + 0.5);
     used.add(`${Math.floor(x)},${Math.floor(z)}`);
   });
   label('Neighbourhood', 4.5, 4, 1.6);

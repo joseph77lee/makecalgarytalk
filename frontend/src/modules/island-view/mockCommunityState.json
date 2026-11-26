@@ -4,24 +4,11 @@
   "vitality": 72,
   "houses": [
     {
-      "id": "r1",
-      "nickname": "Sarah",
-      "activeToday": true
-    },
-    {
-      "id": "r2",
-      "nickname": "Minjun",
-      "activeToday": true
-    },
-    {
-      "id": "r3",
-      "nickname": "Priya",
-      "activeToday": false
-    },
-    {
-      "id": "r4",
-      "nickname": "Tom",
-      "activeToday": true
+      "id": "my-house",
+      "slot": 0,
+      "nickname": "",
+      "activeToday": false,
+      "mine": true
     }
   ],
   "buildings": [
@@ -130,8 +117,8 @@
   "speechBubbles": [
     {
       "anchor": {
-        "kind": "house",
-        "id": "r1"
+        "kind": "villager",
+        "index": 1
       },
       "text": "Sarah helped the sailing dock"
     },

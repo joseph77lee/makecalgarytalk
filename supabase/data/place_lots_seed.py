@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 Writes the gamecore place-lot seed migration from the stored island plans (requirement.md v1.48
-§7.6, §7.8): for every build map step with a lot on a community's island, the land stage at which
-that lot has fully risen. The server opens a step only once that land has risen.
+§7.2, §7.6, §7.8): for every build map step with a lot on a community's island, the land stage at
+which that lot has fully risen (the server opens a step only once that land has risen), and how
+many house lots each land stage holds (house slots for "My house").
 
   python3 -I supabase/data/place_lots_seed.py supabase/migrations/<timestamp>_gamecore_place_lots_seed.sql
 
@@ -24,10 +25,15 @@ def q(v):
 def main(out):
     keys = {s["key"] for s in json.loads((HERE / "build_map.json").read_text())["steps"]}
     rows = []
+    capacity = []
     for f in sorted(PLANS.glob("*.json")):
         plan = json.loads(f.read_text())
         t = plan["tiles"]
         stage = {(t[i], t[i + 1]): t[i + 2] for i in range(0, len(t), 3)}
+        hs = plan["houses"]
+        house_stages = [stage[(hs[i], hs[i + 1])] for i in range(0, len(hs), 2)]
+        for k in range(len(plan["tiers"])):
+            capacity.append(f"  ({q(plan['code'])}, {k}, {sum(1 for s in house_stages if s <= k)})")
         for key, (x, z, w, d, *_rest) in sorted(plan["lots"].items()):
             if key not in keys:
                 continue  # Main Street and spare lots are not build map steps
@@ -45,6 +51,14 @@ def main(out):
         ") as l (code, building_key, land_stage)",
         "join gamecore.communities c on c.code = l.code",
         "on conflict (community_id, building_key) do update set land_stage = excluded.land_stage;",
+        "",
+        "-- house lots per land stage",
+        "delete from gamecore.house_capacity;",
+        "insert into gamecore.house_capacity (community_id, land_stage, slots)",
+        "select c.id, h.land_stage, h.slots from (values",
+        ",\n".join(capacity),
+        ") as h (code, land_stage, slots)",
+        "join gamecore.communities c on c.code = h.code;",
         "",
     ]
     Path(out).write_text("\n".join(lines))
