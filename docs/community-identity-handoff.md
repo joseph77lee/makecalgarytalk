@@ -45,9 +45,16 @@ Facts checked during the discussion:
 7. **Models are built once as a library and used by data:** the build map refers to asset keys (§7.6b, §20.4); unknown keys draw the placeholder. Adding a model never changes game rules.
 8. **Terrain can change** (operator offered): hills, escarpments and ravines may be expressed in the island floor.
 
+Agreed in the follow-up session (2026-11-25), answering §4:
+
+9. **Unlocks (replaces proposal B):** the next building opens only when the previous one is **completed** *and* the community meets a **resident-count** condition (key steps, especially the landmark, also need streak days / the highest resident count). Completing an opened building takes the residents' **daily contributions** (3 energy a day). Keep the required contribution **scaled by active residents** as in §7.6 today (5 per active resident × stage multiplier), so big communities do not finish in a day and small ones do not stall. Daily-visit drivers: energy resets daily, community streak, "What changed since yesterday", and "N more neighbours to build our landmark".
+10. **Unique landmarks (C):** about 30 priority communities at launch, but aim to give **every** community its own landmark over time (data-only swaps after launch). Claude proposes the 30 candidates from the CSV (landmark specificity + population).
+11. **Houses (replaces proposal D):** houses are **scenery**, placed and counted for beauty (2–4 residential zones, a cap, growing up instead of out), not one per resident. **Only "My house" is personal:** each Verified Resident keeps a **fixed lot** inside a residential zone, assigned by the server (stable position, ready for later visits); the owner sees it with the "My house" marker, everyone else sees an ordinary house. **No owner tap, no names, no "+N more residents"** on other houses (cooperative async game, not a live online world). **Windows are not tied to activity:** at night **every** house has lit windows (it looks prettier); this replaces the "active today → warm lights" rule of §7.2.
+12. **A, E, F, G, H accepted** as proposed in §4.
+
 ---
 
-## 4. Proposals awaiting the operator's answer
+## 4. Proposals (answered 2026-11-25: see §3 items 9–12; B and D were changed by the operator)
 
 | # | Proposal (my recommendation) | Why |
 |---|---|---|
@@ -118,7 +125,7 @@ Gallery tools (on `main`): labels switch, camera pad (arrows/WASD pan, +/− zoo
 
 ## 8. Next steps (recommended order)
 
-0. **Get the operator's answers** to §4 (A–H) and §4.1. Reply in Korean (see memory), keep repo text English.
+0. ~~Get the operator's answers to §4 (A–H)~~ done (§3 items 9–12); terrain §4.1 accepted as the next step. Reply in Korean (see memory), keep repo text English.
 1. **Terrain gallery mock-up** (three terrain types) — decides lot placement and where landmarks sit.
 2. **CSV cleanup → English data file**, e.g. `supabase/data/community_personas.csv`: `code, persona (one of ~10), persona_secondary, signature_landmark (generic English name), landmark_reference (real place, for the operator), track_steps, nature_terrain, source, confidence`; fix the yacht mentions; generalise brands; keep the operator's Korean file as their working copy.
 3. **Model library**: persona-pattern places (≈ 30–40 voxel models) → unique landmarks for the 20–30 priority communities as photos arrive → gallery review; tests for lot fit, snow and night lights (follow `assets/voxel/designFit.ts` style).
