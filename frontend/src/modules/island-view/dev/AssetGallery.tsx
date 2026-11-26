@@ -49,6 +49,9 @@ import { GalleryLife } from './GalleryLife';
 import { DesignGallery } from './DesignGallery';
 import { DESIGN_VIEWS, type DesignSection } from './designSections';
 import { CameraPad, CameraPadBridge } from './CameraPad';
+import { ConceptIsland } from './ConceptIsland';
+import { PlaceGallery } from './PlaceGallery';
+import { BUILD_MAP_VIEWS, LANDMARK_VIEWS, PLACE_VIEWS } from './placeLayout';
 
 interface Item {
   label: string;
@@ -72,9 +75,22 @@ const VIEWS = {
   CTrain: { target: [12.5, 6.5], zoom: 120 },
 } as const;
 /** The box-model diorama's presets, then the new voxel designs' (M23 rework). */
-const ALL_VIEWS: Record<string, { target: readonly [number, number]; zoom: number; y?: number }> = { ...VIEWS, ...DESIGN_VIEWS };
-type ViewName = keyof typeof VIEWS | DesignSection;
+/** Concept of the community-identity build map (2026-11-25): Mahogany finished as a lake island. */
+const CONCEPT_VIEWS = {
+  'Concept: Mahogany': { target: [113, 11], zoom: 34 },
+  'Concept: lake landmarks': { target: [116, 5.5], zoom: 70 },
+  'Concept: town centre': { target: [14 + 100, 14], zoom: 70 },
+  'Concept: hill': { target: [150, 9], zoom: 44 },
+  'Concept: escarpment': { target: [175, 9], zoom: 44 },
+  'Concept: ravine': { target: [200, 9], zoom: 44 },
+  'Concept: waterfall': { target: [194.5, 10], zoom: 100 },
+} as const;
+const ALL_VIEWS: Record<string, { target: readonly [number, number]; zoom: number; y?: number }> = { ...VIEWS, ...DESIGN_VIEWS, ...CONCEPT_VIEWS, ...PLACE_VIEWS, ...LANDMARK_VIEWS, ...BUILD_MAP_VIEWS };
+type ViewName = keyof typeof VIEWS | DesignSection | keyof typeof CONCEPT_VIEWS | `Places: ${string}`;
 const isDesign = (v: ViewName): v is DesignSection => v in DESIGN_VIEWS;
+/** Where the sun's shadow box is centred: the diorama, or the chosen design / concept view. */
+/** A view renamed by hot reload (landmark rows are named after their codes) falls back to the centre. */
+const sunCentre = (v: ViewName): readonly [number, number] => (v in VIEWS ? [0, 0] : (ALL_VIEWS[v]?.target ?? [0, 0]));
 
 /** Moves the orbit target and zoom when a preset is chosen (keeps the viewing angle). */
 function ViewRig({ view }: { view: ViewName }) {
@@ -85,6 +101,7 @@ function ViewRig({ view }: { view: ViewName }) {
     if (!orbit) return;
     const cam = camera as OrthoCam;
     const v = ALL_VIEWS[view];
+    if (!v) return;
     const ty = v.y ?? 0.5;
     const d = [cam.position.x - orbit.target.x, cam.position.y - orbit.target.y, cam.position.z - orbit.target.z];
     orbit.target.set(v.target[0], ty, v.target[1]);
@@ -294,7 +311,7 @@ export function AssetGallery() {
       <CameraPad />
       <SoundBoard scene={{ weather, wind: windLevel, nightness: look.nightness > 0.5 ? 1 : 0, hasWater: true, campfire: true, construction: true }} />
       <div className="absolute bottom-4 left-1/2 z-10 flex w-[min(96vw,60rem)] -translate-x-1/2 flex-col items-center gap-1.5">
-        {([['Now (voxel)', Object.keys(VIEWS) as ViewName[]], ['New voxel designs (M23)', Object.keys(DESIGN_VIEWS) as ViewName[]]] as const).map(([title, views]) => (
+        {([['Now (voxel)', Object.keys(VIEWS) as ViewName[]], ['New voxel designs (M23)', Object.keys(DESIGN_VIEWS) as ViewName[]], ['Concept', Object.keys(CONCEPT_VIEWS) as ViewName[]], ['Place library', Object.keys(PLACE_VIEWS) as ViewName[]], ['Unique landmarks', Object.keys(LANDMARK_VIEWS) as ViewName[]], ['Build maps', Object.keys(BUILD_MAP_VIEWS) as ViewName[]]] as const).map(([title, views]) => (
           <div key={title} className="flex flex-wrap items-center justify-center gap-1.5">
             <span className="rounded-full bg-slate-800/80 px-2.5 py-1 text-[11px] font-bold text-white">{title}</span>
             {views.map((v) => (
@@ -304,7 +321,7 @@ export function AssetGallery() {
                 onClick={() => setView(v)}
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow ${v === view ? 'bg-indigo-500 text-white' : 'bg-white/90 text-slate-700'}`}
               >
-                {v.replace(/^New (.)/, (_, c: string) => c.toUpperCase())}
+                {v.replace(/^New (.)/, (_, c: string) => c.toUpperCase()).replace(/^(Concept|Places): /, '')}
               </button>
             ))}
           </div>
@@ -314,7 +331,7 @@ export function AssetGallery() {
         <OrthographicCamera makeDefault position={[22, 24, 22]} zoom={42} near={0.1} far={400} />
         <OrbitControls makeDefault target={[0, 0, 0.5]} enablePan screenSpacePanning={false} minZoom={10} maxZoom={1200} />
         <hemisphereLight color={look.hemiSky} groundColor={look.hemiGround} intensity={look.ambientIntensity} />
-        <SunLight centre={isDesign(view) ? DESIGN_VIEWS[view].target : [0, 0]} dir={[dx, dy, dz]} color={look.sunColor} intensity={look.sunIntensity} />
+        <SunLight centre={sunCentre(view)} dir={[dx, dy, dz]} color={look.sunColor} intensity={look.sunIntensity} />
         {look.fog > 0 && <fog attach="fog" args={[look.bg[2], 30 - 12 * look.fog, 75 - 30 * look.fog]} />}
         <GalleryWind wind={wind} />
         {precip && <Precipitation kind={precip.kind} count={precip.count} radius={14} wind={wind} />}
@@ -322,6 +339,8 @@ export function AssetGallery() {
         <GalleryLife />
         <BoxBatch parts={parts} />
         <DesignGallery snow={snow} lightsOn={look.lightsOn} section={labels && isDesign(view) ? view : null} />
+        <ConceptIsland snow={snow} lightsOn={look.lightsOn} showLabels={labels} />
+        <PlaceGallery snow={snow} lightsOn={look.lightsOn} showLabels={labels} />
         <CameraPadBridge />
         {labels &&
           items
