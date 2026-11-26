@@ -3,7 +3,7 @@
  * Generic places, no brands or sign text. Voxels (12 per tile), front towards +z, centred.
  */
 import { asSway, type BoxPart } from '../boxes';
-import { bench, fence, flowerBed, ICE, IRON, lamp, PAVING, reeds, smallTree, STONE, WATER, WOOD, WOOD_DARK } from './placeParts';
+import { bench, fence, flowerBed, ICE, IRON, LAMP, lamp, PAVING, reeds, smallTree, STONE, WATER, WOOD, WOOD_DARK } from './placeParts';
 import { ART } from './samples';
 import { gableRoof, hipRoof, pick, rnd, shade, vb, windowX, windowZ } from './voxel';
 
@@ -47,25 +47,56 @@ export function outdoorRink(_seed: number): BoxPart[] {
   return parts;
 }
 
-/** Ball diamond (3 × 3 tiles): infield dirt, bases, a backstop, dugout benches, bleachers and a lit scoreboard post. */
-export function ballDiamond(_seed: number): BoxPart[] {
-  const parts: BoxPart[] = [vb(-18, 0, -18, 18, 0.3, 18, '#93cb6c')];
-  // a stepped diamond of dirt, home plate towards the viewer (+z)
-  for (let i = 0; i < 11; i++) {
-    const half = i < 6 ? i * 1.6 + 1 : (10 - i) * 1.6 + 1;
-    const z = 12 - i * 2;
-    parts.push(vb(-half, 0.3, z - 2, half, 0.5, z, '#d9a77f'));
+/**
+ * Ball diamond (5 × 5 tiles): an infield of dirt with grass inside the bases, foul lines, a curved
+ * outfield fence, a backstop behind home plate, dugouts, bleachers, a scoreboard and light towers.
+ */
+export function ballDiamond(seed: number): BoxPart[] {
+  const parts: BoxPart[] = [vb(-30, 0, -30, 30, 0.3, 30, '#93cb6c')];
+  const HZ = 22; // home plate; the outfield is towards −z
+  const R = 40; // outfield fence radius from home
+  // mowing stripes in the outfield
+  for (let z = -28; z < HZ; z += 4) parts.push(vb(-28, 0.3, z, 28, 0.34, z + 2, '#9fd47a'));
+  // infield dirt: the area within reach of the bases (a diamond plus an arc), grass inside the bases
+  for (let x = -16; x < 16; x += 1)
+    for (let z = HZ - 26; z < HZ + 3; z += 1) {
+      const cx = x + 0.5;
+      const cz = z + 0.5;
+      const d = Math.abs(cx) + Math.abs(cz - (HZ - 10));
+      const r = Math.hypot(cx, cz - HZ);
+      const dirt = (d < 13 && r < 20) || r < 3.2;
+      const grassInside = d < 7.6 && r > 3.2;
+      if (dirt && !grassInside) parts.push(vb(x, 0.3, z, x + 1, 0.46, z + 1, '#d9a77f'));
+    }
+  parts.push(vb(-1.2, 0.46, HZ - 11.2, 1.2, 0.9, HZ - 8.8, '#d9a77f'), vb(-0.5, 0.9, HZ - 10.3, 0.5, 1, HZ - 9.7, '#fbf8f2'));
+  for (const [x, z] of [[0, HZ], [10, HZ - 10], [0, HZ - 20], [-10, HZ - 10]]) parts.push(vb(x - 0.8, 0.46, z - 0.8, x + 0.8, 0.8, z + 0.8, '#fbf8f2'));
+  // foul lines out to the fence
+  for (let t = 1; t < R / Math.SQRT2; t += 1) for (const s of [-1, 1]) parts.push(vb(s * t - 0.25, 0.34, HZ - t - 0.25, s * t + 0.25, 0.4, HZ - t + 0.25, '#fbf8f2'));
+  // outfield fence: green panels on an arc, yellow cap
+  for (let a = -45; a <= 45; a += 3) {
+    const rad = (a * Math.PI) / 180;
+    const x = R * Math.sin(rad);
+    const z = HZ - R * Math.cos(rad);
+    parts.push(vb(x - 1.2, 0, z - 1.2, x + 1.2, 4, z + 1.2, '#2f6f4a'), vb(x - 1.2, 4, z - 1.2, x + 1.2, 4.4, z + 1.2, '#f2c14e'));
   }
-  parts.push(vb(-4, 0.3, -4, 4, 0.55, 4, '#93cb6c'), vb(-1, 0.5, -1, 1, 0.9, 1, '#d9a77f'));
-  for (const [x, z] of [[0, 11], [8.6, 2.4], [0, -6.4], [-8.6, 2.4]]) parts.push(vb(x - 0.7, 0.5, z - 0.7, x + 0.7, 0.8, z + 0.7, '#fbf8f2'));
   // backstop behind home plate
-  for (let x = -6; x <= 6; x += 1.5) parts.push(vb(x - 0.15, 0, 14.5, x + 0.15, 8, 14.8, IRON));
-  for (let y = 1; y <= 8; y += 1.4) parts.push(vb(-6, y, 14.55, 6, y + 0.15, 14.75, '#9aa1ab'));
-  for (const s of [-1, 1]) parts.push(vb(s * 9 - 3, 0, 12.5, s * 9 + 3, 4, 15, '#8f9bc0'), vb(s * 9 - 2.6, 1.2, 12.6, s * 9 + 2.6, 1.6, 13.4, ART.wood));
-  // bleachers on the first-base side, scoreboard in the outfield
-  for (let r = 0; r < 4; r++) parts.push(vb(12, r * 1.2, 4 + r * 1.4, 17.5, r * 1.2 + 1.2, 6 + r * 1.4, r % 2 ? '#9aa1ab' : '#c3c8cf'));
-  parts.push(vb(-15, 0, -16, -14.4, 10, -15.4, IRON), vb(-18, 10, -16.2, -11.4, 14, -15.6, '#2f4a3a'));
-  for (let i = 0; i < 6; i++) parts.push(vb(-17 + i, 12, -15.6, -16.4 + i, 12.8, -15.5, '#ffe7a3', 'glow'));
+  for (let a = -60; a <= 60; a += 10) {
+    const rad = (a * Math.PI) / 180;
+    const x = 6 * Math.sin(rad);
+    const z = HZ + 6 * Math.cos(rad);
+    parts.push(vb(x - 0.2, 0, z - 0.2, x + 0.2, 9, z + 0.2, IRON));
+  }
+  for (let y = 1; y <= 9; y += 1.6) parts.push(vb(-5.2, y, HZ + 5.4, 5.2, y + 0.2, HZ + 6, '#9aa1ab'));
+  // dugouts along the baselines, bleachers behind them
+  for (const s of [-1, 1]) {
+    parts.push(vb(s * 13 - 4, 0, HZ - 2, s * 13 + 4, 4, HZ + 1, '#8f9bc0'), vb(s * 13 - 4.4, 4, HZ - 2.4, s * 13 + 4.4, 4.6, HZ + 1.4, shade('#8f9bc0', -0.2)), vb(s * 13 - 3.4, 1.2, HZ - 1.6, s * 13 + 3.4, 1.6, HZ - 0.8, ART.wood));
+    for (let r = 0; r < 4; r++) parts.push(vb(s * 13 - 5, r * 1.2, HZ + 2 + r * 1.4, s * 13 + 5, r * 1.2 + 1.2, HZ + 3.4 + r * 1.4, r % 2 ? '#9aa1ab' : '#c3c8cf'));
+  }
+  // scoreboard beyond the fence and light towers at the corners (not taller than the leisure centre)
+  parts.push(vb(-26, 0, -27, -25, 9, -26, IRON), vb(-29, 9, -27.4, -20, 14, -26.6, '#2f4a3a'));
+  for (let i = 0; i < 7; i++) parts.push(vb(-28 + i * 1.2, 11.5, -26.6, -27.4 + i * 1.2, 12.4, -26.5, LAMP, 'glow'));
+  for (const [x, z] of [[-27, 10], [27, 10], [27, -22]]) parts.push(vb(x - 0.4, 0, z - 0.4, x + 0.4, 15, z + 0.4, IRON), vb(x - 1.6, 15, z - 0.6, x + 1.6, 16.4, z + 0.6, LAMP, 'glow'));
+  parts.push(...smallTree(-27, 27, seed, 9), ...smallTree(27, 27, seed + 1, 9));
   return parts;
 }
 

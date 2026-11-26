@@ -41,6 +41,14 @@ describe('place library', () => {
     for (const k of track.slice(0, -1)) expect(extent(PLACE_LIBRARY[k].build(3)).h).toBeLessThanOrEqual(h);
   });
 
+  it('big grounds take real space (operator, 2026-11-26)', () => {
+    const area = (k: PlaceKey) => PLACE_LIBRARY[k].tiles[0] * PLACE_LIBRARY[k].tiles[1];
+    expect(area('place.mature-suburb.ball-diamond')).toBeGreaterThanOrEqual(25);
+    expect(area('place.golf.golf-hole')).toBeGreaterThanOrEqual(15);
+    expect(area('place.golf.driving-range')).toBeGreaterThanOrEqual(15);
+    for (const k of ['place.golf.clubhouse', 'place.special-district.hay-field', 'place.special-district.horse-corral'] as const) expect(area(k)).toBeGreaterThanOrEqual(9);
+  });
+
   it('keys follow place.<persona>.<name>', () => {
     for (const key of KEYS) expect(key).toMatch(/^place\.[a-z-]+\.[a-z-]+$/);
   });
