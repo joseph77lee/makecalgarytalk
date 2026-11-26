@@ -39,11 +39,21 @@ describe('unique landmarks', () => {
 
   it.each(KEYS)('%s belongs to a priority community with the same persona', (key) => {
     const lm = LANDMARK_LIBRARY[key];
-    expect(key).toBe(`landmark.${lm.code.toLowerCase()}`);
+    const order = lm.order ?? 1;
+    expect(key).toBe(order === 1 ? `landmark.${lm.code.toLowerCase()}` : `landmark.${lm.code.toLowerCase()}.${order}`);
     const row = PERSONAS.get(lm.code);
     expect(row).toBeDefined();
     expect(row?.priority).toBe('1');
     expect(row?.landmark_tier).toBe('unique');
     expect(row?.persona).toBe(lm.persona);
+  });
+
+  it('gives each community one signature landmark and numbers the rest 2, 3, … in order', () => {
+    const orders = new Map<string, number[]>();
+    for (const key of KEYS) {
+      const lm = LANDMARK_LIBRARY[key];
+      orders.set(lm.code, [...(orders.get(lm.code) ?? []), lm.order ?? 1]);
+    }
+    for (const list of orders.values()) expect([...list].sort()).toEqual(list.map((_, i) => i + 1));
   });
 });

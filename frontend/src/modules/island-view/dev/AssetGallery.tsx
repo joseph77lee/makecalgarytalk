@@ -89,7 +89,8 @@ const ALL_VIEWS: Record<string, { target: readonly [number, number]; zoom: numbe
 type ViewName = keyof typeof VIEWS | DesignSection | keyof typeof CONCEPT_VIEWS | `Places: ${string}`;
 const isDesign = (v: ViewName): v is DesignSection => v in DESIGN_VIEWS;
 /** Where the sun's shadow box is centred: the diorama, or the chosen design / concept view. */
-const sunCentre = (v: ViewName): readonly [number, number] => (v in VIEWS ? [0, 0] : ALL_VIEWS[v].target);
+/** A view renamed by hot reload (landmark rows are named after their codes) falls back to the centre. */
+const sunCentre = (v: ViewName): readonly [number, number] => (v in VIEWS ? [0, 0] : (ALL_VIEWS[v]?.target ?? [0, 0]));
 
 /** Moves the orbit target and zoom when a preset is chosen (keeps the viewing angle). */
 function ViewRig({ view }: { view: ViewName }) {
@@ -100,6 +101,7 @@ function ViewRig({ view }: { view: ViewName }) {
     if (!orbit) return;
     const cam = camera as OrthoCam;
     const v = ALL_VIEWS[view];
+    if (!v) return;
     const ty = v.y ?? 0.5;
     const d = [cam.position.x - orbit.target.x, cam.position.y - orbit.target.y, cam.position.z - orbit.target.z];
     orbit.target.set(v.target[0], ty, v.target[1]);

@@ -1,6 +1,7 @@
 /**
  * Unique landmarks by community code (community-identity build map, 2026-11-26): the last step of a
- * priority community's persona track, replacing the pattern landmark. Keys `landmark.<code>`; the
+ * priority community's persona track, replacing the pattern landmark. Keys `landmark.<code>` (signature) and
+ * `landmark.<code>.<order>` (later landmarks of the same community); the
  * persona matches `supabase/data/community_personas.csv` (tested). Not used by the islands yet.
  */
 import type { BoxPart } from '../boxes';
@@ -8,12 +9,18 @@ import { extent } from './designFit';
 import type { PlaceModel } from './placeLibrary';
 import { caboosePark, curvedLibrary, domedCulturalCentre, footballStadium, heritageRedBarn, lionArchBridge, redSpiralBridge, signalHillStones, skiJumpTower, stoneArchGate } from './uniqueLandmarks';
 import { cornerTowerStreet, highStreetClockTower, islandInTheLake, lagoonTeahouse, lakeBeachClub, ringPylonBridge, smallBoatMarina, twinMansards, waterfallHillLake, welcomeArchStreet } from './uniqueLandmarksTwo';
-import { barracksStables, castleHouse, cougarRock, glassTowerCluster, hilltopLookout, peacekeeperPark, sandstoneSchoolhouse, stagecoachStone, stoneTowerEntrance, tractorGreenhouse, waveRecCentre } from './uniqueLandmarksThree';
+import { barracksStables, castleHouse, cougarRock, crescentTower, hilltopLookout, observationTower, peacekeeperPark, sandstoneSchoolhouse, stagecoachStone, stoneTowerEntrance, tractorGreenhouse, waveRecCentre } from './uniqueLandmarksThree';
 import { vmove } from './voxel';
 
 export interface LandmarkModel extends Omit<PlaceModel, 'step'> {
   /** Community code (as in `calgary_communities.csv`). */
   code: string;
+  /**
+   * Place in the community's landmark list: 1 (default) is the signature landmark, shown on the
+   * World Map; 2, 3 come later on the build map. A community can have several landmarks, each one
+   * real building on its own (operator, 2026-11-26). Key: `landmark.<code>` or `landmark.<code>.<order>`.
+   */
+  order?: number;
 }
 
 const centred = (build: (seed: number) => BoxPart[]) => (seed: number) => {
@@ -51,7 +58,8 @@ const LIBRARY = {
   'landmark.coa': { code: 'COA', label: 'Stagecoach stone', persona: 'hill_view', tiles: [3, 2], site: 'park', build: stagecoachStone },
   'landmark.cur': { code: 'CUR', label: 'Old barracks stables', persona: 'historic_main_street', tiles: [4, 3], site: 'street', build: barracksStables },
   'landmark.sna': { code: 'SNA', label: '1912 sandstone school', persona: 'historic_main_street', tiles: [4, 3], site: 'street', build: sandstoneSchoolhouse },
-  'landmark.dnc': { code: 'DNC', label: 'Downtown glass towers', persona: 'downtown', tiles: [4, 4], site: 'plaza', build: glassTowerCluster },
+  'landmark.dnc': { code: 'DNC', label: 'Observation tower', persona: 'downtown', tiles: [2, 2], site: 'plaza', build: observationTower },
+  'landmark.dnc.2': { code: 'DNC', order: 2, label: 'Crescent glass tower', persona: 'downtown', tiles: [3, 3], site: 'plaza', build: crescentTower },
   'landmark.kca': { code: 'KCA', label: 'Stone tower entrance', persona: 'mature_suburb', tiles: [4, 2], site: 'street', build: stoneTowerEntrance },
   'landmark.rvw': { code: 'RVW', label: 'Red tractor and greenhouse', persona: 'new_suburb', tiles: [4, 3], site: 'park', build: tractorGreenhouse },
   'landmark.roc': { code: 'ROC', label: 'Wave-roofed recreation centre', persona: 'mature_suburb', tiles: [5, 3], site: 'park', build: waveRecCentre },

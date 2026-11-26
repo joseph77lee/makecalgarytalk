@@ -468,39 +468,50 @@ export function waveRecCentre(seed: number): BoxPart[] {
 // --- Downtown -------------------------------------------------------------------------------------
 
 /**
- * DNC — downtown glass towers (4 × 4 tiles): a crescent tower of diamond-lattice glass, a slender
- * observation tower with a red and white pod, a dark maroon tower, a blue-green glass tower, a
- * beige banded tower and low brick blocks along a tree-lined street.
+ * DNC 1 — observation tower (2 × 2 tiles): a slender concrete column on a glass podium, a red and
+ * white observation pod with a glass ring that glows at night, a mast with a red beacon, a small
+ * plaza with trees and lamps.
  */
-export function glassTowerCluster(seed: number): BoxPart[] {
-  const parts: BoxPart[] = [vb(-24, 0, -24, 24, 0.3, 24, '#c9c2b4'), vb(-24, 0.3, 19, 24, 0.4, 24, PAVING)];
-  // crescent tower: an arc of glass segments, a checker of two blues reads as a lattice
-  for (let i = -4; i <= 4; i++) {
-    const a = (i / 4) * 1.05;
-    const x = -9 + Math.sin(a) * 10;
-    const z = -2 - Math.cos(a) * 6;
-    for (let y = 0.3, j = 0; y < 58; y += 4, j++) parts.push(vb(x - 1.5, y, z - 2.4, x + 1.5, Math.min(y + 4, 58), z + 2.4, (i + j) % 2 ? '#3c5a78' : '#4f7396'));
-    parts.push(vb(x - 1.6, 58, z - 2.5, x + 1.6, 58.6, z + 2.5, '#2f3f52'));
+export function observationTower(seed: number): BoxPart[] {
+  const parts: BoxPart[] = [vb(-12, 0, -12, 12, 0.3, 12, '#c9c2b4'), vb(-12, 0.3, 8, 12, 0.4, 12, PAVING)];
+  // podium building
+  parts.push(vb(-9, 0.3, -9, 9, 7, 5, '#b8b2a6'), vb(-9.4, 7, -9.4, 9.4, 7.6, 5.4, '#8f8a80'));
+  parts.push(vb(-8, 1, 5, 8, 5.6, 5.3, G), vb(9, 1, -8, 9.3, 5.6, 4, G), vb(-2, 0.3, 5.2, 2, 4.4, 5.5, '#4a4f5a'), vb(-8, 5.8, 5.2, 8, 6.2, 5.5, LAMP, 'glow'));
+  // the column, slightly tapered
+  parts.push(vb(-1.8, 7.6, -3.8, 1.8, 30, -0.2, '#d8d4cc'), vb(-1.5, 30, -3.5, 1.5, 50, -0.5, '#d8d4cc'));
+  for (let y = 10; y < 50; y += 4) parts.push(vb(-0.4, y, -0.25, 0.4, y + 2.4, -0.1, '#9aa1ab'));
+  // observation pod
+  parts.push(...round(0, -2, 50, 52, 3.4, '#c8372d'), ...round(0, -2, 52, 54.6, 5.2, '#c8372d'), ...round(0, -2, 54.6, 56, 5.4, '#f4f1ea'));
+  parts.push(...round(0, -2, 56, 58, 5, G), ...round(0, -2, 58, 59.2, 5.4, '#c8372d'), ...round(0, -2, 59.2, 60.6, 3.4, '#f4f1ea'), ...round(0, -2, 60.6, 62, 2, '#d8d4cc'));
+  parts.push(vb(-2, 56.4, 2.95, 2, 57.6, 3.15, LAMP, 'glow'), vb(4.95, 56.4, -4, 5.15, 57.6, 0, LAMP, 'glow'));
+  parts.push(vb(-0.3, 62, -2.3, 0.3, 70, -1.7, '#d8d4cc'), vb(-0.45, 70, -2.45, 0.45, 70.8, -1.55, '#ff6a5a', 'glow'));
+  // plaza
+  parts.push(...smallTree(-9.4, 9.6, seed, 9), ...smallTree(9.4, 9.6, seed + 1, 9), ...lamp(-4, 10, 8), ...lamp(4, 10, 8));
+  return parts;
+}
+
+/**
+ * DNC 2 — crescent glass tower (3 × 3 tiles): a tall tower curved like a crescent, its glass in a
+ * diamond lattice of two blues with pale steel diagonals, on a plaza with trees, benches and lamps.
+ */
+export function crescentTower(seed: number): BoxPart[] {
+  const parts: BoxPart[] = [vb(-18, 0, -18, 18, 0.3, 18, '#c9c2b4'), vb(-18, 0.3, 12, 18, 0.4, 18, PAVING)];
+  const TOP = 64;
+  const N = 6;
+  for (let i = -N; i <= N; i++) {
+    const a = (i / N) * 1.1;
+    const x = Math.sin(a) * 13;
+    const z = 4 - Math.cos(a) * 9;
+    for (let y = 0.3, j = 0; y < TOP; y += 4, j++) {
+      parts.push(vb(x - 1.2, y, z - 2.4, x + 1.2, Math.min(y + 4, TOP), z + 2.4, (i + j) % 2 ? '#3c5a78' : '#4f7396'));
+      // the diagonal steel: one pale bar per cell, stepping with height (reads as diamonds)
+      if ((i + j) % 2 === 0) parts.push(vb(x - 1.25, y + 1.8, z + 2.35, x + 1.25, y + 2.2, z + 2.5, '#c9d3dc'));
+    }
+    parts.push(vb(x - 1.3, TOP, z - 2.5, x + 1.3, TOP + 0.6, z + 2.5, '#2f3f52'));
   }
-  // observation tower
-  parts.push(vb(13.6, 0.3, 4.6, 16.4, 40, 7.4, '#d8d4cc'), ...round(15, 6, 40, 43, 4.2, '#c8372d'), ...round(15, 6, 43, 44.6, 4.4, '#f4f1ea'));
-  parts.push(...round(15, 6, 44.6, 46, 4, G), ...round(15, 6, 46, 47, 4.4, '#c8372d'), ...round(15, 6, 47, 48.4, 2.6, '#d8d4cc'), vb(14.7, 48.4, 5.7, 15.3, 56, 6.3, '#d8d4cc'));
-  parts.push(vb(14.2, 44.6, 10.2, 15.8, 46, 10.5, LAMP, 'glow'), vb(19.2, 44.6, 5.2, 19.5, 46, 6.8, LAMP, 'glow'), vb(14.85, 56, 5.85, 15.15, 56.6, 6.15, '#ff6a5a', 'glow'));
-  // maroon tower, blue-green tower, beige tower
-  const tower = (x0: number, z0: number, x1: number, z1: number, h: number, wall: string, band: string, step = 3) => {
-    parts.push(vb(x0, 0.3, z0, x1, h, z1, wall));
-    for (let y = 2; y < h - 1; y += step) parts.push(vb(x0 - 0.05, y, z1, x1 + 0.05, y + step * 0.45, z1 + 0.15, band), vb(x1, y, z0 - 0.05, x1 + 0.15, y + step * 0.45, z1 + 0.05, band));
-  };
-  tower(2, -22, 12, -12, 52, '#6e3b3b', '#8f5a55');
-  parts.push(vb(3, 52, -21, 11, 55, -14, '#5a3030'), vb(6, 55, -19, 8, 61, -17, '#c9c6bf'));
-  tower(15, -22, 23, -13, 46, '#3f8a98', '#6fb7c4', 4);
-  tower(-23, 4, -14, 14, 34, '#c9a77e', G);
-  parts.push(vb(-22, 34, 5, -15, 36, 13, '#b39468'));
-  // low brick blocks along the street, lit shop windows
-  tower(-12, 10, 2, 17, 12, '#b8694f', G);
-  tower(4, 12, 12, 17, 9, '#c9845c', G);
-  parts.push(vb(-12, 1, 17, 2, 3.4, 17.3, LAMP, 'glow'));
-  for (const x of [-20, -6, 8, 20]) parts.push(...lamp(x, 20.6, 9));
-  for (const x of [-14, 0, 14]) parts.push(...smallTree(x, 21.4, seed + x, 9));
+  parts.push(vb(-6, 0.3, 3, 6, 5, 4.6, G), vb(-6, 5, 3, 6, 5.4, 4.8, LAMP, 'glow'));
+  // plaza: trees, benches, lamps
+  for (const [x, z] of [[-14.6, 14.6], [14.6, 14.6], [-15, 2], [15, 2]]) parts.push(...smallTree(x, z, seed + x + z, 9));
+  parts.push(...bench(-6, 10), ...bench(6, 10), ...lamp(-10, 15, 9), ...lamp(10, 15, 9));
   return parts;
 }

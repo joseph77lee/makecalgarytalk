@@ -63,7 +63,7 @@ function buildScene(): { parts: BoxPart[]; labels: PlaceLabel[]; rows: Record<st
       const cz = z + d / 2;
       parts.push(box('solid', cx, -0.3, cz, w + 0.6, 0.3, d + 0.6, '#9fd47a'), box('solid', cx, -0.6, cz, w + 0.6, 0.3, d + 0.6, '#c49a6c'));
       parts.push(...translate(lm.build(7), cx, cz));
-      labels.push({ text: `★ ${lm.code} · ${lm.label}`, at: [cx, 0.2, cz + d / 2 + 0.6], landmark: true });
+      labels.push({ text: `★ ${lm.code}${lm.order ? ` ${lm.order}` : ''} · ${lm.label}`, at: [cx, 0.2, cz + d / 2 + 0.6], landmark: true });
       x += w + 1.6;
     }
     rows[`Landmarks ${[...new Set([rowKeys[0], rowKeys[rowKeys.length - 1]])].map((k) => k.slice(9).toUpperCase()).join('–')}`] = [(X0 + x) / 2, z + depth / 2];
