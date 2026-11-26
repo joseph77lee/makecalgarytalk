@@ -97,7 +97,7 @@ HSD,Homestead,new_suburb,Wetland pathway,Homestead Landing,pattern,0,flat,direct
 HSN,Haskayne,new_suburb,Clifftop new village,The Lodge,pattern,0,escarpment,direct,
 HUN,Huntington Hills,mature_suburb,Grassy hill,Thornhill Aquatic and Recreation Centre,pattern,0,hill,direct,
 HUX,Huxley,new_suburb,New modern homes,East Hills Shopping Centre,pattern,0,flat,direct,
-ING,Inglewood,historic_main_street,Historic brick main street,9 Avenue SE,unique,1,flat,replace,Photo is an unrelated listing building; needs the historic 9 Avenue SE brick main street
+ING,Inglewood,historic_main_street,Historic brick main street,9 Avenue SE,unique,1,flat,accepted,Operator accepted the photo as the reference (2026-11-26): twin white buildings with dark mansard roofs and red doors
 KCA,Kincora,mature_suburb,Stone tower entrance,Kincora stone tower entrance,unique,1,flat,direct,
 KEL,Kelvin Grove,mature_suburb,Large-lot bungalows,Glenmore Reservoir·Weaselhead Flats,pattern,0,flat,direct,
 KIL,Killarney/Glengarry,historic_main_street,Small old bungalows,Killarney Aquatic & Recreation Centre,pattern,0,flat,direct,
@@ -116,7 +116,7 @@ MAH,Mahogany,lake,Lake beach club,Mahogany Lake Main Beach Club,unique,1,flat,di
 MAL,Mayland Heights,food_street,Neighbourhood trattoria,Crossroads Community Association,pattern,0,flat,substitute,
 MAN,Manchester,special_district,Brick warehouse brewery,1 Street SW,pattern,0,flat,interior,Indoor view (barrels)
 MCK,McKenzie Lake,lake,Island in the lake,McKenzie Lake island,unique,1,flat,direct,
-MCT,McKenzie Towne,new_suburb,High-street clock tower,McKenzie Towne High Street,unique,1,flat,replace,Photo looks AI-generated (garbled signs); needs a real photo of the High Street clock tower
+MCT,McKenzie Towne,new_suburb,High-street clock tower,McKenzie Towne High Street,unique,1,flat,accepted,Photo looks AI-generated; operator accepted it as the reference (2026-11-26): red clock tower over the high street
 MDH,Medicine Hill,new_suburb,Terraced hillside townhomes,Trinity Hills Town Centre,pattern,0,hill,direct,
 MEA,Meadowlark Park,historic_main_street,Meadowlark figure,CF Chinook Centre,pattern,0,flat,substitute,
 MID,Midnapore,lake,Residents' lake,Lake Midnapore,pattern,0,flat,direct,
@@ -192,7 +192,7 @@ SPH,Springbank Hill,hill_view,Ridge-top view homes,69 Street CTrain,pattern,0,hi
 SPR,Spruce Cliff,river,Clifftop spruce row,Shaganappi Point Golf Course,pattern,0,escarpment,direct,
 SSD,Sunnyside,river,Brick shop street,Kensington,pattern,0,flat,direct,
 SSW,Scarboro/Sunalta West,special_district,Tudor mansion,Scarboro School,pattern,0,hill,direct,
-STA,St. Andrews Heights,historic_main_street,Football stadium,McMahon Stadium,unique,1,flat,direct,
+STA,St. Andrews Heights,special_district,Football stadium,McMahon Stadium,unique,1,flat,direct,
 STR,Strathcona Park,mature_suburb,Central park,Strathcona Park,pattern,0,flat,substitute,
 SVO,Silverado,special_district,Ranch fence and horses,Spruce Meadows,pattern,0,flat,brand,Show-jumping venue with sponsor signs; use fence and horses
 SVR,Symons Valley Ranch,special_district,Old ranch market barn,Symons Valley Ranch,pattern,0,ravine,substitute,
@@ -219,6 +219,6 @@ WIN,Winston Heights/Mountview,historic_main_street,Golf course,Mount View School
 WLD,Wildwood,river,Tall Douglas fir forest,Edworthy Park,pattern,0,flat,direct,
 WND,Windsor Park,river,Golf course by the river,Chinook Centre,pattern,0,flat,direct,
 WOO,Woodlands,mature_suburb,Golf course,Canyon Meadows Golf & Country Club,pattern,0,flat,direct,
-WSP,West Springs,mature_suburb,Ski jump tower,Canada Olympic Park ski jump,unique,1,flat,direct,
+WSP,West Springs,hill_view,Ski jump tower,Canada Olympic Park ski jump,unique,1,hill,direct,
 WWO,Wolf Willow,river,Riverside trailhead,Edworthy Park,pattern,0,flat,direct,
 YKV,Yorkville,new_suburb,Stone-facade homes,Yorkville Central Park,pattern,0,flat,direct,

@@ -101,7 +101,8 @@ The operator collected 222 reference photos (one per community; Twinhills has no
 - About 70 show a clear, modelable landmark (e.g. Signal Hill stone numbers, Centre Street Bridge lions, Mahogany beach club, Lake Bonavista).
 - The rest show ordinary houses, neighbourhood aerials or skyline views: good for house style, not for a landmark.
 - Problems, recorded per community in `photo_status`: **replace** (MCT looks AI-generated; ING is an unrelated building; OAK, CSC, MPK, RED are placeholders or maps), **duplicate** (LKV = CHK, MAC = HUN, WHL and EAU both the Peace Bridge, UNI and STA both McMahon Stadium), **interior** (ACA, MAN, PIN, UOC), **brand** (BVD, RCK, MRL, VAR, GLA, SVO, SGH: model generic versions), **sensitive** (CAS, MRT, REN, MIS places of worship and QPK cemetery: scenery, not build goals).
-- Waiting on the operator: real photos for MCT and ING first (both are prototype islands), then the placeholders.
+- MCT and ING (2026-11-26): the operator accepted the current photos as the references (`photo_status = accepted`). Still to replace: OAK, CSC, MPK, RED (placeholders), then the duplicates.
+- Persona corrections (2026-11-26, operator): STA → `special_district`, WSP → `hill_view` (the landmark decides the track).
 
 ### 5.4 `supabase/data/community_personas.csv` (English data, 2026-11-26)
 Built from the operator's CSV and the photo index (the generating script stays outside the repo because its keyword rules are in Korean). One row per community (223):
