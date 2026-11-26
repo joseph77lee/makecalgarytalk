@@ -1,11 +1,13 @@
 import { BUILDING_TREE, buildingSpec, type BuildingView } from '../island-view';
 
 export const STAGE_NAMES: Record<number, string> = {
+  0: 'Welcome',
   1: 'First day',
   2: 'First week',
   3: 'Together',
   4: 'Community',
   5: 'Pride',
+  6: 'Landmarks',
 };
 
 /** A building counts as built once its first level is done (an upgrade keeps it built). */

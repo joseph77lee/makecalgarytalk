@@ -28,7 +28,7 @@ insert into gamecore.building_types (key, position, name, stage, lot, grows_from
   ('welcome-sign', 1, 'Welcome sign', 0, null, null, 0, 0, 'root', 0, null, null, null, 1, 1, 'entrance'),
   ('fire-pit', 2, 'Fire pit', 1, null, null, 0, 0, 'community', 1, null, null, null, 3, 3, 'plaza'),
   ('warming-hut', 3, 'Warming hut', 2, null, null, 0, 3, 'community', 2, null, null, null, 3, 3, 'plaza'),
-  ('skating-rink', 4, 'Skating rink', 3, null, null, 3, 0, 'community', 3, null, null, null, 2, 3, 'park'),
+  ('skating-rink', 4, 'Skating rink', 3, null, null, 3, 0, 'community', 3, null, null, null, 3, 2, 'park'),
   ('community-hall', 5, 'Community hall', 4, null, null, 6, 7, 'community', 4, null, null, null, 3, 3, 'plaza'),
   ('neighbourhood-park', 6, 'Neighbourhood park', 5, null, null, 10, 14, 'community', 5, null, null, null, 3, 3, 'park'),
   ('playground', 7, 'Playground', 1, null, null, 0, 0, 'nature', 1, null, null, null, 2, 2, 'park'),

@@ -96,8 +96,8 @@ describe('build map (requirement.md §7.6a)', () => {
   });
   it('groups by tree stage in tree order, unknown buildings last', () => {
     const groups = groupByStage([view('castle', 'built'), view('neighbourhood-park', 'locked'), view('fire-pit', 'built'), view('welcome-sign', 'built')]);
-    expect(groups.map((g) => g.name)).toEqual(['1. First day', '5. Pride', 'New buildings']);
-    expect(groups[0].buildings.map((b) => b.key)).toEqual(['welcome-sign', 'fire-pit']);
+    expect(groups.map((g) => g.name)).toEqual(['0. Welcome', '1. First day', '5. Pride', 'New buildings']);
+    expect(groups[1].buildings.map((b) => b.key)).toEqual(['fire-pit']);
   });
 });
 
@@ -107,7 +107,8 @@ describe('finished example', () => {
     const l = buildIslandLayout(PLAN, finishedExampleState('Mahogany'));
     expect(l.futureTiles).toHaveLength(0);
     expect(l.objects.some((o) => o.assetKey === 'construction-site' || o.assetKey === 'silhouette')).toBe(false);
-    expect(l.objects.find((o) => o.id === 'lot:lot-a')?.assetKey).toBe('building.community-hall');
+    expect(l.objects.find((o) => o.id === 'lot:community-hall')?.assetKey).toBe('building.community-hall');
+    expect(l.objects.find((o) => o.id === 'lot:landmark.mah')?.assetKey).toBe('building.landmark.mah');
     const houses = l.objects.filter((o) => o.assetKey === 'house');
     expect(houses.length).toBeGreaterThan(0);
     expect(houses.every((h) => h.assetKey === 'house' && h.nickname === '')).toBe(true);

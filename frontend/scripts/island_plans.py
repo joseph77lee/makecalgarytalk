@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 """
-Island plan generator (requirement.md 7.8): one stored plan per community.
+Island plan generator (requirement.md v1.48 7.2, 7.6, 7.8): one stored plan per community.
+
+Plan v4 (M24): lots for every step of the community's build map (supabase/data/build_map.json
+and community_personas.csv, the same "most specific step wins" rule as the server), placed by
+meaning: water places on the shore facing the water, street places along a path, plaza places by
+the plaza, the rest spread over the newly grown land. Each lot is [x, z, w, d, face] (face 0..3 =
+the model turned that many quarter turns: 0 faces +z, 1 +x, 2 -z, 3 -x). A lot rises with the
+land stage that fits it; the server waits for that land (gamecore.place_lots, seeded by
+supabase/data/place_lots_seed.py from these plans). Houses stand in 2-4 residential zones.
+Lake and river communities with (almost) no water inside the boundary get a small lake at the
+edge facing the nearest real water.
 
   python3 -I frontend/scripts/island_plans.py            # write plans that do not exist yet
   python3 -I frontend/scripts/island_plans.py --force    # regenerate all (PRE-LAUNCH ONLY)
@@ -9,7 +19,8 @@ Island plan generator (requirement.md 7.8): one stored plan per community.
 
 Inputs:  supabase/data/calgary_boundaries.json, supabase/data/calgary_water.json,
          supabase/data/calgary_ctrain.json (track and stations at their real position, v3),
-         supabase/data/calgary_communities.csv, supabase/data/building_tree.json (lots)
+         supabase/data/calgary_communities.csv, supabase/data/build_map.json,
+         supabase/data/community_personas.csv, supabase/data/building_tree.json (Main Street and spare lots)
 Output:  frontend/public/islands/<CODE>.json
 
 Positions must never change after launch, so existing plans are never overwritten
@@ -28,6 +39,14 @@ DATA = ROOT / "supabase" / "data"
 OUT = ROOT / "frontend" / "public" / "islands"
 
 TREE = json.loads((DATA / "building_tree.json").read_text())
+BUILD = json.loads((DATA / "build_map.json").read_text())
+PERSONAS = {r["code"]: r["persona"] for r in csv.DictReader(open(DATA / "community_personas.csv"))}
+LAND_MIN = [t["minResidents"] for t in BUILD["landTiers"]]
+TRACK_ORDER = {"root": 0, "community": 1, "persona": 2, "nature": 3}
+WATER_SITES = ("shore", "riverbank")
+# Lake and river islands with less water than this get a small lake (POND_W x POND_D) at the edge.
+MIN_WATER = 12
+POND_SIZES = [(8, 4), (6, 4), (6, 3), (5, 3), (4, 3)]
 BASE_TIERS = [t["tiles"] for t in TREE["landTiers"]]  # last is None = all
 TIERS = list(BASE_TIERS)  # current tiers; the first stage may be enlarged for water (see main)
 # If the first buildings (or Main Street) do not fit next to central water, the first two
@@ -39,7 +58,7 @@ RING8 = ((1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1))
 MAX_HOUSES = 150
 # Houses each land stage must hold at least (most residents a stage can have, requirement 7.8).
 MIN_HOUSES = [2, 5, 10, 25, 50, 80]
-PLAN_VERSION = 3
+PLAN_VERSION = 4
 CTRAIN = json.loads((DATA / "calgary_ctrain.json").read_text())
 # A station inside the community or this close to its boundary (metres) is drawn on the track.
 STATION_NEAR_M = 150
@@ -373,6 +392,72 @@ def hash01(x, z, salt):
     return h / 4294967296
 
 
+def step_residents(step):
+    """Cumulative residents a step needs (the same conditions as supabase/data/build_map_seed.py)."""
+    common = {c["step"]: c for c in BUILD["conditions"]["common"]}
+    landmarks = {c["order"]: c for c in BUILD["conditions"]["landmarks"]}
+    if step["track"] == "root":
+        return 0
+    if step["track"] == "persona" and step["step"] >= 4:
+        return landmarks[step["step"] - 3].get("residents", 0)
+    return common.get(step["step"], common[max(common)]).get("residents", 0)
+
+
+def land_stage_for(residents):
+    return max(i for i, m in enumerate(LAND_MIN) if m <= residents)
+
+
+def community_steps(code):
+    """The community's build map steps that need a lot: per (track, step) the most specific row."""
+    persona = PERSONAS.get(code)
+    best = {}
+    for s in BUILD["steps"]:
+        if s.get("persona") not in (None, persona) or s.get("community") not in (None, code):
+            continue
+        rank = (s.get("community") is not None, s.get("persona") is not None)
+        k = (s["track"], s["step"])
+        if k not in best or rank > best[k][0]:
+            best[k] = (rank, s)
+    return [s for _, s in sorted(best.values(), key=lambda v: (TRACK_ORDER[v[1]["track"]], v[1]["step"])) if s["tiles"][0] > 0]
+
+
+def carve_pond(cells, water, stage, plaza, toward):
+    """A small lake at the island edge (largest size that fits), towards the nearest real water."""
+    # at the edge in early land if possible; on compact islands (edge only in late land) a pond inside
+    for at_edge, max_stage in ((True, 2), (True, 3), (False, 2), (False, 3)):
+        for size in POND_SIZES:
+            pond = carve_pond_sized(cells, water, stage, plaza, toward, size, max_stage, at_edge)
+            if pond:
+                return pond
+    return set()
+
+
+def carve_pond_sized(cells, water, stage, plaza, toward, size, max_stage, at_edge=True):
+    edge = {c for c in cells if any((c[0] + dx, c[1] + dz) not in cells for dx, dz in N4)}
+    near_plaza = {(p[0] + dx, p[1] + dz) for p in plaza for dx in range(-3, 4) for dz in range(-3, 4)}
+    pcx = sum(p[0] for p in plaza) / 4
+    pcz = sum(p[1] for p in plaza) / 4
+    best = None
+    for (x, z) in cells:
+        for w, d in (size, size[::-1]):
+            block = [(x + i, z + j) for i in range(w) for j in range(d)]
+            if not all(b in cells and b not in water and b not in near_plaza and stage[b] <= max_stage for b in block):
+                continue
+            if at_edge and not any(b in edge for b in block):
+                continue
+            bx, bz = x + w / 2 - pcx, z + d / 2 - pcz
+            n = math.hypot(bx, bz) or 1
+            aim = 0 if toward is None else -((bx * toward[0] + bz * toward[1]) / n)
+            score = (aim, max(stage[b] for b in block), math.hypot(bx, bz), x, z)
+            dry = cells - water - set(block)
+            if best is not None and score >= best[0]:
+                continue
+            if len(bfs(plaza, dry)) != len(dry):
+                continue  # the lake must not cut the land apart
+            best = (score, block)
+    return set(best[1]) if best else set()
+
+
 def far_target(g, stage, avoid_dir=None, centre=(0, 0)):
     best = None
     for c, d in g.items():
@@ -483,9 +568,25 @@ def ctrain_for(cells, origin, scale, lonlat_rings):
     return runs, rail, stations, ends
 
 
-def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8):
+def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8, report=None):
     cells, water, origin, scale = island_cells(lonlat_rings, water_rings)
     runs, rail, station_specs, rail_ends = ctrain_for(cells, origin, scale, lonlat_rings)
+    steps = community_steps(code)
+    pond = set()
+    if any(st["site"] in WATER_SITES for st in steps) and len(water) < MIN_WATER:
+        (qx, qz), q_plaza, _, q_stage = stages_for(cells, water)
+        toward = None
+        if water_rings:
+            to_cell = to_cell_space(origin, scale)
+            pts = [to_cell(lon, lat) for r in water_rings for lon, lat in r]
+            wx, wz = sum(q[0] for q in pts) / len(pts) - (qx + 1), sum(q[1] for q in pts) / len(pts) - (qz + 1)
+            nn = math.hypot(wx, wz) or 1
+            toward = (wx / nn, wz / nn)
+        pond = carve_pond(cells, water, q_stage, q_plaza, toward)
+        water = water | pond
+        if report is not None:
+            report.append(f"{code}: small lake added ({len(pond)} tiles)")
+    # stages count dry land only, so they are computed with the lake in place
     (px, pz), plaza, g, stage = stages_for(cells, water)
     pc = (px + 1, pz + 1)
     # The plaza never sits on the track; if it would, fall back to plans without track there.
@@ -556,44 +657,99 @@ def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8):
     ring_radius = [max((math.hypot(c[0] - pc[0], c[1] - pc[1]) for c in cells if stage[c] == k), default=4) for k in range(len(TIERS))]
 
     entrance = path1[0] if path1 else None
-    lots["entrance"] = [entrance[0], entrance[1], 1, 1] if entrance else None
+    lots["welcome-sign"] = [entrance[0], entrance[1], 1, 1, 0] if entrance else None
+    plaza_set = set(plaza)
+    lot_stage = {}
+    lot_cells = set()  # houses and trees never stand right beside a lot, so its door stays free
+
+    # Residential zones (requirement 7.2): 2-4 clusters of houses, the first one near the centre.
+    n_dry = len(cells - water)
+    n_zones = 2 if n_dry < 500 else 3 if n_dry < 850 else 4
+    zone_centres = []
+    zone_stages = [1, 3, 4, 2][:n_zones]
+    for zi, zs in enumerate(zone_stages):
+        ring = [c for c in cells if c not in used and stage[c] == zs]
+        if not ring:
+            continue
+        def zscore(c):
+            ang = math.atan2(c[1] - pc[1], c[0] - pc[0])
+            near = min((abs(math.atan2(math.sin(ang - a), math.cos(ang - a))) for a in zone_centres_ang), default=math.pi)
+            return (-near, abs(math.hypot(c[0] - pc[0], c[1] - pc[1]) - ring_radius[zs] * 0.75), c[0], c[1])
+        zone_centres_ang = [math.atan2(c[1] - pc[1], c[0] - pc[0]) for c in zone_centres]
+        zone_centres.append(min(ring, key=zscore))
+    ZONE_R = 4.5
+    zone_cells = {c for c in cells if any(math.hypot(c[0] - zc[0], c[1] - zc[1]) <= ZONE_R for zc in zone_centres)}
 
     def touches_path(tiles):
-        return any((t[0] + dx, t[1] + dz) in path_set or (t[0] + dx, t[1] + dz) in set(plaza) for t in tiles for dx, dz in N4)
+        return any((t[0] + dx, t[1] + dz) in path_set or (t[0] + dx, t[1] + dz) in plaza_set for t in tiles for dx, dz in N4)
 
-    def place(key, size, land_stage, kind):
+    def side_cells(x, z, w, d, face):
+        """The cells just outside one side of the lot: 0 = +z, 1 = +x, 2 = -z, 3 = -x."""
+        if face == 0:
+            return [(x + i, z + d) for i in range(w)]
+        if face == 1:
+            return [(x + w, z + j) for j in range(d)]
+        if face == 2:
+            return [(x + i, z - 1) for i in range(w)]
+        return [(x - 1, z + j) for j in range(d)]
+
+    def place(key, size, land_stage, kind, site="park", strict=True):
         w0, d0 = size
-        options = [(w0, d0)] if w0 == d0 else [(w0, d0), (d0, w0)]
+        options = [(w0, d0, (0, 2))] if w0 == d0 else [(w0, d0, (0, 2)), (d0, w0, (1, 3))]
+        if w0 == d0:
+            options = [(w0, d0, (0, 1, 2, 3))]
+        wet = site in WATER_SITES and bool(water)
+        shore_d = (lambda t: min(abs(t[0] - w_[0]) + abs(t[1] - w_[1]) for w_ in water)) if (wet and not strict) else None
+        if not strict:
+            wet = False
         cands = []
         for (x, z) in cells:
-            for (w, d) in options:
+            for (w, d, faces) in options:
                 tiles = [(x + i, z + j) for i in range(w) for j in range(d)]
                 if not all(t in cells and stage[t] <= land_stage and t not in used for t in tiles):
                     continue
                 touch = touches_path(tiles)
                 if kind == "main-street" and not touch:
                     continue
+                def feature(c):
+                    if wet:
+                        return c in water
+                    return c in path_set or c in plaza_set
+                counts = {f: sum(1 for c in side_cells(x, z, w, d, f) if feature(c)) for f in range(4)}
+                if wet and max(counts.values()) == 0:
+                    continue  # water places stand on the shore
+                face = max(faces, key=lambda f: (counts[f], -f))
+                best_any = max(counts.values())
                 cx, cz = x + w / 2 - pc[0], z + d / 2 - pc[1]
                 dist = math.hypot(cx, cz)
-                # Prefer the lot's own land ring, so later lots do not eat early land.
                 early = land_stage - min(stage[t] for t in tiles)
+                in_zone = sum(1 for t in tiles if t in zone_cells)
                 if land_stage == 0 or kind == "main-street":
                     score = dist - (3 if touch else 0) + early * 12
                 else:
-                    # Later lots: outer part of their newly grown land, away from other later lots.
                     target = ring_radius[land_stage] * 0.8
                     ang = math.atan2(cz, cx)
                     near = min((abs(math.atan2(math.sin(ang - a), math.cos(ang - a))) for a in later_angles), default=math.pi)
                     spread = spread_weight * max(0.0, 1 - near / (math.pi / 3))
                     score = abs(dist - target) - (1.5 if touch else 0) + early * 12 + spread
-                cands.append((score, x, z, w, d, tiles))
+                if site == "plaza":
+                    score += dist * 0.8
+                if site == "street" and not touch:
+                    score += 6
+                score += 2.5 * (best_any - counts[face]) + 3 * in_zone / max(1, len(tiles)) * 4
+                if shore_d is not None:
+                    score += 2 * min(shore_d(t) for t in tiles)
+                cands.append((score, x, z, w, d, face, tiles))
         cands.sort(key=lambda c: (c[0], c[1], c[2]))
-        for _, x, z, w, d, tiles in cands[:400]:
-            if walk.full_ok(tiles, tiles, land_stage):
+        for _, x, z, w, d, face, tiles in cands[:400]:
+            real = max(stage[t] for t in tiles)  # the lot exists (and blocks) from the stage its land rises
+            if walk.full_ok(tiles, tiles, real):
                 walk.blocked |= set(tiles)
-                walk.lots.append((tiles, land_stage))
+                walk.lots.append((tiles, real))
                 used.update(tiles)
-                lots[key] = [x, z, w, d]
+                lots[key] = [x, z, w, d, face]
+                lot_stage[key] = max(stage[t] for t in tiles)
+                lot_cells.update(tiles)
                 if land_stage > 0 and kind != "main-street":
                     later_angles.append(math.atan2(z + d / 2 - pc[1], x + w / 2 - pc[0]))
                 return True
@@ -602,49 +758,71 @@ def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8):
     houses = []
     house_set = set()
 
-    def add_houses(max_stage, limit):
+    def add_houses(max_stage, limit, zoned=True, beside_lots=False):
         for c in sorted(cells, key=lambda c: (stage[c], g.get(c, 1 << 20), c[0], c[1])):
             if len(houses) >= limit:
                 return
-            if stage[c] > max_stage or c in used:
+            if stage[c] > max_stage or c in used or (zoned and c not in zone_cells):
+                continue
+            beside = any((c[0] + dx, c[1] + dz) in lot_cells for dx, dz in N4)
+            if beside and not beside_lots:
                 continue
             if any((c[0] + dx, c[1] + dz) in house_set for dx, dz in RING8):
                 continue
             doors = [(c[0] + dx, c[1] + dz) for dx, dz in N4]
             if not any(n in cells and stage[n] <= stage[c] and n not in used for n in doors):
                 continue
-            if not walk.simple_ok(c):
+            if not walk.simple_ok(c) or (beside and not walk.full_ok([c], [c], stage[c])):
                 continue
             walk.blocked.add(c)
+            walk.lots.append(([c], stage[c]))  # a house keeps a reachable door like a lot
             used.add(c)
             house_set.add(c)
             houses.append(c)
 
-    # Stage-0 building lots first, then the minimum early houses, then Main Street
-    # (needs path frontage near the plaza), then the rest.
-    keys = [k for k in TREE["lots"] if k != "entrance"]
-    order = sorted(keys, key=lambda k: (
-        0 if TREE["lots"][k]["kind"] == "building" and TREE["lots"][k]["landStage"] == 0
-        else 1 if TREE["lots"][k]["kind"] == "main-street" else 2,
-        keys.index(k)))
-    reserved_houses = False
-    for key in order:
-        spec = TREE["lots"][key]
-        if not reserved_houses and not (spec["kind"] == "building" and spec["landStage"] == 0):
+    # The build map's lots in the order they can open (land first, then step, taking turns between
+    # the tracks), a few early houses after the first lots, then Main Street and spare lots.
+    place_steps = [st for st in steps if st["track"] != "root"]
+    # scarce sites first: each track's first place (a founder builds them in the first days), then the
+    # signature landmark (its shore or street spot must exist by 11 residents), then the rest
+    def priority(st):
+        if st["step"] == 1:
+            return 0  # every track's first place (taking turns between tracks below)
+        return 1 if st.get("landmarkOrder") == 1 else 2
+    # among first places the persona one goes first: its site (a shore, a street) is the scarcest
+    first_order = {"persona": 0, "community": 1, "nature": 2}
+    place_steps.sort(key=lambda st: (priority(st), first_order.get(st["track"], 3) if st["step"] == 1 else 0,
+                                     land_stage_for(step_residents(st)), st["step"], TRACK_ORDER[st["track"]]))
+    early_houses_done = False
+    for st in place_steps:
+        want = land_stage_for(step_residents(st))
+        if not early_houses_done and want > 0:
             for k, need in enumerate(MIN_HOUSES[:3]):
                 add_houses(k, need)
-            reserved_houses = True
-        if not place(key, spec["size"], spec["landStage"], spec["kind"]):
+                if len([h for h in houses if stage[h] <= k]) < need:
+                    add_houses(k, need, zoned=False)
+                if len([h for h in houses if stage[h] <= k]) < need:
+                    add_houses(k, need, zoned=False, beside_lots=True)
+            early_houses_done = True
+        kind = "building"
+        if not any(place(st["key"], st["tiles"], k, kind, st["site"]) for k in range(want, len(TIERS))):
+            # no shore left: the land nearest the water (the report lists these)
+            if not any(place(st["key"], st["tiles"], k, kind, st["site"], strict=False) for k in range(want, len(TIERS))):
+                raise RuntimeError(f"{code}: no room for {st['key']}")
+            if report is not None and st["site"] in WATER_SITES:
+                report.append(f"{code}: {st['key']} near the water, not on the shore")
+    for key, spec in TREE["lots"].items():
+        if spec["kind"] in ("main-street", "spare") and not any(place(key, spec["size"], k, spec["kind"]) for k in range(spec["landStage"], len(TIERS))):
             raise RuntimeError(f"{code}: no room for lot {key}")
 
     # Later lots must not leave a direction empty for more than 150° (validated by the tests).
-    later = [k for k, v in TREE["lots"].items() if v["kind"] in ("building", "spare") and v["landStage"] > 0]
+    later = [k for k in lots if lots[k] and k in lot_stage and lot_stage[k] > 0 and not k.startswith("main-street")]
     angles = sorted(math.atan2(lots[k][1] + lots[k][3] / 2 - pc[1], lots[k][0] + lots[k][2] / 2 - pc[0]) for k in later)
     gaps = [(angles[(i + 1) % len(angles)] - a) % (2 * math.pi) for i, a in enumerate(angles)]
-    if max(gaps) >= math.radians(150):
+    if angles and max(gaps) >= math.radians(150):
         raise RuntimeError(f"{code}: later lots leave a {math.degrees(max(gaps)):.0f}° gap")
 
-    # House lots: centre outward, never touching another house, door kept free.
+    # House lots: in the residential zones, centre outward, never touching another house, door kept free.
     add_houses(len(TIERS) - 1, MAX_HOUSES)
     houses.sort(key=lambda c: (stage[c], g.get(c, 1 << 20), c[0], c[1]))
 
@@ -654,7 +832,7 @@ def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8):
         if c in used or hash01(c[0], c[1], 1) >= 0.28:
             continue
         near = [(c[0] + dx, c[1] + dz) for dx, dz in N4]
-        if any(n in path_set or n in house_set for n in near):
+        if any(n in path_set or n in house_set or n in lot_cells for n in near):
             continue
         if not walk.simple_ok(c):
             continue
@@ -693,7 +871,9 @@ def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8):
         "name": name,
         "tiles": tiles_flat,
         "paths": flat(paths),
-        "lots": {k: [v[0] - ox, v[1] - oz, v[2], v[3]] for k, v in lots.items() if v},
+        "persona": PERSONAS.get(code),
+        "lots": {k: [v[0] - ox, v[1] - oz, v[2], v[3], v[4] if len(v) > 4 else 0] for k, v in lots.items() if v},
+        "pond": flat(sorted(pond)),
         "houses": flat(houses),
         "trees": flat(trees),
         "water": flat(sorted(water)),
@@ -716,6 +896,7 @@ def main(argv):
     OUT.mkdir(parents=True, exist_ok=True)
     written = skipped = 0
     failed = []
+    report = []
     for code in sorted(bounds):
         if only and code not in only:
             continue
@@ -734,7 +915,9 @@ def main(argv):
                 TIERS[0], TIERS[1] = first, second
                 for weight in (8, 14, 20):
                     try:
-                        plan = make_plan(code, names.get(code, code.title()), bounds[code], water_rings, weight)
+                        notes = []
+                        plan = make_plan(code, names.get(code, code.title()), bounds[code], water_rings, weight, notes)
+                        report += notes
                         break
                     except RuntimeError as e:
                         err = e
@@ -752,6 +935,8 @@ def main(argv):
         path.write_text(json.dumps(plan, separators=(",", ":")))
         written += 1
     print(f"written {written}, kept {skipped}, failed {len(failed)}")
+    for r in sorted(set(report)):
+        print("  NOTE", r)
     for f in failed:
         print("  FAILED", f)
     return 1 if failed else 0

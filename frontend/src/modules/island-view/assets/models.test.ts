@@ -7,7 +7,7 @@ import { remainingText } from '../scene/labelText';
 import { futureLandParts, terrainParts } from '../scene/terrainParts';
 import { asGhost, box } from './boxes';
 import { building, constructionSite, house, reservedPlot, silhouette, tree, type BuildCtx } from './models';
-import { BUILDING_VARIANTS } from './voxel/buildings';
+import { BUILDING_VARIANTS, BUILDING_VOXELS } from './voxel/buildings';
 
 /** Scenery context: 'sleepy' kept as the old name for snow on the ground. */
 const ctx = (look: 'lively' | 'normal' | 'sleepy'): BuildCtx => ({ snow: look === 'sleepy', palette: scenePalette(look === 'sleepy') });
@@ -52,11 +52,14 @@ describe('models', () => {
     expect(snow('lively')).toHaveLength(0);
   });
 
+  /** Build map steps drawn by the tree models (persona places and landmarks have their own tests). */
+  const LOT_MODELS = BUILDING_TREE.buildings.filter((b) => b.tiles[0] > 0 && BUILDING_VOXELS[b.key]).map((b) => [b.key, b.tiles] as const);
+
   const built = (buildingKey: string, w: number, d: number, level = 1): BuildingObject => ({
     assetKey: `building.${buildingKey}`, id: 'b', x: 0, z: 0, stage: 0, w, d, facing: 0, variant: 0, buildingKey, title: buildingKey, level, next: null, upgrade: null,
   });
 
-  it.each(BUILDING_TREE.buildings.filter((b) => b.lot).map((b) => [b.key, BUILDING_TREE.lots[b.lot as string].size] as const))(
+  it.each(LOT_MODELS)(
     '%s has a model that stays inside its lot',
     (key, [w, d]) => {
       const parts = building(built(key, w, d), ctx('normal'));
@@ -68,7 +71,7 @@ describe('models', () => {
     },
   );
 
-  it.each(BUILDING_TREE.buildings.filter((b) => b.lot).map((b) => [b.key, BUILDING_TREE.lots[b.lot as string].size] as const))(
+  it.each(LOT_MODELS)(
     '%s: every design fits its lot in every allowed facing (also a turned lot)',
     (key, [w, d]) => {
       const shapes: [number, number, number[]][] = w === d ? [[w, d, [0, 1, 2, 3]]] : [[w, d, [0, 2]], [d, w, [1, 3]]];
@@ -89,7 +92,7 @@ describe('models', () => {
   it('buildings with several designs really look different per design', () => {
     for (const [key, n] of Object.entries(BUILDING_VARIANTS)) {
       if (n < 2) continue;
-      const size = BUILDING_TREE.lots[BUILDING_TREE.buildings.find((b) => b.key === key)!.lot as string].size;
+      const size = BUILDING_TREE.buildings.find((b) => b.key === key)?.tiles ?? [3, 3];
       const looks = new Set(Array.from({ length: n }, (_, v) => JSON.stringify(building({ ...built(key, size[0], size[1]), variant: v }, ctx('normal')))));
       expect(looks.size, key).toBe(n);
     }
@@ -230,7 +233,7 @@ describe('remainingText (requirement.md §7.6)', () => {
   it.each([
     [{ streakDays: 1, residents: 0, requires: [] }, '1 more streak day'],
     [{ streakDays: 4, residents: 1, requires: [] }, '1 more neighbour · 4 more streak days'],
-    [{ streakDays: 0, residents: 2, requires: ['frozen-pond'] }, 'Build the Frozen pond first · 2 more neighbours'],
+    [{ streakDays: 0, residents: 2, requires: ['warming-hut'] }, 'Build the Warming hut first · 2 more neighbours'],
     [{ streakDays: 0, residents: 0, requires: [] }, 'Opens tomorrow'],
   ])('%o → %s', (remaining, text) => {
     expect(remainingText(remaining)).toBe(text);

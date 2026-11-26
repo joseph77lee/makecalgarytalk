@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMockCommunityStore } from '../mockStore';
 import { vitalityMood } from '../mood';
 import { celebrateNewBuilding } from '../scene/islandContext';
-import { BUILDING_TREE, LAND_STAGE_COUNT } from '../plan/buildingTree';
+import { BUILDING_TREE, LAND_STAGE_COUNT, communitySteps } from '../plan/buildingTree';
 import { BUILDING_STATUSES, MAX_MINI_VILLAGERS, type BuildingStatus, type BuildingView, type CommunityViewState } from '../types';
 
 const NAMES = ['Ava', 'Noah', 'Jisoo', 'Liam', 'Mei', 'Omar', 'Chloe', 'Arjun', 'Emma', 'Lucas', 'Sofia', 'Ethan'];
@@ -15,6 +15,9 @@ export function IslandDevPanel() {
   const update = useMockCommunityStore((s) => s.update);
   const reset = useMockCommunityStore((s) => s.reset);
   const set = (patch: Partial<CommunityViewState>) => update((s) => ({ ...s, ...patch }));
+  const plan = useMockCommunityStore((s) => s.plan);
+  // this community's build map (requirement v1.48 §7.6): its persona places and landmarks
+  const steps = plan ? communitySteps(plan.code, plan.persona) : BUILDING_TREE.buildings;
 
   if (!open) {
     return (
@@ -121,9 +124,17 @@ export function IslandDevPanel() {
         />
       </Row>
 
-      <Row label="Buildings (tree)">
+      <Row label="Build map">
+        <div className="mb-1 flex gap-1">
+          <button type="button" className="rounded bg-slate-100 px-2 py-0.5" onClick={() => update((s) => ({ ...s, buildings: steps.map((b) => ({ ...viewOf(b.key), status: 'built' as const, progress: 1 })) }))}>
+            All built
+          </button>
+          <button type="button" className="rounded bg-slate-100 px-2 py-0.5" onClick={() => update((s) => ({ ...s, buildings: steps.map((b) => ({ ...viewOf(b.key), status: 'opened' as const, progress: 0 })) }))}>
+            All ready
+          </button>
+        </div>
         <div className="flex flex-col gap-1">
-          {BUILDING_TREE.buildings.map((spec) => {
+          {steps.map((spec) => {
             const v = viewOf(spec.key);
             return (
               <div key={spec.key} className="flex items-center gap-1">
@@ -133,9 +144,6 @@ export function IslandDevPanel() {
                     <option key={s}>{s}</option>
                   ))}
                 </select>
-                <button type="button" className="rounded bg-slate-100 px-1" onClick={() => setBuilding(spec.key, { level: v.level + 1 })} title="Upgrade level">
-                  Lv {v.level}+
-                </button>
                 {v.status === 'building' && (
                   <input
                     type="range"

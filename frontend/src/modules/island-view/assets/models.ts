@@ -9,6 +9,9 @@ import { houseParts } from './voxel/houses';
 import { ACCENTS, type MoodPalette } from '../mood';
 import { asGhost, box, translate, type BoxPart } from './boxes';
 import { BUILDING_VOXELS, placeholderModel } from './voxel/buildings';
+import { LANDMARK_LIBRARY, type LandmarkKey } from './voxel/landmarkLibrary';
+import { PLACE_LIBRARY, type PlaceKey } from './voxel/placeLibrary';
+import { decorationGarden } from './voxel/placeParts';
 import { FEATURE_VOXELS, catenaryPole, crossingSign, railEndSignParts, stationPlatformParts } from './voxel/features';
 import { shade, vb } from './voxel/voxel';
 import { bench as benchModel, car as carModel, flowerBed as flowerBedModel, lampPost, leafyTree, mailbox as mailboxModel, spruce } from './voxel/samples';
@@ -257,6 +260,10 @@ function upgradeScaffold(w: number, d: number): BoxPart[] {
  * with an odd facing from the layout, so the turn also fits the model to the lot.
  */
 function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx): BoxPart[] {
+  // Persona places and landmarks (requirement v1.48 §7.6): written for their own footprint, front +z.
+  const library = PLACE_LIBRARY[key as PlaceKey] ?? LANDMARK_LIBRARY[key as LandmarkKey];
+  if (library) return vturn(library.build(variant), facing);
+  if (key.startsWith('decoration-')) return vturn(decorationGarden(variant), facing);
   const make = BUILDING_VOXELS[key];
   if (!make) return placeholderModel({ w, d, level, variant }, ctx);
   const turned = facing % 2 === 1;

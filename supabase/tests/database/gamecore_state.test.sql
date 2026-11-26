@@ -15,6 +15,7 @@ delete from residency.check_ins;
 delete from residency.check_days;
 delete from gamecore.community_days;
 delete from gamecore.community_snapshots;
+delete from gamecore.place_lots;  -- seeded from the island plans; each test adds what it needs
 
 insert into auth.users (id, email)
 select ('00000000-0000-4000-8000-0000000000' || lpad(n::text, 2, '0'))::uuid, 'u' || n || '@test.local'

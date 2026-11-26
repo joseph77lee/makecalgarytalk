@@ -115,3 +115,26 @@ export function onGrounds(parts: BoxPart[], wTiles: number, dTiles: number, seed
       }
   return [...out, ...model];
 }
+
+/**
+ * A decoration step of the nature track (requirement v1.48 §7.6): a small garden on its lot — flower
+ * beds, young trees, a bench and a lamp, arranged by `seed` so neighbouring gardens differ.
+ */
+export function decorationGarden(seed: number, wTiles = 2, dTiles = 2): BoxPart[] {
+  const hx = (wTiles * V) / 2;
+  const hz = (dTiles * V) / 2;
+  const parts: BoxPart[] = [vb(-hx, 0, -hz, hx, 0.25, hz, '#93cb6c')];
+  const kind = Math.floor(rnd(seed, 1) * 3);
+  // a gravel path across, then beds and trees either side
+  if (kind === 0) parts.push(vb(-hx, 0.25, -1.5, hx, 0.32, 1.5, PAVING));
+  else parts.push(vb(-1.5, 0.25, -hz, 1.5, 0.32, hz, PAVING));
+  const along = kind === 0;
+  for (const s of [-1, 1]) {
+    const bx = along ? -hx + 2 : s * 4 - (s < 0 ? 6 : 0);
+    const bz = along ? s * 4 - (s < 0 ? 4 : 0) : -hz + 2;
+    parts.push(...flowerBed(bx, bz, along ? hx * 2 - 10 : 6, along ? 4 : hz * 2 - 10, seed + s));
+    parts.push(...smallTree(along ? hx - 3 : s * (hx - 3), along ? s * (hz - 3) : hz - 3, seed + s * 7, 7 + rnd(seed, s) * 3));
+  }
+  parts.push(...(along ? bench(-hx + 4, 2.4) : bench(-2.4, -hz + 4, false)), ...lamp(along ? hx - 2 : 2.6, along ? -2.4 : hz - 2, 7));
+  return parts;
+}

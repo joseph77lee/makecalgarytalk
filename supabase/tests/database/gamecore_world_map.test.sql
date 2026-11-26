@@ -3,6 +3,7 @@ begin;
 select plan(9);
 
 delete from gamecore.community_snapshots;
+delete from gamecore.place_lots;  -- seeded from the island plans; each test adds what it needs
 delete from gamecore.actions;
 delete from gamecore.projects;
 

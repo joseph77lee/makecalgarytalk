@@ -8,7 +8,9 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BUILDING_VOXELS } from './buildings';
 import { LANDMARK_LIBRARY, type LandmarkKey } from './landmarkLibrary';
+import { extent } from './designFit';
 import { PLACE_LIBRARY, type PlaceKey } from './placeLibrary';
+import { decorationGarden } from './placeParts';
 
 interface Step {
   key: string;
@@ -71,6 +73,14 @@ describe('build map data', () => {
     for (const t of ['community', 'nature'] as const) {
       const steps = STEPS.filter((s) => s.track === t).map((s) => s.step);
       expect(steps, t).toEqual(steps.map((_, i) => i + 1));
+    }
+  });
+
+  it('draws decoration steps as small gardens that stay on their 2 × 2 lot', () => {
+    for (const seed of [1, 2, 3, 7, 11, 23]) {
+      const e = extent(decorationGarden(seed));
+      expect(e.w).toBeLessThanOrEqual(24.25);
+      expect(e.d).toBeLessThanOrEqual(24.25);
     }
   });
 });

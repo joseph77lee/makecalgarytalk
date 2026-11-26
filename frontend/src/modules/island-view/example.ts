@@ -1,8 +1,8 @@
 import { BUILDING_TREE, LAND_STAGE_COUNT } from './plan/buildingTree';
 import type { CommunityViewState } from './types';
 
-/** Houses in the example: a busy village, still below the plan's house lots. */
-const EXAMPLE_HOUSES = 60;
+/** No residents' houses in the example: every house lot shows an ordinary house (houses are scenery, v1.48 §7.2). */
+const EXAMPLE_HOUSES = 0;
 
 /**
  * "See a finished example" (requirement.md §5.1, §7.6a): this community's own island with the

@@ -9,11 +9,12 @@
  */
 import { houseModelHeight, houseStyleFor, houseTypeFor, type HouseType } from './assets/voxel/houses';
 import { vitalityMood, type VitalityMood } from './mood';
-import { BUILDING_TREE, chainOnLot } from './plan/buildingTree';
+import { buildingSpec, lotKind } from './plan/buildingTree';
 import { featuresFor, type CommunityFeature, type FeatureKey } from './plan/features';
 import {
   PLAZA,
   houseLotOrder,
+  lotStage,
   lotTiles,
   stageMap,
   tileKey,
@@ -231,15 +232,28 @@ export function buildIslandLayout(
   const usedLots: string[] = [];
   const freeMainStreet: { key: string; rect: LotRect }[] = [];
   const featureQueue = [...features];
-  for (const [lotKey, spec] of Object.entries(BUILDING_TREE.lots)) {
+  const variant = (key: string) => hashString(`${plan.code}:${key}`);
+  // The next step of the same track (shown on a built place's label: "Next: …").
+  const nextOf = (key: string): BuildingView | undefined => {
+    const spec = buildingSpec(key);
+    if (!spec) return undefined;
+    return state.buildings.find((b) => {
+      const s = buildingSpec(b.key);
+      return s !== undefined && (spec.track === 'root' ? s.step === 1 && s.track === 'community' : s.track === spec.track && s.step === spec.step + 1);
+    });
+  };
+  const planLotKeys = [...Object.keys(plan.lots).filter((k) => lotKind(k) === 'spare'), ...Object.keys(plan.lots).filter((k) => lotKind(k) !== 'spare')];
+  for (const lotKey of planLotKeys) {
+    const kind = lotKind(lotKey);
+    if (lotKey === 'entrance') continue; // plan v2/v3 entrance key (the Welcome sign's lot is keyed by its step since v4)
     const rect = plan.lots[lotKey];
     const rTiles = lotTiles(rect);
-    const stage = Math.max(...rTiles.map(stageOf), spec.landStage);
+    const stage = lotStage(plan, lotKey, stages);
     const base = { ...centreOf(rect), w: rect.w, d: rect.d, stage };
-    const onLand = spec.landStage <= landStage && rTiles.every(on);
+    const onLand = stage <= landStage;
     // Signature features take the spare lots in plan order, on land or not (§7.9).
     // A feature keeps its lot while the land is still to come, and appears with that land.
-    if (spec.kind === 'spare' && featureQueue.length > 0) {
+    if (kind === 'spare' && featureQueue.length > 0) {
       const f = featureQueue.shift() as CommunityFeature;
       if (onLand) {
         objects.push({ ...base, facing: lotFacing(rect, pathKeys, false), variant: hashString(`${plan.code}:${f.key}`), id: `feature:${f.key}`, assetKey: 'feature', featureKey: f.key, name: f.name });
@@ -248,41 +262,29 @@ export function buildIslandLayout(
       }
       continue;
     }
-    // Lots not open yet, spare lots and lots without a building yet stay plain (walkable) land.
+    // Lots not risen yet, spare lots and lots without a place yet stay plain (walkable) land.
     if (!onLand) continue;
-    if (spec.kind === 'spare') {
+    if (kind === 'spare') {
       freeSpares.push({ key: lotKey, rect });
       continue;
     }
-    if (spec.kind === 'main-street') {
+    if (kind === 'main-street') {
       // Faint markers only; shops arrive in Phase 4 (requirement.md §22.4). Also a fallback
       // spot for unknown buildings when the spare lots run out.
       freeMainStreet.push({ key: lotKey, rect });
       continue;
     }
-    const chain = chainOnLot(lotKey);
-    if (chain.length === 0) continue; // reserved for a later building (e.g. the Phase 3 landmark)
-    const views = chain.map((b) => byKey.get(b.key));
-    const shown = views.some((v) => v && v.status !== 'locked');
-    // Locked buildings are not drawn (requirement.md §7.6): the lot stays plain, walkable land.
-    if (!shown) continue;
+    // One build map step per lot, keyed by the step (requirement v1.48 §7.6). Steps of other
+    // personas have no lot here; locked steps are not drawn (§7.6), the lot stays walkable land.
+    const v = byKey.get(lotKey);
+    if (!v || v.status === 'locked') continue;
     usedLots.push(lotKey);
-    if (spec.kind !== 'entrance') rTiles.forEach((t) => occupied.add(tileKey(t)));
-    const facing = lotFacing(rect, pathKeys, spec.kind === 'entrance');
-    const variant = (key: string) => hashString(`${plan.code}:${key}`);
-    const buildingIdx = views.findIndex((v) => v?.status === 'building' && v.level === 1);
-    let builtIdx = -1;
-    views.forEach((v, i) => {
-      // An upgrade (building at level 2+) stands on a built building: draw that one.
-      if (v?.status === 'built' || (v?.status === 'building' && v.level > 1)) builtIdx = i;
-    });
-    if (buildingIdx >= 0) {
-      const v = views[buildingIdx] as BuildingView;
-      objects.push({ ...base, facing, variant: variant(v.key), id: `lot:${lotKey}`, assetKey: 'construction-site', buildingKey: v.key, title: v.title, progress: v.progress, level: v.level });
-    } else if (builtIdx >= 0) {
-      const v = views[builtIdx] as BuildingView;
-      const nextSpec = chain[builtIdx + 1];
-      const nextView = nextSpec ? byKey.get(nextSpec.key) : undefined;
+    if (kind !== 'entrance') rTiles.forEach((t) => occupied.add(tileKey(t)));
+    const facing = rect.face ?? lotFacing(rect, pathKeys, kind === 'entrance');
+    if (v.status === 'building') {
+      objects.push({ ...base, facing, variant: variant(v.key), id: `lot:${lotKey}`, assetKey: 'construction-site', buildingKey: v.key, title: v.title, progress: v.progress, level: 1 });
+    } else if (v.status === 'built') {
+      const next = nextOf(v.key);
       objects.push({
         ...base,
         facing,
@@ -291,31 +293,22 @@ export function buildIslandLayout(
         assetKey: `building.${v.key}`,
         buildingKey: v.key,
         title: v.title,
-        ...builtLevel(v),
-        next: nextSpec ? { title: nextSpec.name, remaining: nextView?.remaining ?? null, status: nextView?.status ?? 'locked' } : null,
+        level: 1,
+        upgrade: null,
+        next: next ? { title: next.title, remaining: next.remaining, status: next.status } : null,
       });
     } else {
-      const first = chain[0];
-      const v = views[0];
-      objects.push({
-        ...base,
-        facing,
-        variant: variant(first.key),
-        id: `lot:${lotKey}`,
-        assetKey: 'silhouette',
-        buildingKey: first.key,
-        title: first.name,
-        ready: v?.status === 'opened',
-        remaining: v?.remaining ?? null,
-      });
+      objects.push({ ...base, facing, variant: variant(v.key), id: `lot:${lotKey}`, assetKey: 'silhouette', buildingKey: v.key, title: v.title, ready: true, remaining: v.remaining });
     }
   }
 
-  // Buildings the tree does not know yet: placeholder on spare lots (requirement.md §7.6b).
-  const treeKeys = new Set(BUILDING_TREE.buildings.map((b) => b.key));
+  // Places the client does not know yet (added on the server after this build): placeholder on
+  // spare lots (requirement.md §7.6b).
+  const treeKeys = new Set(Object.keys(plan.lots));
   let hiddenUnknown = 0;
   for (const b of state.buildings) {
-    if (treeKeys.has(b.key) || (b.status !== 'building' && b.status !== 'built')) continue;
+    // known steps without a lot here belong to another community's map (or need no lot)
+    if (treeKeys.has(b.key) || (b.status !== 'building' && b.status !== 'built') || buildingSpec(b.key)) continue;
     const spare = freeSpares.shift() ?? freeMainStreet.shift();
     if (!spare) {
       hiddenUnknown++;
@@ -325,7 +318,7 @@ export function buildIslandLayout(
       ...centreOf(spare.rect),
       w: spare.rect.w,
       d: spare.rect.d,
-      stage: BUILDING_TREE.lots[spare.key].landStage,
+      stage: lotStage(plan, spare.key, stages),
       facing: lotFacing(spare.rect, pathKeys, false),
       variant: hashString(`${plan.code}:${b.key}`),
     };
@@ -339,7 +332,7 @@ export function buildIslandLayout(
   }
 
   for (const m of freeMainStreet) {
-    objects.push({ ...centreOf(m.rect), w: m.rect.w, d: m.rect.d, stage: BUILDING_TREE.lots[m.key].landStage, id: `lot:${m.key}`, assetKey: 'reserved-plot', lotKind: 'main-street' });
+    objects.push({ ...centreOf(m.rect), w: m.rect.w, d: m.rect.d, stage: lotStage(plan, m.key, stages), id: `lot:${m.key}`, assetKey: 'reserved-plot', lotKind: 'main-street' });
   }
 
   // CTrain (requirement.md §7.9): track tiles, station platforms and next-station signs on land.
@@ -691,10 +684,7 @@ function builtLevel(v: BuildingView): { level: number; upgrade: { level: number;
 
 /** Tile to walk to when helping a building (the avatar stops next to its lot). */
 export function buildingSiteTile(layout: IslandLayout, buildingKey: string): Tile | null {
-  const chainLot = BUILDING_TREE.buildings.find((b) => b.key === buildingKey)?.lot;
-  const o = layout.objects.find(
-    (x) => ('buildingKey' in x && x.buildingKey === buildingKey) || (chainLot !== undefined && chainLot !== null && x.id === `lot:${chainLot}`),
-  );
+  const o = layout.objects.find((x) => ('buildingKey' in x && x.buildingKey === buildingKey) || x.id === `lot:${buildingKey}`);
   if (!o) return null;
   const w = 'w' in o ? o.w : 1;
   const d = 'd' in o ? o.d : 1;
