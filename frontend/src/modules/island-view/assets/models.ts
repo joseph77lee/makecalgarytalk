@@ -11,6 +11,7 @@ import { asGhost, box, translate, type BoxPart } from './boxes';
 import { BUILDING_VOXELS, placeholderModel } from './voxel/buildings';
 import { LANDMARK_LIBRARY, type LandmarkKey } from './voxel/landmarkLibrary';
 import { PLACE_LIBRARY, type PlaceKey } from './voxel/placeLibrary';
+import { finishAllSides } from './allSides';
 import { decorationGarden } from './voxel/placeParts';
 import { FEATURE_VOXELS, catenaryPole, crossingSign, railEndSignParts, stationPlatformParts } from './voxel/features';
 import { shade, vb } from './voxel/voxel';
@@ -262,12 +263,12 @@ function upgradeScaffold(w: number, d: number): BoxPart[] {
 function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx): BoxPart[] {
   // Persona places and landmarks (requirement v1.48 §7.6): written for their own footprint, front +z.
   const library = PLACE_LIBRARY[key as PlaceKey] ?? LANDMARK_LIBRARY[key as LandmarkKey];
-  if (library) return vturn(library.build(variant), facing);
+  if (library) return vturn(finishAllSides(library.build(variant)), facing);
   if (key.startsWith('decoration-')) return vturn(decorationGarden(variant), facing);
   const make = BUILDING_VOXELS[key];
   if (!make) return placeholderModel({ w, d, level, variant }, ctx);
   const turned = facing % 2 === 1;
-  return vturn(make({ w: turned ? d : w, d: turned ? w : d, level, variant }, ctx), facing);
+  return vturn(finishAllSides(make({ w: turned ? d : w, d: turned ? w : d, level, variant }, ctx)), facing);
 }
 
 /** A built building of the tree (placeholder for unknown keys), with upgrade markers. */
@@ -279,7 +280,7 @@ export function building(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
 
 /** A signature feature on its spare lot: the community's design, facing the path. */
 export function feature(item: ObjectOf<'feature'>, ctx: BuildCtx): BoxPart[] {
-  return vturn(FEATURE_VOXELS[item.featureKey](item.variant, ctx), item.facing);
+  return vturn(finishAllSides(FEATURE_VOXELS[item.featureKey](item.variant, ctx)), item.facing);
 }
 
 const BALLAST = '#cbbfae';

@@ -9,6 +9,7 @@ import type { BoxPart } from '../boxes';
 import { apartment, ART, bungalow, infill, loft, semiDetached, townhouses, twoStoreyGarage } from './samples';
 import { VOXEL_DESIGNS as N } from './designFit';
 import { rnd, vmirrorX, vturn } from './voxel';
+import { finishAllSides } from '../allSides';
 
 export const HOUSE_TYPES = ['bungalow', 'twoStoreyGarage', 'semiDetached', 'townhouses', 'infill', 'apartment', 'loft'] as const;
 export type HouseType = (typeof HOUSE_TYPES)[number];
@@ -103,7 +104,7 @@ const WINDOWS = new Set<string>([ART.glass, ART.glassDark]);
  */
 export function houseParts(type: HouseType, seed: number, facing: number): BoxPart[] {
   const parts = houseModel(type, seed).map((b): BoxPart => (!WINDOWS.has(b.c) ? b : { ...b, tag: 'village-window' }));
-  return vturn(parts, facing);
+  return vturn(finishAllSides(parts), facing);
 }
 
 const top = (parts: BoxPart[]) => parts.reduce((h, b) => Math.max(h, b.p[1] + b.s[1] / 2), 0);
