@@ -184,13 +184,13 @@ export function redBarn(seed: number): BoxPart[] {
 }
 
 /**
- * Heritage railway (3 × 2 tiles), the special-district track's landmark: a short track with a red
+ * Heritage railway (4 × 2 tiles), the special-district track's landmark: a short track with a red
  * steam locomotive and a caboose, a little station platform with a lantern and a tall wooden water tower.
  */
 export function heritageRailway(seed: number): BoxPart[] {
-  const parts: BoxPart[] = [vb(-18, 0, -12, 18, 0.3, 12, '#93cb6c'), vb(-18, 0.3, -2.5, 18, 0.7, 2.5, '#a99c88')];
-  for (let x = -17.5; x < 18; x += 2) parts.push(vb(x, 0.7, -2.2, x + 0.9, 1, 2.2, WOOD_DARK));
-  parts.push(vb(-18, 1, -1.6, 18, 1.3, -1.2, '#7a7f8a'), vb(-18, 1, 1.2, 18, 1.3, 1.6, '#7a7f8a'));
+  const parts: BoxPart[] = [vb(-24, 0, -12, 24, 0.3, 12, '#93cb6c'), vb(-24, 0.3, -2.5, 24, 0.7, 2.5, '#a99c88')];
+  for (let x = -23.5; x < 24; x += 2) parts.push(vb(x, 0.7, -2.2, x + 0.9, 1, 2.2, WOOD_DARK));
+  parts.push(vb(-24, 1, -1.6, 24, 1.3, -1.2, '#7a7f8a'), vb(-24, 1, 1.2, 24, 1.3, 1.6, '#7a7f8a'));
   // locomotive facing +x
   const red = pick(['#b5443a', '#2f4a6a'], rnd(seed, 1));
   parts.push(vb(-2, 2.6, -2, 8, 7, 2, '#2b2f3a'), vb(8, 1.4, -2.2, 9.4, 3, 2.2, '#c9483c'), vb(5.5, 7, -0.8, 7, 10.5, 0.8, '#2b2f3a'), vb(5.1, 10.5, -1.2, 7.4, 11.2, 1.2, '#2b2f3a'));
@@ -205,9 +205,11 @@ export function heritageRailway(seed: number): BoxPart[] {
   parts.push(vb(-14, 0.3, 4, 6, 1.4, 9, '#cfc9bd'), ...bench(-6, 7).map((b) => ({ ...b, p: [b.p[0], b.p[1] + 1.1 / 12, b.p[2]] as [number, number, number] })));
   parts.push(vb(2, 1.4, 7.5, 2.5, 9, 8, IRON), vb(1.6, 9, 7.1, 2.9, 10.4, 8.4, LAMP, 'glow'));
   // water tower on four legs with a spout over the track
-  for (const [x, z] of [[11, -10], [16, -10], [11, -5], [16, -5]]) parts.push(vb(x - 0.5, 0, z - 0.5, x + 0.5, 14, z + 0.5, WOOD_DARK));
-  parts.push(vb(10, 14, -11, 17, 24, -4, WOOD), ...hipRoof(10, 17, -11, -4, 25, '#5a5f6a', 0.6, 4));
-  for (let y = 15; y < 24; y += 3) parts.push(vb(9.9, y, -11.1, 17.1, y + 0.4, -3.9, '#4a3a30'));
-  parts.push(vb(12.8, 16, -4, 13.6, 16.8, -1.8, '#4a3a30'));
+  for (const [x, z] of [[17, -10], [22, -10], [17, -5], [22, -5]]) parts.push(vb(x - 0.5, 0, z - 0.5, x + 0.5, 14, z + 0.5, WOOD_DARK));
+  parts.push(vb(16, 14, -11, 23, 24, -4, WOOD), ...hipRoof(16, 23, -11, -4, 25, '#5a5f6a', 0.6, 4));
+  for (let y = 15; y < 24; y += 3) parts.push(vb(15.9, y, -11.1, 23.1, y + 0.4, -3.9, '#4a3a30'));
+  parts.push(vb(18.8, 16, -4, 19.6, 16.8, -1.8, '#4a3a30'));
+  // a signal post and a handcar at the far end of the track
+  parts.push(vb(13, 0.3, 4, 13.5, 10, 4.5, IRON), vb(12.6, 8, 4.5, 13.9, 10, 4.8, '#2b2f3a'), vb(12.9, 9, 4.8, 13.6, 9.7, 4.9, '#e0453c', 'glow'), vb(17, 1.3, -1.8, 21, 2.4, 1.8, WOOD_DARK), vb(18.6, 2.4, -0.3, 19.4, 4.6, 0.3, IRON), vb(17.6, 4.6, -0.2, 20.4, 5, 0.2, IRON));
   return parts;
 }

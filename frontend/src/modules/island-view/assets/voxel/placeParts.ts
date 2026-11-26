@@ -5,7 +5,8 @@
 import { asSway, type BoxPart } from '../boxes';
 import { LAMP } from '../environmentParts';
 import { ART } from './samples';
-import { pick, rnd, shade, vb } from './voxel';
+import { extent } from './designFit';
+import { pick, rnd, shade, V, vb, vmove } from './voxel';
 
 export { LAMP };
 export const WOOD = '#b88a64';
@@ -71,3 +72,46 @@ export const reeds = (x: number, z: number, seed: number): BoxPart[] =>
     const h = 2.6 + rnd(seed, i, 23) * 1.6;
     return vb(ox, 0, oz, ox + 0.3, h, oz + 0.3, i === 1 ? '#7a5638' : '#6f9a4f');
   });
+
+export interface GroundsOptions {
+  /** Ground colour of the whole lot. */
+  base?: string;
+  /** `back` sets the model against the back of the lot, leaving a forecourt in front (+z). */
+  align?: 'centre' | 'back';
+  /** Chance of a tree on each free spot of the margin (0 = none). */
+  trees?: number;
+  /** A path from the model's front to the lot's front edge. */
+  path?: boolean;
+}
+
+/**
+ * Sets a model on a lot of `wTiles × dTiles` with its grounds: a ground slab under the whole lot,
+ * a path to the front, lamps by the path and trees on the free margin. Buildings take the land a
+ * real one does (yard, forecourt, trees), not just their walls (operator, 2026-11-26).
+ */
+export function onGrounds(parts: BoxPart[], wTiles: number, dTiles: number, seed: number, opts: GroundsOptions = {}): BoxPart[] {
+  const { base = '#93cb6c', align = 'centre', trees = 0.5, path = true } = opts;
+  const hx = (wTiles * V) / 2;
+  const hz = (dTiles * V) / 2;
+  const e = extent(parts);
+  const dz = align === 'back' ? -hz + 1 + e.d / 2 - e.cz : -e.cz;
+  const model = vmove(parts, -e.cx, 0, dz);
+  const mx0 = -e.w / 2 - 1.5;
+  const mx1 = e.w / 2 + 1.5;
+  const mz0 = (align === 'back' ? -hz + 1 : -e.d / 2) - 1.5;
+  const mz1 = mz0 + e.d + 3;
+  const out: BoxPart[] = [vb(-hx, 0, -hz, hx, 0.25, hz, base)];
+  const onPath = (x: number) => path && Math.abs(x) < 3.5;
+  if (path && mz1 < hz - 1) {
+    for (let z = mz1 - 1.5; z < hz; z += 2) out.push(vb(-2, 0.25, z, 2, 0.32, Math.min(z + 2, hz), PAVING));
+    if (hz - mz1 > 6) out.push(...lamp(-3.6, hz - 3, 8), ...lamp(3.6, hz - 3, 8));
+  }
+  if (trees > 0)
+    for (let x = -hx + 3; x <= hx - 3; x += 6)
+      for (let z = -hz + 3; z <= hz - 3; z += 6) {
+        if (x > mx0 - 2.4 && x < mx1 + 2.4 && z > mz0 - 2.4 && z < mz1 + 2.4) continue;
+        if (onPath(x) || (path && Math.abs(x) < 6 && z > hz - 5)) continue;
+        if (rnd(seed, Math.round(x), Math.round(z)) < trees) out.push(...smallTree(x, z, seed + Math.round(x * 7 + z), 8 + rnd(seed, Math.round(z), Math.round(x)) * 3));
+      }
+  return [...out, ...model];
+}

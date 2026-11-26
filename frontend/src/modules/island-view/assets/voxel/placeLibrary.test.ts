@@ -24,6 +24,12 @@ describe('place library', () => {
     }
   });
 
+  it.each(KEYS)('%s fills most of the land it takes', (key) => {
+    const place = PLACE_LIBRARY[key];
+    const e = extent(place.build(7));
+    expect((e.w * e.d) / (place.tiles[0] * place.tiles[1] * V * V)).toBeGreaterThanOrEqual(0.7);
+  });
+
   it('is deterministic for a seed', () => {
     for (const key of KEYS) expect(PLACE_LIBRARY[key].build(5)).toEqual(PLACE_LIBRARY[key].build(5));
   });
@@ -46,7 +52,7 @@ describe('place library', () => {
     expect(area('place.mature-suburb.ball-diamond')).toBeGreaterThanOrEqual(25);
     expect(area('place.golf.golf-hole')).toBeGreaterThanOrEqual(15);
     expect(area('place.golf.driving-range')).toBeGreaterThanOrEqual(15);
-    for (const k of ['place.golf.clubhouse', 'place.special-district.hay-field', 'place.special-district.horse-corral'] as const) expect(area(k)).toBeGreaterThanOrEqual(9);
+    for (const k of ['place.golf.clubhouse', 'place.special-district.hay-field', 'place.special-district.horse-corral', 'place.mature-suburb.outdoor-rink', 'place.new-suburb.storm-pond', 'place.mature-suburb.leisure-centre', 'place.main-street.sandstone-school', 'place.downtown.signature-tower', 'place.food-street.food-hall'] as const) expect(area(k)).toBeGreaterThanOrEqual(9);
   });
 
   it('keys follow place.<persona>.<name>', () => {

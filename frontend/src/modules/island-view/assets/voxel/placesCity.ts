@@ -109,34 +109,35 @@ export function foodTrucks(seed: number): BoxPart[] {
   return parts;
 }
 
-/** Market stalls (2 × 2 tiles): four stalls with striped canopies, crates of produce, flowers and bread. */
+/** Market stalls (3 × 2 tiles): six stalls in two rows with striped canopies, crates of produce, flowers and bread, lamps down the aisle. */
 export function marketStalls(seed: number): BoxPart[] {
-  const parts: BoxPart[] = [vb(-12, 0, -12, 12, 0.3, 12, '#d9cfbd')];
+  const parts: BoxPart[] = [vb(-18, 0, -12, 18, 0.3, 12, '#d9cfbd')];
   const goods = [['#e46a5c', '#f2c14e', '#6fae4f'], ['#f08bb3', '#fbf8f2', '#b9a6e2'], ['#c98a4b', '#e0b070', '#a86b3c'], ['#6fae4f', '#8cc867', '#f2c14e']];
-  [[-6, -6], [6, -6], [-6, 6], [6, 6]].forEach(([x, z], i) => {
+  [[-12, -6], [0, -6], [12, -6], [-12, 6], [0, 6], [12, 6]].forEach(([x, z], i) => {
     const c = pick(BRIGHT, rnd(seed, i));
     parts.push(vb(x - 4, 0, z - 2.5, x + 4, 3, z + 2.5, ART.wood), vb(x - 4, 3, z - 2.5, x + 4, 3.3, z + 2.5, '#d9c3a0'));
     for (const px of [x - 3.8, x + 3.4]) for (const pz of [z - 2.4, z + 2]) parts.push(vb(px, 0, pz, px + 0.4, 7.6, pz + 0.4, '#9aa1ab'));
     for (let k = 0; k < 8; k++) parts.push(...asSway([vb(x - 4.4 + k * 1.1, 7.6 + (k % 2) * 0.3, z - 3, x - 3.3 + k * 1.1, 8.2 + (k % 2) * 0.3, z + 3, k % 2 ? c : '#fbf8f2')]));
-    for (let k = 0; k < 3; k++) parts.push(vb(x - 3.4 + k * 2.4, 3.3, z - 1.6, x - 1.4 + k * 2.4, 4.4, z + 1.6, '#a07a52'), vb(x - 3.2 + k * 2.4, 4.4, z - 1.4, x - 1.6 + k * 2.4, 5, z + 1.4, goods[i][k]));
+    for (let k = 0; k < 3; k++) parts.push(vb(x - 3.4 + k * 2.4, 3.3, z - 1.6, x - 1.4 + k * 2.4, 4.4, z + 1.6, '#a07a52'), vb(x - 3.2 + k * 2.4, 4.4, z - 1.4, x - 1.6 + k * 2.4, 5, z + 1.4, goods[i % 4][k]));
   });
-  parts.push(...lamp(0, -11, 8), ...lamp(0, 11, 8));
+  parts.push(...lamp(-6, 0, 8), ...lamp(6, 0, 8));
   return parts;
 }
 
-/** Lantern street (2 × 1 tiles): a short lane under strings of round paper lanterns between poles, with benches and planters. */
+/** Lantern street (3 × 1 tiles): a lane under strings of round paper lanterns between poles, with benches and planters. */
 export function lanternStreet(seed: number): BoxPart[] {
-  const parts: BoxPart[] = [vb(-12, 0, -6, 12, 0.3, 6, '#cfc9bd'), vb(-12, 0.3, -1.2, 12, 0.35, 1.2, '#bfb8aa')];
-  for (const x of [-11, -3.6, 3.6, 11]) for (const z of [-5, 5]) parts.push(vb(x - 0.35, 0, z - 0.35, x + 0.35, 12, z + 0.35, '#8a2f2a'), vb(x - 0.7, 12, z - 0.7, x + 0.7, 12.6, z + 0.7, '#5a1f1c'));
+  const parts: BoxPart[] = [vb(-18, 0, -6, 18, 0.3, 6, '#cfc9bd'), vb(-18, 0.3, -1.2, 18, 0.35, 1.2, '#bfb8aa')];
+  const posts = [-17, -8.5, 0, 8.5, 17];
+  for (const x of posts) for (const z of [-5, 5]) parts.push(vb(x - 0.35, 0, z - 0.35, x + 0.35, 12, z + 0.35, '#8a2f2a'), vb(x - 0.7, 12, z - 0.7, x + 0.7, 12.6, z + 0.7, '#5a1f1c'));
   const colours = ['#e0453c', '#f2a14e', '#f2c14e'];
-  for (const x of [-11, -3.6, 3.6, 11])
+  for (const x of posts)
     for (let i = 1; i < 6; i++) {
       const z = -5 + i * (10 / 6);
       const y = 11 - Math.sin((i / 6) * Math.PI) * 1.6;
       parts.push(...asSway([vb(x - 0.9, y - 1.8, z - 0.9, x + 0.9, y, z + 0.9, LAMP, 'glow'), vb(x - 1.1, y - 1.4, z - 1.1, x + 1.1, y - 0.4, z + 1.1, pick(colours, rnd(seed, x, i)))]));
     }
-  for (let x = -10; x < 10; x += 0.9) parts.push(vb(x, 11.6 - Math.abs(Math.sin(x / 7.4 * Math.PI)) * 0.3, -0.1, x + 0.9, 11.8 - Math.abs(Math.sin(x / 7.4 * Math.PI)) * 0.3, 0.1, '#5a1f1c'));
-  parts.push(...bench(-7.3, -3.6), ...bench(7.3, 3.6), ...flowerBed(-10, 2.4, 4, 3, seed), ...flowerBed(6, -5.4, 4, 3, seed + 2));
+  for (let x = -16; x < 16; x += 0.9) parts.push(vb(x, 11.5, -0.1, x + 0.9, 11.7, 0.1, '#5a1f1c'));
+  parts.push(...bench(-12.7, -3.6), ...bench(4.2, -3.6), ...bench(-4.2, 3.6), ...bench(12.7, 3.6), ...flowerBed(-16, 2.4, 4, 3, seed), ...flowerBed(12, -5.4, 4, 3, seed + 2));
   return parts;
 }
 

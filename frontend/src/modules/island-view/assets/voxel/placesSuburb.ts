@@ -31,19 +31,20 @@ export function communityGarden(seed: number): BoxPart[] {
   return parts;
 }
 
-/** Outdoor rink (3 × 2 tiles): ice inside white boards, lines, two nets, a warming bench and two floodlights. */
+/** Outdoor rink (4 × 3 tiles): a full-size rink of ice inside white boards, lines, two nets, a players' hut and floodlights. */
 export function outdoorRink(_seed: number): BoxPart[] {
-  const parts: BoxPart[] = [vb(-18, 0, -12, 18, 0.3, 12, '#e8e2d6'), vb(-16, 0.3, -9, 16, 0.6, 9, ICE)];
-  parts.push(vb(-16.5, 0, -9.5, 16.5, 2.2, -9, '#fbf8f2'), vb(-16.5, 0, 9, 16.5, 2.2, 9.5, '#fbf8f2'), vb(-16.5, 0, -9.5, -16, 2.2, 9.5, '#fbf8f2'), vb(16, 0, -9.5, 16.5, 2.2, 9.5, '#fbf8f2'));
-  parts.push(vb(-16.5, 0, -9.5, 16.5, 0.8, -9.2, '#5b8fd6'), vb(-16.5, 0, 9.2, 16.5, 0.8, 9.5, '#5b8fd6'));
-  parts.push(vb(-0.3, 0.6, -9, 0.3, 0.65, 9, '#e46a5c'), vb(-8.3, 0.6, -9, -7.7, 0.65, 9, '#5b8fd6'), vb(7.7, 0.6, -9, 8.3, 0.65, 9, '#5b8fd6'));
+  const parts: BoxPart[] = [vb(-24, 0, -18, 24, 0.3, 18, '#e8e2d6'), vb(-21, 0.3, -11, 21, 0.6, 11, ICE)];
+  parts.push(vb(-21.5, 0, -11.5, 21.5, 2.2, -11, '#fbf8f2'), vb(-21.5, 0, 11, 21.5, 2.2, 11.5, '#fbf8f2'), vb(-21.5, 0, -11.5, -21, 2.2, 11.5, '#fbf8f2'), vb(21, 0, -11.5, 21.5, 2.2, 11.5, '#fbf8f2'));
+  parts.push(vb(-21.5, 0, -11.5, 21.5, 0.8, -11.2, '#5b8fd6'), vb(-21.5, 0, 11.2, 21.5, 0.8, 11.5, '#5b8fd6'));
+  parts.push(vb(-0.3, 0.6, -11, 0.3, 0.65, 11, '#e46a5c'), vb(-10.3, 0.6, -11, -9.7, 0.65, 11, '#5b8fd6'), vb(9.7, 0.6, -11, 10.3, 0.65, 11, '#5b8fd6'));
+  for (let a = 0; a < 16; a++) parts.push(vb(Math.cos((a / 16) * Math.PI * 2) * 3 - 0.3, 0.6, Math.sin((a / 16) * Math.PI * 2) * 3 - 0.3, Math.cos((a / 16) * Math.PI * 2) * 3 + 0.3, 0.65, Math.sin((a / 16) * Math.PI * 2) * 3 + 0.3, '#5b8fd6'));
   for (const s of [-1, 1]) {
-    const x = s * 13.5;
+    const x = s * 18;
     parts.push(vb(x - 1, 0.6, -1.6, x + 1, 2.6, -1.3, '#e46a5c'), vb(x - 1, 0.6, 1.3, x + 1, 2.6, 1.6, '#e46a5c'), vb(x + s * 0.7, 0.6, -1.6, x + s * 1, 2.6, 1.6, '#e46a5c'), vb(x - 1, 2.4, -1.6, x + 1, 2.6, 1.6, '#e46a5c'));
   }
-  // players' bench hut in front and floodlights at the corners
-  parts.push(vb(-5, 0, 10, 5, 5, 12, '#d9c3a0'), vb(-5.5, 5, 9.5, 5.5, 5.6, 12, '#8f9bc0'), vb(-4, 1.4, 10, 4, 1.8, 11, ART.wood));
-  parts.push(...lamp(-17, -11, 14), ...lamp(17, -11, 14));
+  // players' hut and benches in front, floodlights at the corners
+  parts.push(vb(-7, 0, 12.5, 7, 5, 16, '#d9c3a0'), vb(-7.5, 5, 12, 7.5, 5.6, 16.5, '#8f9bc0'), vb(-6, 1.4, 12.5, 6, 1.8, 13.5, ART.wood), ...windowZ(-4, -1, 2.4, 4, 16, G), ...windowZ(1, 4, 2.4, 4, 16, G));
+  parts.push(...bench(-15, 14.5), ...bench(15, 14.5), ...lamp(-23, -17, 14), ...lamp(23, -17, 14), ...lamp(-23, 13, 14), ...lamp(23, 13, 14));
   return parts;
 }
 
@@ -150,22 +151,22 @@ export function stoneGate(seed: number): BoxPart[] {
   return parts;
 }
 
-/** Storm pond (3 × 3 tiles): a stone-edged pond with a fountain, reeds, a little boardwalk and a bench. */
+/** Storm pond (4 × 3 tiles): a stone-edged pond with a fountain, reeds, a boardwalk out over the water and benches on the path around it. */
 export function stormPond(seed: number): BoxPart[] {
-  const parts: BoxPart[] = [];
-  const inPond = (x: number, z: number) => ((x + 0.5) / 14) ** 2 + ((z + 0.5) / 11) ** 2 < 1;
-  for (let x = -16; x < 16; x += 2)
-    for (let z = -14; z < 14; z += 2) {
+  const parts: BoxPart[] = [vb(-24, 0, -18, 24, 0.25, 18, '#93cb6c')];
+  const inPond = (x: number, z: number) => ((x + 0.5) / 19) ** 2 + ((z + 0.5) / 12) ** 2 < 1;
+  const nearPond = (x: number, z: number) => ((x + 0.5) / 22) ** 2 + ((z + 0.5) / 15) ** 2 < 1;
+  for (let x = -24; x < 24; x += 2)
+    for (let z = -18; z < 18; z += 2) {
       if (inPond(x + 1, z + 1)) parts.push(vb(x, 0, z, x + 2, 0.4, z + 2, WATER));
       else if (inPond(x - 1, z + 1) || inPond(x + 3, z + 1) || inPond(x + 1, z - 1) || inPond(x + 1, z + 3)) parts.push(vb(x, 0, z, x + 2, 0.8, z + 2, shade(STONE, (rnd(seed, x, z) - 0.5) * 0.15)));
+      else if (nearPond(x + 1, z + 1)) parts.push(vb(x, 0.25, z, x + 2, 0.32, z + 2, '#d6d0c4'));
     }
-  // the fountain in the middle: a jet with a spray crown
-  parts.push(vb(-1, 0.4, -1, 1, 1, 1, '#cfc6b8'), vb(-0.4, 1, -0.4, 0.4, 7, 0.4, '#e9f6fc'), vb(-1.6, 6.4, -1.6, 1.6, 7.4, 1.6, '#e9f6fc'));
-  for (const [x, z] of [[-12, -4], [-10, 6], [11, -6], [9, 7], [-4, -10]]) parts.push(...reeds(x, z, seed + x));
-  // a short boardwalk out over the water with a bench
-  parts.push(vb(4, 0.6, 8, 8, 1.2, 16, WOOD));
-  for (let z = 8; z < 16; z += 1.2) parts.push(vb(4, 1.15, z, 8, 1.25, z + 0.1, WOOD_DARK));
-  parts.push(...bench(-8, 14.5), ...lamp(13, 13, 9));
+  parts.push(vb(-1, 0.4, -1, 1, 1, 1, '#cfc6b8'), vb(-0.4, 1, -0.4, 0.4, 8, 0.4, '#e9f6fc'), vb(-1.8, 7.4, -1.8, 1.8, 8.4, 1.8, '#e9f6fc'));
+  for (const [x, z] of [[-16, -5], [-14, 7], [15, -7], [13, 8], [-5, -11], [6, -11]]) parts.push(...reeds(x, z, seed + x));
+  parts.push(vb(5, 0.6, 7, 9, 1.2, 17, WOOD));
+  for (let z = 7; z < 17; z += 1.2) parts.push(vb(5, 1.15, z, 9, 1.25, z + 0.1, WOOD_DARK));
+  parts.push(...bench(-12, 15.8), ...bench(18, -13), ...lamp(-21, 14, 9), ...lamp(21, 14, 9), ...lamp(-21, -14, 9));
   return parts;
 }
 
