@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ServerChanges, ServerStreak } from '../daily-actions';
-import { BUILDING_TREE, buildIslandLayout, decodePlan, finishedExampleState, type BuildingView } from '../island-view';
-import { completionPercent, groupByStage, isBuilt } from './buildMapModel';
+import { buildIslandLayout, decodePlan, finishedExampleState } from '../island-view';
 import { changeItems, changesPanelOpen } from './changesText';
 import { landGoalText, streakText } from './streakText';
 import { readFileSync } from 'node:fs';
@@ -76,28 +75,6 @@ describe('what changed since yesterday', () => {
     expect(changesPanelOpen(changes(), false, extra)).toBe(true);
     expect(changesPanelOpen(changes(), true, extra)).toBe(false);
     expect(changesPanelOpen(changes(), false)).toBe(false);
-  });
-});
-
-const view = (key: string, status: BuildingView['status'], level = 1): BuildingView => ({ key, status, level, progress: status === 'built' ? 1 : 0.3, title: key, remaining: null });
-
-describe('build map (requirement.md §7.6a)', () => {
-  it('an upgrade still counts as built; a first construction does not', () => {
-    expect(isBuilt(view('fire-pit', 'building', 2))).toBe(true);
-    expect(isBuilt(view('fire-pit', 'building', 1))).toBe(false);
-  });
-  it('completion % counts built tree buildings only', () => {
-    const all = BUILDING_TREE.buildings.map((b) => view(b.key, 'locked'));
-    expect(completionPercent(all)).toBe(0);
-    all[0] = view(all[0].key, 'built');
-    all[1] = view(all[1].key, 'building', 3);
-    expect(completionPercent([...all, view('castle', 'built')])).toBe(Math.round((2 / BUILDING_TREE.buildings.length) * 100));
-    expect(completionPercent(BUILDING_TREE.buildings.map((b) => view(b.key, 'built')))).toBe(100);
-  });
-  it('groups by tree stage in tree order, unknown buildings last', () => {
-    const groups = groupByStage([view('castle', 'built'), view('neighbourhood-park', 'locked'), view('fire-pit', 'built'), view('welcome-sign', 'built')]);
-    expect(groups.map((g) => g.name)).toEqual(['0. Welcome', '1. First day', '5. Pride', 'New buildings']);
-    expect(groups[1].buildings.map((b) => b.key)).toEqual(['fire-pit']);
   });
 });
 

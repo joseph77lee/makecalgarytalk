@@ -74,3 +74,14 @@ export function requestViewReset(): void {
   viewReset.requested = true;
   cameraFocus.manual = false;
 }
+
+/**
+ * "See it on the island" (requirement v1.48 §7.6a): a request for the camera rig to glide to a
+ * place and zoom in. The rig resolves the key to the place's lot on its next frame; following
+ * pauses (like a pan) until the avatar moves again.
+ */
+export const lookRequest: { key: string | null } = { key: null };
+
+export function requestLookAt(buildingKey: string): void {
+  lookRequest.key = buildingKey;
+}

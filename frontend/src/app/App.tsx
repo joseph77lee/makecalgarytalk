@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
 import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen, type ChangeCard, type ChangeItem } from '../modules/community-state';
-import { ActionBar, SessionScreen, Toast, useDailyActions } from '../modules/daily-actions';
+import { ActionBar, SessionScreen, Toast, useDailyActions, type ServerCommunityState } from '../modules/daily-actions';
+import { mockResidents, mockServerBuildings } from './mockBuildMap';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
 import { AdminDashboard } from '../modules/admin';
 import { track } from '../modules/analytics';
@@ -14,11 +15,13 @@ import { ShareCardDialog, type ShareCard } from '../modules/share-cards';
 import { WorldMap } from '../modules/world-map';
 import {
   AssetGallery,
+  PicturePrinter,
   IslandDevPanel,
   IslandHud,
   IslandView,
   captureIsland,
   finishedExampleState,
+  requestLookAt,
   celebrateNewBuilding,
   upcomingIdentity,
   useMockCommunityStore,
@@ -34,11 +37,14 @@ const adminMode = params.has('admin');
 
 /** `?gallery` shows the Art Pass style samples (M19), no sign-in needed. */
 const galleryMode = params.has('gallery');
+/** `?pictures` (dev server only) prints the build map's static pictures. */
+const picturesMode = import.meta.env.DEV && params.has('pictures');
 
 export function App() {
   // sound starts on the first tap and pauses while the page is hidden (§10.5)
   useEffect(() => installSound(), []);
   if (galleryMode) return <AssetGallery />;
+  if (picturesMode) return <PicturePrinter />;
   return mockMode ? <MockApp /> : <IdentityGate />;
 }
 
@@ -64,6 +70,13 @@ function LiveApp() {
   const server = useDailyActions((s) => s.server);
   const view = useDailyActions((s) => s.view);
   const [mapOpen, setMapOpen] = useState(false);
+  // "Help build it today" on the build map points at that construction in the action bar for a while.
+  const [helpKey, setHelpKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!helpKey) return;
+    const t = setTimeout(() => setHelpKey(null), 6000);
+    return () => clearTimeout(t);
+  }, [helpKey]);
   const [worldOpen, setWorldOpen] = useState(false);
   const myCommunityId = useResidency((s) => s.status?.play_community?.id ?? null);
   const [example, setExample] = useState(false);
@@ -212,7 +225,7 @@ function LiveApp() {
                   </div>
                 )}
               </StreakBar>
-              <ActionBar />
+              <ActionBar highlightKey={helpKey} />
               {server.me?.member && !showWelcome && (
                 // Remounts when the changes panel closes, so the nudge is not shown behind it.
                 <InviteFab
@@ -252,12 +265,24 @@ function LiveApp() {
             <BuildMap
               community={server.community}
               streakDays={server.streak.days}
-              buildings={view.buildings}
+              buildings={server.buildings}
               onClose={() => {
                 playSound('ui-close');
                 setMapOpen(false);
               }}
               onInvite={server.me?.member ? invite : undefined}
+              onHelp={
+                server.me?.member
+                  ? (key) => {
+                      setMapOpen(false);
+                      setHelpKey(key);
+                    }
+                  : undefined
+              }
+              onSeeOnIsland={(key) => {
+                setMapOpen(false);
+                requestLookAt(key);
+              }}
               upcoming={plan ? upcomingIdentity(plan, server.community.land_stage) : null}
               onShowExample={() => {
                 setMapOpen(false);
@@ -308,15 +333,60 @@ function MockApp() {
   const state = useMockCommunityStore((s) => s.state);
   const plan = useMockCommunityStore((s) => s.plan);
   const loadPlan = useMockCommunityStore((s) => s.loadPlan);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [example, setExample] = useState(false);
   useEffect(() => {
     // `?mock&plan=BLN` shows another community's real shape.
     void loadPlan(params.get('plan') ?? undefined);
   }, [loadPlan]);
+  // `?mock&streak=14`: the community streak the mock build map assumes
+  const streakDays = Number(params.get('streak') ?? 7);
+  const residents = mockResidents(state.landStage);
+  if (example && plan) return <ExampleView plan={plan} communityName={plan.name} onBack={() => setExample(false)} />;
   return (
     <main className="relative h-dvh w-full overflow-hidden">
       {plan && <Island plan={plan} state={state} />}
-      <IslandHud state={state} />
+      <IslandHud
+        state={state}
+        right={
+          <button type="button" onClick={() => setMapOpen(true)} aria-label="Build map" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-lg shadow-sm backdrop-blur">
+            🌳
+          </button>
+        }
+      />
       <IslandDevPanel />
+      {mapOpen && plan && (
+        <BuildMap
+          community={
+            {
+              id: 'mock',
+              code: plan.code,
+              name: plan.name,
+              residents,
+              land_stage: state.landStage,
+              settled: true,
+              level: 0,
+              persona: plan.persona,
+              vitality: state.vitality,
+              mini_villagers: state.miniVillagerCount,
+              next_land_residents: null,
+            } as ServerCommunityState['community']
+          }
+          streakDays={streakDays}
+          buildings={mockServerBuildings(plan, state, streakDays)}
+          onClose={() => setMapOpen(false)}
+          onShowExample={() => {
+            setMapOpen(false);
+            setExample(true);
+          }}
+          onHelp={() => setMapOpen(false)}
+          onSeeOnIsland={(key) => {
+            setMapOpen(false);
+            requestLookAt(key);
+          }}
+          upcoming={upcomingIdentity(plan, state.landStage)}
+        />
+      )}
     </main>
   );
 }

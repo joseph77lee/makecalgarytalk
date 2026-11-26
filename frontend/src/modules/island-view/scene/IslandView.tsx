@@ -1,6 +1,6 @@
 import { OrbitControls, OrthographicCamera, PerformanceMonitor } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { Box3, Vector3, type Group, type HemisphereLight, type OrthographicCamera as OrthoCam, type Ray } from 'three';
 import type { ItemsProps } from '../assets/BoxAsset';
 import { ASSET_REGISTRY, BuildingAsset } from '../assets/registry';
@@ -20,7 +20,7 @@ import { pickPostBubbles, seededRandom, villagerCount, villagersOutside } from '
 import { BloomBurst } from './BloomBurst';
 import { BoxBatch } from './BoxBatch';
 import { ISLAND_AZIMUTH, landExtent, northScreenAngle, viewFrame, zoomForFrame, type ViewFrame } from './camera';
-import { cameraFocus, clampToBounds, followStrength, landBounds, requestViewReset, startManualView, viewReset, type ViewBounds } from './cameraFocus';
+import { cameraFocus, clampToBounds, followStrength, landBounds, lookRequest, requestViewReset, startManualView, viewReset, type ViewBounds } from './cameraFocus';
 import { opaqueBox, setIslandCapturer } from './capture';
 import { IslandContext, useSceneFx, type IslandCtx, pokeWalker, walkerSound } from './islandContext';
 import { IslandLabels } from './Labels';
@@ -344,6 +344,13 @@ function IslandScene({
   const wholeFrame = useMemo(() => viewFrame(plan.tiles, az), [plan, az]);
   const extent = useMemo(() => landExtent(layout.tiles, az), [layout.tiles, az]);
   const bounds = useMemo(() => landBounds(layout.tiles), [layout.tiles]);
+  const findPlace = useCallback(
+    (key: string): [number, number] | null => {
+      const o = layout.objects.find((x) => ('buildingKey' in x && x.buildingKey === key) || x.id === `lot:${key}`);
+      return o ? [o.x, o.z] : null;
+    },
+    [layout],
+  );
 
   const wind = useMemo(() => windVector({ wind: env.wind, windFromDeg: env.windFromDeg }), [env.wind, env.windFromDeg]);
   const precip = precipitation(env.weather, lowQuality);
@@ -366,7 +373,7 @@ function IslandScene({
         near={0.1}
         far={300}
       />
-      <CameraRig frame={landFrame} whole={wholeFrame} azimuth={az} bounds={bounds} />
+      <CameraRig frame={landFrame} whole={wholeFrame} azimuth={az} bounds={bounds} findPlace={findPlace} />
       <CaptureRegistrar />
       <Lights look={look} radius={layout.landRadius} storm={env.weather === 'thunderstorm' && !lowQuality} flash={flash} />
       {look.fog > 0 && <fog attach="fog" args={[look.bg[2], fogNear, fogFar]} />}
@@ -499,7 +506,20 @@ const RESET_TIME = 0.6;
  * (two fingers, or right-drag) within the risen land; a pan pauses following until the avatar
  * moves; the compass brings the start view back.
  */
-function CameraRig({ frame, whole, azimuth, bounds }: { frame: ViewFrame; whole: ViewFrame; azimuth: number; bounds: ViewBounds }) {
+function CameraRig({
+  frame,
+  whole,
+  azimuth,
+  bounds,
+  findPlace,
+}: {
+  frame: ViewFrame;
+  whole: ViewFrame;
+  azimuth: number;
+  bounds: ViewBounds;
+  /** World centre of a place's lot by key (for "See it on the island"), or null. */
+  findPlace: (key: string) => [number, number] | null;
+}) {
   const get = useThree((s) => s.get);
   const viewport = useThree((s) => s.size);
   const fit = zoomForFrame(frame, viewport.width, viewport.height);
@@ -508,6 +528,8 @@ function CameraRig({ frame, whole, azimuth, bounds }: { frame: ViewFrame; whole:
   const first = useRef(true);
   const gestureStart = useRef(new Vector3());
   const resetLeft = useRef(0);
+  /** Where "See it on the island" is gliding to (null when not gliding). */
+  const glide = useRef<[number, number] | null>(null);
   const base = useMemo<[number, number, number]>(() => [frame.cx, -0.6, frame.cz], [frame.cx, frame.cz]);
 
   useEffect(() => {
@@ -527,6 +549,16 @@ function CameraRig({ frame, whole, azimuth, bounds }: { frame: ViewFrame; whole:
       viewReset.requested = false;
       resetLeft.current = RESET_TIME;
       target.current = fit;
+      glide.current = null;
+    }
+    if (lookRequest.key !== null) {
+      const at = findPlace(lookRequest.key);
+      lookRequest.key = null;
+      if (at) {
+        glide.current = at;
+        startManualView();
+        target.current = Math.max(camera.zoom, fit * 2.4);
+      }
     }
     const diff = target.current - camera.zoom;
     if (Math.abs(diff) >= 0.01) {
@@ -542,9 +574,13 @@ function CameraRig({ frame, whole, azimuth, bounds }: { frame: ViewFrame; whole:
       offset.lerp(homeOffset, resetLeft.current === 0 ? 1 : Math.min(1, dt * 8)).setLength(homeOffset.length());
       camera.position.copy(orbit.target).add(offset);
     }
-    if (cameraFocus.manual) {
+    if (cameraFocus.manual && glide.current) {
+      desired.set(glide.current[0], base[1], glide.current[1]);
+    } else if (cameraFocus.manual) {
       desired.copy(orbit.target);
+      glide.current = null;
     } else {
+      glide.current = null;
       const k = cameraFocus.active ? followStrength(camera.zoom, fit) : 0;
       // Aim between the land's centre and the focus (stronger when zoomed in).
       desired.set(base[0] + (cameraFocus.x - base[0]) * k, base[1], base[2] + (cameraFocus.z - base[2]) * k);
@@ -553,10 +589,11 @@ function CameraRig({ frame, whole, azimuth, bounds }: { frame: ViewFrame; whole:
     desired.set(cx, base[1], cz);
     step.copy(desired).sub(orbit.target);
     if (step.lengthSq() < 1e-6) {
+      glide.current = null;
       if (resetLeft.current > 0) orbit.update();
       return;
     }
-    step.multiplyScalar(cameraFocus.manual ? 1 : Math.min(1, dt * 3));
+    step.multiplyScalar(cameraFocus.manual && !glide.current ? 1 : Math.min(1, dt * 3));
     orbit.target.add(step);
     camera.position.add(step);
     orbit.update();
@@ -576,6 +613,7 @@ function CameraRig({ frame, whole, azimuth, bounds }: { frame: ViewFrame; whole:
       minZoom={Math.min(wholeZoom, fit) * 0.9}
       maxZoom={fit * 6}
       onStart={() => {
+        glide.current = null;
         target.current = get().camera.zoom; // the user takes over the zoom
         const orbit = get().controls as unknown as OrbitLike | null;
         if (orbit) gestureStart.current.copy(orbit.target);
