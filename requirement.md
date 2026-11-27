@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.50 |
+| Document version | v1.51 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
 | Status | Initial draft for starting MVP development |
@@ -526,8 +526,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### 14.1 Today's question (MVP)
 - **One multiple-choice question a day for the whole city**: a question and 2–4 choices, each an emoji and a short text; one tap and it is done (no free text, so nothing to moderate). A daily reason to visit and the first posting step (14)
 - **Who answers**: residents of the community they play in, verified or verifying (14 step 1); **one answer per player per Calgary day**, final (no changing). Visitors see the question and today's counts but cannot answer
-- **Shown** as a small card the first time the player opens the game that Calgary day (after the "What changed since yesterday" panel when that is open); it can be closed and is also in Community News
-- **After answering**: the community's counts so far (e.g. "Mahogany so far (5 neighbours)", a bar per choice); **counts only, never who chose what**; the final result goes into the next day's newspaper (11)
+- **Shown** as a small card the first time the player opens the game that Calgary day (after the "What changed since yesterday" panel when that is open), only while the player can still answer; it can be closed and is also in Community News
+- **After answering**: the card turns into the community's counts so far in place (e.g. "Mahogany so far (5 neighbours)", a bar per choice) and **closes by itself after a few seconds** (a tap anywhere closes it sooner; no extra step to start playing). With **fewer than 3 answers** the bars are replaced by "Thanks! See what neighbours chose in tomorrow's paper" (a lone "1 neighbour" says nothing). **Counts only, never who chose what**; the final result goes into the next day's newspaper (11)
 - **Questions are data** (`supabase/data/daily_questions.csv`, seeded into the database): id, category, season, situation, question, up to 4 choices (emoji + text). Writing rules: 2–4 choices, every emoji different within a question, choice text at most 32 characters, one choice anyone can pick (e.g. "🤷 Never tried it"), emoji from Unicode 12 or older and no flags (older phones, Windows); no politics, religion or income, no alcohol as the subject (players are 13+), nothing that reveals where someone lives or when they are out (2)
 - **Picking** (server, deterministic from the Calgary day, so the whole city gets the same question): from the current season's questions (winter Nov–Mar, spring Apr–May, summer Jun–Aug, fall Sep–Oct) plus year-round ones, matching the day (`weekday` / `weekend` questions only on those days; other situations are stored but not used yet), leaving out questions shown in the last 60 days and the previous day's category
 - Answers are append-only rows (one per player per day, idempotent); counts are computed on read (20.3)

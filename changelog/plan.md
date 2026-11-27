@@ -12,6 +12,32 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.04
+**Changed:** M26 🟨 → ✅ Done again (header, table row, heading, DoD "user has played it" ticked, Handoff). Header current module: M16 next.
+
+**Why:** The operator checked the v1.51 answered-card fix ("일단 main 병합해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v2.03 |`
+- `| Current module | M26 🟨 (answered card fix), then M16 Deploy & Playtest |`
+- `| M26 | Community News Steps | BE + FE + data | | M24 | 🟨 |`
+- `### M26 — Community News Steps 🟨`
+- `  - [ ] user has played it (2026-11-27 before the v1.51 fix; again for the answered card)`
+
+### 2026-11-27 — v2.03
+**Changed:** M26 ✅ → 🔁 Reopened for requirement v1.51, fixed and back to 🟨 Ready for playtest (header, table row, heading); new scope item (ticked) for the answered card closing by itself; DoD "user has played it" unticked until the fix is checked; Handoff note. Header: plan version, `Based on` v1.51, current module.
+
+**Why:** Playtest feedback (requirement v1.51): the answered question card needed one more tap before playing, and one or two answers made empty-looking bars.
+
+**Previous (verbatim):**
+- `| Plan version | v2.02 |`
+- `| Based on | \`requirement.md\` v1.50 |`
+- `| Current module | M16 Deploy & Playtest (next) |`
+- `| M26 | Community News Steps | BE + FE + data | | M24 | ✅ |`
+- `### M26 — Community News Steps ✅`
+- `  - [x] user has played it (2026-11-27)` (M26 DoD)
+- `  - **Done:** the operator played M26 and confirmed on 2026-11-27; next is M16.`
+
 ### 2026-11-27 — v2.02
 **Changed:** M26 Community News Steps 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M16 next.
 

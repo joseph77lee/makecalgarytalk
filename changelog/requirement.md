@@ -12,6 +12,16 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v1.51
+**Changed:** 14.1 after answering, the card shows the counts in place and closes by itself after a few seconds (a tap closes it sooner); with fewer than 3 answers a thank-you line replaces the bars. The pop-up is only shown while the player can still answer. Header version.
+
+**Why:** Playtest 2026-11-27: the first open of the day already passes the "Since yesterday" panel, and the answered card then needed one more tap (✕) before playing; with only one or two answers the bars say nothing ("굳이 이걸 보여줘야 하나 싶어서"). Operator chose option A ("A안으로 진행해줘"): keep the result, drop the extra step.
+
+**Previous:**
+- Header (verbatim): `| Document version | v1.50 |`
+- 14.1 (verbatim): `- **Shown** as a small card the first time the player opens the game that Calgary day (after the "What changed since yesterday" panel when that is open); it can be closed and is also in Community News`
+- 14.1 (verbatim): `- **After answering**: the community's counts so far (e.g. "Mahogany so far (5 neighbours)", a bar per choice); **counts only, never who chose what**; the final result goes into the next day's newspaper (11)`
+
 ### 2026-11-27 — v1.50
 **Changed:** 7.6b a new site **crossing**: a bridge place laid across the water with both ends on dry land. 7.8 water never holds buildings **except bridge places**, with the riverbank as the fallback when no water fits. Header version.
 

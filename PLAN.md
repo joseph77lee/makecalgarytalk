@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v2.02 |
+| Plan version | v2.04 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
-| Based on | `requirement.md` v1.50 |
+| Based on | `requirement.md` v1.51 |
 | Current module | M16 Deploy & Playtest (next) |
 
 ---
@@ -678,16 +678,17 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] today's question data: `supabase/data/daily_questions.csv` (from the reviewed operator draft) seeded by a script into the module's schema; a data test for the writing rules (2–4 choices, distinct emoji, ≤ 32 characters, known seasons/situations/categories) — `supabase/data/daily_questions_seed.py` → `20261127140100_questions_seed.sql` (202 questions; the script refuses rule breaks), data checks in `questions_rules.test.sql`
   - [x] today's question rules: one question per Calgary day for the whole city, deterministic (season by month, weekday/weekend, not shown in the last 60 days, not yesterday's category), an answer RPC (residents of the community they play in, verified or verifying; one per player per Calgary day; idempotent; final), community counts on read (no who-chose-what anywhere) — new `questions` module (`20261127140000_questions.sql`): picked on the first read of the day and stored in `questions.days` (same day → same question), short pools relax the 60 days first; `public.questions_today` / `questions_answer`
   - [x] today's question card on the first open of the day (after the changes panel), counts after answering, visitors read-only; the question and yesterday's result in Community News — new frontend module `daily-question` (`QuestionPopUp` after the changes panel and the welcome card, only while I can still answer; `NewsQuestion` in the newspaper with yesterday's line); the newspaper's `question` comes from `20261127140200_news_question.sql`
+  - [x] 🔁 answered card closes by itself (requirement v1.51 §14.1): counts in place, closes after a few seconds or on a tap; fewer than 3 answers show a thank-you line instead of bars — `questionText.ts` `showBars` (3+), `autoCloseMs` (3 s after the counts are back), `QuestionPopUp` timer and tap-to-close; checked on a phone-sized screen (1 answer: thank-you line; 3 answers: bars; closed by itself after 3 s; a tap closed it)
 - **Out of scope:** situations other than weekday/weekend (game days, Stampede week), city-wide comparisons, an operator screen for questions, free-text replies
 - **Definition of Done**
   - [x] DB tests: Calgary day boundary for the question and the one-answer rule, season edges (Mar 31/Apr 1, May 31/Jun 1, Aug 31/Sep 1, Oct 31/Nov 1), weekday/weekend, no repeat within 60 days and never yesterday's category (including a short pool), same question for every community, step 3 at exactly 14 active days (13 is not enough), active days kept after a move, question-only days not counted, visitors and other communities' residents cannot answer, counts never expose who answered — `questions_rules.test.sql` (48), `posts_rules.test.sql` steps, `news_rules.test.sql` board and question result; "kept after a move" is covered by counting actions in every community (a player's actions in Auburn Bay count after joining Mahogany), not by a full residency move
   - [x] screen check on desktop and a phone (card, answered state, newspaper result, write box with the next step) — local server as dev users: desktop (card after the changes panel, answered with counts, newspaper with yesterday's result and the write box) and phone 390×844 (bottom card, answered); visitors' read-only card only in tests
-  - [x] user has played it (2026-11-27)
+  - [x] user has played it (2026-11-27, and again after the v1.51 fix)
 - **Handoff (2026-11-27)**
   - **Decisions:** the day's question is picked on the first read and stored (`questions.days`), because the 60-day rule needs the earlier picks; the same day always gives the same question. The pop-up shows only to players who can still answer in their own community; visitors and players without a community read it in Community News. Closing the card without answering is remembered on the device for that Calgary day (`mct.question.closedDay`, the day comes from the server); an answered card is not remembered, so another player on the same device still gets theirs. Active days count today's action too.
   - **Not tested:** a full residency move with active days (covered by the any-community count), visitors' read-only card on screen, real phone touch, emoji from Unicode 12 or older (not checked automatically).
   - **Gotchas:** after editing `supabase/data/daily_questions.csv` rerun `python3 -I supabase/data/daily_questions_seed.py supabase/migrations/20261127140100_questions_seed.sql` (pre-launch; after launch write a new seed migration); questions already shown are never deleted.
-  - **Done:** the operator played M26 and confirmed on 2026-11-27; next is M16.
+  - **Done:** the operator played M26 and confirmed on 2026-11-27. **Reopened** the same day for v1.51 (answered card closes by itself; thank-you line below 3 answers) on `fix/m26-question-card`; the operator checked the fix the same day; next is M16.
 
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.

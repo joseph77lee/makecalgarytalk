@@ -59,3 +59,19 @@ export function shouldPopUp(today: TodayQuestion | null, closedDay: string | nul
 export function answeredLocally(today: TodayQuestion, choice: number): TodayQuestion {
   return { ...today, can_answer: false, reason: 'answered', answered: choice };
 }
+
+/** Below this many answers the bars say nothing yet (requirement.md v1.51 §14.1). */
+export const MIN_ANSWERS_FOR_BARS = 3;
+
+export const THANKS_TEXT = 'Thanks! See what neighbours chose in tomorrow\'s paper.';
+
+/** Whether the counts are shown as bars (enough answers in the community). */
+export function showBars(counts: Counts | null): counts is Counts {
+  return !!counts && counts.total >= MIN_ANSWERS_FOR_BARS;
+}
+
+/** How long the answered pop-up stays before closing by itself; null while it must stay (not answered, or counts not back yet). */
+export const AUTO_CLOSE_MS = 3000;
+export function autoCloseMs(today: TodayQuestion | null): number | null {
+  return today && today.answered !== null && today.counts !== null ? AUTO_CLOSE_MS : null;
+}
