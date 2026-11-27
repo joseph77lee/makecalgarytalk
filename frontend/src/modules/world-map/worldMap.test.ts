@@ -48,7 +48,7 @@ describe('map geometry', () => {
     expect(iconPlan(0, 4e6, 50, 1)).toEqual(['cloud']);
     expect(iconPlan(1, 4e6, 1, 1)).toEqual(['sign']);
     expect(iconPlan(3, 4e6, 2, 1)).toEqual(['hall', 'house']);
-    expect(iconPlan(4, 4e6, 3, 1).slice(0, 2)).toEqual(['park', 'hall']);
+    expect(iconPlan(4, 4e6, 3, 1)).toEqual(['landmark', 'hall', 'park']); // level 4: the community's landmark first (§9)
     expect(iconPlan(2, 4e6, 1, 0)[0]).toBe('playground');
     expect(iconPlan(2, 4e6, 1, 1)[0]).toBe('rink');
     expect(iconPlan(1, 4e6, 100, 1).length).toBeLessThan(iconPlan(4, 4e6, 100, 1).length);
@@ -82,6 +82,10 @@ describe('map texts and data', () => {
   it('status list checks', () => {
     expect(isStatusList([{ code: 'MAH', id: 'x', level: 2, vitality: 60, residents: 4 }])).toBe(true);
     expect(isStatusList([{ code: 'MAH', id: 'x', level: 7, vitality: null, residents: 4 }])).toBe(false);
+    // the level-4 landmark key (§9): a string, null, or missing from an older server
+    expect(isStatusList([{ code: 'BEL', id: 'x', level: 4, vitality: 80, residents: 60, landmark: 'place.lake.lighthouse' }])).toBe(true);
+    expect(isStatusList([{ code: 'BEL', id: 'x', level: 4, vitality: 80, residents: 60, landmark: null }])).toBe(true);
+    expect(isStatusList([{ code: 'BEL', id: 'x', level: 4, vitality: 80, residents: 60, landmark: 7 }])).toBe(false);
     expect(isStatusList(null)).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
--- Module: gamecore — World Map levels from the build map (requirement.md v1.48 §7.4, §9).
+-- Module: gamecore — World Map levels from the build map and the level-4 landmark (requirement.md v1.49 §7.4, §9).
 begin;
-select plan(9);
+select plan(10);
 
 delete from gamecore.community_snapshots;
 delete from gamecore.place_lots;  -- seeded from the island plans; each test adds what it needs
@@ -8,21 +8,29 @@ delete from gamecore.actions;
 delete from gamecore.projects;
 
 create function pg_temp.c(code text) returns uuid language sql as $$ select gamecore.community_id_by_code('calgary', code) $$;
-create function pg_temp.snap(code text, level integer, vitality integer default 50, residents integer default 3) returns void language sql as $$
+create function pg_temp.snap(code text, level integer, vitality integer default 50, residents integer default 3, buildings jsonb default '[]') returns void language sql as $$
   insert into gamecore.community_snapshots (community_id, calgary_day, built_at, state)
   values (pg_temp.c(code), date '2026-12-01', now(), jsonb_build_object(
-    'community', jsonb_build_object('level', level, 'vitality', vitality, 'residents', residents), 'buildings', '[]'::jsonb))
+    'community', jsonb_build_object('level', level, 'vitality', vitality, 'residents', residents), 'buildings', buildings))
+$$;
+-- persona steps 1 and 4 as the snapshot lists them
+create function pg_temp.persona(landmark text) returns jsonb language sql as $$
+  select jsonb_build_array(
+    jsonb_build_object('key', 'place.lake.sailing-dock', 'track', 'persona', 'step', 1),
+    jsonb_build_object('key', landmark, 'track', 'persona', 'step', 4))
 $$;
 create function pg_temp.level(code text) returns integer language sql as $$
   select (r ->> 'level')::integer from jsonb_array_elements(gamecore.world_map()) r where r ->> 'code' = code
 $$;
 
-select pg_temp.snap('MAH', 2);
-select pg_temp.snap('BEL', 4, 80, 60);
+select pg_temp.snap('MAH', 2, 50, 3, pg_temp.persona('landmark.mah'));
+select pg_temp.snap('BEL', 4, 80, 60, pg_temp.persona('place.lake.lighthouse'));
 select is(pg_temp.level('BOW'), 0, 'no snapshot yet: unsettled');
 select is(pg_temp.level('MAH'), 2, 'the map shows the level stored in the snapshot');
 select is((select r from jsonb_array_elements(gamecore.world_map()) r where r ->> 'code' = 'BEL') - 'id',
-  '{"code": "BEL", "level": 4, "vitality": 80, "residents": 60}'::jsonb, 'level, Vitality and residents');
+  '{"code": "BEL", "level": 4, "vitality": 80, "residents": 60, "landmark": "place.lake.lighthouse"}'::jsonb, 'level, Vitality, residents and the level-4 landmark');
+select is((select r ->> 'landmark' from jsonb_array_elements(gamecore.world_map()) r where r ->> 'code' = 'MAH'), null,
+  'below level 4 no landmark is named, even when its step is listed');
 
 -- The level itself (§7.4): built the day after its goal was reached (one action each here).
 insert into auth.users (id, email) values ('00000000-0000-4000-8000-0000000000a1', 'lv1@test.local'), ('00000000-0000-4000-8000-0000000000a2', 'lv2@test.local');

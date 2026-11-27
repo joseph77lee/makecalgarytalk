@@ -110,6 +110,18 @@ export function drawIcon(ctx: CanvasRenderingContext2D, kind: IconKind, x: numbe
       }
       break;
     }
+    case 'landmark': {
+      // stand-in while the community's own landmark picture loads: a gold tower with a star
+      ctx.fillStyle = '#f2c14e';
+      ctx.fillRect(-s * 0.22, -s * 0.9, s * 0.44, s * 1.3);
+      ctx.fillStyle = '#c98f1c';
+      ctx.fillRect(-s * 0.4, s * 0.25, s * 0.8, s * 0.15);
+      ctx.fillStyle = '#fff4c2';
+      ctx.font = `${Math.round(s * 0.5)}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('★', 0, -s * 0.35);
+      break;
+    }
     case 'cloud': {
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.strokeStyle = 'rgba(148,163,184,0.6)';

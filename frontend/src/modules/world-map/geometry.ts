@@ -135,7 +135,7 @@ export function iconSpots(c: MapCommunity, step = 140, margin = 70): [number, nu
   return [c.label, ...spots.map((s) => s.p)];
 }
 
-export type IconKind = 'house' | 'sign' | 'playground' | 'rink' | 'hall' | 'park' | 'cloud';
+export type IconKind = 'house' | 'sign' | 'playground' | 'rink' | 'hall' | 'park' | 'landmark' | 'cloud';
 
 /** Icons per km² at full detail by level (requirement §9: denser as the community develops). */
 const DENSITY = [0, 2, 4, 6, 9];
@@ -147,7 +147,7 @@ const DENSITY = [0, 2, 4, 6, 9];
 export function iconPlan(level: number, areaM2: number, room: number, codeSeed: number): IconKind[] {
   if (level <= 0) return ['cloud'];
   const main: IconKind[] =
-    level >= 4 ? ['park', 'hall'] : level === 3 ? ['hall'] : level === 2 ? [codeSeed % 2 === 0 ? 'playground' : 'rink', 'sign'] : ['sign'];
+    level >= 4 ? ['landmark', 'hall', 'park'] : level === 3 ? ['hall'] : level === 2 ? [codeSeed % 2 === 0 ? 'playground' : 'rink', 'sign'] : ['sign'];
   const full = Math.max(main.length + 1, Math.round(DENSITY[Math.min(level, 4)]! * (areaM2 / 1e6)) + main.length);
   const n = Math.max(1, Math.min(full, room));
   return Array.from({ length: n }, (_, i) => (i < main.length ? main[i]! : 'house'));

@@ -34,6 +34,20 @@ const NAME_MIN_PX2 = 1200;
 /** Map scale (px per metre) from which CTrain station names show. */
 const STATION_NAME_SCALE = 0.09;
 
+const landmarkPictures = new Map<string, HTMLImageElement>();
+
+/** The landmark's static picture once loaded (null until then; `onLoad` redraws the map). */
+function landmarkPicture(key: string, onLoad: () => void): HTMLImageElement | null {
+  let img = landmarkPictures.get(key);
+  if (!img) {
+    img = new Image();
+    img.onload = onLoad;
+    img.src = `/places/${encodeURIComponent(key)}.png`;
+    landmarkPictures.set(key, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
 /** Colour tone by development level (requirement.md v1.41 §9): richer green and lit windows as it grows. */
 function levelColours(level: number): { fill: string; edge: string; c: MoodColours } {
   const p = MOOD_PALETTES[level >= 2 ? 'lively' : 'normal'];
@@ -200,7 +214,15 @@ export function WorldMap({ myCommunityId, onEnter, onInvite, onClose, onShareLas
           const spot = p.spots[i];
           if (!spot) return;
           if (kind === 'cloud') ctx.globalAlpha = 0.7;
-          drawIcon(ctx, kind, spot[0] * scale + ox, spot[1] * scale + oy, icon, colours, p.seed + i);
+          const x = spot[0] * scale + ox, y = spot[1] * scale + oy;
+          // level 4: the community's own landmark (its pre-rendered build map picture, §9)
+          const picture = kind === 'landmark' && st?.landmark ? landmarkPicture(st.landmark, () => redraw.current()) : null;
+          if (picture) {
+            const size = icon * 2.4;
+            ctx.drawImage(picture, x - size / 2, y - size * 0.7, size, size);
+            return;
+          }
+          drawIcon(ctx, kind, x, y, icon, colours, p.seed + i);
           ctx.globalAlpha = 1;
         });
       }
