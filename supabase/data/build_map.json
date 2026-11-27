@@ -732,7 +732,7 @@
         3,
         1
       ],
-      "site": "riverbank",
+      "site": "crossing",
       "persona": "river"
     },
     {
@@ -841,7 +841,7 @@
         5,
         1
       ],
-      "site": "riverbank",
+      "site": "crossing",
       "community": "CRE",
       "landmarkOrder": 1
     },
@@ -854,7 +854,7 @@
         5,
         1
       ],
-      "site": "riverbank",
+      "site": "crossing",
       "community": "EAU",
       "landmarkOrder": 1
     },
@@ -1075,7 +1075,7 @@
         5,
         1
       ],
-      "site": "riverbank",
+      "site": "crossing",
       "community": "POI",
       "landmarkOrder": 1
     },

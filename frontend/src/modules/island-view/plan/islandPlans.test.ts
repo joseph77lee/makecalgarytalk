@@ -97,6 +97,15 @@ describe('stored island plans', () => {
         expect(N4(r).some((n) => owner.get(tileKey(n)) === 'plaza'), 'entrance next to the plaza').toBe(true);
         continue;
       }
+      if (st.site === 'crossing' && lotTiles(r).some((t) => waterKeys.has(tileKey(t)))) {
+        // a bridge across the water (requirement v1.50 §7.6b, §7.8): a straight line, both ends on
+        // free dry land, water under the middle; the water stays water, only the dry tiles are claimed
+        const tiles = lotTiles(r);
+        expect(Math.min(r.w, r.d), `${st.key} is one tile wide`).toBe(1);
+        expect(waterKeys.has(tileKey(tiles[0]!)) || waterKeys.has(tileKey(tiles[tiles.length - 1]!)), `${st.key} lands on dry land at both ends`).toBe(false);
+        tiles.filter((t) => !waterKeys.has(tileKey(t))).forEach((t) => claim(t, st.key));
+        continue;
+      }
       for (const t of lotTiles(r)) claim(t, st.key);
     }
     for (const [key, spec] of Object.entries(LOT_SPECS)) {
@@ -186,6 +195,18 @@ describe('places by meaning (requirement v1.48 §7.6b, §7.8)', () => {
     const water = new Set(p.water.map(tileKey));
     return lotTiles(p.lots[key]).some((t) => N4(t).some((n) => water.has(tileKey(n))));
   };
+
+  it('bridge places cross the water where an island has water narrow enough (requirement v1.50 §7.8)', () => {
+    const crossing = plans.flatMap((p) =>
+      communitySteps(p.code, p.persona)
+        .filter((st) => st.site === 'crossing')
+        .map((st) => ({ code: p.code, key: st.key, wet: lotTiles(p.lots[st.key]!).some((t) => p.water.some((w) => w.x === t.x && w.z === t.z)) })),
+    );
+    expect(crossing.length).toBeGreaterThan(20);
+    // the landmark bridges of Eau Claire and Point McKay span their water; Crescent Heights' water is too wide (riverbank)
+    expect(crossing.filter((c) => c.key === 'landmark.eau' || c.key === 'landmark.poi').every((c) => c.wet)).toBe(true);
+    expect(crossing.filter((c) => c.wet).length).toBeGreaterThanOrEqual(10);
+  });
 
   it('water places stand on the shore (all but a few, listed by the generator)', () => {
     const wet = plans.flatMap((p) => communitySteps(p.code, p.persona).filter((st) => WATER_SITES.includes(st.site)).map((st) => touchesWater(p, st.key)));

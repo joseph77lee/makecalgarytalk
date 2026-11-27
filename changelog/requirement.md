@@ -12,6 +12,16 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v1.50
+**Changed:** 7.6b a new site **crossing**: a bridge place laid across the water with both ends on dry land. 7.8 water never holds buildings **except bridge places**, with the riverbank as the fallback when no water fits. Header version.
+
+**Why:** The bridge landmarks (Crescent Heights, Eau Claire, Point McKay) and the river persona's footbridge stood on the riverbank beside the water instead of crossing it. Operator decision 2026-11-27: "A안으로 다리 예외 넣고 다시 만들어줘" (add the bridge exception and regenerate the island plans before launch).
+
+**Previous:**
+- Header (verbatim): `| Document version | v1.49 |`, `| Last updated | 2026-11-26 |`
+- 7.6b (verbatim): `and a **site** where it belongs (shore, riverbank, hilltop, slope, street, park, plaza)`
+- 7.8 (verbatim): `Water is not walkable and never holds buildings; if water would cut the land apart, a small bridge path keeps every part reachable.`
+
 ### 2026-11-26 — v1.49
 **Changed:** 11 the newspaper opens **in full** from the Welcome sign (the community board with events and roadmap no longer waits for the Warming hut); the Community hall takes it over once built; the newspaper carries yesterday's today's-question result. 14 posting opens in **personal steps** (read and Thanks → answer today's question → write Free talk, Lost & found, Safety as a Verified Resident → Events and Local deals after 14 active days), rewards for posting stay social. New **14.1 Today's question**: one multiple-choice question a day for the whole city, from a question list kept as data (`supabase/data/daily_questions.csv`), counts only. 5.2, 7.6, 22.1, 22.6 (6g), 23 follow. Header version.
 

@@ -12,6 +12,16 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v1.98
+**Changed:** M24 place library item: the bridge crossing rule is done (requirement v1.50: site `crossing`, all 223 plans regenerated). Header: plan version, `Based on` v1.50.
+
+**Why:** Requirement v1.50 (operator: "A안으로 다리 예외 넣고 다시 만들어줘").
+
+**Previous (verbatim):**
+- `| Plan version | v1.97 |`
+- `| Based on | \`requirement.md\` v1.49 |`
+- M24 place library item text ending `rivers/bridges get a crossing-site rule — **open:** needs a requirement change (§7.8: water never holds buildings) and all plans regenerated; asked the operator),`
+
 ### 2026-11-27 — v1.97
 **Changed:** M24 Community Identity 🟦 → 🟨 Ready for playtest (header, table row, heading). The bridge crossing rule stays open for an operator decision.
 

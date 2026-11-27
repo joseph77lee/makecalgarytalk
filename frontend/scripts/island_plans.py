@@ -44,6 +44,8 @@ PERSONAS = {r["code"]: r["persona"] for r in csv.DictReader(open(DATA / "communi
 LAND_MIN = [t["minResidents"] for t in BUILD["landTiers"]]
 TRACK_ORDER = {"root": 0, "community": 1, "persona": 2, "nature": 3}
 WATER_SITES = ("shore", "riverbank")
+# a bridge place laid across the water, both ends on dry land (requirement v1.50 7.6b, 7.8)
+CROSSING = "crossing"
 # Lake and river islands with less water than this get a small lake (POND_W x POND_D) at the edge.
 MIN_WATER = 12
 POND_SIZES = [(8, 4), (6, 4), (6, 3), (5, 3), (4, 3)]
@@ -573,7 +575,7 @@ def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8, report=Non
     runs, rail, station_specs, rail_ends = ctrain_for(cells, origin, scale, lonlat_rings)
     steps = community_steps(code)
     pond = set()
-    if any(st["site"] in WATER_SITES for st in steps) and len(water) < MIN_WATER:
+    if any(st["site"] in WATER_SITES + (CROSSING,) for st in steps) and len(water) < MIN_WATER:
         (qx, qz), q_plaza, _, q_stage = stages_for(cells, water)
         toward = None
         if water_rings:
@@ -693,6 +695,49 @@ def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8, report=Non
             return [(x + i, z - 1) for i in range(w)]
         return [(x - 1, z + j) for j in range(d)]
 
+    crossing_used = set()
+
+    def place_crossing(key, size, land_stage):
+        """A bridge across the water: a straight lot whose two end tiles are free dry land and whose
+        middle crosses at least one water tile (never a path bridge or the CTrain); water tiles under
+        it stay water. Prefers lots that span more water, near the island's middle."""
+        n = max(size)
+        cands = []
+        for (x, z) in cells:
+            for along_x in (True, False):
+                tiles = [(x + i, z) for i in range(n)] if along_x else [(x, z + i) for i in range(n)]
+                if not all(t in cells and stage[t] <= land_stage for t in tiles):
+                    continue
+                ends, mid = [tiles[0], tiles[-1]], tiles[1:-1]
+                if any(e in water or e in used for e in ends):
+                    continue
+                wet_mid = [m for m in mid if m in water]
+                if not wet_mid or any(m in rail or m in crossing_used for m in wet_mid):
+                    continue
+                if any(m not in water and m in used for m in mid):
+                    continue
+                cx, cz = x + (n / 2 if along_x else 0.5) - pc[0], z + (0.5 if along_x else n / 2) - pc[1]
+                early = land_stage - min(stage[t] for t in tiles)
+                score = -4 * len(wet_mid) + 0.3 * math.hypot(cx, cz) + early * 12
+                cands.append((score, x, z, along_x, tiles))
+        cands.sort(key=lambda c: (c[0], c[1], c[2]))
+        for _, x, z, along_x, tiles in cands[:400]:
+            dry = [t for t in tiles if t not in water]
+            real = max(stage[t] for t in tiles)
+            if walk.full_ok(dry, dry, real):
+                walk.blocked |= set(dry)
+                walk.lots.append((dry, real))
+                used.update(tiles)
+                crossing_used.update(tiles)
+                # spans along x: canonical size, front +z; along z: turned (an odd facing swaps the footprint)
+                lots[key] = [x, z, n, 1, 0] if along_x else [x, z, 1, n, 1]
+                lot_stage[key] = real
+                lot_cells.update(dry)
+                if land_stage > 0:
+                    later_angles.append(math.atan2(z + (0.5 if along_x else n / 2) - pc[1], x + (n / 2 if along_x else 0.5) - pc[0]))
+                return True
+        return False
+
     def place(key, size, land_stage, kind, site="park", strict=True):
         w0, d0 = size
         options = [(w0, d0, (0, 2))] if w0 == d0 else [(w0, d0, (0, 2)), (d0, w0, (1, 3))]
@@ -805,6 +850,13 @@ def make_plan(code, name, lonlat_rings, water_rings, spread_weight=8, report=Non
                     add_houses(k, need, zoned=False, beside_lots=True)
             early_houses_done = True
         kind = "building"
+        if st["site"] == CROSSING:
+            if water and any(place_crossing(st["key"], st["tiles"], k) for k in range(want, len(TIERS))):
+                continue
+            # no water a bridge can span: it stands on the riverbank instead (the report lists these)
+            if report is not None:
+                report.append(f"{code}: {st['key']} on the riverbank, no water to cross")
+            st = {**st, "site": "riverbank"}
         if not any(place(st["key"], st["tiles"], k, kind, st["site"]) for k in range(want, len(TIERS))):
             # no shore left: the land nearest the water (the report lists these)
             if not any(place(st["key"], st["tiles"], k, kind, st["site"], strict=False) for k in range(want, len(TIERS))):

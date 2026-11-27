@@ -32,7 +32,7 @@ export interface PlaceModel {
   /** Footprint in tiles (x, z); the model stays inside it. */
   tiles: [number, number];
   /** Where the place belongs (site placement by meaning, handoff proposal E). */
-  site: 'shore' | 'riverbank' | 'hilltop' | 'slope' | 'street' | 'park' | 'plaza';
+  site: 'shore' | 'riverbank' | 'crossing' | 'hilltop' | 'slope' | 'street' | 'park' | 'plaza';
   build: (seed: number) => BoxPart[];
 }
 
@@ -71,7 +71,7 @@ const LIBRARY = {
   // river
   'place.river.pathway': { label: 'Riverside pathway', persona: 'river', step: 1, tiles: [2, 1], site: 'riverbank', build: riversidePathway },
   'place.river.canoe-launch': { label: 'Canoe launch', persona: 'river', step: 2, tiles: [2, 2], site: 'riverbank', build: canoeLaunch },
-  'place.river.footbridge': { label: 'Arched footbridge', persona: 'river', step: 3, tiles: [3, 1], site: 'riverbank', build: archFootbridge },
+  'place.river.footbridge': { label: 'Arched footbridge', persona: 'river', step: 3, tiles: [3, 1], site: 'crossing', build: archFootbridge },
   'place.river.teahouse': { label: 'Riverside teahouse', persona: 'river', step: 4, tiles: [3, 2], site: 'riverbank', build: lot(riversideTeahouse, 3, 2, { path: false }) },
   // hill view
   'place.hill-view.trailhead': { label: 'Trailhead', persona: 'hill_view', step: 1, tiles: [1, 1], site: 'slope', build: trailhead },

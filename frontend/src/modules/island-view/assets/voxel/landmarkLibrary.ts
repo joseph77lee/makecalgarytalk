@@ -31,8 +31,8 @@ const centred = (build: (seed: number) => BoxPart[]) => (seed: number) => {
 
 const LIBRARY = {
   'landmark.sig': { code: 'SIG', label: 'Stone numbers on the hillside', persona: 'hill_view', tiles: [4, 3], site: 'slope', build: signalHillStones },
-  'landmark.cre': { code: 'CRE', label: 'Lion arch bridge', persona: 'hill_view', tiles: [5, 1], site: 'riverbank', build: lionArchBridge },
-  'landmark.eau': { code: 'EAU', label: 'Red spiral footbridge', persona: 'downtown', tiles: [5, 1], site: 'riverbank', build: redSpiralBridge },
+  'landmark.cre': { code: 'CRE', label: 'Lion arch bridge', persona: 'hill_view', tiles: [5, 1], site: 'crossing', build: lionArchBridge },
+  'landmark.eau': { code: 'EAU', label: 'Red spiral footbridge', persona: 'downtown', tiles: [5, 1], site: 'crossing', build: redSpiralBridge },
   'landmark.wsp': { code: 'WSP', label: 'Ski jump tower', persona: 'hill_view', tiles: [3, 5], site: 'slope', build: skiJumpTower },
   'landmark.dne': { code: 'DNE', label: 'Curved library', persona: 'downtown', tiles: [4, 3], site: 'plaza', build: curvedLibrary },
   'landmark.chn': { code: 'CHN', label: 'Domed cultural centre', persona: 'food_street', tiles: [3, 3], site: 'plaza', build: domedCulturalCentre },
@@ -50,7 +50,7 @@ const LIBRARY = {
   'landmark.mck': { code: 'MCK', label: 'Island in the lake', persona: 'lake', tiles: [4, 4], site: 'shore', build: islandInTheLake },
   'landmark.byv': { code: 'BYV', label: 'Small-boat marina', persona: 'lake', tiles: [4, 3], site: 'shore', build: smallBoatMarina },
   'landmark.bow': { code: 'BOW', label: 'Lagoon teahouse', persona: 'river', tiles: [4, 3], site: 'riverbank', build: lagoonTeahouse },
-  'landmark.poi': { code: 'POI', label: 'Footbridge with ring pylons', persona: 'river', tiles: [5, 1], site: 'riverbank', build: ringPylonBridge },
+  'landmark.poi': { code: 'POI', label: 'Footbridge with ring pylons', persona: 'river', tiles: [5, 1], site: 'crossing', build: ringPylonBridge },
   // third batch
   'landmark.ram': { code: 'RAM', label: 'Hilltop lookout over the city', persona: 'historic_main_street', tiles: [4, 3], site: 'slope', build: hilltopLookout },
   'landmark.umr': { code: 'UMR', label: 'Castle-style house', persona: 'hill_view', tiles: [3, 3], site: 'street', build: castleHouse },

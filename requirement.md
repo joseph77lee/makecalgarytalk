@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.49 |
+| Document version | v1.50 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-26 |
+| Last updated | 2026-11-27 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -252,7 +252,7 @@ The Gateway arch and Lit hockey rink models stay in the library for later steps.
 
 ### 7.6b Extensible places
 - The build map (tracks, steps, conditions, multipliers, footprints, sites) and **each community's persona and landmark list** (7.9; source `supabase/data/community_personas.csv`) are **data in the database**; adding a place or a landmark = a data row + a model, no rule code changes
-- Every place has a **footprint in tiles fitting its real size** (one tile ≈ a house lot, 12–15 m, slightly compressed; big grounds take their real share, buildings come with their yard, forecourt and trees) and a **site** where it belongs (shore, riverbank, hilltop, slope, street, park, plaza)
+- Every place has a **footprint in tiles fitting its real size** (one tile ≈ a house lot, 12–15 m, slightly compressed; big grounds take their real share, buildings come with their yard, forecourt and trees) and a **site** where it belongs (shore, riverbank, crossing, hilltop, slope, street, park, plaza); a **crossing** place is a bridge (a footbridge, a landmark bridge) laid across the water with both ends on dry land (7.8)
 - A client that does not know a place yet draws a **generic placeholder model**, never an error
 - Every island keeps **spare lots for future places** and separate **Main Street lots** (22.4)
 
@@ -280,7 +280,7 @@ The Gateway arch and Lit hockey rink models stay in the library for later steps.
 - **Positions never change.** Each community's lot plan (place lots, residential zones and house lots, spare lots, Main Street lots, paths) is generated **once** and stored; later algorithm changes apply only to new communities or newly added lots. **One exception before launch:** every plan is regenerated once for the build map (7.6) and the new house rule (7.2), since no player has a house yet (operator decision 2026-11-25).
 - **Places are laid out by meaning**, not by track: community places around the plaza (a cosy village centre), persona places beside their nature (lake shore, riverbank, hilltop, main street), nature and decoration along the paths between them, residential zones spread out. Each land stage opens a new **zone** with a mix of tracks, so every growth brings new spots in different directions. The plan reserves lots so that each step's resident condition (7.6) matches the land risen at that count.
 - **Terrain** (hills, escarpments, ravines as levels of the island floor) is a later step (22.6); MVP islands are flat apart from real water.
-- **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings; if water would cut the land apart, a small bridge path keeps every part reachable. Land amounts count dry land only; where water sits next to the plaza, the first two stages get a little more dry land (up to 112 / 176 tiles) so the first buildings and Main Street fit.
+- **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings, **except bridge places** (site crossing, 7.6b), which span the water with both ends on dry land (when an island has no water a bridge can span, it stands on the riverbank instead); if water would cut the land apart, a small bridge path keeps every part reachable. Land amounts count dry land only; where water sits next to the plaza, the first two stages get a little more dry land (up to 112 / 176 tiles) so the first buildings and Main Street fit.
 - **Map orientation:** every island opens with the same diagonal camera angle, keeping the World Map's orientation (east to the lower right, north to the upper right), so a community looks like its outline on the map (9). Players can then turn it all the way round (10.1); a small compass shows where north is, turns with the view and brings the default angle back when tapped. Places face their site (the water, the street, the plaza), not the camera.
 - UI shows the next growth goal (e.g. "2 more neighbours until the island grows").
 

@@ -145,6 +145,7 @@ export function laneTitle(lane: Lane, persona: string | null): string {
 export const SITE_TEXT: Record<string, string> = {
   shore: 'by the lake shore',
   riverbank: 'on the riverbank',
+  crossing: 'across the water',
   hilltop: 'on the hilltop',
   slope: 'on the slope',
   street: 'on the street',
