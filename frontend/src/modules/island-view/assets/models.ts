@@ -9,6 +9,10 @@ import { houseParts } from './voxel/houses';
 import { ACCENTS, type MoodPalette } from '../mood';
 import { asGhost, box, translate, type BoxPart } from './boxes';
 import { BUILDING_VOXELS, placeholderModel } from './voxel/buildings';
+import { LANDMARK_LIBRARY, type LandmarkKey } from './voxel/landmarkLibrary';
+import { PLACE_LIBRARY, type PlaceKey } from './voxel/placeLibrary';
+import { finishAllSides } from './allSides';
+import { decorationGarden } from './voxel/placeParts';
 import { FEATURE_VOXELS, catenaryPole, crossingSign, railEndSignParts, stationPlatformParts } from './voxel/features';
 import { shade, vb } from './voxel/voxel';
 import { bench as benchModel, car as carModel, flowerBed as flowerBedModel, lampPost, leafyTree, mailbox as mailboxModel, spruce } from './voxel/samples';
@@ -41,7 +45,7 @@ function levelMarkers(level: number, w: number, d: number): BoxPart[] {
 
 /** A resident's house (Art Pass): its type, colours and facing come from the layout (requirement.md §7.2). */
 export function house(item: ObjectOf<'house'>): BoxPart[] {
-  return houseParts(item.houseType, item.colorIndex, item.facing, item.activeToday, item.village === true);
+  return houseParts(item.houseType, item.colorIndex, item.facing);
 }
 
 /** The M1 box house (kept for comparison in the asset gallery). */
@@ -256,23 +260,27 @@ function upgradeScaffold(w: number, d: number): BoxPart[] {
  * Models are written for the lot's canonical size; a turned lot (e.g. 2×3 instead of 3×2) comes
  * with an odd facing from the layout, so the turn also fits the model to the lot.
  */
-function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx): BoxPart[] {
+function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx, persona: string | null = null): BoxPart[] {
+  // Persona places and landmarks (requirement v1.48 §7.6): written for their own footprint, front +z.
+  const library = PLACE_LIBRARY[key as PlaceKey] ?? LANDMARK_LIBRARY[key as LandmarkKey];
+  if (library) return vturn(finishAllSides(library.build(variant)), facing);
+  if (key.startsWith('decoration-')) return vturn(decorationGarden(variant), facing);
   const make = BUILDING_VOXELS[key];
   if (!make) return placeholderModel({ w, d, level, variant }, ctx);
   const turned = facing % 2 === 1;
-  return vturn(make({ w: turned ? d : w, d: turned ? w : d, level, variant }, ctx), facing);
+  return vturn(finishAllSides(make({ w: turned ? d : w, d: turned ? w : d, level, variant, persona }, ctx)), facing);
 }
 
 /** A built building of the tree (placeholder for unknown keys), with upgrade markers. */
 export function building(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
-  return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
+  return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx, item.persona ?? null), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
 }
 
 // --- Signature features and CTrain (Art Pass models in voxel/features.ts) ------------------
 
 /** A signature feature on its spare lot: the community's design, facing the path. */
 export function feature(item: ObjectOf<'feature'>, ctx: BuildCtx): BoxPart[] {
-  return vturn(FEATURE_VOXELS[item.featureKey](item.variant, ctx), item.facing);
+  return vturn(finishAllSides(FEATURE_VOXELS[item.featureKey](item.variant, ctx)), item.facing);
 }
 
 const BALLAST = '#cbbfae';
@@ -368,5 +376,5 @@ const CARS: ((seed: number) => BoxPart[])[] = [(s) => carModel(s, s % 5 === 0), 
 
 /** A locked (or ready) building: its model as a translucent ghost on its lot. */
 export function silhouette(item: ObjectOf<'silhouette'>, ctx: BuildCtx): BoxPart[] {
-  return asGhost(treeModel(item.buildingKey, item.w, item.d, 1, item.variant, item.facing, ctx), SILHOUETTE);
+  return asGhost(treeModel(item.buildingKey, item.w, item.d, 1, item.variant, item.facing, ctx, item.persona ?? null), SILHOUETTE);
 }

@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.94 |
+| Plan version | v1.99 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-26 |
-| Based on | `requirement.md` v1.48 |
-| Current module | M24 Community Identity (next; then M16) |
+| Last updated | 2026-11-27 |
+| Based on | `requirement.md` v1.50 |
+| Current module | M26 Community News Steps (next), then M16 |
 
 ---
 
@@ -59,9 +59,10 @@
 | M21 | Living Community | FE + BE | | M20 | ✅ |
 | M22 | Sound | FE | | M21 | ✅ |
 | M23 | Art Pass 2 (voxel variety) | FE (R3F) | | M22 | ✅ |
-| M24 | Community Identity | BE + FE (R3F) + data | | M23 | ⬜ |
+| M24 | Community Identity | BE + FE (R3F) + data | | M23 | ✅ |
 | M25 | Terrain (decide after M24) | FE (R3F) + data | | M24 | ⬜ |
-| M16 | Deploy & Playtest | All + operator accounts | | M24 | ⬜ |
+| M26 | Community News Steps | BE + FE + data | | M24 | ⬜ |
+| M16 | Deploy & Playtest | All + operator accounts | | M26 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -82,7 +83,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M26 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -637,28 +638,51 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Dev tools kept from the Polyfork attempt:** `?meter` render readout (fps, triangles, draw calls), gallery camera pad and labels switch.
 
 
-### M24 — Community Identity ⬜
+### M24 — Community Identity ✅
 **Goal:** Each island grows into a beautiful place with its own signature places and landmarks (`requirement.md` v1.47 §7.2, §7.4, §7.6–§7.9): a build map of three tracks built in order, houses as scenery with only "My house" personal, places laid out by meaning. Built after M23, **before M16**. Design and gallery work so far: `docs/community-identity-handoff.md`, branch `spike/model-library` (place library, 31 unique landmarks), `supabase/data/community_personas.csv`.
 - **In scope**
-  - [ ] persona and landmark list per community as data (from `community_personas.csv`; landmark order 1–3, signature = 1)
-  - [ ] build map as data and server rules: the Welcome sign as root, three tracks, no place twice, persona designs for the Community hall and Neighbourhood park, conditions (previous step + residents/streak + land that fits the footprint), step multipliers, decoration steps; replaces the building tree and upgrades in place (`gamecore`/`communitystate` functions and DB tests rewritten)
-  - [ ] island plan generator v2: residential zones, place lots by site (shore, riverbank, hilltop, street, park, plaza) and footprint, a zone per land stage, lots reserved to match step conditions, places facing their site (a beach club faces the real lake); a small pond (or the nearest water) when a water place finds no shore; a report of the islands where that happens; **all 223 plans regenerated**
-  - [ ] house rule: scenery houses in zones (growing up), "My house" fixed lot seen only by its owner, shared lots when full, no names/tap/"+N", every house lit at night
-  - [ ] place library and unique landmarks moved from the spike into the island renderer by asset key (drawn water removed from the models so they sit on the real water; rivers/bridges get a crossing-site rule), **finished on all sides** (houses too), placeholders for unknown keys
-  - [ ] free camera: 360° turning, closer zoom, panning while zoomed in (kept within the island), compass reset, avatar follow that pauses while panning
-  - [ ] build map screen as a skill tree: root, three lanes, resident-count bands, node states, gold landmark nodes, node detail with "Help build it today", finished island picture, completion %; pre-rendered node pictures; read-only for visitors
-  - [ ] development level from the build map; World Map landmark icon at level 4
-  - [ ] "What changed since yesterday", share cards and invites name the new places and landmarks
+  - [x] persona and landmark list per community as data (from `community_personas.csv`; landmark order 1–3, signature = 1) — `gamecore.community_personas`, landmark steps in `supabase/data/build_map.json`
+  - [x] build map as data and server rules: the Welcome sign as root, three tracks, no place twice, persona designs for the Community hall and Neighbourhood park (pavilion/lodge/barn halls, waterside/plaza/terrace/meadow parks, the rest pick a shared design; `PERSONA_DESIGNS` in `assets/voxel/buildings.ts`), conditions (previous step + residents/streak + land that fits the footprint), step multipliers, decoration steps; replaces the building tree and upgrades in place (`gamecore`/`communitystate` functions and DB tests rewritten)
+  - [x] island plan generator v2: residential zones, place lots by site (shore, riverbank, hilltop, street, park, plaza) and footprint, a zone per land stage, lots reserved to match step conditions, places facing their site (a beach club faces the real lake); a small pond (or the nearest water) when a water place finds no shore; a report of the islands where that happens; **all 223 plans regenerated** — plan v4, `frontend/scripts/island_plans.py`; lots' land stages seeded by `supabase/data/place_lots_seed.py`; small lakes added for 12 lake/river islands (BOW BRT BYV ERL EYA MAF RID ROX SPR TUS WLD WND); 3 water places only near the water (BYV beach house, ERL teahouse, SDC lighthouse); persona first place on the first land on 203 islands (river ones wait for the riverbank)
+  - [x] house rule: scenery houses in zones (growing up), "My house" fixed lot seen only by its owner, shared lots when full, no names/tap/"+N", every house lit at night — `20261126140000_gamecore_houses_scenery.sql` (slots from `gamecore.house_capacity`, shared lots, no house list in the public state); houses grow up into townhouses/apartments from land stage 2 (`houseTypeGrown`)
+  - [x] place library and unique landmarks moved from the spike into the island renderer by asset key (drawn water removed from the models so they sit on the real water — **changed:** the five lake landmarks keep their water inside the lot (lowered to the real water level it would hide in the land tile) but it is tagged `water` and takes the island's water colour, icy with snow (`withWater`); rivers/bridges get a crossing-site rule — done with requirement v1.50: site `crossing` (Crescent Heights, Eau Claire and Point McKay landmark bridges, the river footbridge), a straight lot with both ends on free dry land over at least one water tile (`place_crossing` in `island_plans.py`); 11 of 25 bridges cross water (EAU, POI and 9 footbridges), the rest have no water narrow enough and stand on the riverbank (listed in the generator report)), **finished on all sides** (houses too; done by `assets/allSides.ts` `finishAllSides`: front and side windows and doors mirrored onto bare back walls, applied to every model, tested over all houses, buildings, places, landmarks and features), placeholders for unknown keys
+  - [x] free camera: 360° turning, closer zoom, panning while zoomed in (kept within the island), compass reset, avatar follow that pauses while panning — `scene/IslandView.tsx` CameraRig, `scene/cameraFocus.ts` (manual view, bounds, reset); real two-finger touch not tested on a device yet
+  - [x] build map screen as a skill tree: root, three lanes, resident-count bands, node states, gold landmark nodes, node detail with "Help build it today", finished island picture, completion %; pre-rendered node pictures; read-only for visitors — `community-state/BuildMap.tsx` + `skillTree.ts`; pictures printed at `?pictures` (dev server) into `public/places/<key>.png` and `public/islands/finished/<CODE>.webp`; "See it on the island" glides the camera (`requestLookAt`); "Help build it today" makes that construction glow in the action bar; `?mock` has a 🌳 button for the map (`?mock&streak=N`)
+  - [x] development level from the build map; World Map landmark icon at level 4 — level computed on the server (`gamecore.development_level`); `gamecore.world_map()` names the persona step-4 landmark at level 4 (`20261127120000_gamecore_world_map_landmark.sql`) and the map draws its pre-rendered picture (`/places/<key>.png`, a gold stand-in while it loads)
+  - [x] "What changed since yesterday", share cards and invites name the new places and landmarks — places already came by name; landmarks now say "Our landmark, the X, was built!" (first, ⭐), "is ready to build" replaces "unlocked", a gold `landmark` share card ("Our landmark is built!"), and an invite nudge up to 5 neighbours away ("…and we can build our landmark, the X!"); `isLandmarkKey` in `community-state`
 - **Out of scope:** terrain (M25), more unique landmarks beyond the 31 (data-only additions later), interiors (22.3)
 - **Definition of Done**
-  - [ ] DB tests for every condition (track order, residents, streak, land fit, at most 3 constructions, day boundary), plan generator tests (zones, sites, no overlap, every lot reachable)
-  - [ ] simulated islands at 1, 3, 10, 26, 60 residents look right for the three prototypes (Inglewood, Lake Bonavista, McKenzie Towne) and a downtown one, by day, at night and with snow, on desktop and a phone
-  - [ ] user has played it
+  - [x] DB tests for every condition (track order, residents, streak, land fit, at most 3 constructions, day boundary), plan generator tests (zones, sites, no overlap, every lot reachable) — `gamecore_rules`/`gamecore_state` (landmark 11 residents + 14-day streak added), `islandPlans.test.ts` (per island: no overlap, lots on risen land, every lot and house reachable on every stage, water places on the shore, houses in zones)
+  - [x] simulated islands at 1, 3, 10, 26, 60 residents look right for the three prototypes (Inglewood, Lake Bonavista, McKenzie Towne) and a downtown one, by day, at night and with snow, on desktop and a phone — checked with `?mock&plan=CODE&residents=N` (20 day shots, night at 60, snow at 26, phone at 10; no console errors); McKenzie Towne is MCT (the plan said McKenzie Towne; MCK is McKenzie Lake)
+  - [x] user has played it (2026-11-27)
+- **Handoff (in progress, 2026-11-26; for the next session)**
+  - **Done on `module/m24-community-identity`** (steps 1–5, all pushed, CI green up to step 4): build map data + server rules (`supabase/data/build_map.json`, `build_map_seed.py`, `20261126120000_gamecore_build_map.sql`), plan v4 for all 223 islands + place lots and house capacity seed (`frontend/scripts/island_plans.py`, `supabase/data/place_lots_seed.py`, `20261126150000_gamecore_place_lots_seed.sql`), scenery houses (`20261126140000_gamecore_houses_scenery.sql`), free camera, all-sides models (`assets/allSides.ts`). Server computes the development level (`community.level`); the World Map reads it.
+  - **Partly done:** build map item still needs the persona designs for the Community hall and Neighbourhood park (frontend models; server side done). Place library item still needs drawn water removed from the lake/river models (they draw their own water; on islands they sit next to real water) and a crossing-site rule for bridges (CRE, EAU, POI). ⭐2/⭐3 landmark slots draw the purple placeholder until models exist.
+  - **Step 6 done (skill-tree build map screen):** `community-state/BuildMap.tsx` reads `server.buildings` through the pure `skillTree.ts`; bands from each step's resident condition; persona step 4+ and every `landmark_order` are gold. Pictures are static: `?pictures` on the dev server, "Print places" (95 + 20 persona hall/park PNGs) and "Print finished islands" (223 WebPs; `&codes=A,B` for a few); rerun after model or plan changes and never edit source files while printing (HMR stops the run).
+  - **Steps 7–9 done (2026-11-27):** World Map landmark icon at level 4 (server names the landmark); changes/share card/invite texts name "our landmark" (gold `landmark` share card); persona designs for the Community hall and Neighbourhood park; landmark water takes the island water colour; snow on the models' own lawns; `?mock&residents=N` simulation; DoD screen checks.
+  - **Bridge rule done (v1.50, 2026-11-27):** all 223 plans regenerated, seeds rewritten, finished-island pictures reprinted. Known small gaps: decoration gardens stay green in snow; the "Decoration → Decoration" and "Landmark 2 → Landmark 3" next-step labels use the placeholder names; ⭐2/⭐3 landmarks still draw the purple placeholder; `pathway-lights` prints a placeholder picture.
+  - **Done:** the operator played M24 and confirmed on 2026-11-27; next is M26.
+  - **Gotchas:** after any build map or plan change rerun, in order, `python3 -I frontend/scripts/island_plans.py --force` (pre-launch only), `python3 -I supabase/data/build_map_seed.py supabase/migrations/20261126120100_gamecore_build_map_seed.sql`, `python3 -I supabase/data/place_lots_seed.py supabase/migrations/20261126150000_gamecore_place_lots_seed.sql`, then `supabase db reset`. DB tests clear `gamecore.place_lots` / `house_capacity` and set their own. Docker CLI is at `~/.docker/bin` (add it to PATH for `supabase`). The gallery build-map preview (`dev/buildMapLayout.ts`) shows the old three-start layout; delete it when the real screen exists. `?mock&plan=MAH&time=night` + Dev tools (land stage, "All built") is the quickest screen check.
+  - **Not tested yet:** real phone touch gestures, snow, the "My house" marker as a signed-in verified resident on the live server.
 
 ### M25 — Terrain ⬜ (decide after M24)
 **Goal:** Hills, escarpments and ravines as levels of the island floor (handoff §4.1; gallery concept on `spike/terrain-concept`). Whether it comes before M16 is decided after playing M24.
 - **In scope (draft):** up to 4 levels from elevation data with an operator override, cliffs facing the camera, stairs/ramps so every level is reachable (avatar and villager pathfinding with height), building lots flat on one level, CTrain on one level
 - **Definition of Done:** to be written when the module is planned
+
+### M26 — Community News Steps ⬜
+**Goal:** Writing in Community News becomes a daily reason to visit, opened step by step (`requirement.md` v1.49 §11, §14, §14.1): one newspaper with the community board from the Welcome sign, posting in personal steps (the last after 14 active days), and today's question for the whole city. Builds on M15 (posts) and M8/M9 (newspaper); built after M24, **before M16**.
+- **In scope**
+  - [ ] one newspaper: the community board (events, roadmap) is part of it from the Welcome sign; the Warming hut lock and its text removed; the Community hall takes the newspaper over once built; leftover `gateway-arch` keys removed from the news code
+  - [ ] personal posting steps on the server: a player's step (0 read/Thanks, 1 today's question, 2 Free talk/Lost & found/Safety, 3 Events/Local deals) and total active days computed on read from the action log (no counter; follows the person across moves); post kinds checked on the server; the write box shows the next step and days to go
+  - [ ] today's question data: `supabase/data/daily_questions.csv` (from the reviewed operator draft) seeded by a script into the module's schema; a data test for the writing rules (2–4 choices, distinct emoji, ≤ 32 characters, known seasons/situations/categories)
+  - [ ] today's question rules: one question per Calgary day for the whole city, deterministic (season by month, weekday/weekend, not shown in the last 60 days, not yesterday's category), an answer RPC (residents of the community they play in, verified or verifying; one per player per Calgary day; idempotent; final), community counts on read (no who-chose-what anywhere)
+  - [ ] today's question card on the first open of the day (after the changes panel), counts after answering, visitors read-only; the question and yesterday's result in Community News
+- **Out of scope:** situations other than weekday/weekend (game days, Stampede week), city-wide comparisons, an operator screen for questions, free-text replies
+- **Definition of Done**
+  - [ ] DB tests: Calgary day boundary for the question and the one-answer rule, season edges (Mar 31/Apr 1, May 31/Jun 1, Aug 31/Sep 1, Oct 31/Nov 1), weekday/weekend, no repeat within 60 days and never yesterday's category (including a short pool), same question for every community, step 3 at exactly 14 active days (13 is not enough), active days kept after a move, question-only days not counted, visitors and other communities' residents cannot answer, counts never expose who answered
+  - [ ] screen check on desktop and a phone (card, answered state, newspaper result, write box with the next step)
+  - [ ] user has played it
 
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.

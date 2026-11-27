@@ -70,6 +70,9 @@ export interface NudgeInputs {
   /** Fewest more residents a locked building still needs (null if none waits for residents). */
   closestBuildingResidents: number | null;
   closestBuildingTitle: string | null;
+  /** Fewest more residents the next locked landmark needs, and its name (§7.9: the reason to invite). */
+  closestLandmarkResidents?: number | null;
+  closestLandmarkTitle?: string | null;
   /** Something was built or the island grew since yesterday. */
   builtSinceYesterday: string | null;
   landGrew: boolean;
@@ -81,6 +84,8 @@ export function inviteNudge(n: NudgeInputs): string | null {
   if (n.nextLandResidents !== null && n.nextLandResidents <= 2) return `${more(n.nextLandResidents)} and your community grows! Invite someone nearby.`;
   if (n.closestBuildingResidents !== null && n.closestBuildingResidents <= 2 && n.closestBuildingTitle)
     return `${more(n.closestBuildingResidents)} and the ${n.closestBuildingTitle} opens! Invite someone nearby.`;
+  if (n.closestLandmarkResidents && n.closestLandmarkResidents <= 5 && n.closestLandmarkTitle)
+    return `${more(n.closestLandmarkResidents)} and we can build our landmark, the ${n.closestLandmarkTitle}! Invite someone nearby.`;
   if (n.landGrew) return 'Your community grew! Invite neighbours to grow it again.';
   if (n.builtSinceYesterday) return `The ${n.builtSinceYesterday} is built! Share it with your neighbours.`;
   return null;

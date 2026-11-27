@@ -3,26 +3,131 @@
   "landStage": 1,
   "vitality": 72,
   "houses": [
-    { "id": "r1", "nickname": "Sarah", "activeToday": true },
-    { "id": "r2", "nickname": "Minjun", "activeToday": true },
-    { "id": "r3", "nickname": "Priya", "activeToday": false },
-    { "id": "r4", "nickname": "Tom", "activeToday": true }
+    {
+      "id": "my-house",
+      "slot": 0,
+      "nickname": "",
+      "activeToday": false,
+      "mine": true
+    }
   ],
   "buildings": [
-    { "key": "welcome-sign", "status": "built", "level": 1, "progress": 1, "title": "Welcome sign", "remaining": null },
-    { "key": "fire-pit", "status": "built", "level": 1, "progress": 1, "title": "Fire pit", "remaining": null },
-    { "key": "frozen-pond", "status": "building", "level": 1, "progress": 0.6, "title": "Frozen pond", "remaining": null },
-    { "key": "warming-hut", "status": "locked", "level": 1, "progress": 0, "title": "Warming hut", "remaining": { "residents": 0, "streakDays": 2, "requires": [] } },
-    { "key": "playground", "status": "building", "level": 1, "progress": 0.2, "title": "Playground", "remaining": null },
-    { "key": "sledding-hill", "status": "locked", "level": 1, "progress": 0, "title": "Sledding hill", "remaining": { "residents": 0, "streakDays": 2, "requires": ["frozen-pond"] } },
-    { "key": "skating-rink", "status": "locked", "level": 1, "progress": 0, "title": "Skating rink", "remaining": { "residents": 0, "streakDays": 0, "requires": ["frozen-pond"] } },
-    { "key": "gateway-arch", "status": "opened", "level": 1, "progress": 0, "title": "Gateway arch", "remaining": null },
-    { "key": "dog-park", "status": "locked", "level": 1, "progress": 0, "title": "Off-leash dog park", "remaining": { "residents": 0, "streakDays": 0, "requires": ["playground"] } },
-    { "key": "community-garden", "status": "locked", "level": 1, "progress": 0, "title": "Community garden", "remaining": { "residents": 1, "streakDays": 5, "requires": ["warming-hut"] } }
+    {
+      "key": "welcome-sign",
+      "status": "built",
+      "level": 1,
+      "progress": 1,
+      "title": "Welcome sign",
+      "remaining": null
+    },
+    {
+      "key": "fire-pit",
+      "status": "built",
+      "level": 1,
+      "progress": 1,
+      "title": "Fire pit",
+      "remaining": null
+    },
+    {
+      "key": "place.lake.sailing-dock",
+      "status": "building",
+      "level": 1,
+      "progress": 0.6,
+      "title": "Sailing dock",
+      "remaining": null
+    },
+    {
+      "key": "playground",
+      "status": "building",
+      "level": 1,
+      "progress": 0.2,
+      "title": "Playground",
+      "remaining": null
+    },
+    {
+      "key": "warming-hut",
+      "status": "locked",
+      "level": 1,
+      "progress": 0,
+      "title": "Warming hut",
+      "remaining": {
+        "residents": 0,
+        "streakDays": 2,
+        "requires": []
+      }
+    },
+    {
+      "key": "place.lake.boardwalk",
+      "status": "locked",
+      "level": 1,
+      "progress": 0,
+      "title": "Boardwalk",
+      "remaining": {
+        "residents": 0,
+        "streakDays": 2,
+        "requires": [
+          "place.lake.sailing-dock"
+        ]
+      }
+    },
+    {
+      "key": "sledding-hill",
+      "status": "locked",
+      "level": 1,
+      "progress": 0,
+      "title": "Sledding hill",
+      "remaining": {
+        "residents": 0,
+        "streakDays": 2,
+        "requires": [
+          "playground"
+        ]
+      }
+    },
+    {
+      "key": "skating-rink",
+      "status": "locked",
+      "level": 1,
+      "progress": 0,
+      "title": "Skating rink",
+      "remaining": {
+        "residents": 0,
+        "streakDays": 0,
+        "requires": [
+          "warming-hut"
+        ]
+      }
+    },
+    {
+      "key": "landmark.mah",
+      "status": "locked",
+      "level": 1,
+      "progress": 0,
+      "title": "Lake beach club",
+      "remaining": {
+        "residents": 7,
+        "streakDays": 12,
+        "requires": [
+          "place.lake.beach-house"
+        ]
+      }
+    }
   ],
   "miniVillagerCount": 6,
   "speechBubbles": [
-    { "anchor": { "kind": "house", "id": "r1" }, "text": "Sarah helped the frozen pond" },
-    { "anchor": { "kind": "villager", "index": 0 }, "text": "The fire pit is so warm!" }
+    {
+      "anchor": {
+        "kind": "villager",
+        "index": 1
+      },
+      "text": "Sarah helped the sailing dock"
+    },
+    {
+      "anchor": {
+        "kind": "villager",
+        "index": 0
+      },
+      "text": "The fire pit is so warm!"
+    }
   ]
 }

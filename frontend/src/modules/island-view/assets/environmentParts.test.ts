@@ -24,27 +24,12 @@ describe('withLights (night, storms)', () => {
     }
   });
 
-  it("a resident's windows never light by night: only being active today lights them (§7.2)", () => {
-    for (let seed = 0; seed < 12; seed++) {
-      const idle = houseParts('bungalow', seed, 0, false);
-      expect(idle.some((p) => p.tag === 'house-window')).toBe(true);
-      expect(withLights(idle, true).some((p) => p.layer === 'glow')).toBe(false);
-      const active = houseParts('bungalow', seed, 0, true);
-      expect(withLights(active, true).filter((p) => p.layer === 'glow').length).toBe(active.filter((p) => p.layer === 'glow').length);
-      expect(withLights(active, false).some((p) => p.layer === 'glow')).toBe(true);
-    }
-  });
-
-  it('about half of the village houses light up at night, none by day (v1.41 §7.2)', () => {
-    let lit = 0;
-    const n = 200;
-    for (let seed = 0; seed < n; seed++) {
-      const parts = houseParts('bungalow', seed * 7 + 1, 0, false, true);
-      if (withLights(parts, true).some((p) => p.layer === 'glow')) lit++;
+  it('every house lights its windows at night, none by day (requirement v1.48 §7.2)', () => {
+    for (let seed = 0; seed < 200; seed++) {
+      const parts = houseParts('bungalow', seed * 7 + 1, 0);
+      expect(withLights(parts, true).some((p) => p.layer === 'glow'), `house ${seed}`).toBe(true);
       expect(withLights(parts, false).some((p) => p.layer === 'glow')).toBe(false);
     }
-    expect(lit / n).toBeGreaterThan(0.35);
-    expect(lit / n).toBeLessThan(0.65);
   });
 
   it('public buildings light about 70 % of windows at night, none by day', () => {
@@ -65,7 +50,7 @@ describe('withLights (night, storms)', () => {
 
 describe('withSnow', () => {
   it('turns house roofs snowy and leaves walls alone', () => {
-    const parts = houseParts('twoStoreyGarage', 3, 1, false);
+    const parts = houseParts('twoStoreyGarage', 3, 1);
     const roofs = parts.filter((p) => p.tag === 'roof');
     expect(roofs.length).toBeGreaterThan(0);
     const snowy = withSnow(parts, true);
@@ -91,5 +76,38 @@ describe('withSnow', () => {
     const parts = tree(t, ctx);
     expect(parts.some((p) => p.layer === 'sway')).toBe(true);
     expect(parts.filter((p) => p.layer === 'solid').every((p) => p.p[1] - p.s[1] / 2 <= 0.3)).toBe(true);
+  });
+});
+
+describe('water a model draws itself (requirement v1.48 §7.6b)', () => {
+  it('takes the island water colour, other parts unchanged', async () => {
+    const { withWater } = await import('./environmentParts');
+    const parts = [
+      { layer: 'solid' as const, p: [0, 0, 0] as [number, number, number], s: [1, 1, 1] as [number, number, number], c: '#8ec5ea', tag: 'water' as const },
+      { layer: 'solid' as const, p: [0, 0, 0] as [number, number, number], s: [1, 1, 1] as [number, number, number], c: '#8ec5ea' },
+    ];
+    const out = withWater(parts, '#a6d2ef');
+    expect(out[0]!.c).toBe('#a6d2ef');
+    expect(out[1]!.c).toBe('#8ec5ea'); // a pool or fountain keeps its own blue
+  });
+
+  it('every lake landmark tags its water', async () => {
+    const { LANDMARK_LIBRARY } = await import('./voxel/landmarkLibrary');
+    for (const key of ['landmark.mah', 'landmark.lkb', 'landmark.mck', 'landmark.byv', 'landmark.bow'] as const) {
+      const parts = LANDMARK_LIBRARY[key].build(3);
+      const water = parts.filter((b) => b.tag === 'water');
+      expect(water.length, key).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('snow on the models\' own lawns', () => {
+  it('a thin lawn turns snowy; leaves of the same green do not', () => {
+    const lawn: BoxPart = { layer: 'solid', p: [0, 0, 0], s: [2, 0.3 / 12, 2], c: '#93cb6c' };
+    const leaves: BoxPart = { layer: 'solid', p: [0, 0.5, 0], s: [0.3, 0.3, 0.3], c: '#8cc867' };
+    const [l, t] = withSnow([lawn, leaves], true);
+    expect(l!.c).toBe('#eef3f9');
+    expect(t!.c).toBe('#8cc867');
+    expect(withSnow([lawn], false)[0]!.c).toBe('#93cb6c');
   });
 });

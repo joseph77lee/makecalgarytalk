@@ -4,7 +4,7 @@
 -- Days are simulated: actions are inserted directly on chosen Calgary days (one per player per
 -- day is enough for these rules). Day N = date '2026-12-01' + N; its noon is 18:00Z (UTC-6).
 begin;
-select plan(48);
+select plan(49);
 
 delete from gamecore.actions;
 delete from gamecore.projects;
@@ -15,6 +15,7 @@ delete from residency.check_ins;
 delete from residency.check_days;
 delete from gamecore.community_days;
 delete from gamecore.community_snapshots;
+delete from gamecore.place_lots;  -- seeded from the island plans; each test adds what it needs
 
 insert into auth.users (id, email)
 select ('00000000-0000-4000-8000-0000000000' || lpad(n::text, 2, '0'))::uuid, 'u' || n || '@test.local'
@@ -134,7 +135,7 @@ select is(gamecore.mini_villagers(0, null), 3, 'mini villagers: at least 3');
 select is(gamecore.mini_villagers(100, 100), 20, 'mini villagers: at most 20');
 select is(gamecore.mini_villagers(10, 50), 10, 'mini villagers: residents × (0.5 + Vitality)');
 
--- Tree conditions use the real streak (GLA, one resident) ----------------------------------
+-- Build map conditions use the real streak (GLA, one resident) ----------------------------------
 select pg_temp.join_(1, 'GLA', 10);
 select is(
   (select array_agg(s) from (select coalesce(r ->> 'reason', r ->> 'status') s from jsonb_array_elements(gamecore.submit_actions_at(
@@ -144,30 +145,30 @@ select is(
     pg_temp.noon(10)) -> 'results') r) x),
   array['accepted', 'accepted', 'accepted'], 'a single resident builds the Welcome sign on day one'
 );
-select is(pg_temp.state('GLA', 11) -> 'changes',
+select is((pg_temp.state('GLA', 11) -> 'changes') - 'opened',
   jsonb_build_object(
     'actions', 3,
     'progress', jsonb_build_array(jsonb_build_object('building_key', 'welcome-sign', 'title', 'Welcome sign', 'level', 1, 'added', 3)),
     'built', jsonb_build_array(jsonb_build_object('building_key', 'welcome-sign', 'title', 'Welcome sign', 'level', 1)),
-    'opened', '[]'::jsonb,
     'new_residents', 1,
     'land_grew', false,
     'vitality_before', null
   ), 'next day: what changed since yesterday');
-select gamecore.submit_actions_at(pg_temp.u(1), jsonb_build_array(jsonb_build_object('id', gen_random_uuid(), 'project_id',
-  (select id from gamecore.projects where community_id = pg_temp.c('GLA') and building_key = 'fire-pit'))), pg_temp.noon(11));
+select is(jsonb_array_length(pg_temp.state('GLA', 11) -> 'changes' -> 'opened'), 3, 'the built root opened the first step of each track');
+select gamecore.submit_actions_at(pg_temp.u(1), (select jsonb_agg(jsonb_build_object('id', gen_random_uuid(), 'project_id', p.id))
+  from gamecore.projects p, generate_series(1, 3) where p.community_id = pg_temp.c('GLA') and p.building_key = 'fire-pit'), pg_temp.noon(11));
 select is((pg_temp.state('GLA', 11) -> 'streak' ->> 'days')::int, 2, 'the live streak counts today''s action at once (snapshot not rebuilt)');
 select is(pg_temp.state('GLA', 11) -> 'streak' -> 'today', '{"acted": 1, "needed": 1, "attended": true, "active_residents": 1}'::jsonb, 'today''s progress');
-select ok(not exists (select 1 from gamecore.building_openings where community_id = pg_temp.c('GLA') and building_key = 'playground'), 'playground still locked at a 2-day streak');
+select ok(not exists (select 1 from gamecore.building_openings where community_id = pg_temp.c('GLA') and building_key = 'warming-hut'), 'the Warming hut still locked at a 2-day streak');
 select gamecore.submit_actions_at(pg_temp.u(1), jsonb_build_array(jsonb_build_object('id', gen_random_uuid(), 'project_id',
-  (select id from gamecore.projects where community_id = pg_temp.c('GLA') and building_key = 'fire-pit'))), pg_temp.noon(12));
+  (select id from gamecore.projects where community_id = pg_temp.c('GLA') and building_key = 'playground'))), pg_temp.noon(12));
 
 -- Snapshots (§20.3) --------------------------------------------------------------------------
 select is((select calgary_day from gamecore.community_snapshots where community_id = pg_temp.c('GLA')), pg_temp.d(11), 'a snapshot is kept per community and day');
-select is(pg_temp.building(pg_temp.state('GLA', 12), 'playground') ->> 'status', 'opened', 'a new day rebuilds the snapshot: the third streak day opened the Playground');
-select is((select opened_on from gamecore.building_openings where community_id = pg_temp.c('GLA') and building_key = 'playground'),
+select is(pg_temp.building(pg_temp.state('GLA', 12), 'warming-hut') ->> 'status', 'building', 'a new day rebuilds the snapshot: the Fire pit built and the third streak day opened the Warming hut (started at once)');
+select is((select opened_on from gamecore.building_openings where community_id = pg_temp.c('GLA') and building_key = 'warming-hut'),
           pg_temp.d(12), 'opened on the day the streak reached 3');
-select is(pg_temp.state('GLA', 13) -> 'changes' -> 'opened', '[{"title": "Playground", "building_key": "playground"}]'::jsonb,
+select is(pg_temp.state('GLA', 13) -> 'changes' -> 'opened', '[{"title": "Warming hut", "building_key": "warming-hut"}]'::jsonb,
           'the next day lists it as unlocked, even once its construction started');
 select is(gamecore.refresh_snapshots(pg_temp.noon(12)), 8, 'the 5-minute job rebuilds every community with residents');
 select pg_temp.join_(2, 'GLA', 12);

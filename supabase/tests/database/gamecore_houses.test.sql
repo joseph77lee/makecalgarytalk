@@ -1,7 +1,8 @@
--- Module: gamecore — resident houses (fixed lots, 30-day archive, movers, full lots) and today's
--- actions for the replay (requirement.md v1.26 §7.2, §7.3). Day N = date '2026-12-01' + N.
+-- Module: gamecore — houses are scenery, "My house" is a fixed slot (shared when full, never taken
+-- back, freed by moving away), and today's actions for the replay (requirement.md v1.48 §7.2, §7.3).
+-- Day N = date '2026-12-01' + N.
 begin;
-select plan(30);
+select plan(18);
 
 delete from gamecore.actions;
 delete from gamecore.projects;
@@ -9,6 +10,7 @@ delete from gamecore.building_openings;
 delete from gamecore.community_days;
 delete from gamecore.community_snapshots;
 delete from gamecore.house_lots;
+delete from gamecore.house_capacity;  -- seeded from the island plans; this test sets its own
 delete from residency.verifications;
 delete from residency.moves;
 delete from residency.check_ins;
@@ -41,70 +43,58 @@ create function pg_temp.act(who integer, code text, n integer, pending boolean d
          coalesce((select max(a.energy_slot) from gamecore.actions a where a.user_id = pg_temp.u(who) and a.calgary_day = pg_temp.d(n)), 0) + 1,
          pending, clock_timestamp()
 $$;
-create function pg_temp.houses(code text, n integer) returns jsonb language sql as $$
-  select gamecore.houses_at(pg_temp.c(code), pg_temp.d(n))
+create function pg_temp.assign(code text, n integer) returns void language sql as $$
+  select gamecore.assign_houses(pg_temp.c(code), pg_temp.d(n))
 $$;
 create function pg_temp.slot(who integer, code text) returns integer language sql as $$
   select l.slot::integer from gamecore.house_lots l where l.community_id = pg_temp.c(code) and l.user_id = pg_temp.u(who)
 $$;
-create function pg_temp.house(code text, n integer, slot integer) returns jsonb language sql as $$
-  select h from jsonb_array_elements(pg_temp.houses(code, n) -> 'houses') h where (h ->> 'slot')::integer = slot
+create function pg_temp.capacity(code text, slots integer[]) returns void language sql as $$
+  insert into gamecore.house_capacity (community_id, land_stage, slots)
+  select pg_temp.c(code), k - 1, slots[k] from generate_subscripts(slots, 1) k
 $$;
+-- Mahogany: 2 house lots on the first land, 4 from 3 residents; Bel-Aire: 2 lots on every stage.
+select pg_temp.capacity('MAH', array[2, 4, 6, 8, 10, 12]);
+select pg_temp.capacity('BEL', array[2, 2, 2, 2, 2, 2]);
+select pg_temp.capacity('AUB', array[3, 3, 3, 3, 3, 3]);
 
--- Lots and house data ------------------------------------------------------------------------
+-- My house: a fixed slot -----------------------------------------------------------------------
+select is(gamecore.house_slots_on(pg_temp.c('MAH'), 1), 4, 'house lots per land stage come from the island plan');
+select is(gamecore.house_slots_on(pg_temp.c('ACA'), 0), 0, 'no plan data: no house lots');
 select pg_temp.verify(1, 'MAH', 0);
 select pg_temp.verify(2, 'MAH', 1);
-select is(jsonb_array_length(pg_temp.houses('MAH', 1) -> 'houses'), 2, 'one house per Verified Resident');
+select pg_temp.assign('MAH', 1);
 select is(pg_temp.slot(1, 'MAH'), 0, 'the first resident gets lot 0');
 select is(pg_temp.slot(2, 'MAH'), 1, 'the next resident the next free lot');
-select is(pg_temp.house('MAH', 1, 0), '{"slot": 0, "founding": true, "nickname": "Resident 1", "active_today": false}'::jsonb,
-  'house data: slot, nickname, active today, Founding Resident (no user id)');
-select is(pg_temp.house('MAH', 1, 1) ->> 'founding', 'false', 'later residents are not founders');
 select residency.check_location_at(pg_temp.u(3), extensions.st_y(extensions.st_pointonsurface(b.area)), extensions.st_x(extensions.st_pointonsurface(b.area)), 10, pg_temp.noon(1))
 from residency.boundaries b where b.community_id = pg_temp.c('MAH');
-select is(jsonb_array_length(pg_temp.houses('MAH', 1) -> 'houses'), 2, 'a player still verifying has no house');
+select pg_temp.assign('MAH', 1);
+select is(pg_temp.slot(3, 'MAH'), null, 'a player still verifying has no house yet');
+select pg_temp.assign('MAH', 40);
+select is(array[pg_temp.slot(1, 'MAH'), pg_temp.slot(2, 'MAH')], array[0, 1], 'lots never move and are never taken back, even after 40 quiet days');
 
--- Lights: active today
-select pg_temp.act(2, 'MAH', 2);
-select is(pg_temp.house('MAH', 2, 1) ->> 'active_today', 'true', 'acted today: lights on');
-select is(pg_temp.house('MAH', 3, 1) ->> 'active_today', 'false', 'next day: lights off');
-select is(pg_temp.slot(2, 'MAH'), 1, 'lots never move');
+-- Full lots are shared ---------------------------------------------------------------------------
+select pg_temp.verify(n, 'BEL', 0) from generate_series(10, 14) n;
+select pg_temp.assign('BEL', 0);
+select is(array(select pg_temp.slot(n, 'BEL') from generate_series(10, 14) n), array[0, 1, 0, 1, 0],
+  'when every lot has an owner, new residents share the least shared lot (lowest first)');
+select is((select count(*)::int from gamecore.house_lots where community_id = pg_temp.c('BEL')), 5, 'every resident has a house: nobody is hidden');
+select pg_temp.verify(15, 'MAH', 2);
+select pg_temp.assign('MAH', 2);
+select is(pg_temp.slot(15, 'MAH'), 2, 'with 3 residents the land grew: a free lot on the new land, not a shared one');
 
--- Archived after 30 days, same lot when back
-select is(pg_temp.house('MAH', 29, 0) ->> 'nickname', 'Resident 1', 'verified on day 0 without acting: still shown on day 29');
-select is(pg_temp.house('MAH', 30, 0), null, 'day 30: archived (house removed)');
-select is(pg_temp.slot(1, 'MAH'), 0, 'but the lot is kept for them');
-select pg_temp.act(1, 'MAH', 40);
-select pg_temp.act(2, 'MAH', 40);
-select is(pg_temp.house('MAH', 40, 0) ->> 'nickname', 'Resident 1', 'back: the house reappears on the same lot');
-
--- Movers keep their house until the move completes
+-- Movers -------------------------------------------------------------------------------------------
 select residency.start_move_at(pg_temp.u(2), pg_temp.noon(41));
-select is(pg_temp.house('MAH', 41, 1) ->> 'nickname', 'Resident 2', 'moving: the house stays in the old community');
+select pg_temp.assign('MAH', 41);
+select is(pg_temp.slot(2, 'MAH'), 1, 'moving: the house stays in the old community until the move completes');
 select pg_temp.verify(2, 'AUB', 42);
-select is(pg_temp.house('MAH', 42, 1), null, 'move completed: the old house is gone');
-select is(pg_temp.slot(2, 'MAH'), null, 'and its lot is free again');
-select is(pg_temp.house('AUB', 42, 0) ->> 'nickname', 'Resident 2', 'the house moved to the new community');
+select pg_temp.assign('MAH', 42);
+select pg_temp.assign('AUB', 42);
+select is(pg_temp.slot(2, 'MAH'), null, 'move completed: the old lot is free again');
+select is(pg_temp.slot(2, 'AUB'), 0, 'and they have a house in the new community');
 select pg_temp.verify(4, 'MAH', 43);
-select pg_temp.houses('MAH', 43) is not null as assigned;
+select pg_temp.assign('MAH', 43);
 select is(pg_temp.slot(4, 'MAH'), 1, 'a new resident takes the freed lot');
-
--- Full lots: 150 residents in Bel-Aire
-select pg_temp.verify(n, 'BEL', 0) from generate_series(10, 159) n;
-select is(jsonb_array_length(pg_temp.houses('BEL', 0) -> 'houses'), 150, '150 houses fill every lot');
-select pg_temp.verify(160, 'BEL', 0);
-select is((pg_temp.houses('BEL', 0) ->> 'hidden')::integer, 1, 'one more active resident: not drawn ("+1 more")');
-select is(pg_temp.slot(160, 'BEL'), null, 'and gets no lot');
--- Day 35: only residents 10..39 (lots 0..29) acted recently; the others are archived.
-select pg_temp.act(n, 'BEL', 34) from generate_series(10, 39) n;
-select pg_temp.act(160, 'BEL', 34);
-select is(jsonb_array_length(pg_temp.houses('BEL', 35) -> 'houses'), 31, 'archived houses are removed (30 recent residents + the waiting one)');
-select is(pg_temp.slot(160, 'BEL'), 30, 'full: the waiting resident takes the lowest lot of an archived resident');
-select is(pg_temp.slot(40, 'BEL'), null, 'whose lot is gone');
-select pg_temp.act(40, 'BEL', 36);
-select pg_temp.houses('BEL', 36) is not null as assigned;
-select is(pg_temp.slot(40, 'BEL'), 31, 'when they come back they take another archived lot');
-select is((pg_temp.houses('BEL', 36) ->> 'hidden')::integer, 0, 'nobody is hidden while archived lots exist');
 
 -- Today's actions for the replay -------------------------------------------------------------
 select pg_temp.act(4, 'MAH', 50);
@@ -117,7 +107,8 @@ select is((select array_agg(k order by k) from jsonb_object_keys(gamecore.today_
 
 -- My house slot is personal ------------------------------------------------------------------
 select is((gamecore.community_state_at(pg_temp.c('MAH'), pg_temp.noon(50), pg_temp.u(4)) -> 'me' ->> 'house_slot')::integer, 1, 'my house slot');
-select is(gamecore.community_state_at(pg_temp.c('MAH'), pg_temp.noon(50), null) -> 'houses' -> 0 ? 'user_id', false, 'public houses carry no user id');
+select is((gamecore.community_state_at(pg_temp.c('MAH'), pg_temp.noon(50), null) ?| array['houses', 'hidden_houses']), false, 'the public state lists no residents'' houses (houses are scenery)');
+select is((gamecore.community_state_at(pg_temp.c('MAH'), pg_temp.noon(50), pg_temp.u(1)) -> 'me' ->> 'house_slot')::integer, 0, 'each resident sees only their own slot');
 
 select * from finish();
 rollback;

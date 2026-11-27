@@ -1,8 +1,7 @@
 /**
  * Time of day and snow on box parts (requirement.md v1.40 §10.4).
  *   - Lights on (night, storms): lamps glow with a warm pool on the ground; about 70 % of public
- *     windows glow (the rest stay dark). Residents' windows (`house-window`) never light here:
- *     a house is lit only when its resident was active today (§7.2), so it already glows.
+ *     windows and every house window glow (requirement v1.48 §7.2: every house is lit at night).
  *   - Lights off: lamp heads are off.
  *   - Snow: roofs turn snowy.
  */
@@ -16,6 +15,11 @@ const LAMP_OFF = '#f1ece0';
 const DARK_GLASS = '#2b3550';
 export const SNOW_WHITE = '#f6f8fb';
 
+/** Water a model draws itself takes the island's water colour (icy with snow; v1.48 §7.6b). */
+export function withWater(parts: BoxPart[], water: string): BoxPart[] {
+  return parts.some((b) => b.tag === 'water') ? parts.map((b) => (b.tag === 'water' ? { ...b, c: water } : b)) : parts;
+}
+
 export function withLights(parts: BoxPart[], on: boolean): BoxPart[] {
   const out: BoxPart[] = [];
   for (const b of parts) {
@@ -26,21 +30,26 @@ export function withLights(parts: BoxPart[], on: boolean): BoxPart[] {
         if (b.s[1] > 0.1) out.push({ layer: 'mist', p: [b.p[0], 0.02, b.p[2]], s: [1.6, 0.02, 1.6], c: '#ffd27a' }, { layer: 'mist', p: [b.p[0], 0.03, b.p[2]], s: [0.9, 0.02, 0.9], c: '#ffe2a0' });
       } else out.push({ ...b, layer: 'solid', c: LAMP_OFF });
     } else if (on && b.layer === 'solid' && WINDOW_COLOURS.has(b.c)) {
-      if (b.tag === 'house-window') {
-        out.push({ ...b, c: DARK_GLASS });
-        continue;
-      }
-      const lit = rnd(Math.round(b.p[0] * 97), Math.round(b.p[1] * 89), Math.round(b.p[2] * 83)) < (b.tag === 'village-window' ? 0.85 : 0.7);
+      const lit = b.tag === 'village-window' || rnd(Math.round(b.p[0] * 97), Math.round(b.p[1] * 89), Math.round(b.p[2] * 83)) < 0.7;
       out.push(lit ? { ...b, layer: 'glow', c: rnd(Math.round(b.p[0] * 31), Math.round(b.p[2] * 37), 5) < 0.5 ? '#ffd98a' : '#ffe6b3' } : { ...b, c: DARK_GLASS });
     } else out.push(b);
   }
   return out;
 }
 
-/** Snowy roofs: the roof colour shows only faintly through the snow. */
+/** Grass colours the place and landmark models paint their own ground with. */
+const MODEL_GRASS = new Set(['#93cb6c', '#8cc867', '#9fd47a']);
+/** Snow on the ground (the island's winter grass, mood.ts). */
+const SNOW_GROUND = '#eef3f9';
+/** Thin enough to be ground (a lawn or a terrace top), not a bush or leaves. */
+const GROUND_THICKNESS = 1.2 / 12;
+
+/** Snowy roofs (the roof colour shows only faintly through the snow) and snow on the models' own lawns. */
 export function withSnow(parts: BoxPart[], snow: boolean): BoxPart[] {
   if (!snow) return parts;
-  return parts.map((b) => (b.tag === 'roof' ? { ...b, c: snowOver(b.c) } : b));
+  return parts.map((b) =>
+    b.tag === 'roof' ? { ...b, c: snowOver(b.c) } : b.layer === 'solid' && MODEL_GRASS.has(b.c) && b.s[1] <= GROUND_THICKNESS ? { ...b, c: SNOW_GROUND } : b,
+  );
 }
 
 function snowOver(c: string): string {

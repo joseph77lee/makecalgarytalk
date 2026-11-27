@@ -12,6 +12,64 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v1.99
+**Changed:** M24 Community Identity 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M26 next.
+
+**Why:** The operator played M24 and confirmed ("플레이해봤어. main에 병합하고 M26 시작해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v1.98 |`
+- `| Current module | M24 Community Identity 🟨 (then M26, M16) |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | 🟨 |`
+- `### M24 — Community Identity 🟨`
+- `  - [ ] user has played it` (M24 DoD)
+- `  - **Next:** the operator plays M24 (Ready for playtest); then M26.`
+
+### 2026-11-27 — v1.98
+**Changed:** M24 place library item: the bridge crossing rule is done (requirement v1.50: site `crossing`, all 223 plans regenerated). Header: plan version, `Based on` v1.50.
+
+**Why:** Requirement v1.50 (operator: "A안으로 다리 예외 넣고 다시 만들어줘").
+
+**Previous (verbatim):**
+- `| Plan version | v1.97 |`
+- `| Based on | \`requirement.md\` v1.49 |`
+- M24 place library item text ending `rivers/bridges get a crossing-site rule — **open:** needs a requirement change (§7.8: water never holds buildings) and all plans regenerated; asked the operator),`
+
+### 2026-11-27 — v1.97
+**Changed:** M24 Community Identity 🟦 → 🟨 Ready for playtest (header, table row, heading). The bridge crossing rule stays open for an operator decision.
+
+**Why:** M24 scope and DoD checks done except the bridge rule, which needs a requirement change; ready for the operator to play.
+
+**Previous (verbatim):**
+- `| Plan version | v1.96 |`
+- `| Current module | M24 Community Identity 🟦 (then M26, M16) |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | 🟦 |`
+- `### M24 — Community Identity 🟦`
+
+### 2026-11-26 — v1.96
+**Changed:** New module **M26 Community News Steps** (requirement v1.49: one newspaper with the board from the Welcome sign, personal posting steps, today's question), after M24/M25 and before M16; M16 now depends on M26. Header: plan version, `Based on` v1.49, current module line. Dependency diagram.
+
+**Why:** Requirement v1.49 (operator decisions 2026-11-26): "응 v1.49랑 M26 진행해줘".
+
+**Previous (verbatim):**
+- `| Plan version | v1.95 |`
+- `| Based on | \`requirement.md\` v1.48 |`
+- `| Current module | M24 Community Identity 🟦 (then M16) |`
+- `| M16 | Deploy & Playtest | All + operator accounts | | M24 | ⬜ |`
+- `    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M16 ── M17 ── M18`
+- M26 did not exist.
+
+### 2026-11-26 — v1.95
+**Changed:** M24 Community Identity started (🟦): header, table row, heading.
+
+**Why:** User: "응 병합하고 M24 시작해줘" (docs merged to `main` as b809514).
+
+**Previous (verbatim):**
+- `| Plan version | v1.94 |`
+- `| Current module | M24 Community Identity (next; then M16) |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | ⬜ |`
+- `### M24 — Community Identity ⬜`
+
 ### 2026-11-26 — v1.94
 **Changed:** M24 scope follows requirement v1.48: the Welcome sign as root, no place twice, persona hall/park designs; plan generator places face their site, pond fallback and a report; models without drawn water and finished on all sides; a new free-camera item; the build map screen as a skill tree. Header: plan version, `Based on` v1.48.
 

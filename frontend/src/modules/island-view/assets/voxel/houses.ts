@@ -9,6 +9,7 @@ import type { BoxPart } from '../boxes';
 import { apartment, ART, bungalow, infill, loft, semiDetached, townhouses, twoStoreyGarage } from './samples';
 import { VOXEL_DESIGNS as N } from './designFit';
 import { rnd, vmirrorX, vturn } from './voxel';
+import { finishAllSides } from '../allSides';
 
 export const HOUSE_TYPES = ['bungalow', 'twoStoreyGarage', 'semiDetached', 'townhouses', 'infill', 'apartment', 'loft'] as const;
 export type HouseType = (typeof HOUSE_TYPES)[number];
@@ -73,6 +74,18 @@ export const HOUSE_MIX: Record<HouseStyle, [HouseType, number][]> = {
   suburb: [['twoStoreyGarage', 0.45], ['semiDetached', 0.2], ['townhouses', 0.2], ['bungalow', 0.1], ['infill', 0.05]],
 };
 
+/** Share of houses that have grown up into townhouses or apartments by land stage (requirement v1.48 §7.2). */
+const GROWN_UP = [0, 0, 0.1, 0.2, 0.3, 0.4];
+
+/**
+ * The house type on a lot as the community grows: the style's mix, and with more land a growing
+ * share of townhouses (suburbs) or small apartments (inner city) instead of spreading out.
+ */
+export function houseTypeGrown(style: HouseStyle, seed: number, landStage: number): HouseType {
+  if (style !== 'downtown' && rnd(seed, 78) < (GROWN_UP[landStage] ?? GROWN_UP[GROWN_UP.length - 1])) return style === 'inner' && rnd(seed, 79) < 0.5 ? 'apartment' : 'townhouses';
+  return houseTypeFor(style, seed);
+}
+
 export function houseTypeFor(style: HouseStyle, seed: number): HouseType {
   const r = rnd(seed, 77);
   let acc = 0;
@@ -86,16 +99,12 @@ export function houseTypeFor(style: HouseStyle, seed: number): HouseType {
 const WINDOWS = new Set<string>([ART.glass, ART.glassDark]);
 
 /**
- * The house model: `facing` 0 = front towards +z, 1 = +x, 2 = −z, 3 = −x. Active-today houses
- * light their windows warm (§7.2).
+ * The house model: `facing` 0 = front towards +z, 1 = +x, 2 = −z, 3 = −x. Every house's windows
+ * light up at night (requirement v1.48 §7.2: houses are scenery, lights do not follow activity).
  */
-export function houseParts(type: HouseType, seed: number, facing: number, active: boolean, village = false): BoxPart[] {
-  // about half of the village houses light up at night (§7.2); residents' only when active
-  const nightTag = village && rnd(seed, 91) < 0.5 ? 'village-window' : 'house-window';
-  const parts = houseModel(type, seed).map((b): BoxPart =>
-    !WINDOWS.has(b.c) ? b : active ? { ...b, layer: 'glow', c: '#ffd98a' } : { ...b, tag: nightTag },
-  );
-  return vturn(parts, facing);
+export function houseParts(type: HouseType, seed: number, facing: number): BoxPart[] {
+  const parts = houseModel(type, seed).map((b): BoxPart => (!WINDOWS.has(b.c) ? b : { ...b, tag: 'village-window' }));
+  return vturn(finishAllSides(parts), facing);
 }
 
 const top = (parts: BoxPart[]) => parts.reduce((h, b) => Math.max(h, b.p[1] + b.s[1] / 2), 0);

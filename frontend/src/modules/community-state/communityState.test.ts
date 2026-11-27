@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ServerChanges, ServerStreak } from '../daily-actions';
-import { BUILDING_TREE, buildIslandLayout, decodePlan, finishedExampleState, type BuildingView } from '../island-view';
-import { completionPercent, groupByStage, isBuilt } from './buildMapModel';
+import { buildIslandLayout, decodePlan, finishedExampleState } from '../island-view';
 import { changeItems, changesPanelOpen } from './changesText';
 import { landGoalText, streakText } from './streakText';
 import { readFileSync } from 'node:fs';
@@ -55,7 +54,7 @@ describe('what changed since yesterday', () => {
     expect(items).toEqual([
       'Frozen pond was built',
       'Welcome sign upgraded to Lv 2',
-      'Playground unlocked',
+      'Playground is ready to build',
       'Your community grew!',
       '2 new neighbours joined',
       '4 actions yesterday: Fire pit +3, Welcome sign Lv 2 +1',
@@ -65,6 +64,18 @@ describe('what changed since yesterday', () => {
     const items = changeItems(changes({ built: [{ building_key: 'fire-pit', title: 'Fire pit', level: 1 }], new_residents: 1 }));
     expect(items[0]?.card).toEqual({ kind: 'built', title: 'Fire pit was built' });
     expect(items[1]?.card).toBeUndefined();
+  });
+  it('names landmarks as "our landmark", first, with a share card (requirement.md §7.9)', () => {
+    const items = changeItems(
+      changes({
+        built: [{ building_key: 'fire-pit', title: 'Fire pit', level: 1 }, { building_key: 'landmark.lkb', title: 'Lake Bonavista beach', level: 1 }],
+        opened: [{ building_key: 'place.lake.lighthouse', title: 'Lighthouse' }],
+      }),
+    );
+    expect(items.map((i) => i.text)).toEqual(['Our landmark, the Lake Bonavista beach, was built!', 'Fire pit was built', 'Our landmark, the Lighthouse, is ready to build']);
+    expect(items[0]?.icon).toBe('⭐');
+    expect(items[0]?.card).toEqual({ kind: 'landmark', title: 'Lake Bonavista beach' });
+    expect(items[2]?.card).toBeUndefined();
   });
   it('no Community Revival any more, even when a quiet community picks up (v1.41 §7.4)', () => {
     const items = changeItems(changes({ vitality_before: 10 }));
@@ -79,35 +90,14 @@ describe('what changed since yesterday', () => {
   });
 });
 
-const view = (key: string, status: BuildingView['status'], level = 1): BuildingView => ({ key, status, level, progress: status === 'built' ? 1 : 0.3, title: key, remaining: null });
-
-describe('build map (requirement.md §7.6a)', () => {
-  it('an upgrade still counts as built; a first construction does not', () => {
-    expect(isBuilt(view('fire-pit', 'building', 2))).toBe(true);
-    expect(isBuilt(view('fire-pit', 'building', 1))).toBe(false);
-  });
-  it('completion % counts built tree buildings only', () => {
-    const all = BUILDING_TREE.buildings.map((b) => view(b.key, 'locked'));
-    expect(completionPercent(all)).toBe(0);
-    all[0] = view(all[0].key, 'built');
-    all[1] = view(all[1].key, 'building', 3);
-    expect(completionPercent([...all, view('castle', 'built')])).toBe(Math.round((2 / BUILDING_TREE.buildings.length) * 100));
-    expect(completionPercent(BUILDING_TREE.buildings.map((b) => view(b.key, 'built')))).toBe(100);
-  });
-  it('groups by tree stage in tree order, unknown buildings last', () => {
-    const groups = groupByStage([view('castle', 'built'), view('neighbourhood-park', 'locked'), view('fire-pit', 'built'), view('welcome-sign', 'built')]);
-    expect(groups.map((g) => g.name)).toEqual(['1. First day', '5. Pride', 'New buildings']);
-    expect(groups[0].buildings.map((b) => b.key)).toEqual(['welcome-sign', 'fire-pit']);
-  });
-});
-
 describe('finished example', () => {
   const PLAN = decodePlan(JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../../../public/islands/MAH.json'), 'utf8')));
   it('draws the whole tree built on the full island, with unnamed houses', () => {
     const l = buildIslandLayout(PLAN, finishedExampleState('Mahogany'));
     expect(l.futureTiles).toHaveLength(0);
     expect(l.objects.some((o) => o.assetKey === 'construction-site' || o.assetKey === 'silhouette')).toBe(false);
-    expect(l.objects.find((o) => o.id === 'lot:lot-a')?.assetKey).toBe('building.community-hall');
+    expect(l.objects.find((o) => o.id === 'lot:community-hall')?.assetKey).toBe('building.community-hall');
+    expect(l.objects.find((o) => o.id === 'lot:landmark.mah')?.assetKey).toBe('building.landmark.mah');
     const houses = l.objects.filter((o) => o.assetKey === 'house');
     expect(houses.length).toBeGreaterThan(0);
     expect(houses.every((h) => h.assetKey === 'house' && h.nickname === '')).toBe(true);

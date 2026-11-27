@@ -1,0 +1,203 @@
+id,category,season,situation,question,opt1_emoji,opt1_text,opt2_emoji,opt2_text,opt3_emoji,opt3_text,opt4_emoji,opt4_text
+Q001,weather,winter,,It snowed overnight. What's your move?,🧹,Shovel right away,🌬️,Wait for the Chinook,☕,"Cocoa first, shovel later",😴,Pretend I didn't see it
+Q002,weather,winter,,"On a Chinook day, it's -20 in the morning and +8 by lunch. How are you dressed?",🧥,Winter coat all day,🧅,"Layers, peeling off by noon",😎,Shorts by afternoon,🥶,"Gave up, staying inside"
+Q003,neighbourhood,winter,,The Bow River pathway on a snowy day — are you on it?,🚶,Walking the dog,⛸️,Skating at Bowness,🏃,Running anyway,🛋️,Waiting till spring
+Q004,food,year-round,,Ginger beef was invented in Calgary. How do you order yours?,🌶️,Extra spicy,🍯,Sweet is fine,🥡,"Takeout, always",🤷,Never tried it (yet!)
+Q005,sports,winter,,"When the Flames play the Oilers, where do you watch?",🔥,"At the game, loud and proud",🛋️,"Couch, jersey on",🍔,Pub with friends,🛢️,Quietly… cheering for the Oilers
+Q006,daily,year-round,weekday,Deerfoot is crawling again. What's your move?,🚗,"Stay in the lane, podcast on",🚇,Should've taken the CTrain,🛣️,Back-road detour,🏠,"Work from home, obviously"
+Q007,weather,winter,,You spot a Chinook arch over the Rockies. What do you do?,🌤️,Check the forecast right away,🧥,Grab a lighter jacket,😌,"Smile, warm weather is coming",🤷,Never noticed the arch before
+Q008,weather,winter,,It's -30 with wind chill. How do you get through the day?,🧣,"Bundle up, face the cold",☕,Hot drinks all day long,🚗,"Car, garage to garage",🛋️,"Staying in, no debate"
+Q009,weather,winter,,The first snow of the season falls. What's your reaction?,❄️,"Finally, winter is here",📸,Out for photos right away,😩,"Too soon, I wasn't ready",🤷,Wake me when it's spring
+Q010,weather,winter,,Your windshield is frozen solid. What's your move?,🧊,"Scrape it, no shortcuts",🔌,Plug in the block heater,☕,"Coffee first, car later",🚌,Taking the CTrain instead
+Q011,weather,winter,,Calgary weather changes fast. How many layers are you wearing?,👕,"One layer, I'm brave",🧅,"Three layers, always",🎒,"Jacket in the bag, just in case",🤷,Whatever I grabbed first
+Q012,weather,winter,,A Chinook rolls in and the pressure drops. How do you feel?,🤕,"Headache, every single time",😊,Energized by the warm wind,😴,"Sleepy, pressure changes hit me",🤷,I never feel a thing
+Q013,weather,winter,,Winter tires: when do yours go on?,🍂,Before the first snowfall,❄️,Right after the first snow,😅,"All-seasons, living dangerously",🚌,"No car, not my problem"
+Q014,weather,winter,,Your neighbour's driveway is buried in snow. What do you do?,🤝,Shovel it while I'm out there,👋,Wave and keep shovelling mine,☕,Bring them a hot drink,🤷,"Not my driveway, not my job"
+Q015,weather,spring,,It snows in May. What's your honest reaction?,😂,"Classic Calgary, of course",🌷,My garden just gave up,📸,"Snowy tulips, take a photo",🤷,I stopped being surprised
+Q016,weather,spring,,The last snow finally melts. What do you do first?,🚶,Walk the pathways again,🌱,Start the garden early,🧹,Sweep the garage and yard,😌,Just enjoy the sunshine
+Q017,weather,summer,,A summer hailstorm rolls through. What's your move?,🚗,Move the car under cover,🪟,Check the windows and roof,🌧️,Watch it from the porch,😅,Hail? I just moved here
+Q018,weather,summer,,Wildfire smoke hazes the sky. How do you handle it?,😷,"Mask on, windows shut",🏠,"Indoor day, air purifier on",🏃,"Still running, just slower",🤷,Didn't even notice the haze
+Q019,weather,summer,,"On a hot Stampede day, how do you stay cool?",🤠,Cowboy hat and lots of water,🌳,"Shade first, rides later",🍦,Ice cream solves everything,🏠,"Air conditioning, full stop"
+Q020,weather,year-round,,Calgary gets 333 sunny days a year. Do you believe it?,☀️,"Yes, the sun never quits",🌤️,"Sunny, but it's still cold",🕶️,Sunglasses in every jacket,🤷,Sounds too good to be true
+Q021,weather,year-round,,The wind is howling across the prairie. What do you do?,🧥,Zip up and lean into it,🪁,Perfect kite-flying weather,🚗,"Drive slow, both hands on",🏠,Wait it out indoors
+Q022,weather,winter,weekday,A cold snap hits on a workday. How do you get to work?,🚗,Warm up the car early,🚇,"CTrain, warm all the way",🧣,"Walk anyway, bundled up",🏠,Work from home if I can
+Q023,weather,fall,,The first frost covers the lawn. What's your reaction?,🍂,Fall is officially here,🌱,"Cover the plants, quick",📸,"Frosty grass, great photo",😴,Wake me when it melts
+Q024,weather,fall,,Larch season turns the mountains gold. What's your plan?,🥾,Hike to see the gold,🚗,Drive the mountain roads,📸,"Photos from the city, fine",🤷,Larch? Never heard of it
+Q026,weather,summer,,Patio season finally arrives. Where do you sit?,☀️,"Full sun, no shade for me",🌳,"Under the umbrella, please",🍹,"Near the misters, obviously",🏠,Patio? My backyard counts
+Q027,weather,winter,,Would you rather have a week of Chinook warmth or a week of perfect snow?,🌬️,"Chinook warmth, every time",❄️,"Perfect snow, bring it on",🤝,"One day of each, please",🤷,I'll take whatever comes
+Q028,weather,year-round,,How often do you check the Calgary forecast?,📱,"Every morning, like clockwork",🌦️,Only when the sky looks odd,😲,Only after getting caught out,🤷,Forecasts? I just look up
+Q029,weather,winter,,The sidewalks are glare ice. How do you walk?,🥾,"Grippy boots, slow steps",🐧,"Penguin waddle, obviously",🧂,Salt the path first,🏠,"Not walking anywhere, nope"
+Q030,weather,spring,,A spring rain soaks the city. What's your move?,🌧️,"Walk in it, rain gear on",☂️,"Umbrella up, carry on",🚗,"Drive, even for short trips",🏠,"Rainy day, stay inside"
+Q031,weather,summer,,A heat wave hits Calgary. How do you cool down?,💦,Splash pad with the kids,🏊,"Pool or river, I'm in",🌳,Shade of a big tree,🧊,"Basement, cold drink, done"
+Q032,weather,fall,,Fall leaves cover your yard. What do you do?,🍂,Rake them the same day,🍁,Jump in the pile first,🌬️,Let the wind take them,🤷,Leaves? They can stay
+Q033,weather,winter,,"Fresh snow, perfect for building. What do you make?",⛄,A classic snowman,🏰,"A snow fort, obviously",🐕,Snow dog for the neighbours,😌,I just watch it fall
+Q034,weather,year-round,,Calgary weather in one word — which fits best?,🎢,"A rollercoaster, honestly",😲,"Unpredictable, always",😎,Sunny with a surprise,🤷,I've stopped trying to guess
+Q035,weather,spring,,You planted early and frost is coming. What do you do?,🧣,Cover everything overnight,🪴,Bring the pots inside,😬,Hope for the best,🤷,"I plant after May long, always"
+Q036,weather,summer,,A prairie thunderstorm rolls in. What's your move?,⛈️,Watch the lightning show,🏠,"Inside, windows closed",📸,"Storm clouds, great photo",😴,Thunder puts me to sleep
+Q037,weather,fall,,Fall mornings are getting colder. How do you warm up?,☕,Coffee before anything else,🧥,The big coat comes out,🍲,Soup season starts now,😌,I love the crisp air
+Q038,weather,winter,,Fresh snow on the roads. How do you drive?,🐢,Slow and steady wins,🚗,"Winter tires, full confidence",🚌,Let the CTrain drive me,🏠,"Not driving anywhere, nope"
+Q039,weather,winter,,It's sunny and -15. Sunglasses or not?,😎,"Yes, sun is sun",🥶,Too cold to care about sun,🕶️,"Sunglasses, every single day",🤷,I never wear sunglasses
+Q040,weather,spring,,Spring melt makes huge puddles. What do you do?,💦,Splash right through them,🥾,"Boots on, puddles avoided",🐕,The dog jumps in anyway,😌,Puddles don't bother me
+Q041,weather,summer,,"If it pours rain at the Stampede, what's your move?",🌧️,"Poncho on, keep going",🤠,"Rain or shine, it's Stampede",🍔,"Food tents, wait it out",🏠,Rainy Stampede? Stay home
+Q042,weather,fall,,A fall wind rattles the windows. How do you feel?,🍂,"Cozy, love the sound",🌬️,"Windy Calgary, as usual",😬,Hoping the fence holds up,😴,Wind noise helps me sleep
+Q043,weather,winter,,Frost patterns cover your windows. What do you do?,❄️,"Admire them, then wipe off",📸,Photo before they melt,🔥,Crank the heat and wait,🤷,I barely look out the window
+Q044,weather,year-round,,Which Calgary season wins for you?,🌸,"Spring, everything wakes up",☀️,"Summer, patio season",🍂,"Fall, golden and crisp",❄️,"Winter, snow and Chinooks"
+Q046,weather,summer,,The Bow River is perfect on a hot day. What's your plan?,🛶,Float down the river,🎣,Fishing from the bank,🚶,Walk the riverside paths,🏠,"Too hot, staying inside"
+Q047,neighbourhood,winter,,"When the community rink is freshly flooded, what's your move?",⛸️,Lace up and skate,🏒,Stick and puck time,☕,"Hot chocolate, rinkside",🛋️,"Too cold, watching inside"
+Q048,neighbourhood,year-round,,"When you pass a little free library, what do you do?",📖,"Take a book, leave a book",👀,Just peek at the titles,📚,Drop off a stack,🚶,Walk on by
+Q049,neighbourhood,summer,,"When your street closes for a block party, where are you?",🎉,Front and centre,🍔,At the barbecue,🎶,By the music,🏠,Watching from my porch
+Q050,neighbourhood,spring,,"When the community garden opens for spring, what's your role?",🌱,Planting the first seeds,💧,Watering duty,🥕,"Harvesting, obviously",🌻,Just admiring the flowers
+Q051,neighbourhood,summer,,"When the farmers' market sets up, what are you after?",🥕,Fresh vegetables,🍞,Baked goods,🌸,Flowers for the table,👀,Just browsing
+Q052,neighbourhood,year-round,,"When it's bin day, how's your sorting game?",♻️,Sorted like a pro,🤔,Blue bin or black bin?,📦,Cardboard tower in the garage,😅,The truck already left
+Q053,neighbourhood,year-round,,"When a neighbour's dog starts barking early, what's your move?",🐶,Wave hello to the dog,☕,"Coffee first, patience later",📝,Leave a friendly note,😴,Earplugs and back to sleep
+Q054,neighbourhood,year-round,,"When a new neighbour moves in, what's your welcome?",🍪,Cookies at the door,👋,A wave and a hello,🗺️,Share the best local spots,🙂,Give them space for now
+Q055,neighbourhood,summer,,"When a garage sale pops up on your street, what are you hunting for?",🪑,Furniture with character,📚,Books by the box,🧸,Toys for the kids,👀,Just browsing
+Q056,neighbourhood,year-round,,"When you need one small thing, where do you go?",🏪,The corner shop,🛒,The big box store,💻,Order it online,🚶,Wherever's closest
+Q057,neighbourhood,summer,,"When the community hall hosts a movie night, where do you sit?",🍿,"Front row, popcorn ready",🧺,Blanket on the grass,🎬,Arriving fashionably late,🏠,Skipping it this time
+Q058,neighbourhood,winter,,"When the sun is out on a cold winter day, where do you walk?",🌊,Along the Bow River,🌲,Through the park trails,🏘️,Around the block,🛋️,Admiring it from the window
+Q060,neighbourhood,year-round,,"When the community newsletter lands, what do you read first?",📰,The events page,🏡,Neighbourhood news,🎉,The photo contest,🗑️,Straight to recycling
+Q061,neighbourhood,summer,,"When your dog hits the off-leash park, what's their style?",🐕,Chasing every ball,🐾,Sniffing every corner,🐶,Making new friends,👀,"No dog, just watching"
+Q062,neighbourhood,year-round,,"When street parking is tight, what's your move?",🚗,Circle the block again,🚶,Park farther and walk,🚲,Bike it instead,🏠,"Stay home, not worth it"
+Q064,neighbourhood,winter,,"When a Chinook melts all the snow overnight, how do you feel?",😎,Bring on the patio weather,😕,The ice is coming back,🧹,"Finally, no shovelling",🤷,Didn't even notice
+Q065,neighbourhood,year-round,,"When a new café opens on the main street, when do you try it?",☕,"First week, obviously",🥐,Once the hype dies down,👥,When friends drag me along,🏠,My kitchen coffee is fine
+Q066,neighbourhood,year-round,weekday,"When the CTrain is packed at rush hour, what's your move?",🚇,"Squeeze in, it's fine",⏰,Wait for the next one,🚶,Walk to the next station,🚗,Driving next time
+Q067,neighbourhood,spring,,"When the Canada geese return in spring, how do you react?",🦢,"Welcome back, honkers",📸,Photo time,🚶,Give them lots of space,🤷,Didn't notice them
+Q068,neighbourhood,summer,,"When Stampede week rolls around, how does your street look?",🤠,Cowboy hats everywhere,🎶,Music drifting over fences,🚗,Extra cars on the street,🏠,Hiding until it's over
+Q069,neighbourhood,year-round,,"When a lost pet poster goes up, what do you do?",🔍,Keep an eye out,📱,Share it online,🐾,Check the back lanes,🙂,Hope they find their way
+Q071,neighbourhood,fall,,"When Halloween comes to your street, how do you join in?",🎃,"Full decorations, lights on",🍬,Candy bowl on the porch,👻,Handing out treats in costume,🌙,"Lights off, hiding inside"
+Q072,neighbourhood,summer,,"When the city asks everyone to cut water use, what do you do first?",🚿,Shorter showers,🌱,Skip watering the lawn,🪣,Reuse the rinse water,🤷,Didn't hear about it
+Q073,neighbourhood,year-round,,"When you see a poster for a neighbourhood event, what catches your eye?",🎶,Live music,🍔,Food trucks,🎨,Art and crafts,👀,Depends on the day
+Q074,neighbourhood,spring,,"When the first warm weekend arrives, what's on the grill?",🍔,Burgers and hot dogs,🥩,"Steak, obviously",🌽,Veggies and corn,🍕,Ordering pizza instead
+Q075,neighbourhood,year-round,,"When a neighbour asks to borrow a ladder, what do you say?",🪜,"Of course, take it",🤝,I'll bring it over,📅,Borrow mine any time,😅,Mine's buried in the garage
+Q076,neighbourhood,winter,,"When the holiday lights go up, how does your house look?",🎄,Clark Griswold level,✨,A few tasteful lights,🕯️,One candle in the window,🌙,Dark and simple
+Q077,neighbourhood,summer,,"When your lawn turns brown in the summer heat, what's your take?",💧,Water it back to life,🌱,"Let it rest, it'll recover",🌼,Plant clover instead,🤷,It's just grass
+Q078,neighbourhood,year-round,,"When someone new to Calgary asks about your neighbourhood, what do you brag about?",🌳,The parks and pathways,☕,The coffee shops,🚌,Easy transit access,🙂,Still discovering it myself
+Q079,neighbourhood,year-round,weekday,"When school zones slow the morning drive, how do you cope?",🐢,"Slow down, no rush",🛣️,Take a different route,🚶,Walk the kids over,🏠,Working from home today
+Q081,neighbourhood,summer,,"When the mosquitoes come out at dusk, how do you fight back?",🧴,"Bug spray, head to toe",🕯️,Citronella candles lit,🏃,"Head inside, quick",🦟,They never bite me
+Q082,neighbourhood,year-round,,"When your back lane gets a fresh layer of gravel, how do you feel?",🚗,Smooth driving at last,🚶,Nicer walks already,🐾,Paws approve too,🤷,Didn't notice the lane
+Q083,neighbourhood,winter,,"When the river freezes over, what do you picture?",⛸️,Skaters gliding by,🎣,Ice fishing huts,📸,A winter postcard,🛋️,"Warm inside, thanks"
+Q084,neighbourhood,year-round,,"When you find out your street is named after a pioneer, what do you do?",📖,Look up the story,🗺️,Check the old maps,🗣️,Tell the neighbours,🤷,Never thought about it
+Q085,neighbourhood,summer,,"When the neighbourhood pool opens for the season, what's your style?",🏊,Laps before the crowd,🌊,"Cannonball, obviously",🏖️,"Deck chair, book in hand",🛋️,Pools aren't my thing
+Q086,food,summer,,"At the Stampede midway, what's the first thing you try?",🍩,Mini donuts,🌭,Corn dog,🍦,Deep-fried surprise,🤷,I skip the midway food
+Q088,food,year-round,,How do you take your poutine?,🧀,Classic curds and gravy,🥓,Loaded with everything,🌱,Veggie version,🤷,Not a poutine person
+Q089,food,year-round,weekend,Brunch order: what are you picking?,🥞,Pancakes,🍳,Eggs benny,🥑,Avocado toast,🤷,Brunch isn't my thing
+Q090,food,year-round,,A food truck pulls up on your street. What are you hoping for?,🌮,Tacos,🍔,Burgers,🍜,Noodles,🤷,I walk right past
+Q091,food,year-round,,Best find at the farmers' market?,🍓,Fresh berries,🍞,Baked bread,🧀,Local cheese,🛍️,I just browse
+Q092,food,year-round,,Pizza night: what's on it?,🍕,Pepperoni classic,🍍,"Pineapple — yes, I said it",🥦,Veggie-loaded,🤷,Pizza's not my thing
+Q093,food,year-round,,Taco filling of choice?,🥩,Alberta beef,🐟,Fish,🌱,Beans and veggies,🤷,Tacos aren't my thing
+Q094,food,summer,,How do you like your Alberta beef?,🥩,Rare,🍖,Medium,🔥,Well done,🌱,I skip the beef
+Q095,food,year-round,,Donut pick?,🍩,Glazed classic,🍫,Chocolate,🍁,Maple,🤷,I skip donuts
+Q096,food,year-round,,Late-night snack run: where to?,🌮,Taco truck,🍕,Pizza slice,🍜,Noodle shop,🛋️,Fridge at home
+Q097,food,year-round,,You're bringing a dish to a potluck. What is it?,🥗,Salad,🍲,Slow-cooker stew,🍰,"Dessert, obviously",🤷,"Store-bought, no shame"
+Q098,food,year-round,,Your coffee order is…,☕,"Black, no fuss",🥛,Latte,🧊,"Iced, even in winter",🫖,"Tea, actually"
+Q099,food,year-round,,Best breakfast?,🥞,Pancakes and syrup,🍳,Eggs and toast,🥣,"Cereal, quick and easy",🤷,I skip breakfast
+Q100,food,summer,,Picnic in the park: what's in the basket?,🥪,Sandwiches,🍗,Fried chicken,🍉,Watermelon,🧺,I just bring snacks
+Q101,food,winter,,Cold winter day: which soup warms you up?,🍜,Noodle soup,🍅,Tomato soup,🎃,Pumpkin soup,🤷,Soup isn't my thing
+Q102,food,winter,,Ice cream on a freezing cold day: yes or no?,🍦,"Yes, always",🍨,Only on a Chinook day,🍰,I'd rather have cake,🤷,Not an ice cream person
+Q104,food,year-round,,Poutine for breakfast: yes or no?,🍳,"Yes, breakfast poutine",🧀,Only the classic,🕐,Poutine is lunch food,🤷,No poutine for me
+Q105,food,summer,,Best patio drink on a hot day?,🍓,Fruit smoothie,🍹,Lemonade,🥤,Iced coffee,🤷,I skip the patio
+Q106,food,winter,,Snowy evening comfort food?,🍲,Stew,🍝,Pasta,🍕,Pizza delivery,🤷,Whatever's in the fridge
+Q107,food,year-round,,Food truck or sit-down restaurant?,🚚,"Food truck, fast and fun",🍽️,"Sit-down, take my time",🏠,Cook at home,🤷,Depends on the day
+Q108,food,year-round,,Maple syrup on pancakes: how much?,🍁,Drown them,🥞,Just a drizzle,🧈,"Butter only, no syrup",🤷,Pancakes aren't my thing
+Q109,food,summer,,BBQ sauce style?,🍯,Sweet,🌶️,Spicy,🍅,Classic tomato,🤷,"Sauce-free, thanks"
+Q110,food,fall,,First thing you grab at the market in fall?,🎃,Pumpkin,🍎,Apples,🥕,Root veggies,🛍️,Just browsing
+Q111,food,winter,,Hot chocolate order?,☕,Classic with marshmallows,🍫,Extra dark,🌶️,Spicy Mexican style,🤷,Not a hot chocolate person
+Q112,food,year-round,,Dumpling night: steamed or fried?,🥟,Steamed,🍳,Pan-fried,🍜,In soup,🤷,Dumplings aren't my thing
+Q113,food,year-round,weekend,Brunch drink?,🍵,"Tea, please",☕,"Coffee, obviously",🧃,Orange juice,🤷,Water is fine
+Q114,food,year-round,,Would you rather: only BBQ or only tacos for a month?,🍖,BBQ every day,🌮,Tacos every day,🍕,"Neither, give me pizza",🤷,I can't choose
+Q115,food,winter,,Winter market treat?,🍪,Baked cookies,🍯,Local honey,☕,Hot cider,🛍️,Just browsing
+Q116,sports,winter,,Flames vs Oilers — who are you cheering for?,🔥,Flames all the way,🛢️,"Oilers, don't tell anyone",🤝,Just here for a good game,🍿,Neither — I'm here for snacks
+Q117,sports,summer,,Stampeders game day — what's your style?,🐎,"Red and white, head to toe",🌭,Hot dog in each hand,🎉,Tailgate before kickoff,🛋️,Watching from the couch
+Q118,events,summer,,Stampede week — what's your first stop?,🤠,"Rodeo, of course",🎡,Midway rides,🥞,Free pancake breakfast,🏠,Skipping the crowds
+Q119,sports,summer,,What's the wildest Stampede food you'd try?,🍩,Deep-fried everything,🦗,"Cricket pizza, why not",🌭,Classic corn dog,🙅,I'll stick to normal food
+Q120,events,winter,,Chinook Blast in February — what's your pick?,🧊,Ice sculptures at night,🎶,Outdoor concert in a parka,🔥,Fire pit with friends,🛋️,"Warm inside, watching online"
+Q121,sports,winter,,Powder day in the Rockies — where are you headed?,⛷️,"Lake Louise, first chair",🏂,"Nakiska, close to home",🎿,Cross-country at Canmore,🛋️,Hot chocolate at the lodge
+Q122,sports,winter,,Outdoor skating in Calgary — your rink of choice?,⛸️,Bowness Park lagoon,🏒,Shinny at a community rink,🌙,Skating under the lights,🧣,Watching from the boards
+Q123,sports,fall,,Grey Cup party — what's on your plate?,🏈,Wings and football,🍕,"Pizza, obviously",🌭,Hot dogs and chili,📺,Just here for the halftime show
+Q124,sports,spring,,Playoff hockey in Calgary — how are you feeling?,🔥,Believing all the way,😬,Nervous every single game,🎉,Red Mile energy,😴,Wake me when it's over
+Q125,sports,summer,,Cavalry FC at Spruce Meadows — how do you cheer?,⚽,Singing with the supporters,🐴,A day out at the stables,🌞,"Sunny seat, cold drink",📺,Catching the highlights later
+Q126,sports,winter,,Roughnecks lacrosse — have you been to a game?,🥍,Loud and loving it,🎉,First game this season,🤔,"Never been, curious though",🙅,Not a lacrosse fan
+Q127,events,summer,,Folk Fest at Prince's Island — your vibe?,🎵,Front row for every set,🧺,Picnic blanket in the back,🌧️,"Rain or shine, I'm there",🏠,Listening from home instead
+Q128,events,spring,,Lilac Festival on 4th Street — how do you spend it?,🌸,Browsing the market stalls,🎶,Street music all afternoon,🍦,Ice cream in hand,🏠,Skipping the crowds
+Q129,events,summer,,GlobalFest fireworks — your viewing plan?,🎆,Front row at Elliston Park,🌉,Watching from a distance,🎶,Food and music first,📺,Just the photos the next day
+Q130,events,summer,,Canada Day in Calgary — what's your plan?,🍁,Parade and pancakes,🎆,Fireworks after dark,🎉,Backyard barbecue,🛋️,A quiet day at home
+Q131,sports,fall,,Tailgating before the big game — what's your role?,🍔,Grill master,🧊,Cooler duty,🎶,Playlist DJ,📣,Chief cheerleader
+Q132,sports,winter,,Would you rather: front-row seats or a heated suite?,🔥,"Front row, freezing and loud",🛋️,"Heated suite, warm and calm",🧍,Standing room with friends,📺,"Honestly, the couch wins"
+Q133,sports,winter,,Pick your Calgary winter sport.,⛷️,Downhill skiing,⛸️,Outdoor skating,🏂,Snowboarding,🛋️,"Fireside, no sport for me"
+Q134,events,summer,,Stampede Parade morning — where would you be?,🐎,Curbside with a coffee,📺,Watching it on TV,🎉,Marching in it,😴,"Sleeping in, parade who?"
+Q135,sports,year-round,,Best Calgary sports moment ever?,🏒,The '89 Cup run,🏈,Stampeders Grey Cup win,⛷️,Olympic memories from '88,🤷,Too young to pick one
+Q136,sports,winter,,Banff ski trip — how do you get there?,🚗,Driving up yourself,🚌,"Ski bus, nap on the way",🏨,Weekend stay in Banff,🏠,Daydreaming from the couch
+Q137,sports,summer,,Summer evening in Calgary — what's your game?,⚾,Slow-pitch with friends,🏐,Beach volleyball,⛳,Nine holes after work,🧺,"Picnic, no game for me"
+Q138,sports,spring,,Calgary Marathon weekend — are you in?,🏃,Running the full course,🚶,Cheering from the sidelines,🎉,Volunteering at a water stop,🛋️,Sleeping in instead
+Q139,sports,winter,,Flames jersey — which one are you wearing?,🔴,Home red,🤍,Away white,🕰️,A retro classic,👕,"No jersey, just a scarf"
+Q140,sports,winter,,A free winter evening — what are you doing?,🎄,Strolling the light displays,⛸️,Skating with friends,☕,Hot chocolate crawl,🛋️,Staying warm at home
+Q141,sports,summer,,A sunny Calgary afternoon — golf or something else?,⛳,"Eighteen holes, obviously",🥏,Disc golf in the park,🌳,Walking the pathways,🛋️,"Patio, no clubs for me"
+Q142,events,summer,,Stampede outfit — how far do you go?,🤠,"Full cowboy, hat and boots",👢,"Boots only, that's enough",👕,"A plaid shirt counts, right?",👔,No cowboy gear for me
+Q143,sports,year-round,,Big game night — live in person or on the couch?,🏟️,"Live, nothing beats it",🛋️,Couch with the big screen,🍔,Wings spot with the crowd,📱,Highlights on my phone
+Q144,sports,winter,,Family winter day — what's the plan?,⛸️,Skating together,🛷,Tobogganing at the hill,⛄,Building a snowman,🏠,Hot chocolate at home
+Q145,sports,year-round,,One Calgary sports bucket-list item?,🏒,A Flames playoff game,🐎,A rodeo at the Stampede,⛷️,Skiing Lake Louise powder,📺,Watching it all from home
+Q147,daily,year-round,,Which seat do you grab on the CTrain?,🪟,"Window, always",🚪,Near the door,🧍,Standing room only,🎧,"Doesn't matter, headphones on"
+Q148,daily,year-round,,What powers your commute?,🎵,Podcasts all the way,🎧,"Music, loud",🔇,Silence is golden,🏠,"No commute, lucky me"
+Q149,daily,year-round,,The grocery run is taking forever. What's your move?,🛒,"Go early, beat the crowd",📦,Order it online,🌙,Late-night run,🍕,Takeout instead
+Q150,daily,year-round,weekday,Would you rather drive Deerfoot or Crowchild at rush hour?,🛣️,"Deerfoot, straight shot",🌉,"Crowchild, west side",🚇,"Neither, CTrain wins",🏠,Work from home
+Q151,daily,year-round,weekday,Downtown parking — how do you handle it?,🅿️,"Parkade, worth the price",🚶,"Park far, walk in",🚇,CTrain and forget the car,💸,Avoid downtown entirely
+Q152,daily,spring,,An e-scooter is parked on the sidewalk. Your thought?,🛴,"Fun, let's ride",🚶,"In the way, honestly",🤷,Never tried one,🚫,Ban them all
+Q153,daily,spring,,Bike lane or quiet side street — which do you ride?,🚲,"Bike lane, painted and proud",🌳,"Side street, less traffic",🚗,I don't bike here,🚶,I walk everywhere
+Q155,daily,winter,,The bus is 10 minutes late on a freezing day. What now?,🥶,"Wait it out, freezing",📱,"Check the app, replan",🚶,Walk to the next stop,🤷,"It happens, whatever"
+Q156,daily,winter,,Your car is covered in road salt. What's your move?,🧼,"Car wash, right now",🌧️,Wait for the rain,😬,"Leave it, adds character",🚫,No car to wash
+Q157,daily,year-round,weekend,Errands on a Saturday — what's your strategy?,📝,"One big list, one trip",🛒,Several small trips,📦,"Order online, stay home",😴,Errands can wait
+Q158,daily,winter,,Would you rather shovel the driveway or scrape the windshield?,⛄,"Shovel, it's a workout",🧊,"Scrape, it's faster",🌬️,Let the Chinook do it,😌,Pay someone else
+Q159,daily,year-round,,The CTrain doors close just as you arrive. What do you do?,🏃,Sprint and catch it,😩,Sigh and wait,☕,Grab a coffee meanwhile,📱,Check the next arrival
+Q161,daily,spring,,Spring thaw hits and the potholes bloom. Your move?,🕳️,Dodge every crater,🚗,"Slow down, survive it",📞,Report it to 311,🤷,Part of spring here
+Q162,daily,year-round,,CTrain or bus for a crosstown trip?,🚇,"CTrain, fast and simple",🚌,"Bus, drops me closer",🚗,"Drive, no waiting",🚶,Walk if it's nice out
+Q163,daily,winter,,Snow day — the city says stay home if you can. You…,🏠,"Staying in, easy call",🚗,"Out anyway, careful driver",🚇,"Transit, let someone else drive",☕,Snow day means hot drinks
+Q164,daily,winter,,Your car's block heater — plugged in or forgotten?,🔌,Plugged in every night,🤔,What's a block heater?,🚫,"No car, no problem",😅,"Meant to, forgot again"
+Q165,daily,year-round,,Parallel parking downtown — how confident are you?,🅿️,"Pro, first try every time",😬,"Three tries, no shame",🚶,"Park far, walk the rest",🚫,I avoid it entirely
+Q168,daily,year-round,weekday,Carpooling with a neighbour — would you?,🚗,"Sure, split the drive",🎵,Only if I pick the music,🕐,My schedule's too random,🙅,Prefer solo trips
+Q169,daily,year-round,weekend,Weekend drive to the mountains — what's your style?,🏔️,"Early bird, beat traffic",🌤️,"Midday, easy pace",🌙,Night drive home,🏠,Mountains can wait
+Q170,daily,winter,,Your ideal way to spend a snow day off?,⛄,Build a snowman,🎿,Hit the slopes nearby,📚,"Couch, book, blanket",🛍️,"Mall day, warm inside"
+Q171,pride,year-round,,Where's the best view in Calgary?,🏔️,From Nose Hill at sunset,🌉,The Peace Bridge at dusk,🗼,Top of the Calgary Tower,🤷,Can't pick just one
+Q172,pride,year-round,,Which river pathway wins for a walk?,🌊,"Bow River, downtown stretch",🌲,Fish Creek Park trails,🌿,Elbow River pathways,🚶,"Any path, any day"
+Q173,pride,summer,,Best park for a lazy summer afternoon?,🏝️,Prince's Island Park,🌳,Bowness Park by the river,🌸,Riley Park flower beds,🌞,Any park with shade
+Q174,pride,winter,,Best sledding hill on a snowy day?,🛷,St. Patrick's Island hill,🏘️,A community toboggan hill,⛄,Any snowy hill works,😂,I watch from the car
+Q175,pride,year-round,,Where do you watch the sunset?,🌇,Crescent Heights lookout,🏞️,Edworthy Park riverside,🌅,Any west-facing hill,😴,I always miss it
+Q176,pride,year-round,,Best farmers' market in the city?,🥕,Calgary Farmers' Market,🍅,Crossroads Market,🧀,Hillhurst-Sunnyside market,🛒,Any market with samples
+Q177,pride,summer,,Best patio for a sunny afternoon?,🌆,17th Avenue patios,🍹,Kensington patios,☕,Inglewood café patios,🌤️,Any sunny sidewalk table
+Q178,pride,winter,,Best winter walk when the snow falls?,❄️,Prince's Island in snow,🌲,Fish Creek snowy trails,🏙️,Stephen Avenue lights,🔥,"Warm inside, watching snow"
+Q179,pride,year-round,,Best off-leash park for dogs?,🐕,Sue Higgins Park,🐾,Nose Hill off-leash areas,🌳,River Park off-leash,🐶,No dog — I just visit
+Q180,pride,summer,,Best playground in the city?,🧒,Bowness Park playground,🌳,The neighbourhood playground,🎠,The one with the zipline,👧,I'm past playground age
+Q182,pride,year-round,,What makes a block feel friendly?,👋,Neighbours who wave hello,🍪,Shared baking and treats,🌻,Front-yard gardens,🤷,Still looking for mine
+Q183,pride,year-round,,Best coffee stop in the city?,☕,A Kensington café,🥤,Inglewood coffee shops,🍩,A donut shop classic,🏠,My own kitchen brew
+Q185,pride,fall,,Best place for fall colours?,🍁,Fish Creek golden leaves,🍂,Prince's Island maples,🌳,River pathway trees,📸,Anywhere — I take photos
+Q186,pride,spring,,First sure sign of spring here?,🌱,Crocuses in the garden,🦢,Geese back on the river,☀️,A warm Chinook afternoon,🌧️,"Snow in May, obviously"
+Q187,pride,winter,,Best winter festival to visit?,✨,Chinook Blast downtown,🔥,Block Heater music nights,🎄,ZOOLIGHTS at the zoo,🛋️,Festivals are for summer
+Q188,pride,summer,,Best bike ride in the city?,🚲,Bow River pathway loop,🌲,Fish Creek Park trails,🌉,Across the Peace Bridge,🚶,I walk instead of riding
+Q189,pride,summer,,Best picnic spot in Calgary?,🧺,Prince's Island Park,🌳,Edworthy Park riverside,🌸,Riley Park lawns,🍔,Anywhere with takeout
+Q190,pride,year-round,,Best library branch in the city?,📚,Central Library downtown,🏛️,A historic branch library,🖥️,The one with good Wi-Fi,📖,I read on my phone
+Q191,pride,winter,,Best way to enjoy a cold day?,⛸️,Skating at Bowness Park,🎿,Cross-country skiing,🛷,Sledding with the kids,☕,Hot drink by the window
+Q192,pride,summer,,Best summer festival in Calgary?,🎶,Folk Fest at Prince's Island,🎸,Sled Island music fest,🎭,Street theatre season,🌞,Any festival with food
+Q193,pride,year-round,,Where do you take a first-time visitor?,🗼,The Calgary Tower,🏞️,A river pathway walk,🏙️,Stephen Avenue stroll,🤷,Depends on the visitor
+Q194,pride,year-round,,Best main street for a stroll?,🛍️,Kensington Road,🧱,Inglewood's 9th Avenue,☕,17th Avenue shops,🚶,Any street with patios
+Q196,pride,winter,,Best holiday lights in the city?,🎄,The downtown displays,✨,A bright front-yard street,🕯️,Zoo lights evening,😴,I skip the crowds
+Q197,pride,summer,,Best way to enjoy the Bow River?,🚣,Rafting down the Bow,🎣,Fishing from the bank,🚶,Walking the pathways,🏖️,Watching from a bench
+Q198,pride,year-round,weekend,Best area for a weekend brunch?,🥞,Kensington cafés,🍳,Inglewood brunch spots,🥓,17th Avenue restaurants,🏠,Brunch at home instead
+Q199,pride,winter,,Flames game night — what's your ritual?,🔥,"Jersey on, face painted",🍔,Pregame wings with friends,📣,C of Red at the arena,🛋️,I watch whatever's on
+Q200,pride,winter,,Best thing about a Calgary winter?,☀️,Sunny blue-sky days,🌬️,A Chinook rescue,⛸️,Skating and sledding,🏖️,Counting down to summer
+Q201,daily,fall,weekday,Back-to-school traffic is back. How's your morning?,🚸,Leave ten minutes early,🚶,"Walk the kids, skip the car",🚇,"CTrain, avoiding it all",🏠,No school run for me
+Q202,food,fall,,Thanksgiving dinner: what's the star of the table?,🦃,"Turkey, obviously",🥧,Pumpkin pie,🥔,Mashed potatoes and gravy,🍽️,Whatever someone else cooks
+Q203,weather,fall,,It snows in September. Again. Your reaction?,😂,Classic Calgary,🌻,My garden isn't done yet!,🧥,"Winter coat, early debut",🤷,Snow in fall is normal here
+Q204,neighbourhood,fall,,Last harvest day at the community garden. What do you take home?,🥕,Carrots,🥔,A bag of potatoes,🎃,A small pumpkin,👋,Just here to chat
+Q205,daily,fall,,The furnace kicks on for the first time this fall. You…,🔥,Smile at the warm air,👃,Notice that dusty smell,🧣,Hold out in a sweater,🤷,Didn't notice
+Q206,neighbourhood,fall,,Fall leaves and yard waste: where do they go?,🟢,Into the green bin,🍂,Left for the garden,🌬️,The wind takes them,🏢,"No yard, no problem"
+Q207,sports,fall,,Hockey season starts. How do you feel?,🔥,"Ready, jersey's out",📅,Checking the schedule,😬,Already nervous,🤷,Wake me for the playoffs
+Q208,weather,fall,,A golden +18 afternoon in October. What's the plan?,🚶,A long pathway walk,🍁,Leaf photos everywhere,☕,"Patio, one last time",🏠,Yard ready for winter
+Q209,food,fall,,Apple season: what are you making?,🥧,Apple pie,🍎,Eating them straight,🧃,Fresh cider,🤷,Store-bought is fine
+Q210,events,fall,,Halloween costume this year?,🧛,Something spooky,🦸,A superhero,🧥,Whatever fits over a parka,🍬,"No costume, candy duty"
+Q211,events,spring,,May long weekend: what's the plan?,🏕️,First camping trip,🌱,Planting the garden,🧹,Spring clean-up,🛋️,"Rest, it's a long weekend"
+Q212,neighbourhood,spring,,Community spring clean-up day. What's your job?,🧤,Picking up litter,🧹,Sweeping the gravel,🌷,Planting flowers,☕,Coffee for everyone
+Q213,weather,spring,,"+20 on Tuesday, snow on Thursday. How do you plan your week?",🧥,Winter coat stays handy,👕,T-shirt and hope,📱,Forecast every hour,🤷,Calgary does what it wants
+Q214,daily,spring,,Street sweeping is coming to your block. Your move?,🚗,Move the car the night before,🧾,"Set a reminder, just in case",😬,Find the ticket later,🚫,No car on the street
+Q215,sports,spring,,First warm weekend: what are you dusting off?,🚲,The bike,🛹,A skateboard,🏌️,Golf clubs,🛋️,The patio chair
+Q216,food,spring,,Rhubarb is up in the backyard. What happens next?,🥧,Rhubarb pie,🍓,Strawberry-rhubarb crumble,🎁,Giving it to the neighbours,🤷,It just keeps growing
+Q217,neighbourhood,spring,,Garage sale season starts. Are you selling?,🏷️,"Yes, everything must go",🛒,Only buying,🧺,Joining a street-wide sale,🏠,Not this year
+Q218,pride,year-round,,Best place to see the skyline at night?,🌃,Scotsman's Hill,🌉,Tom Campbell's Hill,🏔️,Nose Hill,🤷,Any hill with a view

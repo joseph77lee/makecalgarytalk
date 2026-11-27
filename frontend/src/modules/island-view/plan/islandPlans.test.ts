@@ -6,15 +6,17 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { BUILDING_TREE, LAND_STAGE_COUNT, chainOnLot, landStageForResidents } from './buildingTree';
-import { PLAZA, activeLots, decodePlan, lotTiles, stageMap, tileKey, walkableTiles, type IslandPlan, type Tile } from './islandPlan';
+import { BUILDING_TREE, LAND_STAGE_COUNT, LOT_SPECS, communitySteps, landStageForResidents, lotKind } from './buildingTree';
+import { PLAZA, activeLots, decodePlan, lotStage, lotTiles, stageMap, tileKey, walkableTiles, type IslandPlan, type Tile } from './islandPlan';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../../public/islands');
 const files = readdirSync(DIR).filter((f) => f.endsWith('.json'));
 const plans: IslandPlan[] = files.map((f) => decodePlan(JSON.parse(readFileSync(join(DIR, f), 'utf8'))));
 const STAGES = [...Array(LAND_STAGE_COUNT).keys()];
-/** Most residents a stage can have (requirement.md §7.8) → houses it must hold. */
-const HOUSES_NEEDED = [2, 5, 10, 25, 50, 80];
+/** Houses are scenery (requirement v1.48 §7.2); the first stages still show a few. */
+const HOUSES_NEEDED = [2, 5, 10];
+const MAX_HOUSES = 150;
+const WATER_SITES = ['shore', 'riverbank'];
 
 const N4 = (t: Tile) => [
   { x: t.x + 1, z: t.z },
@@ -80,20 +82,39 @@ describe('stored island plans', () => {
     p.water.forEach((t) => claim(t, 'water'));
     PLAZA.forEach((t) => claim(t, 'plaza'));
     p.paths.forEach((t) => claim(t, 'path'));
-    for (const [key, spec] of Object.entries(BUILDING_TREE.lots)) {
-      const r = p.lots[key];
-      const size = [r.w, r.d].sort().join('x');
-      expect(size, `${key} size`).toBe([...spec.size].sort().join('x'));
-      if (spec.kind === 'entrance') {
+    // Every step of this community's build map that needs a lot has one, of its size and turned
+    // to its facing (an odd facing swaps the footprint); Main Street and spare lots too.
+    const steps = communitySteps(p.code, p.persona).filter((st) => st.tiles[0] > 0);
+    expect(p.persona, 'plan v4 carries the persona').not.toBeNull();
+    for (const st of steps) {
+      const r = p.lots[st.key];
+      expect(r, `lot for ${st.key}`).toBeDefined();
+      const [w, d] = st.tiles;
+      const face = r.face ?? 0;
+      expect(face % 2 === 1 ? [r.d, r.w] : [r.w, r.d], `${st.key} size for face ${face}`).toEqual(w === d ? [w, d] : [w, d]);
+      if (st.track === 'root') {
         expect(owner.get(tileKey(r)), 'entrance is on a path').toBe('path');
         expect(N4(r).some((n) => owner.get(tileKey(n)) === 'plaza'), 'entrance next to the plaza').toBe(true);
         continue;
       }
-      for (const t of lotTiles(r)) {
-        expect(stages.get(tileKey(t))!, `${key} land stage`).toBeLessThanOrEqual(spec.landStage);
-        claim(t, key);
+      if (st.site === 'crossing' && lotTiles(r).some((t) => waterKeys.has(tileKey(t)))) {
+        // a bridge across the water (requirement v1.50 §7.6b, §7.8): a straight line, both ends on
+        // free dry land, water under the middle; the water stays water, only the dry tiles are claimed
+        const tiles = lotTiles(r);
+        expect(Math.min(r.w, r.d), `${st.key} is one tile wide`).toBe(1);
+        expect(waterKeys.has(tileKey(tiles[0]!)) || waterKeys.has(tileKey(tiles[tiles.length - 1]!)), `${st.key} lands on dry land at both ends`).toBe(false);
+        tiles.filter((t) => !waterKeys.has(tileKey(t))).forEach((t) => claim(t, st.key));
+        continue;
       }
+      for (const t of lotTiles(r)) claim(t, st.key);
     }
+    for (const [key, spec] of Object.entries(LOT_SPECS)) {
+      const r = p.lots[key];
+      expect([r.w, r.d].sort().join('x'), `${key} size`).toBe([...spec.size].sort().join('x'));
+      lotTiles(r).forEach((t) => claim(t, key));
+    }
+    const stepKeys = new Set([...steps.map((st) => st.key), ...Object.keys(LOT_SPECS)]);
+    for (const key of Object.keys(p.lots)) expect(stepKeys.has(key), `lot ${key} belongs to this community`).toBe(true);
     p.houses.forEach((t) => claim(t, 'house'));
     p.trees.forEach((t) => claim(t, 'tree'));
     p.stations.forEach((st) => lotTiles(st.rect).forEach((t) => claim(t, `station ${st.name}`)));
@@ -120,11 +141,11 @@ describe('stored island plans', () => {
     // every active lot and house has a reachable door.
     for (const k of STAGES) {
       const houses = p.houses.filter((t) => stages.get(tileKey(t))! <= k);
-      expect(houses.length, `houses on stage ${k}`).toBeGreaterThanOrEqual(HOUSES_NEEDED[k]);
+      expect(houses.length, `houses on stage ${k}`).toBeGreaterThanOrEqual(HOUSES_NEEDED[k] ?? 0);
       const walk = new Set(walkableTiles(p, k, houses.length).map(tileKey));
       const blocked = new Set<string>();
       for (const [key, r] of Object.entries(p.lots)) {
-        if (BUILDING_TREE.lots[key].kind !== 'entrance') lotTiles(r).filter((t) => stages.get(tileKey(t))! <= k).forEach((t) => blocked.add(tileKey(t)));
+        if (lotKind(key) !== 'entrance') lotTiles(r).filter((t) => stages.get(tileKey(t))! <= k).forEach((t) => blocked.add(tileKey(t)));
       }
       houses.forEach((t) => blocked.add(tileKey(t)));
       p.trees.filter((t) => stages.get(tileKey(t))! <= k).forEach((t) => blocked.add(tileKey(t)));
@@ -133,7 +154,7 @@ describe('stored island plans', () => {
       const open = p.tiles.filter((t) => t.stage <= k && !blocked.has(tileKey(t)));
       expect(walk.size, `stage ${k}: ${open.length - walk.size} open tiles unreachable`).toBe(open.length);
       for (const key of activeLots(p, k)) {
-        if (BUILDING_TREE.lots[key].kind === 'entrance') continue;
+        if (lotKind(key) === 'entrance') continue;
         expect(lotTiles(p.lots[key]).some((t) => N4(t).some((n) => walk.has(tileKey(n)))), `stage ${k}: lot ${key} unreachable`).toBe(true);
       }
       for (const h of houses) expect(N4(h).some((n) => walk.has(tileKey(n))), `stage ${k}: house ${tileKey(h)} unreachable`).toBe(true);
@@ -158,42 +179,82 @@ describe('CTrain on the islands (requirement.md §7.9)', () => {
 describe('lot spread (requirement.md §7.8)', () => {
   it.each(plans.map((p) => [p.code, p]))('%s: later lots sit farther out and in different directions', (_code, p) => {
     const centre = (k: string) => ({ x: p.lots[k].x + p.lots[k].w / 2, z: p.lots[k].z + p.lots[k].d / 2 });
-    const keys = Object.entries(BUILDING_TREE.lots);
-    const first = keys.filter(([, v]) => v.kind === 'building' && v.landStage === 0).map(([k]) => k);
-    const later = keys.filter(([, v]) => (v.kind === 'building' || v.kind === 'spare') && v.landStage > 0).map(([k]) => k);
+    const keys = Object.keys(p.lots).filter((k) => lotKind(k) === 'building' || lotKind(k) === 'spare');
+    const first = keys.filter((k) => lotStage(p, k) === 0);
+    const later = keys.filter((k) => lotStage(p, k) > 0);
     const mean = (ks: string[]) => ks.reduce((a, k) => a + Math.hypot(centre(k).x, centre(k).z), 0) / ks.length;
-    expect(mean(later) / mean(first)).toBeGreaterThan(2);
+    expect(mean(later) / mean(first)).toBeGreaterThan(1.5);
     const angles = later.map((k) => Math.atan2(centre(k).z, centre(k).x)).sort((a, b) => a - b);
     const gaps = angles.map((a, i) => (angles[(i + 1) % angles.length] - a + 2 * Math.PI) % (2 * Math.PI));
     expect(Math.max(...gaps), 'no direction is left without later lots for more than 150°').toBeLessThan((150 * Math.PI) / 180);
   });
 });
 
-describe('building tree data', () => {
-  it('every building lot exists and growth chains share one lot', () => {
-    for (const b of BUILDING_TREE.buildings) {
-      if (b.lot) expect(BUILDING_TREE.lots[b.lot], b.key).toBeDefined();
-      if (b.growsFrom) {
-        const parent = BUILDING_TREE.buildings.find((x) => x.key === b.growsFrom);
-        expect(parent?.lot, `${b.key} grows on its parent's lot`).toBe(b.lot);
-        expect(b.requires).toContain(b.growsFrom);
-      }
-      for (const r of b.requires) expect(BUILDING_TREE.buildings.some((x) => x.key === r), `${b.key} requires ${r}`).toBe(true);
-    }
-    expect(chainOnLot('lot-a').map((b) => b.key)).toEqual(['fire-pit', 'warming-hut', 'community-hall']);
+describe('places by meaning (requirement v1.48 §7.6b, §7.8)', () => {
+  const touchesWater = (p: IslandPlan, key: string) => {
+    const water = new Set(p.water.map(tileKey));
+    return lotTiles(p.lots[key]).some((t) => N4(t).some((n) => water.has(tileKey(n))));
+  };
+
+  it('bridge places cross the water where an island has water narrow enough (requirement v1.50 §7.8)', () => {
+    const crossing = plans.flatMap((p) =>
+      communitySteps(p.code, p.persona)
+        .filter((st) => st.site === 'crossing')
+        .map((st) => ({ code: p.code, key: st.key, wet: lotTiles(p.lots[st.key]!).some((t) => p.water.some((w) => w.x === t.x && w.z === t.z)) })),
+    );
+    expect(crossing.length).toBeGreaterThan(20);
+    // the landmark bridges of Eau Claire and Point McKay span their water; Crescent Heights' water is too wide (riverbank)
+    expect(crossing.filter((c) => c.key === 'landmark.eau' || c.key === 'landmark.poi').every((c) => c.wet)).toBe(true);
+    expect(crossing.filter((c) => c.wet).length).toBeGreaterThanOrEqual(10);
   });
 
-  it('a building\'s lot exists by the time its resident condition can be met (§7.8)', () => {
-    for (const b of BUILDING_TREE.buildings) {
-      if (!b.lot) continue;
-      expect(BUILDING_TREE.lots[b.lot].landStage, b.key).toBeLessThanOrEqual(landStageForResidents(b.residents));
-    }
+  it('water places stand on the shore (all but a few, listed by the generator)', () => {
+    const wet = plans.flatMap((p) => communitySteps(p.code, p.persona).filter((st) => WATER_SITES.includes(st.site)).map((st) => touchesWater(p, st.key)));
+    expect(wet.length).toBeGreaterThan(100);
+    expect(wet.filter(Boolean).length / wet.length).toBeGreaterThanOrEqual(0.95);
   });
 
-  it('stage-1 buildings need no residents or streak (a first resident builds one on day one)', () => {
-    const first = BUILDING_TREE.buildings.filter((b) => b.stage === 1);
-    expect(first.map((b) => b.key)).toEqual(['welcome-sign', 'fire-pit', 'frozen-pond']);
-    for (const b of first) expect([b.requires.length, b.residents, b.streakDays]).toEqual([0, 0, 0]);
+  it('every lake and river community has water for its places (a small lake is added when the boundary has none)', () => {
+    for (const p of plans.filter((x) => x.persona === 'lake' || x.persona === 'river')) expect(p.water.length + p.bridges.length, p.code).toBeGreaterThanOrEqual(12); // bridges were water
+  });
+
+  it('Mahogany\'s beach club stands on the lake shore, facing the water', () => {
+    const p = plans.find((x) => x.code === 'MAH') as IslandPlan;
+    expect(touchesWater(p, 'landmark.mah')).toBe(true);
+    const r = p.lots['landmark.mah'];
+    const water = new Set(p.water.map(tileKey));
+    const front = r.face === 0 ? [...Array(r.w).keys()].map((i) => ({ x: r.x + i, z: r.z + r.d })) : r.face === 2 ? [...Array(r.w).keys()].map((i) => ({ x: r.x + i, z: r.z - 1 })) : r.face === 1 ? [...Array(r.d).keys()].map((j) => ({ x: r.x + r.w, z: r.z + j })) : [...Array(r.d).keys()].map((j) => ({ x: r.x - 1, z: r.z + j }));
+    expect(front.some((t) => water.has(tileKey(t))), 'its front faces the water').toBe(true);
+  });
+
+  it('a founder can start the first places: each track\'s first step stands on the first land on most islands', () => {
+    const first = (track: string) => plans.filter((p) => {
+      const st = communitySteps(p.code, p.persona).find((x) => x.track === track && x.step === 1);
+      return st !== undefined && lotStage(p, st.key) === 0;
+    }).length;
+    expect(first('community')).toBeGreaterThanOrEqual(220);
+    expect(first('nature')).toBeGreaterThanOrEqual(210);
+    expect(first('persona')).toBeGreaterThanOrEqual(200);
+  });
+
+  it('signature landmarks have their lot by the time 11 neighbours can build them, on almost every island', () => {
+    const lm = plans.flatMap((p) => communitySteps(p.code, p.persona).filter((st) => st.landmarkOrder === 1).map((st) => lotStage(p, st.key)));
+    expect(lm).toHaveLength(31);
+    expect(lm.filter((s) => s <= landStageForResidents(11)).length).toBeGreaterThanOrEqual(28);
+  });
+
+  it('houses stand in residential zones: at most 150, never more than a third of the land', () => {
+    for (const p of plans) {
+      expect(p.houses.length, p.code).toBeLessThanOrEqual(MAX_HOUSES);
+      expect(p.houses.length, p.code).toBeLessThan((p.tiles.length - p.water.length) / 3);
+    }
+  });
+});
+
+describe('build map data', () => {
+  it('one root opens three tracks; every first step needs no residents', () => {
+    expect(BUILDING_TREE.buildings.filter((b) => b.track === 'root').map((b) => b.key)).toEqual(['welcome-sign']);
+    for (const b of BUILDING_TREE.buildings.filter((x) => x.step === 1)) expect([b.residents, b.streakDays], b.key).toEqual([0, 0]);
   });
 
   it('land stage follows cumulative residents (§7.8)', () => {

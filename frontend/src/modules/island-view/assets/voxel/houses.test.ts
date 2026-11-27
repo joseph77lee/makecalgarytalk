@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { houseFacing } from '../../layout';
-import { HOUSE_MIX, HOUSE_TYPES, houseHeight, houseParts, houseStyleFor, houseTypeFor } from './houses';
+import { HOUSE_MIX, HOUSE_TYPES, houseHeight, houseParts, houseStyleFor, houseTypeFor, houseTypeGrown } from './houses';
 
 describe('house generator (M19, requirement.md §7.2)', () => {
   it('picks the community style: downtown buildings, inner-city, suburbs', () => {
@@ -28,7 +28,7 @@ describe('house generator (M19, requirement.md §7.2)', () => {
   it.each(HOUSE_TYPES.map((t) => [t]))('%s stays inside its one-tile lot in every facing', (type) => {
     for (let facing = 0; facing < 4; facing++) {
       for (let seed = 0; seed < 8; seed++) {
-        for (const b of houseParts(type, seed, facing, false)) {
+        for (const b of houseParts(type, seed, facing)) {
           expect(Math.abs(b.p[0]) + b.s[0] / 2).toBeLessThanOrEqual(0.55);
           expect(Math.abs(b.p[2]) + b.s[2] / 2).toBeLessThanOrEqual(0.55);
           expect(b.p[1] - b.s[1] / 2).toBeGreaterThanOrEqual(-0.001);
@@ -38,16 +38,16 @@ describe('house generator (M19, requirement.md §7.2)', () => {
     }
   });
 
-  it('active-today houses light their windows; others do not', () => {
+  it('no house glows by day; every window is a night window (lights do not follow activity, v1.48 §7.2)', () => {
     for (const type of HOUSE_TYPES) {
-      expect(houseParts(type, 3, 0, true).some((b) => b.layer === 'glow'), type).toBe(true);
-      expect(houseParts(type, 3, 0, false).some((b) => b.layer === 'glow'), type).toBe(false);
+      expect(houseParts(type, 3, 0).some((b) => b.layer === 'glow'), type).toBe(false);
+      expect(houseParts(type, 3, 0).some((b) => b.tag === 'village-window'), type).toBe(true);
     }
   });
 
   it('turning the house rotates its front: the door side moves from +z to +x', () => {
     const front = (facing: number) => {
-      const door = houseParts('bungalow', 1, facing, false).find((b) => b.c === '#8b5a3c')!;
+      const door = houseParts('bungalow', 1, facing).find((b) => b.c === '#8b5a3c')!;
       return [Math.sign(Math.round(door.p[0] * 10)) || 0, Math.sign(Math.round(door.p[2] * 10)) || 0];
     };
     expect(front(0)).toEqual([0, 1]);
@@ -73,6 +73,17 @@ describe('house generator (M19, requirement.md §7.2)', () => {
 describe('snow on every house design', () => {
   it('every house model has a roof that takes snow (flat roofs included)', () => {
     for (const type of HOUSE_TYPES)
-      for (let seed = 0; seed < 60; seed++) expect(houseParts(type, seed, 0, false).some((b) => b.tag === 'roof'), `${type} ${seed}`).toBe(true);
+      for (let seed = 0; seed < 60; seed++) expect(houseParts(type, seed, 0).some((b) => b.tag === 'roof'), `${type} ${seed}`).toBe(true);
+  });
+
+  it('houses grow up as the community grows: more townhouses and apartments on later land stages (v1.48 §7.2)', () => {
+    const tall = (style: 'suburb' | 'inner', stage: number) => {
+      let n = 0;
+      for (let seed = 0; seed < 400; seed++) if (['townhouses', 'apartment'].includes(houseTypeGrown(style, seed, stage))) n++;
+      return n / 400;
+    };
+    expect(tall('suburb', 5)).toBeGreaterThan(tall('suburb', 0) + 0.25);
+    expect(tall('inner', 5)).toBeGreaterThan(tall('inner', 0) + 0.25);
+    for (let seed = 0; seed < 50; seed++) expect(houseTypeGrown('suburb', seed, 0)).toBe(houseTypeFor('suburb', seed));
   });
 });

@@ -42,13 +42,15 @@ export function parseCommunityViewState(input: unknown): ParseResult {
   } else {
     const ids = new Set<string>();
     input.houses.forEach((h, i) => {
-      if (!isObj(h) || !isNonEmptyString(h.id) || !isNonEmptyString(h.nickname) || typeof h.activeToday !== 'boolean') {
+      // houses are scenery (v1.48 §7.2): my own house has no name, so a nickname may be empty
+      if (!isObj(h) || !isNonEmptyString(h.id) || typeof h.nickname !== 'string' || typeof h.activeToday !== 'boolean') {
         errors.push(`houses[${i}] needs id, nickname and activeToday`);
         return;
       }
+      if (h.slot !== undefined && !isCount(h.slot)) errors.push(`houses[${i}] slot must be a lot index`);
       if (ids.has(h.id)) errors.push(`houses[${i}] duplicate id '${h.id}'`);
       ids.add(h.id);
-      houses.push({ id: h.id, nickname: h.nickname, activeToday: h.activeToday });
+      houses.push({ id: h.id, nickname: h.nickname, activeToday: h.activeToday, ...(isCount(h.slot) ? { slot: h.slot as number } : {}), ...(h.mine === true ? { mine: true } : {}) });
     });
   }
 

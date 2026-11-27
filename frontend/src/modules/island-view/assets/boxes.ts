@@ -21,10 +21,11 @@ export interface BoxPart {
   r?: [number, number, number];
   /**
    * What the part is, for weather and time of day (requirement.md v1.40 §10.4): `roof` gets snow
-   * when snow lies; `house-window` is a resident's window, lit only when they were active today
-   * (never by the night lights); `village-window` is a village house's window, about half lit at night (§7.2).
+   * when snow lies; `village-window` is a house window, lit at night on every house (v1.48 §7.2);
+   * `water` is water a model draws itself (a landmark's lake): it takes the island's water colour,
+   * so it matches the real water next to it and turns icy with snow (v1.48 §7.6b).
    */
-  tag?: 'roof' | 'house-window' | 'village-window';
+  tag?: 'roof' | 'village-window' | 'water';
 }
 
 /** Box helper with the BOTTOM at y (easier to stack than centres). */

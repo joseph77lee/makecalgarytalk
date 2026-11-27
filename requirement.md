@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.48 |
+| Document version | v1.50 |
 | First written | 2026-11-16 |
-| Last updated | 2026-11-26 |
+| Last updated | 2026-11-27 |
 | Status | Initial draft for starting MVP development |
 
 ---
@@ -99,7 +99,7 @@ The service grows in this order; features are judged by how they serve it. The *
 1. **World Map**: see how developed all of Calgary is. Tap an empty community to invite a friend who lives there
 2. **My community**: "What changed since yesterday" summary + life on the island (mini villagers, today's local posts)
 3. **Today's 3 actions**: pick one of the active projects and click
-4. **Welcome sign / Warming hut / Community hall** (7.6): read the auto-generated community newspaper and the community board (later: resident posts, coupons, new business news)
+4. **Community News** (Welcome sign, later the Community hall; 11): answer **today's question** (14.1), read the newspaper with the community board and residents' local news (14)
 
 ---
 
@@ -231,7 +231,7 @@ The Gateway arch and Lit hockey rink models stay in the library for later steps.
 - Resident counts are **cumulative Verified Residents** (same basis as island size, 7.8); built places and opened steps never re-lock
 - **At most 3 constructions at a time**; other opened steps wait, taking turns between the tracks
 - Construction progress is **applied the next day**; visuals: scaffolding → frame → complete
-- The newspaper opens from the **Welcome sign**, the **Warming hut** adds the community board, the **Community hall** takes both over (11)
+- The newspaper (with the community board) opens from the **Welcome sign**; the **Community hall** takes it over once built (11)
 - **Locked steps are not drawn on the island** (their lot is plain, walkable land, so the island stays tidy and new places are a surprise); the build map screen (7.6a) shows them with what is missing (e.g. "2 more neighbours", "1 more streak day", "Build the Warming hut first"). A step whose conditions are met appears on its lot as a faded silhouette marked ✨ "Ready to build"
 - Names are generic (no trademarks); landmark rules in 7.9
 - Community level is permanent (separate from the weekly ranking)
@@ -252,7 +252,7 @@ The Gateway arch and Lit hockey rink models stay in the library for later steps.
 
 ### 7.6b Extensible places
 - The build map (tracks, steps, conditions, multipliers, footprints, sites) and **each community's persona and landmark list** (7.9; source `supabase/data/community_personas.csv`) are **data in the database**; adding a place or a landmark = a data row + a model, no rule code changes
-- Every place has a **footprint in tiles fitting its real size** (one tile ≈ a house lot, 12–15 m, slightly compressed; big grounds take their real share, buildings come with their yard, forecourt and trees) and a **site** where it belongs (shore, riverbank, hilltop, slope, street, park, plaza)
+- Every place has a **footprint in tiles fitting its real size** (one tile ≈ a house lot, 12–15 m, slightly compressed; big grounds take their real share, buildings come with their yard, forecourt and trees) and a **site** where it belongs (shore, riverbank, crossing, hilltop, slope, street, park, plaza); a **crossing** place is a bridge (a footbridge, a landmark bridge) laid across the water with both ends on dry land (7.8)
 - A client that does not know a place yet draws a **generic placeholder model**, never an error
 - Every island keeps **spare lots for future places** and separate **Main Street lots** (22.4)
 
@@ -280,7 +280,7 @@ The Gateway arch and Lit hockey rink models stay in the library for later steps.
 - **Positions never change.** Each community's lot plan (place lots, residential zones and house lots, spare lots, Main Street lots, paths) is generated **once** and stored; later algorithm changes apply only to new communities or newly added lots. **One exception before launch:** every plan is regenerated once for the build map (7.6) and the new house rule (7.2), since no player has a house yet (operator decision 2026-11-25).
 - **Places are laid out by meaning**, not by track: community places around the plaza (a cosy village centre), persona places beside their nature (lake shore, riverbank, hilltop, main street), nature and decoration along the paths between them, residential zones spread out. Each land stage opens a new **zone** with a mix of tracks, so every growth brings new spots in different directions. The plan reserves lots so that each step's resident condition (7.6) matches the land risen at that count.
 - **Terrain** (hills, escarpments, ravines as levels of the island floor) is a later step (22.6); MVP islands are flat apart from real water.
-- **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings; if water would cut the land apart, a small bridge path keeps every part reachable. Land amounts count dry land only; where water sits next to the plaza, the first two stages get a little more dry land (up to 112 / 176 tiles) so the first buildings and Main Street fit.
+- **Real water** (lakes, ponds, wetlands, creeks; City of Calgary Hydrology) is placed at its real position and shape inside the island when the plan is generated (e.g. Mahogany Lake). Water is not walkable and never holds buildings, **except bridge places** (site crossing, 7.6b), which span the water with both ends on dry land (when an island has no water a bridge can span, it stands on the riverbank instead); if water would cut the land apart, a small bridge path keeps every part reachable. Land amounts count dry land only; where water sits next to the plaza, the first two stages get a little more dry land (up to 112 / 176 tiles) so the first buildings and Main Street fit.
 - **Map orientation:** every island opens with the same diagonal camera angle, keeping the World Map's orientation (east to the lower right, north to the upper right), so a community looks like its outline on the map (9). Players can then turn it all the way round (10.1); a small compass shows where north is, turns with the view and brings the default angle back when tapped. Places face their site (the water, the street, the plaza), not the camera.
 - UI shows the next growth goal (e.g. "2 more neighbours until the island grows").
 
@@ -419,7 +419,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ## 11. Community news (community newspaper)
 
-- **Available from the MVP**: the newspaper opens from the **Welcome sign**; the **Warming hut** adds the community board (operator announcements, events); the **Community hall** takes both over and expands them (7.6)
+- **Available from the MVP**: the newspaper opens **in full** from the **Welcome sign** (newspaper, operator announcements, the community board with events and roadmap, local news); the **Community hall** takes it over once built (7.6)
   - Opens when the player taps the building; the avatar does not need to walk there
 - **Auto-generated community newspaper** (no operator effort)
   - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed."
@@ -427,10 +427,11 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - Written **once per community per Calgary day** (the first time someone opens it) and then served as stored (no extra cost per reader)
   - Before the Welcome sign is built, tapping its spot says "Build the Welcome sign to open the community newspaper"
   - Shows nicknames of active residents (recognition)
+  - Yesterday's **today's question** result for the community (14.1), e.g. "Yesterday 3 of 5 neighbours went with 🧅 Layers" (counts only, never who chose what)
   - Farewell line when a resident moves away (6.4), e.g. "Sarah moved to Bridgeland — thanks for everything, neighbour!" (no times)
 - **Upcoming updates (roadmap)**: e.g. "December: Community board opens"
 - **Operator announcements (global)**: short notices written by the operator (events, maintenance, rule changes), shown to **all communities** at the top of the newspaper. No per-community announcements in the MVP
-  - Always at the top of the newspaper (also before the Warming hut). The **community board** section (events and roadmap) opens with the Warming hut; before that it shows a lock ("Opens with the Warming hut"). MVP: the operator adds announcements with SQL in the Supabase dashboard (an admin screen comes later)
+  - Always at the top of the newspaper. The **community board** section (events and roadmap) is part of the newspaper from the Welcome sign on. MVP: the operator adds announcements with SQL in the Supabase dashboard (an admin screen comes later)
 - Locked features are shown with a lock icon + "Coming soon"
 
 ---
@@ -494,7 +495,18 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ## 14. Community posts (resident-written local news, MVP)
 
-- **Verified Residents only**, in their own community. Opens when the community's **Welcome sign** is built (together with the newspaper)
+- Opens when the community's **Welcome sign** is built (together with the newspaper). What a player can do grows in **personal steps** (not community ones, so a small community is never held back); the write box shows the next step and what it needs (e.g. "🎉 Events opens after 14 active days (9 to go)")
+
+| Step | Who | Can do |
+|---|---|---|
+| 0 | Anyone signed in (visitors too) | Read, 👍 Thanks, report |
+| 1 | Residents of the community they play in (verifying included) | Answer **today's question** (14.1) |
+| 2 | Verified Residents, in their own community | Write posts: 💬 Free talk, 🔎 Lost & found, 🚨 Safety |
+| 3 | Verified Residents with **14 active days** | Also 🎉 Events and 🏷️ Local deals |
+
+  - **Active day** = a Calgary day on which the player took at least one daily action (answering today's question alone does not count); total active days follow the person across moves (6.4) and are the same count the ranks use (13.2: 14 = Neighbour). Computed on the server from the action log (no counter), checked on the server when posting
+  - Safety comes at step 2 (urgent news must not wait); Events and Local deals wait because they are the kinds most open to promotion and spam
+  - Rewards for posting are **social only** (Thanks, the nickname credit, the post riding a mini villager's bubble, the Community Reporter badge), never energy or construction progress
 - Shown in the **Local news** section of Community News (11), credited by nickname, newest first
 - A post: a kind and up to **300 characters**; **1 post per resident per Calgary day**; **no links or photos**
   - Kinds are about what is really happening in the community: 🚨 **Safety** (e.g. car break-ins overnight), 🏷️ **Local deals** (local store events and sales), 🎉 **Events**, 🔎 **Lost & found**, 💬 **Free talk**
@@ -510,6 +522,15 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - **"Community Reporter" badge** once a resident's posts have received 10 thanks in total
   - The write box suggests what to post (an event, a local deal, something lost or found)
 - Paid business ads stay in Phase 4 (22.4); residents may mention a local deal in words (no links)
+
+### 14.1 Today's question (MVP)
+- **One multiple-choice question a day for the whole city**: a question and 2–4 choices, each an emoji and a short text; one tap and it is done (no free text, so nothing to moderate). A daily reason to visit and the first posting step (14)
+- **Who answers**: residents of the community they play in, verified or verifying (14 step 1); **one answer per player per Calgary day**, final (no changing). Visitors see the question and today's counts but cannot answer
+- **Shown** as a small card the first time the player opens the game that Calgary day (after the "What changed since yesterday" panel when that is open); it can be closed and is also in Community News
+- **After answering**: the community's counts so far (e.g. "Mahogany so far (5 neighbours)", a bar per choice); **counts only, never who chose what**; the final result goes into the next day's newspaper (11)
+- **Questions are data** (`supabase/data/daily_questions.csv`, seeded into the database): id, category, season, situation, question, up to 4 choices (emoji + text). Writing rules: 2–4 choices, every emoji different within a question, choice text at most 32 characters, one choice anyone can pick (e.g. "🤷 Never tried it"), emoji from Unicode 12 or older and no flags (older phones, Windows); no politics, religion or income, no alcohol as the subject (players are 13+), nothing that reveals where someone lives or when they are out (2)
+- **Picking** (server, deterministic from the Calgary day, so the whole city gets the same question): from the current season's questions (winter Nov–Mar, spring Apr–May, summer Jun–Aug, fall Sep–Oct) plus year-round ones, matching the day (`weekday` / `weekend` questions only on those days; other situations are stored but not used yet), leaving out questions shown in the last 60 days and the previous day's category
+- Answers are append-only rows (one per player per day, idempotent); counts are computed on read (20.3)
 
 ## 15. Speech bubbles (Phase 2)
 - **"Neighbour" rank and above**
@@ -715,7 +736,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - **Build map screen** (7.6a) drawn like a skill tree: three lanes, resident-count bands, node states, landmark nodes; the finished island picture on top
 - Avatar shirt colour choice (10.2)
 - Next-day construction progress + "What changed since yesterday"
-- Auto community newspaper + roadmap notice + "Coming soon"
+- Auto community newspaper with the community board (from the Welcome sign) + roadmap notice + "Coming soon"
+- **Today's question** (14.1) and resident posts opening in personal steps (14)
 - Weekly ranking (basic) + share cards
 - Invite link + invite rewards + Pioneer Sponsor badge
 - Update email subscription (optional, CASL opt-in)
@@ -728,6 +750,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 3. Silhouette of the next building (anticipation)
 4. Real weather/time (novelty)
 5. Community newspaper with my name (recognition)
+6. Today's question (a small, new reason to open the game every day)
 
 ### 22.2 Phase 2
 - **Art Pass** and **day/night and weather** — *moved before the deploy and playtest (22.6, 10.4; 2026-11-24)*: refined pastel voxel models and props (Section 19.1–19.4), styled World Map with animated Bow/Elbow rivers, moving CTrain trains, Calgary landmark buildings and transitions, character variants and animations, avatar customization, walk-up-and-tap actions, day/night and weather effects
@@ -782,6 +805,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 6d | **Art Pass 2** (19.1, 19.2): more voxel designs (shapes after free catalogues such as Polyfork, sized like today's models) for houses, buildings, trees, cars and props, and varied people, weather-aware |
 | 6e | **Community identity** (decided with the operator 2026-11-25/26, details in 7.2, 7.6–7.9): a build map with the Welcome sign as root and three tracks built in order (community, persona, nature & leisure), shown as a skill tree, personas and up to 3 landmarks per community (31 unique signature landmarks at launch), houses as scenery with only my own house personal, places laid out by meaning and every island plan regenerated, a camera that turns all the way round and zooms in close |
 | 6f | **Terrain** (hills, escarpments, ravines as island levels): a separate step after 6e; whether it comes before the launch is decided after playing 6e |
+| 6g | **Community News steps** (decided with the operator 2026-11-26, details in 11, 14, 14.1): one newspaper with the community board from the Welcome sign, posting in personal steps (the last by active days), today's question for the whole city; before the launch |
 | 7 | Deploy with **all communities open** → family/friends playtest → public launch |
 
 ### 22.7 Launch
@@ -839,6 +863,9 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Move | A Verified Resident changing community: user-started, re-verification in the new community, no limbo, auto-cancel after 7 days, 90-day cooldown, one free correction within 14 days of first verification (6.4) |
 | Cumulative Verified Residents | Distinct people who have ever been Verified Residents of a community; never decreases (movers stay counted, returners are not counted twice) |
 | Build map | The data-driven community places, shaped like a skill tree: the Welcome sign as root, then three tracks (community, persona, nature & leisure), each built in order: the previous step plus residents, streak and land open a step, residents build it (7.6) |
+| Active day | A Calgary day on which a player took at least one daily action; counted per person across moves; opens posting step 3 at 14 (14) and the ranks (13.2) |
+| Posting steps | What a player can do in Community News, growing with their own progress: read → today's question → posts → Events and Local deals (14) |
+| Today's question | One multiple-choice question a day for the whole city, answered by residents, shown as community counts only (14.1) |
 | Unlock | A build map step whose conditions are met (it can now be built) |
 | Main Street | Reserved temporary lots for local business shops (Phase 4, 22.4) |
 | Silhouette | Faded preview of a step that is ready to build |

@@ -3,8 +3,11 @@ import { energyShown } from './actionQueue';
 import { useDailyActions } from './liveStore';
 import { projectIcon } from './projectIcons';
 
-/** Bottom action bar: energy, the 3 active projects, tap to help (requirement.md §8, §10.2). */
-export function ActionBar() {
+/**
+ * Bottom action bar: energy, the 3 active projects, tap to help (requirement.md §8, §10.2).
+ * `highlightKey`: a construction picked on the build map ("Help build it today", §7.6a) glows.
+ */
+export function ActionBar({ highlightKey = null }: { highlightKey?: string | null } = {}) {
   const server = useDailyActions((s) => s.server);
   const queue = useDailyActions((s) => s.queue);
   const act = useDailyActions((s) => s.act);
@@ -47,9 +50,10 @@ export function ActionBar() {
                 type="button"
                 onClick={() => act(i)}
                 aria-disabled={energy === 0 || viewOnly}
+                data-highlight={highlightKey === p.building_key || undefined}
                 className={`group flex min-w-0 flex-col gap-1 rounded-2xl bg-slate-50 p-2 text-left transition active:scale-95 ${
                   energy === 0 || viewOnly ? 'opacity-60' : ''
-                }`}
+                } ${highlightKey === p.building_key ? 'animate-pulse ring-2 ring-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.8)]' : ''}`}
               >
                 <span className="flex min-w-0 items-center gap-1 text-xs font-semibold text-slate-700">
                   <span aria-hidden>{projectIcon(p.building_key)}</span>

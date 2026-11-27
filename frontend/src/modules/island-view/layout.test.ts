@@ -63,44 +63,36 @@ describe('land and outline (requirement.md §7.8)', () => {
 });
 
 describe('lots and the building tree (requirement.md §7.6)', () => {
-  it('a growth chain shows its most advanced building on the shared lot', () => {
-    const lot = (buildings: BuildingView[]) => at(buildIslandLayout(MAH, stateWith({ buildings })).objects, 'lot:lot-a');
-    expect(lot([])).toBeUndefined(); // locked: not drawn
+  it('each step shows on its own lot as it progresses (requirement v1.48 §7.6)', () => {
+    const lot = (buildings: BuildingView[], id = 'lot:fire-pit') => at(buildIslandLayout(MAH, stateWith({ buildings })).objects, id);
+    expect(lot([])).toBeUndefined(); // not on this map yet: not drawn
     expect(lot([view('fire-pit', { status: 'locked' })])).toBeUndefined();
     expect(lot([view('fire-pit', { status: 'opened' })])).toMatchObject({ assetKey: 'silhouette', buildingKey: 'fire-pit', ready: true });
     expect(lot([view('fire-pit', { status: 'building', progress: 0.4 })])).toMatchObject({ assetKey: 'construction-site', buildingKey: 'fire-pit', progress: 0.4 });
-    expect(lot([view('fire-pit', { status: 'built' })])).toMatchObject({ assetKey: 'building.fire-pit', next: { title: 'Warming hut', status: 'locked' } });
-    expect(lot([view('fire-pit', { status: 'built' }), view('warming-hut', { status: 'building', progress: 0.1 })])).toMatchObject({
-      assetKey: 'construction-site',
-      buildingKey: 'warming-hut',
-    });
-    expect(
-      lot([view('fire-pit', { status: 'built' }), view('warming-hut', { status: 'built' }), view('community-hall', { status: 'built', level: 2 })]),
-    ).toMatchObject({ assetKey: 'building.community-hall', level: 2, next: null });
-  });
-
-  it('an upgrade keeps the built building on its lot with a progress label (§7.6 upgrades in place)', () => {
-    const lot = (buildings: BuildingView[]) => at(buildIslandLayout(MAH, stateWith({ buildings })).objects, 'lot:lot-a');
-    expect(lot([view('fire-pit', { status: 'building', level: 2, progress: 0.25 })])).toMatchObject({
+    // built: the next step of the same track is named on its label
+    expect(lot([view('fire-pit', { status: 'built' }), view('warming-hut', { title: 'Warming hut' })])).toMatchObject({
       assetKey: 'building.fire-pit',
       level: 1,
-      upgrade: { level: 2, progress: 0.25 },
-      next: { title: 'Warming hut' },
+      upgrade: null,
+      next: { title: 'Warming hut', status: 'locked' },
     });
-    expect(lot([view('fire-pit', { status: 'built', level: 3 })])).toMatchObject({ assetKey: 'building.fire-pit', level: 3, upgrade: null });
-    // a new building growing on the lot is still a construction site
-    expect(lot([view('fire-pit', { status: 'built' }), view('warming-hut', { status: 'building', progress: 0.1 })])).toMatchObject({ assetKey: 'construction-site' });
-    // an upgrade of the chain's newest building draws that building
-    expect(lot([view('fire-pit', { status: 'built' }), view('warming-hut', { status: 'building', level: 2, progress: 0.5 })])).toMatchObject({
-      assetKey: 'building.warming-hut',
-      level: 1,
-      upgrade: { level: 2, progress: 0.5 },
-    });
+    // the Warming hut is a place of its own, on its own lot: the Fire pit stays
+    const both = buildIslandLayout(MAH, stateWith({ buildings: [view('fire-pit', { status: 'built' }), view('warming-hut', { status: 'building', progress: 0.1 })] })).objects;
+    expect(at(both, 'lot:fire-pit')).toMatchObject({ assetKey: 'building.fire-pit' });
+    expect(at(both, 'lot:warming-hut')).toMatchObject({ assetKey: 'construction-site', buildingKey: 'warming-hut' });
   });
 
-  it('the Welcome sign stays up while it is upgraded, and the avatar still finds it', () => {
-    const l = buildIslandLayout(MAH, stateWith({ buildings: [view('welcome-sign', { status: 'building', level: 2, progress: 0 })] }));
-    expect(l.objects.find((o) => 'buildingKey' in o && o.buildingKey === 'welcome-sign')).toMatchObject({ assetKey: 'building.welcome-sign', upgrade: { level: 2 } });
+  it('persona places and landmarks stand on their own lots, turned to the plan\'s facing', () => {
+    const l = buildIslandLayout(MAH, stateWith({ landStage: 5, buildings: [view('landmark.mah', { status: 'built', title: 'Lake beach club' })] }));
+    expect(at(l.objects, 'lot:landmark.mah')).toMatchObject({ assetKey: 'building.landmark.mah', facing: MAH.lots['landmark.mah'].face });
+    // another persona's places have no lot on this island
+    const other = buildIslandLayout(MAH, stateWith({ landStage: 5, buildings: [view('place.golf.clubhouse', { status: 'built' })] }));
+    expect(other.objects.some((o) => o.id === 'lot:place.golf.clubhouse')).toBe(false);
+  });
+
+  it('the Welcome sign stands at the entrance and the avatar finds it', () => {
+    const l = buildIslandLayout(MAH, stateWith({ buildings: [view('welcome-sign', { status: 'built' })] }));
+    expect(l.objects.find((o) => 'buildingKey' in o && o.buildingKey === 'welcome-sign')).toMatchObject({ assetKey: 'building.welcome-sign', upgrade: null });
     expect(buildingSiteTile(l, 'welcome-sign')).not.toBeNull();
   });
 
@@ -111,14 +103,14 @@ describe('lots and the building tree (requirement.md §7.6)', () => {
 
   it('a locked lot is plain walkable land; once shown it blocks walking', () => {
     const walkOf = (buildings: BuildingView[]) => new Set(buildIslandLayout(MAH, stateWith({ buildings })).walkable.map(tileKey));
-    const tiles = lotTiles(MAH.lots['lot-a']);
+    const tiles = lotTiles(MAH.lots['fire-pit']);
     expect(tiles.every((t) => walkOf([]).has(tileKey(t)))).toBe(true);
     expect(tiles.some((t) => walkOf([view('fire-pit', { status: 'opened' })]).has(tileKey(t)))).toBe(false);
   });
 
   it('a lot fills its stored rectangle', () => {
-    const o = at(buildIslandLayout(MAH, stateWith({ buildings: [view('fire-pit', { status: 'built' })] })).objects, 'lot:lot-a') as BuildingObject;
-    const r = MAH.lots['lot-a'];
+    const o = at(buildIslandLayout(MAH, stateWith({ buildings: [view('fire-pit', { status: 'built' })] })).objects, 'lot:fire-pit') as BuildingObject;
+    const r = MAH.lots['fire-pit'];
     expect([o.x, o.z, o.w, o.d]).toEqual([r.x + r.w / 2, r.z + r.d / 2, r.w, r.d]);
   });
 
@@ -133,7 +125,7 @@ describe('lots and the building tree (requirement.md §7.6)', () => {
     expect(at(l.objects, 'lot:spare-1')).toBeUndefined();
     const walk = new Set(l.walkable.map(tileKey));
     expect(lotTiles(MAH.lots['spare-1']).every((t) => walk.has(tileKey(t)))).toBe(true);
-    expect(lotTiles(MAH.lots['lot-a']).some((t) => walk.has(tileKey(t)))).toBe(false);
+    expect(lotTiles(MAH.lots['fire-pit']).some((t) => walk.has(tileKey(t)))).toBe(false);
   });
 
   it('unknown buildings use the placeholder on spare lots (§7.6b); extra ones are counted, not overlapped', () => {
@@ -165,7 +157,7 @@ describe('lots and the building tree (requirement.md §7.6)', () => {
   it('the avatar\'s site for a building is next to its lot', () => {
     const l = buildIslandLayout(MAH, stateWith({ buildings: [view('warming-hut', { status: 'building', progress: 0.2 })] }));
     const site = buildingSiteTile(l, 'warming-hut');
-    const r = MAH.lots['lot-a'];
+    const r = MAH.lots['warming-hut'];
     expect(lotTiles(r).some((t) => t.x === site?.x && t.z === site?.z)).toBe(true);
     expect(buildingSiteTile(l, 'not-a-building')).toBeNull();
   });
@@ -195,7 +187,7 @@ describe('houses, villagers, mood', () => {
     const order = houseLotOrder(MAH);
     const stageOfLot = (t: { x: number; z: number }) => MAH.tiles.find((x) => x.x === t.x && x.z === t.z)!.stage;
     for (let i = 1; i < order.length; i++) expect(stageOfLot(order[i])).toBeGreaterThanOrEqual(stageOfLot(order[i - 1]));
-    expect(order).toHaveLength(150);
+    expect(order).toHaveLength(MAH.houses.length);
   });
 
   it('a slot not on the current land, and residents beyond the lots, are counted as hidden', () => {

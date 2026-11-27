@@ -3,7 +3,7 @@
  * frontend/scripts/island_plans.py and never regenerated after launch, so positions never change.
  * Coordinates: tile (x, z); the plaza is tiles x, z ∈ {-1, 0}; its centre is the world origin.
  */
-import { BUILDING_TREE, LAND_STAGE_COUNT } from './buildingTree';
+import { LAND_STAGE_COUNT, LOT_SPECS, lotKind } from './buildingTree';
 
 export interface Tile {
   x: number;
@@ -15,6 +15,8 @@ export interface PlanTile extends Tile {
 export interface LotRect extends Tile {
   w: number;
   d: number;
+  /** Quarter turns of the model (plan v4): 0 faces +z, 1 +x, 2 −z, 3 −x; an odd turn swaps w and d. */
+  face?: number;
 }
 
 /** One CTrain track run across the island, tiles in track order (4-connected). */
@@ -62,6 +64,8 @@ export interface IslandPlan {
    * Kept so stored plans decode unchanged.
    */
   cameraAzimuth: number;
+  /** The community's persona (plan v4); picks its build map's persona places. */
+  persona: string | null;
 }
 
 export const tileKey = ({ x, z }: Tile): string => `${x},${z}`;
@@ -89,7 +93,7 @@ export function decodePlan(raw: unknown): IslandPlan {
     throw new Error(`Invalid island plan: ${what}`);
   };
   if (!isObj(raw)) return fail('not an object');
-  if (raw.v !== 2 && raw.v !== 3) fail(`unsupported version ${String(raw.v)}`);
+  if (raw.v !== 2 && raw.v !== 3 && raw.v !== 4) fail(`unsupported version ${String(raw.v)}`);
   if (typeof raw.code !== 'string' || typeof raw.name !== 'string') fail('code/name');
   if (!isIntArray(raw.tiles, 3)) fail('tiles');
   if (!isIntArray(raw.paths, 2) || !isIntArray(raw.houses, 2) || !isIntArray(raw.trees, 2)) fail('paths/houses/trees');
@@ -105,16 +109,18 @@ export function decodePlan(raw: unknown): IslandPlan {
   }
   const lots: Record<string, LotRect> = {};
   for (const [k, v] of Object.entries(raw.lots as Obj)) {
-    if (!isIntArray(v, 4) || (v as number[]).length !== 4) fail(`lot ${k}`);
-    const [x, z, w, d] = v as number[];
-    lots[k] = { x, z, w, d };
+    const n = raw.v === 4 ? 5 : 4;
+    if (!isIntArray(v, n) || (v as number[]).length !== n) fail(`lot ${k}`);
+    const [x, z, w, d, face] = v as number[];
+    if (face !== undefined && (face < 0 || face > 3)) fail(`lot ${k} face`);
+    lots[k] = face === undefined ? { x, z, w, d } : { x, z, w, d, face };
   }
-  for (const k of Object.keys(BUILDING_TREE.lots)) if (!lots[k]) fail(`missing lot ${k}`);
+  for (const k of [raw.v === 4 ? 'welcome-sign' : 'entrance', ...Object.keys(LOT_SPECS)]) if (!lots[k]) fail(`missing lot ${k}`);
   // v3 adds the CTrain; v2 plans (communities without track) have none.
   const rail: RailRun[] = [];
   const stations: StationLot[] = [];
   const railEnds: RailEnd[] = [];
-  if (raw.v === 3) {
+  if (raw.v === 3 || raw.v === 4) {
     if (!Array.isArray(raw.rail) || !Array.isArray(raw.stations) || !Array.isArray(raw.railEnds)) fail('rail/stations/railEnds');
     for (const r of raw.rail as Obj[]) {
       if (!isObj(r) || typeof r.line !== 'string' || !isIntArray(r.tiles, 2)) fail('rail run');
@@ -136,6 +142,7 @@ export function decodePlan(raw: unknown): IslandPlan {
   return {
     code: raw.code as string,
     name: raw.name as string,
+    persona: typeof raw.persona === 'string' ? raw.persona : null,
     tiles,
     paths: pairs(raw.paths as number[]),
     lots,
@@ -162,9 +169,15 @@ export function stageMap(plan: IslandPlan): Map<string, number> {
   return new Map(plan.tiles.map((t) => [tileKey(t), t.stage]));
 }
 
+/** Land stage at which a lot has fully risen (its highest tile, at least its spec's stage). */
+export function lotStage(plan: IslandPlan, key: string, stages: Map<string, number> = stageMap(plan)): number {
+  return Math.max(LOT_SPECS[key]?.landStage ?? 0, ...lotTiles(plan.lots[key]).map((t) => stages.get(tileKey(t)) ?? 99));
+}
+
 /** Lot keys that exist on this land stage (the entrance never blocks walking). */
 export function activeLots(plan: IslandPlan, landStage: number): string[] {
-  return Object.keys(plan.lots).filter((k) => (BUILDING_TREE.lots[k]?.landStage ?? 0) <= landStage);
+  const stages = stageMap(plan);
+  return Object.keys(plan.lots).filter((k) => lotStage(plan, k, stages) <= landStage);
 }
 
 /**
@@ -194,7 +207,7 @@ export function walkableTiles(plan: IslandPlan, landStage: number, houses: numbe
   // the game passes only lots that have something on them, so empty plots stay walkable.
   const lotKeys = usedLots ? new Set(usedLots) : new Set(Object.keys(plan.lots));
   for (const [k, r] of Object.entries(plan.lots)) {
-    if (BUILDING_TREE.lots[k]?.kind === 'entrance' || !lotKeys.has(k)) continue;
+    if (lotKind(k) === 'entrance' || k === 'entrance' || !lotKeys.has(k)) continue;
     lotTiles(r).filter(on).forEach((t) => blocked.add(tileKey(t)));
   }
   if (typeof houses === 'number') plan.houses.filter(on).slice(0, houses).forEach((t) => blocked.add(tileKey(t)));

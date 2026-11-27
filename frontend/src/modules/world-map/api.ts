@@ -9,6 +9,8 @@ export interface CommunityStatus {
   level: number;
   vitality: number | null;
   residents: number;
+  /** The signature landmark's build map key at level 4 (drawn on the map, §9); null below. */
+  landmark: string | null;
 }
 
 export async function loadShapes(fetchFn: typeof fetch = fetch): Promise<MapShapes> {
@@ -30,7 +32,8 @@ export function isStatusList(v: unknown): v is CommunityStatus[] {
         s.level >= 0 &&
         s.level <= 4 &&
         (s?.vitality === null || typeof s?.vitality === 'number') &&
-        Number.isInteger(s?.residents),
+        Number.isInteger(s?.residents) &&
+        (s?.landmark === undefined || s.landmark === null || typeof s.landmark === 'string'),
     )
   );
 }
@@ -39,5 +42,5 @@ export async function fetchStatuses(c: SupabaseClient): Promise<CommunityStatus[
   const { data, error } = await c.rpc('gamecore_world_map');
   if (error) throw new Error(error.message);
   if (!isStatusList(data)) throw new Error('Unexpected server response: world map');
-  return data;
+  return data.map((s) => ({ ...s, landmark: s.landmark ?? null }));
 }
