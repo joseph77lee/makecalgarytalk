@@ -190,7 +190,11 @@ export function missingChips(n: TreeNode): string[] {
   return chips;
 }
 
-/** Static picture of a place (pre-rendered, §7.6a). */
-export const nodePicture = (key: string): string => `/places/${key}.png`;
+/** Places drawn in the community's persona design (requirement v1.48 §7.6), with a picture per persona. */
+const PERSONA_PICTURES = new Set(['community-hall', 'neighbourhood-park']);
+
+/** Static picture of a place (pre-rendered, §7.6a); the hall and park in the community's persona design. */
+export const nodePicture = (key: string, persona: string | null = null): string =>
+  persona && PERSONA_PICTURES.has(key) ? `/places/${key}.${persona.replaceAll('_', '-')}.png` : `/places/${key}.png`;
 /** Static picture of the community's finished island. */
 export const finishedIslandPicture = (code: string): string => `/islands/finished/${code}.webp`;

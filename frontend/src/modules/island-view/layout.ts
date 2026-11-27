@@ -68,6 +68,8 @@ interface Look {
   facing: number;
   /** Design choice, fixed per community and building (hash of both). */
   variant: number;
+  /** The community's persona: the Community hall and Neighbourhood park take its design (requirement v1.48 §7.6). */
+  persona?: string | null;
 }
 
 export type PlacedObject =
@@ -282,13 +284,14 @@ export function buildIslandLayout(
     if (kind !== 'entrance') rTiles.forEach((t) => occupied.add(tileKey(t)));
     const facing = rect.face ?? lotFacing(rect, pathKeys, kind === 'entrance');
     if (v.status === 'building') {
-      objects.push({ ...base, facing, variant: variant(v.key), id: `lot:${lotKey}`, assetKey: 'construction-site', buildingKey: v.key, title: v.title, progress: v.progress, level: 1 });
+      objects.push({ ...base, facing, variant: variant(v.key), persona: plan.persona, id: `lot:${lotKey}`, assetKey: 'construction-site', buildingKey: v.key, title: v.title, progress: v.progress, level: 1 });
     } else if (v.status === 'built') {
       const next = nextOf(v.key);
       objects.push({
         ...base,
         facing,
         variant: variant(v.key),
+        persona: plan.persona,
         id: `lot:${lotKey}`,
         assetKey: `building.${v.key}`,
         buildingKey: v.key,
@@ -298,7 +301,7 @@ export function buildIslandLayout(
         next: next ? { title: next.title, remaining: next.remaining, status: next.status } : null,
       });
     } else {
-      objects.push({ ...base, facing, variant: variant(v.key), id: `lot:${lotKey}`, assetKey: 'silhouette', buildingKey: v.key, title: v.title, ready: true, remaining: v.remaining });
+      objects.push({ ...base, facing, variant: variant(v.key), persona: plan.persona, id: `lot:${lotKey}`, assetKey: 'silhouette', buildingKey: v.key, title: v.title, ready: true, remaining: v.remaining });
     }
   }
 

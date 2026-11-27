@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { projectIcon, type ServerCommunityState } from '../daily-actions';
 import { BUILDING_TREE, type UpcomingIdentity } from '../island-view';
 import { InviteChip } from './InviteChip';
@@ -16,6 +16,9 @@ import {
   type ServerBuilding,
   type TreeNode,
 } from './skillTree';
+
+/** The community's persona: the hall and park pictures follow it (requirement v1.48 §7.6). */
+const PersonaContext = createContext<string | null>(null);
 
 interface Props {
   community: ServerCommunityState['community'];
@@ -46,6 +49,7 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
   const lastNatureBand = [...tree.bands].reverse().find((b) => b.lanes.nature.length > 0);
 
   return (
+    <PersonaContext.Provider value={community.persona}>
     <div className="absolute inset-0 z-40 flex justify-center bg-slate-900/25" onClick={onClose}>
       <section
         aria-label="Community build map"
@@ -112,6 +116,7 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
         )}
       </section>
     </div>
+    </PersonaContext.Provider>
   );
 }
 
@@ -198,13 +203,14 @@ const STATE_TEXT: Record<TreeNode['state'], string> = { built: 'Built', building
 
 function Picture({ n, size }: { n: TreeNode; size: number }) {
   const [missing, setMissing] = useState(false);
+  const persona = useContext(PersonaContext);
   const dim = n.state === 'locked' ? 'opacity-45 grayscale' : '';
   return missing ? (
     <span className={`flex items-center justify-center ${dim}`} style={{ width: size, height: size, fontSize: size * 0.5 }} aria-hidden>
       {projectIcon(n.key)}
     </span>
   ) : (
-    <img src={nodePicture(n.key)} alt="" onError={() => setMissing(true)} className={`object-contain ${dim}`} style={{ width: size, height: size }} draggable={false} />
+    <img src={nodePicture(n.key, persona)} alt="" onError={() => setMissing(true)} className={`object-contain ${dim}`} style={{ width: size, height: size }} draggable={false} />
   );
 }
 

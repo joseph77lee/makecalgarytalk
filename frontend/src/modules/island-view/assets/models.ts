@@ -260,7 +260,7 @@ function upgradeScaffold(w: number, d: number): BoxPart[] {
  * Models are written for the lot's canonical size; a turned lot (e.g. 2×3 instead of 3×2) comes
  * with an odd facing from the layout, so the turn also fits the model to the lot.
  */
-function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx): BoxPart[] {
+function treeModel(key: string, w: number, d: number, level: number, variant: number, facing: number, ctx: BuildCtx, persona: string | null = null): BoxPart[] {
   // Persona places and landmarks (requirement v1.48 §7.6): written for their own footprint, front +z.
   const library = PLACE_LIBRARY[key as PlaceKey] ?? LANDMARK_LIBRARY[key as LandmarkKey];
   if (library) return vturn(finishAllSides(library.build(variant)), facing);
@@ -268,12 +268,12 @@ function treeModel(key: string, w: number, d: number, level: number, variant: nu
   const make = BUILDING_VOXELS[key];
   if (!make) return placeholderModel({ w, d, level, variant }, ctx);
   const turned = facing % 2 === 1;
-  return vturn(finishAllSides(make({ w: turned ? d : w, d: turned ? w : d, level, variant }, ctx)), facing);
+  return vturn(finishAllSides(make({ w: turned ? d : w, d: turned ? w : d, level, variant, persona }, ctx)), facing);
 }
 
 /** A built building of the tree (placeholder for unknown keys), with upgrade markers. */
 export function building(item: BuildingObject, ctx: BuildCtx): BoxPart[] {
-  return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
+  return [...treeModel(item.buildingKey, item.w, item.d, item.level, item.variant, item.facing, ctx, item.persona ?? null), ...levelMarkers(item.level, item.w, item.d), ...(item.upgrade ? upgradeScaffold(item.w, item.d) : [])];
 }
 
 // --- Signature features and CTrain (Art Pass models in voxel/features.ts) ------------------
@@ -376,5 +376,5 @@ const CARS: ((seed: number) => BoxPart[])[] = [(s) => carModel(s, s % 5 === 0), 
 
 /** A locked (or ready) building: its model as a translucent ghost on its lot. */
 export function silhouette(item: ObjectOf<'silhouette'>, ctx: BuildCtx): BoxPart[] {
-  return asGhost(treeModel(item.buildingKey, item.w, item.d, 1, item.variant, item.facing, ctx), SILHOUETTE);
+  return asGhost(treeModel(item.buildingKey, item.w, item.d, 1, item.variant, item.facing, ctx, item.persona ?? null), SILHOUETTE);
 }

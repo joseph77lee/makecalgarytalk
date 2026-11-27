@@ -18,6 +18,8 @@ export interface BuildingSpec {
   level: number;
   /** Design choice for this community (hash of the community code and the building key). */
   variant: number;
+  /** The community's persona (requirement v1.48 §7.6): the Community hall and Neighbourhood park follow it. */
+  persona?: string | null;
 }
 
 type Model = (s: BuildingSpec, ctx: BuildCtx) => BoxPart[];
@@ -167,8 +169,99 @@ const warmingHut: Model = ({ variant }, { palette }) => {
   return [...parts, ...bush(-16, 12, palette.leaves[0], 3), ...bush(12, -16, palette.leaves[1], 3)];
 };
 
-const communityHall: Model = ({ variant }, { palette }) => {
-  const v = variant % 7;
+// --- Persona designs (requirement v1.48 §7.6): the Community hall and Neighbourhood park follow the
+// community's persona; personas without their own design pick one of the shared designs. --------
+
+/** Hall design per persona: a shared design number, or a persona-only design. */
+const HALL_BY_PERSONA: Record<string, number | 'pavilion' | 'lodge' | 'barn'> = {
+  lake: 'pavilion',
+  river: 'pavilion',
+  hill_view: 'lodge',
+  golf: 'lodge',
+  special_district: 'barn',
+  downtown: 4, // grand hall
+  historic_main_street: 2, // brick hall with a cupola clock
+  food_street: 6, // workshop hall
+  mature_suburb: 0, // classic gabled hall
+  new_suburb: 1, // modern hall
+};
+
+/** Park design per persona: a shared design number, or a persona-only design. */
+const PARK_BY_PERSONA: Record<string, number | 'waterside' | 'plaza' | 'terrace' | 'meadow'> = {
+  lake: 'waterside',
+  river: 'waterside',
+  downtown: 'plaza',
+  historic_main_street: 'plaza',
+  food_street: 'plaza',
+  hill_view: 'terrace',
+  special_district: 'meadow',
+  mature_suburb: 0, // gazebo
+  new_suburb: 2, // picnic shelter
+  golf: 3, // fountain among new trees
+};
+
+/** Lakeside pavilion hall: white walls, glass all along the front, a wide deck and a canoe. */
+function pavilionHall(variant: number, palette: BuildCtx['palette']): BoxPart[] {
+  const wall = '#f4f6f2';
+  const roof = pick(['#8ec5ea', '#9fd0bd', '#a9b8e6'], rnd(variant, 21));
+  const p: BoxPart[] = [pad(17, 17, '#d9cdb5', 0.3), vb(-16, 0.3, -12, 16, 1.2, 14, WOOD)];
+  p.push(vb(-14, 1.2, -10, 14, 9, 6, wall), ...hipRoof(-14, 14, -10, 6, 10, roof, 2.5, 3));
+  for (let x = -12; x <= 9; x += 4) if (x < -3 || x > 2) p.push(...windowZ(x, x + 3, 2.5, 8, 6, ART.glass));
+  p.push(...windowX(-8, -1, 2.5, 8, 14, ART.glass), ...windowX(-8, -1, 2.5, 8, -14, ART.glass));
+  // entrance with its own little gable, like a boathouse
+  p.push(vb(-2.5, 1.2, 6, 2.5, 7.5, 6.5, ART.glass), vb(-3.5, 7.5, 6, 3.5, 8.3, 9, shade(roof, -0.15)), vb(-3.2, 1.2, 8.4, -2.6, 7.5, 9, ART.trim), vb(2.6, 1.2, 8.4, 3.2, 7.5, 9, ART.trim));
+  // deck railing with a gap at the steps
+  for (let x = -15.5; x <= 15.5; x += 2) if (Math.abs(x) > 3) p.push(vb(x, 1.2, 13.3, x + 0.5, 3.6, 13.8, ART.trim));
+  p.push(vb(-16, 3.6, 13.3, -3, 4, 13.8, ART.trim), vb(3, 3.6, 13.3, 16, 4, 13.8, ART.trim), vb(-3, 0.3, 14, 3, 0.8, 16, WOOD));
+  // canoe on a rack, a life ring by the door
+  p.push(vb(8, 1.2, 8.5, 9, 3, 9.5, WOOD), vb(14, 1.2, 8.5, 15, 3, 9.5, WOOD), vb(6.5, 3, 8.2, 16.5, 4, 9.8, '#e0453c'), vb(7.5, 4, 8.6, 15.5, 4.3, 9.4, shade('#e0453c', -0.2)));
+  p.push(vb(-6, 3.5, 6.1, -4, 5.5, 6.6, '#f05a4b'), vb(-5.4, 4.1, 6.2, -4.6, 4.9, 6.7, wall));
+  return [...p, ...flagAt(-15, 15), ...bush(-16, -15, palette.leaves[0], 3), ...bush(12, -15, palette.leaves[1], 2.5)];
+}
+
+/** Mountain lodge hall: stone base, timber walls, a steep green roof and a stone chimney. */
+function lodgeHall(variant: number, palette: BuildCtx['palette']): BoxPart[] {
+  const timber = pick(['#a9774f', '#9a6b47', '#b88458'], rnd(variant, 22));
+  const roof = pick(['#3f6b4f', '#5a4a3e', '#3e5a74'], rnd(variant, 23));
+  const p: BoxPart[] = [pad(17, 17, '#d9cdb5', 0.3)];
+  p.push(vb(-14, 0.3, -10, 12, 3, 6, STONE), vb(-14, 3, -10, 12, 10, 6, timber), ...gableRoof(-15, 13, -10, 6, 10, roof, timber, 1.5));
+  for (let y = 4.5; y < 10; y += 2) p.push(vb(-14.2, y, 6, 12.2, y + 0.4, 6.4, shade(timber, -0.18)));
+  p.push(...windowZ(-12, -8, 4.5, 8.5, 6, ART.glass, '#f3e3c3'), ...windowZ(5, 9, 4.5, 8.5, 6, ART.glass, '#f3e3c3'));
+  // big front: glass under a timber frame, the door below
+  p.push(vb(-4.5, 3, 6, 2.5, 13, 6.6, ART.glass), vb(-5, 3, 6.3, -4.4, 14, 7, timber), vb(2.4, 3, 6.3, 3, 14, 7, timber), vb(-5, 13.4, 6.3, 3, 14, 7, timber));
+  p.push(vb(-2.5, 0.3, 6.6, 0.5, 6, 7.2, ART.door), vb(-6, 0.3, 7, 4, 1.2, 10, STONE));
+  p.push(vb(7, 3, -8, 10.5, 20, -4.5, STONE), vb(6.6, 20, -8.4, 10.9, 20.8, -4.1, shade(STONE, -0.15)));
+  // log pile and young pines
+  p.push(vb(-16, 0.3, 8, -10, 2, 10, WOOD), vb(-15.5, 2, 8.3, -10.5, 3.4, 9.7, shade(WOOD, 0.08)));
+  p.push(...vmove(N.youngPine.build(variant), 14, 0.3, 12), ...vmove(N.youngPine.build(variant + 1), -14, 0.3, -14), ...vmove(N.tallPine.build(variant + 2), 14, 0.3, -14));
+  return [...p, ...flagAt(14, 6), ...bush(8, 12, palette.leaves[1], 2.5)];
+}
+
+/** Ranch barn hall: red walls, white trim, a big barn door, hay bales and a silo. */
+function barnHall(variant: number, palette: BuildCtx['palette']): BoxPart[] {
+  const red = pick(['#b5473a', '#a63f36', '#c0583e'], rnd(variant, 24));
+  const p: BoxPart[] = [pad(17, 17, '#d9cdb5', 0.3)];
+  p.push(vb(-13, 0.3, -10, 10, 10, 6, red), ...gableRoof(-14, 11, -10, 6, 10, '#5b4a44', red, 1.2));
+  p.push(vb(-13.2, 0.3, 5.8, -12.6, 10, 6.4, ART.trim), vb(9.6, 0.3, 5.8, 10.2, 10, 6.4, ART.trim));
+  // barn door: white frame and cross
+  p.push(vb(-5, 0.3, 6, 3, 8, 6.4, shade(red, -0.12)), vb(-5.4, 0.3, 6.2, -4.8, 8.4, 6.7, ART.trim), vb(2.8, 0.3, 6.2, 3.4, 8.4, 6.7, ART.trim), vb(-5.4, 8, 6.2, 3.4, 8.6, 6.7, ART.trim));
+  p.push(vb(-1.3, 0.3, 6.3, -0.7, 8, 6.8, ART.trim), vb(-5, 3.9, 6.3, 3, 4.5, 6.8, ART.trim));
+  p.push(...windowZ(-11, -8, 4, 7, 6, ART.glass, ART.trim), ...windowZ(5, 8, 4, 7, 6, ART.glass, ART.trim));
+  p.push(vb(10.2, 11, -4, 10.8, 14, -1, ART.trim), vb(10.4, 11.4, -3.6, 10.9, 13.6, -1.4, '#5b4a44'));
+  // silo
+  for (let y = 0.3; y < 17; y += 2) p.push(vb(12, y, -12, 16.5, y + 1.8, -7.5, y % 4 < 2 ? '#c9ccd1' : '#b7bcc3'));
+  p.push(vb(12.5, 17, -11.5, 16, 18.5, -8, '#9aa1ab'), vb(13.3, 18.5, -10.7, 15.2, 19.6, -8.8, '#9aa1ab'));
+  // hay bales
+  for (const [x, z] of [[-15, 9], [-11.5, 9], [-13.2, 12]] as const) p.push(vb(x, 0.3, z, x + 3, 2.6, z + 2.6, '#e3c46b'), vb(x + 0.3, 2.6, z + 0.3, x + 2.7, 2.8, z + 2.3, '#d6b45a'));
+  return [...p, ...flagAt(6, 14), ...bush(10, 12, palette.leaves[0], 2.5)];
+}
+
+const communityHall: Model = ({ variant, persona }, { palette }) => {
+  const design = persona ? HALL_BY_PERSONA[persona] : undefined;
+  if (design === 'pavilion') return pavilionHall(variant, palette);
+  if (design === 'lodge') return lodgeHall(variant, palette);
+  if (design === 'barn') return barnHall(variant, palette);
+  const v = typeof design === 'number' ? design : variant % 7;
   const parts: BoxPart[] = [pad(17, 17, '#d9cdb5', 0.3)];
   if (v >= 3) {
     // M23 designs: station hall, grand hall, toy-block hall, workshop hall
@@ -349,7 +442,94 @@ const communityGarden: Model = ({ variant }, { palette }) => {
 
 // --- Neighbourhood park (3×3) -------------------------------------------------------------
 
-const neighbourhoodPark: Model = ({ variant }, { palette }) => {
+/** Waterside park: a sandy beach corner with umbrellas, a kayak rack, log benches and reeds. */
+function watersidePark(variant: number, palette: BuildCtx['palette']): BoxPart[] {
+  const p: BoxPart[] = [pad(17.5, 17.5, palette.grass[0], 0.3)];
+  p.push(vb(-17, 0.3, -1.5, 17, 0.5, 1.5, palette.path[0]), vb(-1.5, 0.3, -17, 1.5, 0.5, 17, palette.path[0]));
+  p.push(vb(3, 0.3, 3, 17, 0.6, 17, '#f0dca8'));
+  const umbrellas = ['#ef9b7f', '#8ec5ea', '#e9c46a'];
+  ([[7, 8], [13, 7], [9, 14]] as const).forEach(([x, z], i) => {
+    p.push(vb(x - 0.25, 0.6, z - 0.25, x + 0.25, 6, z + 0.25, ART.trim), vb(x - 3, 6, z - 3, x + 3, 6.6, z + 3, umbrellas[(i + variant) % 3]!), vb(x - 2, 6.6, z - 2, x + 2, 7.2, z + 2, shade(umbrellas[(i + variant) % 3]!, 0.1)));
+    p.push(vb(x + 1, 0.6, z - 1, x + 3.5, 1.2, z + 0.4, '#fbf3e4'));
+  });
+  // kayak rack
+  p.push(vb(-15, 0.3, 5, -14, 4, 6, WOOD), vb(-6, 0.3, 5, -5, 4, 6, WOOD));
+  ['#f4a259', '#5fa8d3', '#e0453c'].forEach((c, i) => p.push(vb(-16, 1.5 + i * 1.1, 4.6, -4, 2.3 + i * 1.1, 6.4, c)));
+  // log benches and reeds along the edge
+  p.push(...vmove(N.logBench.build(0), -9, 0.3, -6), ...vmove(vturn(N.logBench.build(0), 1), 6, 0.3, -9));
+  for (let x = -16; x < -4; x += 1.6) p.push(vb(x, 0.3, 14, x + 0.4, 3 + rnd(variant, x) * 2, 14.4, '#7f9c5a'), vb(x, 3, 14, x + 0.4, 3.8, 14.4, '#8a6a4c'));
+  p.push(...vmove(asSway(N.shadeTree.build(variant)), -11, 0.3, -12), ...vmove(asSway(N.shadeTree.build(variant + 1)), 11, 0.3, -12), ...lampPostAt(-3, 14), ...lampPostAt(14, -3));
+  return p;
+}
+
+/** Plaza park: a paved square with a fountain, tree planters, benches and string lights. */
+function plazaPark(variant: number): BoxPart[] {
+  const pave = pick(['#d8d2c6', '#e2d9c8', '#cfd4d8'], rnd(variant, 25));
+  const p: BoxPart[] = [pad(17.5, 17.5, pave, 0.5)];
+  for (let x = -16; x < 16; x += 4) for (let z = -16; z < 16; z += 4) if ((x + z) % 8 === 0) p.push(vb(x, 0.5, z, x + 4, 0.55, z + 4, shade(pave, -0.06)));
+  // fountain
+  p.push(vb(-6, 0.5, -6, 6, 2, 6, STONE), vb(-5, 0.5, -5, 5, 2.1, 5, '#8ec5ea'), vb(-1.2, 2, -1.2, 1.2, 5, 1.2, STONE), vb(-2.5, 5, -2.5, 2.5, 5.6, 2.5, STONE), vb(-0.6, 5.6, -0.6, 0.6, 8, 0.6, '#c8e6f4', 'glow'));
+  // tree planters in the corners
+  ([[-12, -12], [12, -12], [-12, 12], [12, 12]] as const).forEach(([x, z], i) => {
+    p.push(vb(x - 3, 0.5, z - 3, x + 3, 2.2, z + 3, shade(STONE, -0.08)), vb(x - 2.6, 2.2, z - 2.6, x + 2.6, 2.4, z + 2.6, '#8a6a4c'));
+    p.push(...vmove(asSway((i % 2 ? N.lollipopTree : N.columnShrub).build(variant + i)), x, 2.4, z));
+  });
+  p.push(...vmove(N.parkBench.build(0), 0, 0.5, -10), ...vmove(vturn(N.parkBench.build(0), 2), 0, 0.5, 10), ...vmove(vturn(N.parkBench.build(0), 1), -10, 0.5, 0), ...vmove(vturn(N.parkBench.build(0), 3), 10, 0.5, 0));
+  // string lights between four poles
+  for (const [x, z] of [[-16, -16], [16, -16], [-16, 16], [16, 16]] as const) p.push(vb(x - 0.3, 0.5, z - 0.3, x + 0.3, 10, z + 0.3, '#4a5060'));
+  for (let t = -15; t <= 15; t += 3) p.push(vb(t, 9.2, -16.2, t + 0.6, 9.8, -15.6, '#ffe7a3', 'glow'), vb(t, 9.2, 15.6, t + 0.6, 9.8, 16.2, '#ffe7a3', 'glow'));
+  return [...p, ...flowers(-4, 13, 4, 15, variant)];
+}
+
+/** Terrace park: grass terraces stepping up to a lookout bench with a telescope. */
+function terracePark(variant: number, palette: BuildCtx['palette']): BoxPart[] {
+  const p: BoxPart[] = [pad(17.5, 17.5, palette.grass[0], 0.3)];
+  p.push(vb(-16, 0.3, -16, 16, 2.3, 4, shade(palette.grass[0], -0.04)), vb(-14, 2.3, -16, 14, 4.3, -4, shade(palette.grass[0], 0.02)), vb(-10, 4.3, -16, 10, 6.3, -9, palette.grass[1]));
+  // stone edges and the stairs up the middle
+  p.push(vb(-16, 0.3, 4, 16, 2.4, 4.6, STONE), vb(-14, 2.3, -4, 14, 4.4, -3.4, STONE), vb(-10, 4.3, -9, 10, 6.4, -8.4, STONE));
+  for (let i = 0; i < 6; i++) p.push(vb(-2, 0.3 + i, 10 - i * 3, 2, 1.3 + i, 13 - i * 3, STONE));
+  // lookout: bench and telescope at the top
+  p.push(...vmove(N.parkBench.build(0), -4, 6.3, -12), vb(4, 6.3, -12, 4.6, 10, -11.4, '#4a5060'), vb(3, 10, -12.4, 6.5, 11.2, -11, '#5d6470'));
+  // rock garden and flowers on the terraces
+  for (const [x, z] of [[-12, 8], [10, 10], [-8, -1]] as const) p.push(vb(x, 0.3, z, x + 3, 1.8, z + 2, '#b9b2a6'), vb(x + 0.6, 1.8, z + 0.4, x + 2.2, 2.6, z + 1.6, '#cfc6b8'));
+  p.push(...flowers(-13, -2, -5, 2, variant), ...flowers(5, -2, 13, 2, variant + 1), ...flowers(-12, -7, -4, -5, variant + 2).map((b) => ({ ...b, p: [b.p[0], b.p[1] + 2 / 12, b.p[2]] as [number, number, number] })));
+  p.push(...vmove(asSway(N.ornamentalTree.build(variant)), -13, 0.3, 13), ...vmove(asSway(N.firTree.build(variant + 1)), 13, 0.3, 14), ...lampPostAt(-3, 15));
+  return p;
+}
+
+/** Meadow park: wildflowers inside a rail fence, hay bales, a picnic table and a farm windmill. */
+function meadowPark(variant: number, palette: BuildCtx['palette']): BoxPart[] {
+  const p: BoxPart[] = [pad(17.5, 17.5, palette.grass[0], 0.3)];
+  p.push(vb(-1.5, 0.3, -17, 1.5, 0.5, 17, '#cbb48e'));
+  // rail fence around the meadow, open at the path
+  for (let t = -16; t <= 16; t += 4) {
+    for (const [x, z] of [[t, -16.5], [t, 16.5], [-16.5, t], [16.5, t]] as const) if (Math.abs(x) > 2 || Math.abs(z) < 16) p.push(vb(x - 0.3, 0.3, z - 0.3, x + 0.3, 3.4, z + 0.3, WOOD));
+  }
+  p.push(vb(-16.5, 2.4, -16.7, -2, 2.8, -16.3, WOOD), vb(2, 2.4, -16.7, 16.5, 2.8, -16.3, WOOD), vb(-16.5, 2.4, 16.3, -2, 2.8, 16.7, WOOD), vb(2, 2.4, 16.3, 16.5, 2.8, 16.7, WOOD));
+  p.push(vb(-16.7, 2.4, -16.5, -16.3, 2.8, 16.5, WOOD), vb(16.3, 2.4, -16.5, 16.7, 2.8, 16.5, WOOD));
+  // wildflower patches
+  const cs = ['#e9c46a', '#b9a6e2', '#ef9b7f', '#ffffff'];
+  for (let x = -15; x < 15; x += 2.2) for (let z = -15; z < 15; z += 2.6) if (Math.abs(x) > 3 && rnd(variant, x * 7 + z) > 0.55) p.push(vb(x, 0.3, z, x + 0.8, 1.2, z + 0.8, cs[Math.floor(rnd(variant, x + z * 3) * cs.length)]!));
+  // windmill: lattice tower and vanes
+  p.push(vb(-12, 0.3, -12, -11.4, 16, -11.4, '#8a8f98'), vb(-9.6, 0.3, -12, -9, 16, -11.4, '#8a8f98'), vb(-12, 0.3, -9.6, -11.4, 16, -9, '#8a8f98'), vb(-9.6, 0.3, -9.6, -9, 16, -9, '#8a8f98'));
+  for (const y of [4, 8, 12]) p.push(vb(-12, y, -12, -9, y + 0.4, -9, '#8a8f98'));
+  p.push(vb(-11, 15.5, -11, -10, 17.5, -8.5, '#6f747c'));
+  for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]] as const) p.push(vb(-10.5 + dx * 1 - 0.3, 16.5 + dy * 1 - 0.3, -8.6, -10.5 + dx * 4 + 0.3, 16.5 + dy * 4 + 0.3, -8.2, '#e7e3d9'));
+  p.push(vb(-10.8, 16.2, -14, -10.2, 16.8, -11, '#6f747c'), vb(-11.2, 15, -15.5, -9.8, 18, -14, '#b5473a'));
+  // hay bales and a picnic table
+  for (const [x, z] of [[8, -12], [11.5, -12], [9.7, -9]] as const) p.push(vb(x, 0.3, z, x + 3, 2.6, z + 2.6, '#e3c46b'), vb(x + 0.3, 2.6, z + 0.3, x + 2.7, 2.8, z + 2.3, '#d6b45a'));
+  p.push(vb(6, 2, 7, 13, 2.6, 10, WOOD), vb(6.5, 0.3, 7.5, 7.1, 2, 9.5, WOOD), vb(11.9, 0.3, 7.5, 12.5, 2, 9.5, WOOD), vb(6, 1.1, 5.5, 13, 1.5, 6.5, WOOD), vb(6, 1.1, 10.5, 13, 1.5, 11.5, WOOD));
+  p.push(...vmove(asSway(N.shadeTree.build(variant)), -11, 0.3, 11));
+  return p;
+}
+
+const neighbourhoodPark: Model = ({ variant: seed, persona }, { palette }) => {
+  const design = persona ? PARK_BY_PERSONA[persona] : undefined;
+  if (design === 'waterside') return watersidePark(seed, palette);
+  if (design === 'plaza') return plazaPark(seed);
+  if (design === 'terrace') return terracePark(seed, palette);
+  if (design === 'meadow') return meadowPark(seed, palette);
+  const variant = typeof design === 'number' ? design : seed;
   const fresh = variant % 4 >= 2; // M23 designs: picnic shelter, new trees, park benches, a drinking fountain
   const parts: BoxPart[] = [pad(17.5, 17.5, palette.grass[0], 0.3)];
   parts.push(vb(-17, 0.3, -1.5, 17, 0.5, 1.5, palette.path[0]), vb(-1.5, 0.3, -17, 1.5, 0.5, 17, palette.path[0]));
@@ -401,6 +581,9 @@ export const BUILDING_VOXELS: Record<string, Model> = {
 };
 
 export const placeholderModel = placeholder;
+
+/** Personas with their own Community hall / Neighbourhood park design (for tests and the gallery). */
+export const PERSONA_DESIGNS = { hall: HALL_BY_PERSONA, park: PARK_BY_PERSONA };
 
 /** How many designs a building has (for tests and the gallery). */
 export const BUILDING_VARIANTS: Record<string, number> = {

@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AmbientLight, BoxGeometry, Color, DirectionalLight, Euler, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three';
 import type { BoxPart } from '../assets/boxes';
 import { building } from '../assets/models';
+import { PERSONA_DESIGNS } from '../assets/voxel/buildings';
 import { finishedExampleState } from '../example';
 import type { BuildingObject } from '../layout';
 import { scenePalette } from '../mood';
@@ -20,12 +21,14 @@ import { IslandView } from '../scene/IslandView';
 import { NOON_CLEAR } from '../types';
 
 const PICTURE = 192;
+/** Places with a design per persona (and so a picture per persona). */
+const PERSONA_PLACES = ['community-hall', 'neighbourhood-park'];
 const ISLAND_WIDTH = 640;
 
 /** Box parts of a step's model on a small grass plate, front towards the camera. */
-function stepParts(key: string, tiles: [number, number]): BoxPart[] {
+function stepParts(key: string, tiles: [number, number], persona: string | null = null): BoxPart[] {
   const [w, d] = tiles[0] === 0 ? [2, 2] : tiles;
-  const item = { assetKey: `building.${key}`, id: key, x: 0, z: 0, stage: 0, w, d, facing: 0, variant: 0, buildingKey: key, title: key, level: 1 } as BuildingObject;
+  const item = { assetKey: `building.${key}`, id: key, x: 0, z: 0, stage: 0, w, d, facing: 0, variant: 0, persona, buildingKey: key, title: key, level: 1 } as BuildingObject;
   const parts = building(item, { snow: false, palette: scenePalette(false) });
   return [
     { layer: 'solid', p: [0, -0.15, 0], s: [w + 0.4, 0.3, d + 0.4], c: '#9fd47a' },
@@ -111,6 +114,16 @@ export function PicturePrinter() {
       await save(`places/${s.key}.png`, url);
       done.push({ key: s.key, url });
       setThumbs([...done]);
+    }
+    // the Community hall and Neighbourhood park follow the persona (requirement v1.48 §7.6)
+    for (const key of PERSONA_PLACES) {
+      const tiles = BUILD_STEPS.find((s) => s.key === key)!.tiles;
+      for (const persona of Object.keys(PERSONA_DESIGNS.hall)) {
+        const url = renderParts(renderer, stepParts(key, tiles, persona));
+        await save(`places/${key}.${persona.replaceAll('_', '-')}.png`, url);
+        done.push({ key: `${key}.${persona}`, url });
+        setThumbs([...done]);
+      }
     }
     renderer.dispose();
     add(`saved ${done.length} place pictures`);

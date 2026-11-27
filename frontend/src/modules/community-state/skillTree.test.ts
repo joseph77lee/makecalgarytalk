@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bandFor, buildSkillTree, conditionLines, missingChips, type ServerBuilding } from './skillTree';
+import { bandFor, buildSkillTree, conditionLines, missingChips, nodePicture, type ServerBuilding } from './skillTree';
 
 const b = (key: string, track: ServerBuilding['track'], step: number, status: ServerBuilding['status'], extra: Partial<ServerBuilding> = {}): ServerBuilding => ({
   key,
@@ -151,5 +151,14 @@ describe('skill tree nodes', () => {
     // a built step shows every condition as met
     const built = conditionLines({ ...n, state: 'built', missing: null }, { residents: 1, streakDays: 0 }, (k) => k);
     expect(built.every((l) => l.met)).toBe(true);
+  });
+});
+
+describe('node pictures', () => {
+  it('the hall and park show the community\'s persona design; other places one picture', () => {
+    expect(nodePicture('community-hall', 'hill_view')).toBe('/places/community-hall.hill-view.png');
+    expect(nodePicture('neighbourhood-park', 'lake')).toBe('/places/neighbourhood-park.lake.png');
+    expect(nodePicture('community-hall', null)).toBe('/places/community-hall.png');
+    expect(nodePicture('fire-pit', 'lake')).toBe('/places/fire-pit.png');
   });
 });
