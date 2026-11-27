@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it, vi } from 'vitest';
 import { isQuestionResult, isTodayQuestion, type TodayQuestion } from './api';
-import { answeredLocally, cannotAnswerText, percents, shouldPopUp, soFarTitle, yesterdayLine } from './questionText';
+import { AUTO_CLOSE_MS, MIN_ANSWERS_FOR_BARS, THANKS_TEXT, answeredLocally, autoCloseMs, cannotAnswerText, percents, shouldPopUp, showBars, soFarTitle, yesterdayLine } from './questionText';
 import { createQuestionStore } from './store';
 
 const question = {
@@ -84,6 +84,25 @@ function fakeClient(responses: Record<string, unknown[]>) {
   const rpc = vi.fn(async (fn: string) => ({ data: responses[fn]!.shift(), error: null }));
   return { client: { rpc } as unknown as SupabaseClient, rpc };
 }
+
+describe('the answered card (requirement.md v1.51 §14.1)', () => {
+  it('shows bars only from 3 answers; fewer get the thank-you line', () => {
+    expect(MIN_ANSWERS_FOR_BARS).toBe(3);
+    expect(showBars({ total: 3, choices: [1, 1, 1] })).toBe(true);
+    expect(showBars({ total: 2, choices: [2, 0, 0] })).toBe(false);
+    expect(showBars({ total: 0, choices: [0, 0, 0] })).toBe(false);
+    expect(showBars(null)).toBe(false);
+    expect(THANKS_TEXT).toMatch(/tomorrow's paper/);
+  });
+  it('closes by itself a few seconds after the counts are back, never before answering', () => {
+    expect(autoCloseMs(today())).toBeNull();
+    expect(autoCloseMs(answeredLocally(today(), 2))).toBeNull(); // still saving
+    expect(autoCloseMs(today({ can_answer: false, reason: 'answered', answered: 2, counts: { total: 1, choices: [0, 1, 0] } }))).toBe(AUTO_CLOSE_MS);
+    expect(AUTO_CLOSE_MS).toBeGreaterThanOrEqual(2000);
+    expect(AUTO_CLOSE_MS).toBeLessThanOrEqual(4000);
+    expect(autoCloseMs(null)).toBeNull();
+  });
+});
 
 describe('today\'s question store', () => {
   it('loads, pops up, answers and then shows the server counts', async () => {

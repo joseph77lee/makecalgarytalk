@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { playSound } from '../sound';
 import type { QuestionResult, TodayQuestion } from './api';
 import { useQuestion } from './liveStore';
-import { cannotAnswerText, percents, soFarTitle, yesterdayLine } from './questionText';
+import { THANKS_TEXT, autoCloseMs, cannotAnswerText, percents, showBars, soFarTitle, yesterdayLine } from './questionText';
 
 interface CardProps {
   today: TodayQuestion;
@@ -18,7 +18,6 @@ interface CardProps {
 export function QuestionCard({ today, community, sending, error, onAnswer, label = true }: CardProps) {
   const q = today.question;
   const note = cannotAnswerText(today.reason);
-  const pct = today.counts ? percents(today.counts) : null;
   return (
     <div className="rounded-2xl bg-white p-3 ring-1 ring-amber-200" data-testid="today-question">
       {label && <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-amber-600">❓ Today's question</p>}
@@ -42,26 +41,31 @@ export function QuestionCard({ today, community, sending, error, onAnswer, label
         </div>
       ) : (
         <>
-          {today.counts && <p className="mt-2 text-xs font-semibold text-slate-500">{soFarTitle(community, today.counts)}</p>}
+          {showBars(today.counts) && <p className="mt-2 text-xs font-semibold text-slate-500">{soFarTitle(community, today.counts)}</p>}
           <ul className="mt-1 space-y-1">
             {q.choices.map((c, i) => {
               const mine = today.answered === i + 1;
+              const bars = showBars(today.counts) ? today.counts : null;
+              const pct = bars ? percents(bars) : null;
               return (
                 <li key={c.emoji} className="relative overflow-hidden rounded-xl bg-slate-100 px-3 py-1.5 text-sm">
                   {pct && <span className={`absolute inset-y-0 left-0 ${mine ? 'bg-amber-300/70' : 'bg-amber-100'}`} style={{ width: `${pct[i]}%` }} aria-hidden />}
+                  {!pct && mine && <span className="absolute inset-0 bg-amber-300/70" aria-hidden />}
                   <span className="relative flex items-center justify-between gap-2">
                     <span className={mine ? 'font-bold text-slate-900' : 'text-slate-700'}>
                       {c.emoji} {c.text}
                       {mine && ' ✓'}
                     </span>
-                    {pct && today.counts && <span className="text-xs font-semibold text-slate-600">{today.counts.choices[i]}</span>}
+                    {bars && <span className="text-xs font-semibold text-slate-600">{bars.choices[i]}</span>}
                   </span>
                 </li>
               );
             })}
           </ul>
           {today.answered && !today.counts && <p className="mt-2 text-xs text-slate-500">Saving your answer…</p>}
-          {today.answered && today.counts && <p className="mt-2 text-xs text-slate-500">Tomorrow's paper has the final result. New question tomorrow!</p>}
+          {today.answered && today.counts && (
+            <p className="mt-2 text-xs text-slate-500">{showBars(today.counts) ? 'Tomorrow\'s paper has the final result. New question tomorrow!' : THANKS_TEXT}</p>
+          )}
           {note && <p className="mt-2 text-xs text-slate-500">{note}</p>}
         </>
       )}
@@ -79,15 +83,29 @@ export function QuestionPopUp({ community }: { community: string }) {
   useEffect(() => {
     if (popUp) playSound('paper-open');
   }, [popUp]);
-  if (!popUp || !today) return null;
   const close = () => {
     playSound('ui-close');
     useQuestion.getState().closePopUp();
   };
+  // Answered: the counts show in place, then the card closes by itself (v1.51 §14.1).
+  const autoClose = popUp ? autoCloseMs(today) : null;
+  useEffect(() => {
+    if (autoClose === null) return;
+    const t = window.setTimeout(() => useQuestion.getState().closePopUp(), autoClose);
+    return () => window.clearTimeout(t);
+  }, [autoClose]);
+  if (!popUp || !today) return null;
   return (
     <div className="absolute inset-0 z-30 flex items-end justify-center bg-slate-900/20 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center" onClick={close}>
-      <div className="relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-        <button type="button" onClick={close} aria-label="Close" className="absolute right-2 top-2 z-10 rounded-full bg-slate-200/80 px-2.5 py-0.5 text-sm text-slate-700">
+      {/* once answered, a tap anywhere (the card too) closes it */}
+      <div className="relative w-full max-w-sm" onClick={(e) => today.answered === null && e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            close();
+          }}
+          aria-label="Close" className="absolute right-2 top-2 z-10 rounded-full bg-slate-200/80 px-2.5 py-0.5 text-sm text-slate-700">
           ✕
         </button>
         <QuestionCard
