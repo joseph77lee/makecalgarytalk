@@ -12,6 +12,19 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v1.99
+**Changed:** M24 Community Identity 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M26 next.
+
+**Why:** The operator played M24 and confirmed ("플레이해봤어. main에 병합하고 M26 시작해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v1.98 |`
+- `| Current module | M24 Community Identity 🟨 (then M26, M16) |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | 🟨 |`
+- `### M24 — Community Identity 🟨`
+- `  - [ ] user has played it` (M24 DoD)
+- `  - **Next:** the operator plays M24 (Ready for playtest); then M26.`
+
 ### 2026-11-27 — v1.98
 **Changed:** M24 place library item: the bridge crossing rule is done (requirement v1.50: site `crossing`, all 223 plans regenerated). Header: plan version, `Based on` v1.50.
 
