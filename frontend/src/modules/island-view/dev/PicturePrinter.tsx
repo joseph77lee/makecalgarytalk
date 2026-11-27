@@ -1,29 +1,21 @@
 /**
  * Dev tool (`?pictures`, `npm run dev` only): prints the build map's static pictures
- * (requirement.md v1.48 §7.6a) so the screen never renders live 3D:
- * - one small picture per build map step  → public/places/<key>.png
- * - each community's finished island      → public/islands/finished/<CODE>.webp
- * The dev server saves them (vite.config.ts `savePictures`). Rerun after a model or plan change.
+ * (requirement.md v1.48 §7.6a) so the screen never renders live 3D: one small picture per build
+ * map step → public/places/<key>.png (no finished-island pictures since v1.53). The dev server
+ * saves them (vite.config.ts `savePictures`). Rerun after a model change.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 import { AmbientLight, BoxGeometry, Color, DirectionalLight, Euler, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three';
 import type { BoxPart } from '../assets/boxes';
 import { building } from '../assets/models';
 import { PERSONA_DESIGNS } from '../assets/voxel/buildings';
-import { finishedExampleState } from '../example';
 import type { BuildingObject } from '../layout';
 import { scenePalette } from '../mood';
 import { BUILD_STEPS } from '../plan/buildingTree';
-import { loadIslandPlan } from '../plan/loadPlan';
-import type { IslandPlan } from '../plan/islandPlan';
-import { captureIsland } from '../scene/capture';
-import { IslandView } from '../scene/IslandView';
-import { NOON_CLEAR } from '../types';
 
 const PICTURE = 192;
 /** Places with a design per persona (and so a picture per persona). */
 const PERSONA_PLACES = ['community-hall', 'neighbourhood-park'];
-const ISLAND_WIDTH = 640;
 
 /** Box parts of a step's model on a small grass plate, front towards the camera. */
 function stepParts(key: string, tiles: [number, number], persona: string | null = null): BoxPart[] {
@@ -88,17 +80,9 @@ async function save(path: string, dataUrl: string): Promise<void> {
   if (!res.ok) throw new Error(`${path}: ${res.status} ${await res.text()}`);
 }
 
-/** Every community on the World Map (those without a plan file are skipped). */
-async function planCodes(): Promise<string[]> {
-  const world = (await (await fetch('/worldmap/calgary.json')).json()) as { communities: { code: string }[] };
-  return world.communities.map((c) => c.code);
-}
-
 export function PicturePrinter() {
   const [log, setLog] = useState<string[]>([]);
   const [thumbs, setThumbs] = useState<{ key: string; url: string }[]>([]);
-  const [island, setIsland] = useState<IslandPlan | null>(null);
-  const islandShown = useRef<(() => void) | null>(null);
   const add = (line: string) => setLog((l) => [line, ...l].slice(0, 400));
 
   const printPlaces = async () => {
@@ -129,44 +113,6 @@ export function PicturePrinter() {
     add(`saved ${done.length} place pictures`);
   };
 
-  const printIslands = async () => {
-    const only = new URLSearchParams(window.location.search).get('codes');
-    const codes = only ? only.split(',') : await planCodes();
-    for (const code of codes) {
-      let plan: IslandPlan;
-      try {
-        plan = await loadIslandPlan(code);
-      } catch {
-        add(`${code}: no plan`);
-        continue;
-      }
-      await new Promise<void>((resolve) => {
-        islandShown.current = resolve;
-        setIsland(plan);
-      });
-      // let the land rise and the models settle before the picture
-      await new Promise((r) => setTimeout(r, 2500));
-      const shot = captureIsland();
-      if (!shot) {
-        add(`${code}: no picture`);
-        continue;
-      }
-      const out = document.createElement('canvas');
-      out.width = ISLAND_WIDTH;
-      out.height = Math.round((shot.height / shot.width) * ISLAND_WIDTH);
-      out.getContext('2d')!.drawImage(shot, 0, 0, out.width, out.height);
-      await save(`islands/finished/${code}.webp`, out.toDataURL('image/webp', 0.82));
-      add(`${code}: saved`);
-    }
-    setIsland(null);
-    add('islands done');
-  };
-
-  useEffect(() => {
-    if (island) islandShown.current?.();
-  }, [island]);
-  const islandState = useMemo(() => (island ? finishedExampleState(island.name) : null), [island]);
-
   return (
     <main className="flex h-dvh w-full">
       <div className="w-80 shrink-0 overflow-y-auto border-r p-3 text-xs">
@@ -174,9 +120,6 @@ export function PicturePrinter() {
         <div className="mb-3 flex gap-2">
           <button type="button" id="print-places" className="rounded bg-indigo-500 px-2 py-1 text-white" onClick={() => void printPlaces().catch((e) => add(String(e)))}>
             Print places
-          </button>
-          <button type="button" id="print-islands" className="rounded bg-indigo-500 px-2 py-1 text-white" onClick={() => void printIslands().catch((e) => add(String(e)))}>
-            Print finished islands
           </button>
         </div>
         <ul id="picture-log">
@@ -190,7 +133,6 @@ export function PicturePrinter() {
           ))}
         </div>
       </div>
-      <div className="relative flex-1">{island && islandState && <IslandView key={island.code} plan={island} state={islandState} environment={NOON_CLEAR} />}</div>
     </main>
   );
 }

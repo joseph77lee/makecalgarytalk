@@ -1,15 +1,15 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { projectIcon, type ServerCommunityState } from '../daily-actions';
-import { BUILDING_TREE, type UpcomingIdentity } from '../island-view';
 import { InviteChip } from './InviteChip';
 import {
   LANES,
   SITE_TEXT,
   buildSkillTree,
+  PERSONA_ICONS,
   conditionLines,
-  finishedIslandPicture,
   laneTitle,
   missingChips,
+  nextBandPlaces,
   nodePicture,
   type Band,
   type Lane,
@@ -25,15 +25,12 @@ interface Props {
   streakDays: number;
   buildings: ServerBuilding[];
   onClose: () => void;
-  onShowExample: () => void;
   /** Opens the invite where more neighbours are needed (residents only). */
   onInvite?: () => void;
   /** "Help build it today": picks that construction in the action bar (residents only). */
   onHelp?: (key: string) => void;
   /** "See it on the island": closes the map and turns the camera to the place. */
   onSeeOnIsland?: (key: string) => void;
-  /** Signature features and CTrain stations that appear with the next land (§7.9). */
-  upcoming?: UpcomingIdentity | null;
 }
 
 /**
@@ -41,12 +38,11 @@ interface Props {
  * the root, three lanes read top to bottom and bands for the neighbours that open steps.
  * Read-only: every state comes from the server.
  */
-export function BuildMap({ community, streakDays, buildings, onClose, onShowExample, onInvite, onHelp, onSeeOnIsland, upcoming = null }: Props) {
+export function BuildMap({ community, streakDays, buildings, onClose, onInvite, onHelp, onSeeOnIsland }: Props) {
   const tree = buildSkillTree(buildings, community.residents);
   const [selected, setSelected] = useState<TreeNode | null>(null);
-  const [enlarged, setEnlarged] = useState(false);
   const titleOf = (key: string) => buildings.find((b) => b.key === key)?.name ?? key;
-  const lastNatureBand = [...tree.bands].reverse().find((b) => b.lanes.nature.length > 0);
+  const next = nextBandPlaces(tree);
 
   return (
     <PersonaContext.Provider value={community.persona}>
@@ -69,7 +65,25 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
         </header>
 
         <div className="flex-1 overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <Hero code={community.code} percent={tree.percent} onEnlarge={() => setEnlarged(true)} onShowExample={onShowExample} upcoming={upcoming} />
+          <div className="p-3">
+            <TogetherBanner
+              title={`Let's build ${community.name} together`}
+              tag={community.persona ? `${PERSONA_ICONS[community.persona] ?? '⭐'} ${laneTitle('persona', community.persona)}` : null}
+            >
+              {next && (
+                <p className="mt-2 text-xs text-sky-900">
+                  Next at {next.residents} {next.residents === 1 ? 'neighbour' : 'neighbours'}: <span className="font-semibold">{next.names.join(' · ')}</span>
+                </p>
+              )}
+            </TogetherBanner>
+            <div className="mt-3 flex items-baseline justify-between">
+              <span className="text-xs font-semibold text-indigo-900">Community complete</span>
+              <span className="text-sm font-bold text-indigo-700">{tree.percent}%</span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-indigo-100">
+              <div className="h-full rounded-full bg-indigo-500 transition-[width] duration-700" style={{ width: `${tree.percent}%` }} />
+            </div>
+          </div>
 
           <div className="sticky top-0 z-10 grid grid-cols-3 gap-1 border-b border-slate-100 bg-white/90 px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-slate-500 backdrop-blur">
             {LANES.map((l) => (
@@ -93,7 +107,6 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
               next={tree.nextBand?.residents === band.residents ? tree.nextBand.more : null}
               onInvite={onInvite}
               onTap={setSelected}
-              more={band === lastNatureBand ? tree.moreDecorations : 0}
             />
           ))}
         </div>
@@ -109,53 +122,35 @@ export function BuildMap({ community, streakDays, buildings, onClose, onShowExam
             onInvite={onInvite}
           />
         )}
-        {enlarged && (
-          <button type="button" aria-label="Close picture" onClick={() => setEnlarged(false)} className="absolute inset-0 z-30 flex items-center justify-center bg-slate-900/80 p-3">
-            <img src={finishedIslandPicture(community.code)} alt={`${community.name}, finished`} className="max-h-full max-w-full object-contain" />
-          </button>
-        )}
       </section>
     </div>
     </PersonaContext.Provider>
   );
 }
 
-function Hero({ code, percent, onEnlarge, onShowExample, upcoming }: { code: string; percent: number; onEnlarge: () => void; onShowExample: () => void; upcoming: UpcomingIdentity | null }) {
-  const [missing, setMissing] = useState(false);
+/**
+ * A designed banner instead of a finished-island picture (requirement.md v1.53 §5.1, §7.6a): players
+ * imagine the final look. The first visit uses it for Calgary, the build map for the community.
+ */
+export function TogetherBanner({ title, tag, children }: { title: string; tag?: string | null; children?: ReactNode }) {
   return (
-    <div className="p-3">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-sky-200 to-sky-100">
-        {missing ? (
-          <div className="flex h-36 items-center justify-center text-5xl" aria-hidden>
-            🏝
-          </div>
-        ) : (
-          <button type="button" onClick={onEnlarge} aria-label="Enlarge the finished island" className="block w-full">
-            <img src={finishedIslandPicture(code)} alt="The finished island" onError={() => setMissing(true)} className="mx-auto h-40 w-full object-contain" />
-          </button>
-        )}
-        <div className="pointer-events-none absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-slate-600">When it is finished</div>
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-200 via-sky-100 to-amber-100 p-4 shadow-inner" data-testid="together-banner">
+      {/* soft voxel clouds and hills, drawn with boxes */}
+      <span className="absolute right-6 top-3 h-3 w-10 rounded-sm bg-white/80" aria-hidden />
+      <span className="absolute right-3 top-5 h-3 w-6 rounded-sm bg-white/70" aria-hidden />
+      <span className="absolute -bottom-3 -right-4 h-12 w-28 rounded-t-lg bg-emerald-300/60" aria-hidden />
+      <span className="absolute -bottom-4 right-16 h-9 w-20 rounded-t-lg bg-emerald-400/50" aria-hidden />
+      <span className="absolute -bottom-2 left-6 h-6 w-16 rounded-t-md bg-emerald-300/40" aria-hidden />
+      <div className="relative pb-5">
+        {tag && <span className="inline-block rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-sky-800">{tag}</span>}
+        <h3 className="mt-1 text-xl font-extrabold leading-tight text-sky-950">{title}</h3>
+        {children}
       </div>
-      <div className="mt-2 flex items-baseline justify-between">
-        <span className="text-sm font-semibold text-indigo-900">Community complete</span>
-        <span className="text-xl font-bold text-indigo-700">{percent}%</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-indigo-50">
-        <div className="h-full rounded-full bg-indigo-500 transition-[width] duration-700" style={{ width: `${percent}%` }} />
-      </div>
-      {upcoming && (
-        <p className="mt-1.5 text-xs text-sky-800">
-          Coming at {upcomingThreshold(upcoming.landStage)} neighbours: <span className="font-semibold">{upcoming.labels.join(', ')}</span>
-        </p>
-      )}
-      <button type="button" onClick={onShowExample} className="mt-2 w-full rounded-xl bg-indigo-50 py-1.5 text-xs font-semibold text-indigo-700 active:scale-[0.98]">
-        See a finished example
-      </button>
     </div>
   );
 }
 
-function BandRow({ band, next, onInvite, onTap, more }: { band: Band; next: number | null; onInvite?: () => void; onTap: (n: TreeNode) => void; more: number }) {
+function BandRow({ band, next, onInvite, onTap }: { band: Band; next: number | null; onInvite?: () => void; onTap: (n: TreeNode) => void }) {
   return (
     <div className={band.reached ? '' : 'bg-slate-50/70'}>
       <div className="flex items-center gap-2 px-3 py-1.5">
@@ -174,14 +169,14 @@ function BandRow({ band, next, onInvite, onTap, more }: { band: Band; next: numb
       </div>
       <div className="grid grid-cols-3 gap-1 px-1 pb-3">
         {LANES.map((lane) => (
-          <LaneColumn key={lane} lane={lane} nodes={band.lanes[lane]} onTap={onTap} more={lane === 'nature' ? more : 0} />
+          <LaneColumn key={lane} lane={lane} nodes={band.lanes[lane]} onTap={onTap} />
         ))}
       </div>
     </div>
   );
 }
 
-function LaneColumn({ lane, nodes, onTap, more }: { lane: Lane; nodes: TreeNode[]; onTap: (n: TreeNode) => void; more: number }) {
+function LaneColumn({ lane, nodes, onTap }: { lane: Lane; nodes: TreeNode[]; onTap: (n: TreeNode) => void }) {
   return (
     <div className="relative flex flex-col items-center gap-3" data-lane={lane}>
       {/* the lane's line, behind the nodes */}
@@ -189,11 +184,6 @@ function LaneColumn({ lane, nodes, onTap, more }: { lane: Lane; nodes: TreeNode[
       {nodes.map((n) => (
         <Node key={n.key} n={n} onTap={onTap} />
       ))}
-      {more > 0 && (
-        <div className="relative rounded-full bg-white px-2 py-0.5 text-[10px] text-slate-500 ring-1 ring-slate-200" title={`${more} more decorations`}>
-          … +{more}
-        </div>
-      )}
     </div>
   );
 }
@@ -205,6 +195,12 @@ function Picture({ n, size }: { n: TreeNode; size: number }) {
   const [missing, setMissing] = useState(false);
   const persona = useContext(PersonaContext);
   const dim = n.state === 'locked' ? 'opacity-45 grayscale' : '';
+  if (n.secret)
+    return (
+      <span className="flex items-center justify-center rounded-full bg-amber-100/70 font-black text-amber-400" style={{ width: size, height: size, fontSize: size * 0.55 }} aria-hidden>
+        ?
+      </span>
+    );
   return missing ? (
     <span className={`flex items-center justify-center ${dim}`} style={{ width: size, height: size, fontSize: size * 0.5 }} aria-hidden>
       {projectIcon(n.key)}
@@ -243,6 +239,7 @@ function Node({ n, onTap }: { n: TreeNode; onTap: (n: TreeNode) => void }) {
         {n.landmark && '★ '}
         {n.title}
       </span>
+      {n.group && <span className="text-[9px] font-semibold text-emerald-700">{n.group.built} / {n.group.total} built</span>}
       {chips.length > 0 && (
         <span className="mt-0.5 flex flex-wrap justify-center gap-0.5">
           {chips.map((c) => (
@@ -302,7 +299,13 @@ function NodeDetail({
               {STATE_BADGE[n.state]} {STATE_TEXT[n.state]}
               {n.state === 'building' && ` · ${Math.round(n.progress * 100)}%`}
             </p>
-            {where && <p className="mt-0.5 text-xs text-slate-500">{n.landmark ? 'A landmark' : 'A place'} {where}</p>}
+            {where && !n.secret && !n.group && <p className="mt-0.5 text-xs text-slate-500">{n.landmark ? 'A landmark' : 'A place'} {where}</p>}
+            {n.secret && <p className="mt-0.5 text-xs text-slate-500">Revealed when it is ready to build.</p>}
+            {n.group && (
+              <p className="mt-0.5 text-xs text-slate-500">
+                {n.group.built} of {n.group.total} built · the next one {n.state === 'built' ? 'is done' : 'needs:'}
+              </p>
+            )}
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="rounded-full bg-slate-100 px-2.5 py-0.5 text-sm text-slate-600">
             ✕
@@ -345,10 +348,4 @@ function NodeDetail({
       </div>
     </div>
   );
-}
-
-/** "11" for the land stage that opens at 11 cumulative residents. */
-function upcomingThreshold(landStage: number): string {
-  const t = BUILDING_TREE.landTiers[landStage];
-  return t ? String(Math.max(1, t.minResidents)) : '';
 }

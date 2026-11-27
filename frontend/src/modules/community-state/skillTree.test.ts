@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bandFor, buildSkillTree, conditionLines, missingChips, nodePicture, type ServerBuilding } from './skillTree';
+import { SECRET_TITLE, bandFor, buildSkillTree, conditionLines, missingChips, nextBandPlaces, nodePicture, type ServerBuilding } from './skillTree';
 
 const b = (key: string, track: ServerBuilding['track'], step: number, status: ServerBuilding['status'], extra: Partial<ServerBuilding> = {}): ServerBuilding => ({
   key,
@@ -65,9 +65,7 @@ describe('skill tree bands (requirement.md v1.48 §7.6a)', () => {
     expect(where('place.lake.lighthouse')).toBe(11); // the persona landmark
     expect(where('landmark-2')).toBe(26);
     expect(where('landmark-3')).toBe(51);
-    expect(where('decoration-1')).toBe(11); // nature step 6: 20 neighbours
-    // later decorations have no resident condition but never jump above the step before them
-    expect(where('decoration-2')).toBe(11);
+    expect(where('decoration-1')).toBe(11); // nature step 6: 20 neighbours; the one "Decorations" node sits there
   });
 
   it('never lists a lane step in a band above an earlier step of the same lane', () => {
@@ -105,16 +103,32 @@ describe('skill tree nodes', () => {
     expect(gold).toEqual(['place.lake.lighthouse', 'landmark-2', 'landmark-3']);
   });
 
-  it('shows the next two decorations and counts the rest as "…"', () => {
+  it('draws the endless decorations as one node, placed by the next one to build', () => {
     const t = buildSkillTree(lakeMap(), 2);
-    const shown = t.bands.flatMap((x) => x.lanes.nature).filter((n) => n.key.startsWith('decoration-')).map((n) => n.key);
-    expect(shown).toEqual(['decoration-1', 'decoration-2']);
-    expect(t.moreDecorations).toBe(8);
-
+    const deco = t.bands.flatMap((x) => x.lanes.nature).filter((n) => n.key.startsWith('decoration-'));
+    expect(deco).toHaveLength(1);
+    expect(deco[0]).toMatchObject({ key: 'decoration-1', title: 'Decorations (10)', group: { built: 0, total: 10 } });
     const map = lakeMap().map((x) => (['decoration-1', 'decoration-2', 'decoration-3'].includes(x.key) ? { ...x, status: 'built' as const, remaining: null } : x));
-    const t2 = buildSkillTree(map, 2);
-    expect(t2.bands.flatMap((x) => x.lanes.nature).filter((n) => n.key.startsWith('decoration-')).length).toBe(5);
-    expect(t2.moreDecorations).toBe(5);
+    const d2 = buildSkillTree(map, 2).bands.flatMap((x) => x.lanes.nature).filter((n) => n.group);
+    expect(d2).toHaveLength(1);
+    expect(d2[0]).toMatchObject({ key: 'decoration-4', group: { built: 3, total: 10 } });
+    const all = lakeMap().map((x) => ({ ...x, status: 'built' as const, remaining: null }));
+    expect(buildSkillTree(all, 60).bands.flatMap((x) => x.lanes.nature).find((n) => n.group)).toMatchObject({ state: 'built', group: { built: 10, total: 10 } });
+  });
+
+  it('keeps the 2nd and 3rd landmarks a secret until they are ready to build (v1.53)', () => {
+    const t = buildSkillTree(lakeMap(), 2);
+    const persona = t.bands.flatMap((x) => x.lanes.persona);
+    expect(persona.find((n) => n.key === 'landmark-2')).toMatchObject({ secret: true, title: SECRET_TITLE });
+    expect(persona.find((n) => n.key === 'place.lake.lighthouse')).toMatchObject({ secret: false }); // the signature landmark keeps its name
+    const opened = lakeMap().map((x) => (x.key === 'landmark-2' ? { ...x, status: 'opened' as const, remaining: null } : x));
+    expect(buildSkillTree(opened, 30).bands.flatMap((x) => x.lanes.persona).find((n) => n.key === 'landmark-2')).toMatchObject({ secret: false, title: 'landmark-2' });
+  });
+
+  it('names the next band\'s places for the banner', () => {
+    expect(nextBandPlaces(buildSkillTree(lakeMap(), 2))).toEqual({ residents: 3, names: ['skating-rink', 'place.lake.beach-house', 'dog-park'] });
+    const all = lakeMap().map((x) => ({ ...x, status: 'built' as const, remaining: null }));
+    expect(nextBandPlaces(buildSkillTree(all, 60))).toBeNull();
   });
 
   it('counts completion without the endless decorations; an empty map is 0%', () => {

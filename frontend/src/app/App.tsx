@@ -21,10 +21,8 @@ import {
   IslandHud,
   IslandView,
   captureIsland,
-  finishedExampleState,
   requestLookAt,
   celebrateNewBuilding,
-  upcomingIdentity,
   useMockCommunityStore,
   type CommunityViewState,
   type IslandPlan,
@@ -80,7 +78,6 @@ function LiveApp() {
   }, [helpKey]);
   const [worldOpen, setWorldOpen] = useState(false);
   const myCommunityId = useResidency((s) => s.status?.play_community?.id ?? null);
-  const [example, setExample] = useState(false);
   const changesSeen = useIdentity((s) => s.changesSeenToday);
   const markChangesSeen = useIdentity((s) => s.markChangesSeen);
   const plan = useDailyActions((s) => s.plan);
@@ -169,10 +166,7 @@ function LiveApp() {
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-gradient-to-b from-sky-100 to-indigo-50">
-      {example && view && plan ? (
-        <ExampleView plan={plan} communityName={view.communityName} onBack={() => setExample(false)} />
-      ) : (
-        <>
+      <>
           {view && plan && server && (
             <Island
               plan={plan}
@@ -295,15 +289,9 @@ function LiveApp() {
                 setMapOpen(false);
                 requestLookAt(key);
               }}
-              upcoming={plan ? upcomingIdentity(plan, server.community.land_stage) : null}
-              onShowExample={() => {
-                setMapOpen(false);
-                setExample(true);
-              }}
             />
           )}
-        </>
-      )}
+      </>
       {status === 'no-community' && residencyStatus === 'new' && !worldOpen && <FindCommunity onLookAround={() => setWorldOpen(true)} />}
       {worldOpen && (
         <WorldMap
@@ -347,7 +335,6 @@ function MockApp() {
   const plan = useMockCommunityStore((s) => s.plan);
   const loadPlan = useMockCommunityStore((s) => s.loadPlan);
   const [mapOpen, setMapOpen] = useState(false);
-  const [example, setExample] = useState(false);
   useEffect(() => {
     // `?mock&plan=BLN` shows another community's real shape; `&residents=N` simulates its growth.
     void loadPlan(params.get('plan') ?? undefined).then(() => {
@@ -359,7 +346,6 @@ function MockApp() {
   // `?mock&streak=14`: the community streak the mock build map assumes
   const streakDays = Number(params.get('streak') ?? 7);
   const residents = mockResidents(state.landStage);
-  if (example && plan) return <ExampleView plan={plan} communityName={plan.name} onBack={() => setExample(false)} />;
   return (
     <main className="relative h-dvh w-full overflow-hidden">
       {plan && <Island plan={plan} state={state} />}
@@ -392,37 +378,14 @@ function MockApp() {
           streakDays={streakDays}
           buildings={mockServerBuildings(plan, state, streakDays)}
           onClose={() => setMapOpen(false)}
-          onShowExample={() => {
-            setMapOpen(false);
-            setExample(true);
-          }}
           onHelp={() => setMapOpen(false)}
           onSeeOnIsland={(key) => {
             setMapOpen(false);
             requestLookAt(key);
           }}
-          upcoming={upcomingIdentity(plan, state.landStage)}
         />
       )}
     </main>
-  );
-}
-
-/** "See a finished example": this community's island with the whole tree built (§7.6a). */
-function ExampleView({ plan, communityName, onBack }: { plan: IslandPlan; communityName: string; onBack: () => void }) {
-  const [state] = useState(() => finishedExampleState(communityName));
-  return (
-    <>
-      <IslandView plan={plan} state={state} />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-center p-3">
-        <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/90 py-1.5 pl-4 pr-1.5 shadow-sm backdrop-blur">
-          <span className="text-sm font-semibold text-slate-700">Example: {communityName}, finished</span>
-          <button type="button" onClick={onBack} className="rounded-full bg-indigo-500 px-3 py-1 text-xs font-semibold text-white">
-            Back to my village
-          </button>
-        </div>
-      </div>
-    </>
   );
 }
 

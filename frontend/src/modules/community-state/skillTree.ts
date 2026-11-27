@@ -15,9 +15,6 @@ export type NodeState = 'built' | 'building' | 'ready' | 'locked';
 export const BANDS = [1, 3, 6, 11, 26, 51] as const;
 export const LANES: Lane[] = ['community', 'persona', 'nature'];
 
-/** Endless decoration steps show only the next ones (§7.6a). */
-const DECORATIONS_SHOWN = 2;
-
 export interface TreeNode {
   key: string;
   title: string;
@@ -35,6 +32,10 @@ export interface TreeNode {
   site: string;
   /** What is still missing while locked (from the server); null otherwise. */
   missing: { residents: number; streakDays: number; landResidents: number; requires: string[] } | null;
+  /** 2nd/3rd landmark not ready yet: shown as a "Secret landmark" (v1.53 §7.6a). */
+  secret: boolean;
+  /** The one "Decorations (N)" node: how many are built of how many (null for other nodes). */
+  group: { built: number; total: number } | null;
 }
 
 export interface Band {
@@ -47,8 +48,6 @@ export interface Band {
 export interface SkillTree {
   root: TreeNode | null;
   bands: Band[];
-  /** Decoration steps after the shown ones ("…"). */
-  moreDecorations: number;
   /** Built share of the tree, decorations left out (they never end). */
   percent: number;
   /** Neighbours still needed for the next band; null when every band is reached. */
@@ -68,12 +67,15 @@ export function bandFor(residents: number): number {
   return band;
 }
 
+export const SECRET_TITLE = 'Secret landmark';
+
 function toNode(b: ServerBuilding): TreeNode {
   const spec = buildingSpec(b.key);
   const lane = b.track === 'root' ? 'root' : b.track;
+  const secret = (b.landmark_order ?? 0) >= 2 && b.status === 'locked';
   return {
     key: b.key,
-    title: b.name,
+    title: secret ? SECRET_TITLE : b.name,
     lane,
     step: b.step,
     state: nodeState(b.status),
@@ -84,7 +86,17 @@ function toNode(b: ServerBuilding): TreeNode {
     streakDays: spec?.streakDays ?? 0,
     site: b.site,
     missing: b.status === 'locked' && b.remaining ? { residents: b.remaining.residents, streakDays: b.remaining.streak_days, landResidents: b.remaining.land_residents, requires: b.remaining.requires } : null,
+    secret,
+    group: null,
   };
+}
+
+/** The endless decoration steps as one node: the next one to build stands for them all (v1.53 §7.6a). */
+function decorationGroup(decorations: TreeNode[]): TreeNode | null {
+  if (decorations.length === 0) return null;
+  const built = decorations.filter((n) => n.state === 'built').length;
+  const next = decorations.find((n) => n.state !== 'built') ?? decorations[decorations.length - 1]!;
+  return { ...next, title: `Decorations (${decorations.length})`, group: { built, total: decorations.length } };
 }
 
 /** The community's build map as a skill tree. `residents`: cumulative residents (from the server). */
@@ -92,15 +104,14 @@ export function buildSkillTree(buildings: ServerBuilding[], residents: number): 
   const nodes = buildings.map(toNode).sort((a, b) => a.step - b.step);
   const root = nodes.find((n) => n.lane === 'root') ?? null;
 
-  // decorations: every built one, then the next few; the rest is "…"
+  // the endless decorations are one node, placed by the next one to build
   const decorations = nodes.filter((n) => isDecoration(n.key));
-  const firstUnbuilt = decorations.findIndex((n) => n.state !== 'built');
-  const shownCount = firstUnbuilt < 0 ? decorations.length : firstUnbuilt + DECORATIONS_SHOWN;
-  const hidden = new Set(decorations.slice(shownCount).map((n) => n.key));
+  const group = decorationGroup(decorations);
+  const placed = [...nodes.filter((n) => !isDecoration(n.key)), ...(group ? [group] : [])].sort((a, b) => a.step - b.step);
 
   const bands: Band[] = BANDS.map((r) => ({ residents: r, reached: residents >= r, lanes: { community: [], persona: [], nature: [] } }));
-  for (const n of nodes) {
-    if (n.lane === 'root' || hidden.has(n.key)) continue;
+  for (const n of placed) {
+    if (n.lane === 'root') continue;
     // a band never sits above the previous step's band in its lane (the lane reads top to bottom)
     const band = bands.find((b) => b.residents === bandFor(n.residents))!;
     const laneBands = bands.filter((b) => b.lanes[n.lane as Lane].length > 0);
@@ -115,11 +126,24 @@ export function buildSkillTree(buildings: ServerBuilding[], residents: number): 
   return {
     root,
     bands: bands.filter((b) => LANES.some((l) => b.lanes[l].length > 0)),
-    moreDecorations: hidden.size,
     percent,
     nextBand: next === undefined ? null : { residents: next, more: next - residents },
   };
 }
+
+/** Icons of the ten persona patterns (§7.9) for the build map banner. */
+export const PERSONA_ICONS: Record<string, string> = {
+  lake: '🛶',
+  mature_suburb: '🌳',
+  new_suburb: '🏡',
+  river: '🌊',
+  hill_view: '⛰️',
+  historic_main_street: '🏛️',
+  downtown: '🏙️',
+  golf: '⛳',
+  food_street: '🍜',
+  special_district: '🐎',
+};
 
 /** Names of the ten persona patterns (§7.9) for the persona lane's heading. */
 export const PERSONA_NAMES: Record<string, string> = {
@@ -197,5 +221,10 @@ const PERSONA_PICTURES = new Set(['community-hall', 'neighbourhood-park']);
 /** Static picture of a place (pre-rendered, §7.6a); the hall and park in the community's persona design. */
 export const nodePicture = (key: string, persona: string | null = null): string =>
   persona && PERSONA_PICTURES.has(key) ? `/places/${key}.${persona.replaceAll('_', '-')}.png` : `/places/${key}.png`;
-/** Static picture of the community's finished island. */
-export const finishedIslandPicture = (code: string): string => `/islands/finished/${code}.webp`;
+
+/** The next band's places by name for the banner ("Next at 3 neighbours: …"); null when every band is reached. */
+export function nextBandPlaces(tree: SkillTree): { residents: number; names: string[] } | null {
+  const band = tree.bands.find((b) => !b.reached);
+  if (!band) return null;
+  return { residents: band.residents, names: LANES.flatMap((l) => band.lanes[l].map((n) => n.title)) };
+}
