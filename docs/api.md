@@ -16,8 +16,8 @@ client never computes time zones; it only counts down to `next_day_start`.
 | `gamecore_submit_actions(p_actions)` | authenticated | Spend energy on projects |
 | `gamecore_world_map()` | anon, authenticated | Level, Vitality, residents of every community with a snapshot |
 | `gamecore_get_me()` | authenticated | The community I play in, pending flag, energy |
-| `identity_get_profile()` | authenticated | My nickname, shirt, account type |
-| `identity_save_profile(p_nickname, p_shirt)` | authenticated | First-visit setup and later changes |
+| `identity_get_profile()` | authenticated | My nickname, shirt, villager look, account type |
+| `identity_save_profile(p_nickname, p_shirt, p_look)` | authenticated | First-visit setup and later changes |
 | `identity_mark_changes_seen()` | authenticated | "What changed since yesterday" seen today |
 | `residency_get_status()` | authenticated | My residency: verifying, verified, moving |
 | `residency_check_location(p_lat, p_lon, p_accuracy)` | authenticated | Location check-in (coordinates never stored) |
@@ -198,16 +198,23 @@ still play in my old community (`pending: false`). `null` = no community yet.
 ## `identity_get_profile()`
 ```json
 { "calgary_day": "2026-12-01", "is_anonymous": true,
-  "profile": { "nickname": "Snowy Moose 42", "shirt": 3 },
+  "profile": { "nickname": "Snowy Moose 42", "shirt": 3,
+               "look": { "age": 0, "skin": 3, "hair": 2, "hair_colour": 1, "skirt": false, "beard": false, "glasses": true } },
   "changes_seen_today": false }
 ```
 - `profile` is `null` until the first-visit setup is saved (the app then shows the finished
   example and the setup).
 - `shirt`: index 0–7 into the client's palette.
+- `look` (requirement §10.2): `age` 0 adult / 1 child / 2 elder; `skin` 0–5; `hair` style 0–6
+  (short, long, bun, curly, ponytail, bald, headscarf); `hair_colour` 0–9 (7 colours, then 3
+  greys); `skirt`, `beard`, `glasses` booleans. `null` for profiles saved before v1.52 (the
+  client keeps the nickname-based look).
 
-## `identity_save_profile(p_nickname text, p_shirt integer)`
+## `identity_save_profile(p_nickname text, p_shirt integer, p_look jsonb default null)`
 Creates or updates my profile. Returns `{ "ok": true, ...identity_get_profile }`, or
-`{ "ok": false, "problem": "length" | "characters" | "blocked" | "shirt" }`.
+`{ "ok": false, "problem": "length" | "characters" | "blocked" | "shirt" | "look" }`.
+- `p_look`: every part, in range, no beard for children (`look`); `null` keeps the stored look,
+  so changing the nickname never changes it.
 - Nickname is trimmed and inner spaces collapsed, then: 2–16 characters; letters (any
   language), digits, spaces and `- _ . '`, with at least one letter or digit; not a blocked
   word (`identity.blocked_words`: equal to one of its words, or contained in it with symbols

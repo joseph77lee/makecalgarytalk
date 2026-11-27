@@ -4,7 +4,7 @@
  * (`VoxelPerson`, `VoxelAnimal`) only turns the groups.
  */
 import type { BoxPart } from '../boxes';
-import { cougar, deer, gooseStanding, jackrabbit, person } from './samples';
+import { cougar, deer, gooseStanding, jackrabbit, person, type PersonLook } from './samples';
 import { V } from './voxel';
 
 /** A moving part: its boxes relative to the joint, and the joint position (tile units). */
@@ -49,8 +49,8 @@ const SHOULDER = 6.2;
 const HIP = 3.4;
 
 /** The voxel person (faces +z): head, two arms (sleeve and hand), two legs (trouser and shoe). */
-export function personRig(seed: number, shirt?: string): Rig {
-  return splitRig(person(seed, shirt), [
+export function personRig(seed: number, shirt?: string, look?: PersonLook): Rig {
+  return splitRig(person(seed, shirt, look), [
     { name: 'head', pivot: [0, NECK, 0], has: (x, y) => y >= NECK && Math.abs(x) < 1.7 },
     { name: 'armL', pivot: [-2, SHOULDER, 0], has: (x) => x < -1.55 },
     { name: 'armR', pivot: [2, SHOULDER, 0], has: (x) => x > 1.55 },

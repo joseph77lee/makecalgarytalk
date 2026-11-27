@@ -1,10 +1,13 @@
 /** Typed wrappers for the identity RPC (docs/api.md), with response checks. */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isAvatarLook, type AvatarLook } from '../common';
 import type { NicknameProblem } from './nickname';
 
 export interface Profile {
   nickname: string;
   shirt: number;
+  /** The villager look (v1.52 §10.2); null for profiles saved before players chose one. */
+  look: AvatarLook | null;
 }
 
 export interface ServerIdentity {
@@ -14,7 +17,12 @@ export interface ServerIdentity {
   changes_seen_today: boolean;
 }
 
-export type SaveResult = ({ ok: true } & ServerIdentity) | { ok: false; problem: NicknameProblem | 'shirt' };
+export type SaveResult = ({ ok: true } & ServerIdentity) | { ok: false; problem: NicknameProblem | 'shirt' | 'look' };
+
+/** Older servers send no `look`: treat it as not chosen. */
+function withLook<T extends ServerIdentity>(d: T): T {
+  return d.profile ? { ...d, profile: { ...d.profile, look: d.profile.look ?? null } } : d;
+}
 
 function assertIdentity(v: unknown): asserts v is ServerIdentity {
   const o = v as Record<string, unknown> | null;
@@ -24,7 +32,7 @@ function assertIdentity(v: unknown): asserts v is ServerIdentity {
     typeof o.calgary_day === 'string' &&
     typeof o.is_anonymous === 'boolean' &&
     typeof o.changes_seen_today === 'boolean' &&
-    (p === null || (typeof p?.nickname === 'string' && Number.isInteger(p?.shirt)));
+    (p === null || (typeof p?.nickname === 'string' && Number.isInteger(p?.shirt) && (p?.look == null || isAvatarLook(p.look))));
   if (!ok) throw new Error('Unexpected server response: identity');
 }
 
@@ -69,12 +77,15 @@ export const identityApi = {
   async getProfile(c: SupabaseClient): Promise<ServerIdentity> {
     const data = await call(c, 'identity_get_profile');
     assertIdentity(data);
-    return data;
+    return withLook(data);
   },
-  async saveProfile(c: SupabaseClient, nickname: string, shirt: number): Promise<SaveResult> {
-    const data = (await call(c, 'identity_save_profile', { p_nickname: nickname, p_shirt: shirt })) as SaveResult;
-    if (data?.ok === true) assertIdentity(data);
-    else if (data?.ok !== false) throw new Error('Unexpected server response: save profile');
+  async saveProfile(c: SupabaseClient, nickname: string, shirt: number, look: AvatarLook): Promise<SaveResult> {
+    const data = (await call(c, 'identity_save_profile', { p_nickname: nickname, p_shirt: shirt, p_look: look })) as SaveResult;
+    if (data?.ok === true) {
+      assertIdentity(data);
+      return { ...withLook(data), ok: true };
+    }
+    if (data?.ok !== false) throw new Error('Unexpected server response: save profile');
     return data;
   },
   async markChangesSeen(c: SupabaseClient): Promise<ServerIdentity> {

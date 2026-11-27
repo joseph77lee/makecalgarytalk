@@ -3,6 +3,7 @@
  * Turnstile check), the first-visit example and profile setup, optional Google linking.
  * Dependencies are injected so the flow can be tested with fakes.
  */
+import type { AvatarLook } from '../common';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { identityApi, type Profile, type ServerIdentity } from './api';
@@ -31,13 +32,13 @@ export interface IdentityState {
   /** First visit: example seen → profile setup. */
   continueToSetup: () => void;
   /** Returns an error message to show, or null when saved. */
-  saveProfile: (nickname: string, shirt: number) => Promise<string | null>;
+  saveProfile: (nickname: string, shirt: number, look: AvatarLook) => Promise<string | null>;
   markChangesSeen: () => void;
   linkGoogle: () => Promise<string | null>;
   signInWithGoogle: () => Promise<string | null>;
 }
 
-const SAVE_MESSAGES = { ...NICKNAME_MESSAGES, shirt: 'Please pick a shirt colour.' } as const;
+const SAVE_MESSAGES = { ...NICKNAME_MESSAGES, shirt: 'Please pick a shirt colour.', look: 'Please choose how your villager looks.' } as const;
 
 export function createIdentityStore(deps: IdentityDeps) {
   const client = (): SupabaseClient => {
@@ -84,9 +85,9 @@ export function createIdentityStore(deps: IdentityDeps) {
         if (get().status === 'example') set({ status: 'setup' });
       },
 
-      async saveProfile(nickname, shirt) {
+      async saveProfile(nickname, shirt, look) {
         try {
-          const r = await identityApi.saveProfile(client(), nickname, shirt);
+          const r = await identityApi.saveProfile(client(), nickname, shirt, look);
           if (!r.ok) return SAVE_MESSAGES[r.problem];
           apply(r);
           set({ status: 'ready' });

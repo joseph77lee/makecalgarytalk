@@ -12,6 +12,22 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.06
+**Changed:** M27 Avatar Look 🟦 → 🟨 Ready for playtest (header, table row, heading); scope and first two DoD items ticked; Handoff added.
+
+**Why:** M27 implemented, tested and screen-checked; waiting for the operator to play it.
+
+**Previous (verbatim):**
+- `| Plan version | v2.05 |`
+- `| Current module | M27 Avatar Look 🟦 (then M16) |`
+- `| M27 | Avatar Look | BE + FE (R3F) | | M26 | 🟦 |`
+- `### M27 — Avatar Look 🟦`
+- `  - [ ] server: the look stored with the profile (`identity`), checked on save (known values only; no beard for children), kept when the nickname changes; profiles without a look keep the nickname-based one`
+- `  - [ ] renderer: the voxel person drawn from a chosen look (`island-view`), the avatar uses it; mini villagers stay random`
+- `  - [ ] first-visit and profile form: live preview, a part picker for each choice, random start, 🎲 shuffle`
+- `  - [ ] DB tests: every value range, child + beard refused, look kept on nickname change, old profiles without a look; frontend tests: look checks, shuffle stays in range, the old nickname look maps to the same parts`
+- `  - [ ] screen check on desktop and a phone (form, preview, shuffle, the avatar on the island for each age)`
+
 ### 2026-11-27 — v2.05
 **Changed:** New module **M27 Avatar Look** (🟦 In progress) before M16 (table, build order, section); M16 depends on M27. Header: plan version, `Based on` v1.52, current module.
 

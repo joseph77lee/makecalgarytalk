@@ -3,6 +3,7 @@
  * Not wired into the game yet. Colours follow the reference (docs/references/voxel-village-*.png).
  * One-tile models use x, z ∈ [-6, 6); two-by-two tile models use x, z ∈ [-12, 12). Front = +z.
  */
+import type { AvatarLook } from '../../../common';
 import type { BoxPart } from '../boxes';
 import { gableRoof, hipRoof, pick, rnd, shade, vb, vmove, windowX, windowZ } from './voxel';
 
@@ -366,6 +367,44 @@ export function personLook(seed: number, shirt?: string): PersonLook {
     hat: rnd(seed, 28) < 0.12 ? 'beanie' : rnd(seed, 28) < 0.2 ? 'cap' : 'none',
     glasses: rnd(seed, 29) < (age === 'elder' ? 0.6 : 0.15),
     beard: age !== 'child' && style !== 'headscarf' && rnd(seed, 30) < 0.15,
+  };
+}
+
+/** Part lists a chosen look indexes into (requirement.md v1.52 §10.2; same order as `AvatarLook`). */
+export const LOOK_AGES: PersonAge[] = ['adult', 'child', 'elder'];
+export const LOOK_HAIR_STYLES: HairStyle[] = ['short', 'long', 'bun', 'curly', 'ponytail', 'bald', 'headscarf'];
+export const LOOK_HAIR_COLOURS: string[] = [...HAIR, ...GREY_HAIR];
+const LOOK_BOTTOM = '#3b4260';
+
+/** The person drawn from a look the player chose (no coat or hat: those are earned later). */
+export function personLookFrom(look: AvatarLook, shirt: string): PersonLook {
+  const age = LOOK_AGES[look.age] ?? 'adult';
+  return {
+    age,
+    skin: SKIN_TONES[look.skin] ?? SKIN_TONES[0],
+    hair: LOOK_HAIR_COLOURS[look.hair_colour] ?? HAIR[0],
+    style: LOOK_HAIR_STYLES[look.hair] ?? 'short',
+    top: shirt,
+    bottom: LOOK_BOTTOM,
+    skirt: look.skirt,
+    coat: false,
+    hat: 'none',
+    glasses: look.glasses,
+    beard: look.beard && age !== 'child',
+  };
+}
+
+/** The chosen-look form of a seed's look, so a player without a saved look starts from the one they had. */
+export function avatarLookFromSeed(seed: number): AvatarLook {
+  const p = personLook(seed);
+  return {
+    age: LOOK_AGES.indexOf(p.age),
+    skin: Math.max(0, (SKIN_TONES as readonly string[]).indexOf(p.skin)),
+    hair: Math.max(0, LOOK_HAIR_STYLES.indexOf(p.style)),
+    hair_colour: Math.max(0, LOOK_HAIR_COLOURS.indexOf(p.hair)),
+    skirt: p.skirt,
+    beard: p.beard && p.age !== 'child',
+    glasses: p.glasses,
   };
 }
 

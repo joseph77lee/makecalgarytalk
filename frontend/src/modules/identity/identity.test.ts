@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it, vi } from 'vitest';
+import type { AvatarLook } from '../common';
 import type { ServerIdentity } from './api';
 import { devUserFromSearch } from './devSession';
 import { cleanNickname, nicknameHint, suggestNickname } from './nickname';
@@ -36,7 +37,7 @@ function setup(opts: { session?: { user: { email?: string } } | null; identity?:
     if (fn === 'identity_get_profile') return { data: identity, error: null };
     if (fn === 'identity_save_profile') {
       if (opts.save) return { data: opts.save, error: null };
-      identity = me({ profile: { nickname: args.p_nickname as string, shirt: args.p_shirt as number } });
+      identity = me({ profile: { nickname: args.p_nickname as string, shirt: args.p_shirt as number, look: (args.p_look as AvatarLook) ?? null } });
       return { data: { ok: true, ...identity }, error: null };
     }
     if (fn === 'identity_mark_changes_seen') return { data: me({ ...identity, changes_seen_today: true }), error: null };
@@ -52,6 +53,8 @@ function setup(opts: { session?: { user: { email?: string } } | null; identity?:
   return { useStore, auth, rpc, captcha };
 }
 
+const LOOK: AvatarLook = { age: 2, skin: 4, hair: 6, hair_colour: 8, skirt: true, beard: false, glasses: true };
+
 describe('sign-in (requirement.md §6.1)', () => {
   it('a first visit creates an anonymous account after the bot check, without any form', async () => {
     const t = setup();
@@ -62,7 +65,7 @@ describe('sign-in (requirement.md §6.1)', () => {
   });
 
   it('a returning visitor keeps their session: no new account, no bot check', async () => {
-    const t = setup({ session: { user: {} }, identity: me({ profile: { nickname: 'Snowy Moose', shirt: 3 } }) });
+    const t = setup({ session: { user: {} }, identity: me({ profile: { nickname: 'Snowy Moose', shirt: 3, look: null } }) });
     await t.useStore.getState().init();
     expect(t.auth.signInAnonymously).not.toHaveBeenCalled();
     expect(t.captcha).not.toHaveBeenCalled();
@@ -95,20 +98,21 @@ describe('first visit and profile', () => {
     await t.useStore.getState().init();
     t.useStore.getState().continueToSetup();
     expect(t.useStore.getState().status).toBe('setup');
-    expect(await t.useStore.getState().saveProfile('Snowy Moose 42', 4)).toBeNull();
-    expect(t.useStore.getState()).toMatchObject({ status: 'ready', profile: { nickname: 'Snowy Moose 42', shirt: 4 } });
+    expect(await t.useStore.getState().saveProfile('Snowy Moose 42', 4, LOOK)).toBeNull();
+    expect(t.rpc).toHaveBeenCalledWith('identity_save_profile', { p_nickname: 'Snowy Moose 42', p_shirt: 4, p_look: LOOK });
+    expect(t.useStore.getState()).toMatchObject({ status: 'ready', profile: { nickname: 'Snowy Moose 42', shirt: 4, look: LOOK } });
   });
 
   it('shows the server\'s reason when a nickname is not allowed', async () => {
     const t = setup({ save: { ok: false, problem: 'blocked' } });
     await t.useStore.getState().init();
     t.useStore.getState().continueToSetup();
-    expect(await t.useStore.getState().saveProfile('Admin', 1)).toBe('Please choose a different nickname.');
+    expect(await t.useStore.getState().saveProfile('Admin', 1, LOOK)).toBe('Please choose a different nickname.');
     expect(t.useStore.getState().status).toBe('setup');
   });
 
   it('"What changed since yesterday" is marked seen once per account per day', async () => {
-    const t = setup({ session: { user: {} }, identity: me({ profile: { nickname: 'Jo', shirt: 0 } }) });
+    const t = setup({ session: { user: {} }, identity: me({ profile: { nickname: 'Jo', shirt: 0, look: null } }) });
     await t.useStore.getState().init();
     t.useStore.getState().markChangesSeen();
     t.useStore.getState().markChangesSeen();
