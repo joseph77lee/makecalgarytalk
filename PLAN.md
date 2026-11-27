@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v2.09 |
+| Plan version | v2.10 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
 | Based on | `requirement.md` v1.53 |
-| Current module | M24 🟨 (build map banner fix), then M16 Deploy & Playtest |
+| Current module | First-visit flow review (see the note above M16), then M16 Deploy & Playtest |
 
 ---
 
@@ -59,7 +59,7 @@
 | M21 | Living Community | FE + BE | | M20 | ✅ |
 | M22 | Sound | FE | | M21 | ✅ |
 | M23 | Art Pass 2 (voxel variety) | FE (R3F) | | M22 | ✅ |
-| M24 | Community Identity | BE + FE (R3F) + data | | M23 | 🟨 |
+| M24 | Community Identity | BE + FE (R3F) + data | | M23 | ✅ |
 | M25 | Terrain (decide after M24) | FE (R3F) + data | | M24 | ⬜ |
 | M26 | Community News Steps | BE + FE + data | | M24 | ✅ |
 | M27 | Avatar Look | BE + FE (R3F) | | M26 | ✅ |
@@ -639,7 +639,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Dev tools kept from the Polyfork attempt:** `?meter` render readout (fps, triangles, draw calls), gallery camera pad and labels switch.
 
 
-### M24 — Community Identity 🟨
+### M24 — Community Identity ✅
 **Goal:** Each island grows into a beautiful place with its own signature places and landmarks (`requirement.md` v1.47 §7.2, §7.4, §7.6–§7.9): a build map of three tracks built in order, houses as scenery with only "My house" personal, places laid out by meaning. Built after M23, **before M16**. Design and gallery work so far: `docs/community-identity-handoff.md`, branch `spike/model-library` (place library, 31 unique landmarks), `supabase/data/community_personas.csv`.
 - **In scope**
   - [x] persona and landmark list per community as data (from `community_personas.csv`; landmark order 1–3, signature = 1) — `gamecore.community_personas`, landmark steps in `supabase/data/build_map.json`
@@ -656,8 +656,8 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done**
   - [x] DB tests for every condition (track order, residents, streak, land fit, at most 3 constructions, day boundary), plan generator tests (zones, sites, no overlap, every lot reachable) — `gamecore_rules`/`gamecore_state` (landmark 11 residents + 14-day streak added), `islandPlans.test.ts` (per island: no overlap, lots on risen land, every lot and house reachable on every stage, water places on the shore, houses in zones)
   - [x] simulated islands at 1, 3, 10, 26, 60 residents look right for the three prototypes (Inglewood, Lake Bonavista, McKenzie Towne) and a downtown one, by day, at night and with snow, on desktop and a phone — checked with `?mock&plan=CODE&residents=N` (20 day shots, night at 60, snow at 26, phone at 10; no console errors); McKenzie Towne is MCT (the plan said McKenzie Towne; MCK is McKenzie Lake)
-  - [ ] user has played it (played 2026-11-27; again for the v1.53 banner fix) (2026-11-27)
-- **v1.53 fix (2026-11-27, `fix/m24-build-map-banner`):** banner instead of the finished picture (build map and first visit), secret ⭐2/⭐3 landmarks, one "Decorations (N)" node, next band by name. The island's `upcomingIdentity` (features and stations with the next land) is no longer shown on the build map; the code stays for the island itself. Waiting for the operator to check it.
+  - [x] user has played it (2026-11-27, and again after the v1.53 banner fix) (2026-11-27)
+- **v1.53 fix (2026-11-27, `fix/m24-build-map-banner`):** banner instead of the finished picture (build map and first visit), secret ⭐2/⭐3 landmarks, one "Decorations (N)" node, next band by name. The island's `upcomingIdentity` (features and stations with the next land) is no longer shown on the build map; the code stays for the island itself. The operator checked it the same day.
 - **Handoff (in progress, 2026-11-26; for the next session)**
   - **Done on `module/m24-community-identity`** (steps 1–5, all pushed, CI green up to step 4): build map data + server rules (`supabase/data/build_map.json`, `build_map_seed.py`, `20261126120000_gamecore_build_map.sql`), plan v4 for all 223 islands + place lots and house capacity seed (`frontend/scripts/island_plans.py`, `supabase/data/place_lots_seed.py`, `20261126150000_gamecore_place_lots_seed.sql`), scenery houses (`20261126140000_gamecore_houses_scenery.sql`), free camera, all-sides models (`assets/allSides.ts`). Server computes the development level (`community.level`); the World Map reads it.
   - **Partly done:** build map item still needs the persona designs for the Community hall and Neighbourhood park (frontend models; server side done). Place library item still needs drawn water removed from the lake/river models (they draw their own water; on islands they sit next to real water) and a crossing-site rule for bridges (CRE, EAU, POI). ⭐2/⭐3 landmark slots draw the purple placeholder until models exist.
