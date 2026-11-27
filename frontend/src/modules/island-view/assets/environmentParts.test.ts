@@ -100,3 +100,14 @@ describe('water a model draws itself (requirement v1.48 §7.6b)', () => {
     }
   });
 });
+
+describe('snow on the models\' own lawns', () => {
+  it('a thin lawn turns snowy; leaves of the same green do not', () => {
+    const lawn: BoxPart = { layer: 'solid', p: [0, 0, 0], s: [2, 0.3 / 12, 2], c: '#93cb6c' };
+    const leaves: BoxPart = { layer: 'solid', p: [0, 0.5, 0], s: [0.3, 0.3, 0.3], c: '#8cc867' };
+    const [l, t] = withSnow([lawn, leaves], true);
+    expect(l!.c).toBe('#eef3f9');
+    expect(t!.c).toBe('#8cc867');
+    expect(withSnow([lawn], false)[0]!.c).toBe('#93cb6c');
+  });
+});

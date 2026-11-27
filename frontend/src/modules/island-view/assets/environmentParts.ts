@@ -37,10 +37,19 @@ export function withLights(parts: BoxPart[], on: boolean): BoxPart[] {
   return out;
 }
 
-/** Snowy roofs: the roof colour shows only faintly through the snow. */
+/** Grass colours the place and landmark models paint their own ground with. */
+const MODEL_GRASS = new Set(['#93cb6c', '#8cc867', '#9fd47a']);
+/** Snow on the ground (the island's winter grass, mood.ts). */
+const SNOW_GROUND = '#eef3f9';
+/** Thin enough to be ground (a lawn or a terrace top), not a bush or leaves. */
+const GROUND_THICKNESS = 1.2 / 12;
+
+/** Snowy roofs (the roof colour shows only faintly through the snow) and snow on the models' own lawns. */
 export function withSnow(parts: BoxPart[], snow: boolean): BoxPart[] {
   if (!snow) return parts;
-  return parts.map((b) => (b.tag === 'roof' ? { ...b, c: snowOver(b.c) } : b));
+  return parts.map((b) =>
+    b.tag === 'roof' ? { ...b, c: snowOver(b.c) } : b.layer === 'solid' && MODEL_GRASS.has(b.c) && b.s[1] <= GROUND_THICKNESS ? { ...b, c: SNOW_GROUND } : b,
+  );
 }
 
 function snowOver(c: string): string {

@@ -3,7 +3,7 @@
 -- Times are fixed instants so the Calgary day is known (Alberta is UTC-6 year-round
 -- since 2026-11-01): day D = 2026-12-01 runs from 2026-12-01T06:00Z to 2026-12-02T06:00Z.
 begin;
-select plan(62);
+select plan(64);
 
 -- Start from an empty game (local seed data such as the dev users must not affect results;
 -- everything is rolled back at the end).
@@ -191,6 +191,15 @@ insert into gamecore.place_lots (community_id, building_key, land_stage) values 
 select is(
   (pg_temp.building(pg_temp.state('mah', 'd1'), 'place.lake.beach-house') -> 'remaining' ->> 'land_residents')::int, 3,
   'a step whose lot has not risen yet waits for the land: 3 more neighbours'
+);
+-- the signature landmark (persona step 4, landmark order 1): 11 neighbours and a 14-day streak (§7.6, §7.9)
+select is(
+  (pg_temp.building(pg_temp.state('mah', 'd1'), 'landmark.mah') - 'remaining' - 'status' - 'progress' - 'level' - 'name' - 'stage' - 'tiles' - 'site'),
+  '{"key": "landmark.mah", "track": "persona", "step": 4, "landmark_order": 1}'::jsonb, 'Mahogany''s own landmark replaces the lake pattern''s step 4'
+);
+select is(
+  ((pg_temp.building(pg_temp.state('mah', 'd1'), 'landmark.mah') -> 'remaining') - 'requires' - 'land_residents'),
+  '{"residents": 8, "streak_days": 13}'::jsonb, 'the landmark waits for 11 neighbours (8 more) and a 14-day streak (1 day so far: 13 more)'
 );
 select is(
   pg_temp.statuses(gamecore.submit_actions_at(pg_temp.uid('b'), jsonb_build_array(

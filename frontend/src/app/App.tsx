@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
 import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen, isLandmarkKey, type ChangeCard, type ChangeItem } from '../modules/community-state';
 import { ActionBar, SessionScreen, Toast, useDailyActions, type ServerCommunityState } from '../modules/daily-actions';
-import { mockResidents, mockServerBuildings } from './mockBuildMap';
+import { mockResidents, mockServerBuildings, simulatedState } from './mockBuildMap';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
 import { AdminDashboard } from '../modules/admin';
 import { track } from '../modules/analytics';
@@ -341,8 +341,12 @@ function MockApp() {
   const [mapOpen, setMapOpen] = useState(false);
   const [example, setExample] = useState(false);
   useEffect(() => {
-    // `?mock&plan=BLN` shows another community's real shape.
-    void loadPlan(params.get('plan') ?? undefined);
+    // `?mock&plan=BLN` shows another community's real shape; `&residents=N` simulates its growth.
+    void loadPlan(params.get('plan') ?? undefined).then(() => {
+      const n = Number(params.get('residents'));
+      const p = useMockCommunityStore.getState().plan;
+      if (p && Number.isInteger(n) && n > 0) useMockCommunityStore.getState().update((s) => simulatedState(p, s, n));
+    });
   }, [loadPlan]);
   // `?mock&streak=14`: the community streak the mock build map assumes
   const streakDays = Number(params.get('streak') ?? 7);

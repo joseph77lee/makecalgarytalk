@@ -4,7 +4,7 @@
  * worked out here from the step's conditions (the real game gets it from the server).
  */
 import type { ServerCommunityState } from '../modules/daily-actions';
-import { BUILDING_TREE, communitySteps, type CommunityViewState, type IslandPlan } from '../modules/island-view';
+import { BUILDING_TREE, communitySteps, landStageForResidents, type BuildingView, type CommunityViewState, type IslandPlan } from '../modules/island-view';
 
 type ServerBuilding = ServerCommunityState['buildings'][number];
 
@@ -40,4 +40,27 @@ export function mockServerBuildings(plan: IslandPlan, state: CommunityViewState,
           : null,
     };
   });
+}
+
+/**
+ * `?mock&residents=N` (screen checks, M24 DoD): the island as a community of N cumulative residents
+ * with a long streak might look: its land stage, every step whose resident condition is met built
+ * (decorations one per 6 residents), and the next step of each track under construction.
+ */
+export function simulatedState(plan: IslandPlan, state: CommunityViewState, residents: number): CommunityViewState {
+  const steps = communitySteps(plan.code, plan.persona);
+  const decorations = Math.min(10, Math.floor(residents / 6));
+  const builds = (s: (typeof steps)[number]) =>
+    s.key.startsWith('decoration-') ? Number(s.key.slice('decoration-'.length)) <= decorations : s.residents <= residents;
+  const buildings: BuildingView[] = [];
+  const started = new Set<string>();
+  for (const s of steps) {
+    const base = { key: s.key, title: s.name, level: 1, remaining: null };
+    if (builds(s)) buildings.push({ ...base, status: 'built', progress: 1 });
+    else if (!started.has(s.track) && started.size < 3) {
+      started.add(s.track);
+      buildings.push({ ...base, status: 'building', progress: 0.4 });
+    }
+  }
+  return { ...state, communityName: plan.name, landStage: landStageForResidents(residents), buildings, vitality: 75 };
 }
