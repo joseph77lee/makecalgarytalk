@@ -12,6 +12,17 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v1.97
+**Changed:** M24 Community Identity 🟦 → 🟨 Ready for playtest (header, table row, heading). The bridge crossing rule stays open for an operator decision.
+
+**Why:** M24 scope and DoD checks done except the bridge rule, which needs a requirement change; ready for the operator to play.
+
+**Previous (verbatim):**
+- `| Plan version | v1.96 |`
+- `| Current module | M24 Community Identity 🟦 (then M26, M16) |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | 🟦 |`
+- `### M24 — Community Identity 🟦`
+
 ### 2026-11-26 — v1.96
 **Changed:** New module **M26 Community News Steps** (requirement v1.49: one newspaper with the board from the Welcome sign, personal posting steps, today's question), after M24/M25 and before M16; M16 now depends on M26. Header: plan version, `Based on` v1.49, current module line. Dependency diagram.
 
