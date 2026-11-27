@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it, vi } from 'vitest';
 import { assertNewspaper, type Newspaper } from './api';
-import { newsBuildingKeys, newsReady, yesterdayLabel } from './newsText';
+import { newsBuildingKeys, newsReady, opensNews, yesterdayLabel } from './newsText';
 import { createNewsStore } from './store';
 
 const paper = (patch: Partial<Newspaper> = {}): Newspaper => ({
@@ -23,7 +23,11 @@ describe('newspaper texts', () => {
     expect(yesterdayLabel('2027-01-01')).toBe('Dec 31');
   });
   it('the newspaper lives on the Welcome sign lot (sign or arch), then moves to the Community hall', () => {
-    expect(newsBuildingKeys(['welcome-sign', 'fire-pit'])).toEqual(['welcome-sign', 'gateway-arch']);
+    expect(newsBuildingKeys(['welcome-sign', 'fire-pit'])).toEqual(['welcome-sign']);
+    expect(opensNews('welcome-sign')).toBe(true);
+    expect(opensNews('community-hall')).toBe(true);
+    expect(opensNews('gateway-arch')).toBe(false);
+    expect(opensNews('warming-hut')).toBe(false);
     expect(newsBuildingKeys(['welcome-sign', 'community-hall'])).toEqual(['community-hall']);
     expect(newsReady(['fire-pit'])).toBe(false);
     expect(newsReady(['welcome-sign'])).toBe(true);

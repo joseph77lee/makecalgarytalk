@@ -12,6 +12,17 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.00
+**Changed:** M26 Community News Steps ⬜ → 🟦 In progress (header, table row, heading).
+
+**Why:** M24 is done; the operator approved the M26 plan ("응 그대로 진행해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v1.99 |`
+- `| Current module | M26 Community News Steps (next), then M16 |`
+- `| M26 | Community News Steps | BE + FE + data | | M24 | ⬜ |`
+- `### M26 — Community News Steps ⬜`
+
 ### 2026-11-27 — v1.99
 **Changed:** M24 Community Identity 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M26 next.
 

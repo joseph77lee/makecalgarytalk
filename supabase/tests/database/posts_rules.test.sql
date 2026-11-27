@@ -2,7 +2,7 @@
 -- 3-day visibility, reports and hiding, thanks and the badge, newspaper wiring, permissions
 -- (requirement.md v1.28 §14). Day N = 2026-12-01 + N.
 begin;
-select plan(64);
+select plan(72);
 
 delete from posts.thanks;
 delete from posts.reports;
@@ -37,7 +37,7 @@ $$;
 create function pg_temp.verify(who integer, code text, n integer) returns void language sql as $$
   select residency.add_verified_resident_at(pg_temp.u(who), pg_temp.c(code), pg_temp.noon(n))
 $$;
-create function pg_temp.post(who integer, body text, n integer, kind text default 'event') returns text language sql as $$
+create function pg_temp.post(who integer, body text, n integer, kind text default 'talk') returns text language sql as $$
   select coalesce(posts.create_at(pg_temp.u(who), kind, body, pg_temp.noon(n)) ->> 'problem', 'ok')
 $$;
 create function pg_temp.problem(body text) returns text language sql as $$
@@ -60,7 +60,7 @@ select gen_random_uuid(), pg_temp.u(1), pg_temp.c('MAH'), p.id, date '2026-12-01
 from gamecore.projects p where p.community_id = pg_temp.c('MAH') and p.building_key = 'welcome-sign';
 select is(pg_temp.post(1, 'Skating on Saturday!', 1), 'ok', 'Welcome sign built: a Verified Resident can post');
 select is(pg_temp.post(1, 'Another one', 1), 'daily_limit', 'one post per Calgary day');
-select is(pg_temp.post(1, 'Hot chocolate at the rink', 2, 'deal'), 'ok', 'a new day allows a new post');
+select is(pg_temp.post(1, 'Hot chocolate at the rink', 2, 'lost_found'), 'ok', 'a new day allows a new post');
 select posts.delete_at(pg_temp.u(1), pg_temp.post_id('Hot chocolate at the rink'));
 select is(pg_temp.post(1, 'Reposting after delete', 2), 'daily_limit', 'deleting does not give the day''s post back');
 select is(pg_temp.post(1, 'Bad kind', 3, 'ad'), 'kind', 'unknown kinds are refused');
@@ -159,6 +159,30 @@ set local role authenticated;
 select throws_ok($$ select * from posts.posts $$, '42501', null, 'signed-in players cannot read the tables');
 select throws_ok($$ select public.posts_create('event', 'x') $$, '28000', 'not authenticated', 'a role without a user id is rejected');
 reset role;
+
+-- Personal steps (v1.49 §14): Events and Local deals after 14 active days ---------------------
+-- Poster 15: 13 active days before joining Mahogany, 5 of them in Auburn Bay (they follow the player).
+select gamecore.ensure_tree(pg_temp.c('AUB'), date '2026-11-01');
+create function pg_temp.act_on(who integer, code text, day date) returns void language sql as $$
+  insert into gamecore.actions (id, user_id, community_id, project_id, calgary_day, energy_slot)
+  select gen_random_uuid(), pg_temp.u(who), pg_temp.c(code),
+         (select p.id from gamecore.projects p where p.community_id = pg_temp.c(code) order by p.level limit 1), day,
+         coalesce((select max(a.energy_slot) from gamecore.actions a where a.user_id = pg_temp.u(who) and a.calgary_day = day), 0) + 1
+$$;
+select pg_temp.act_on(15, case when n <= 5 then 'AUB' else 'MAH' end, date '2026-11-01' + n) from generate_series(1, 13) n;
+select pg_temp.act_on(15, 'MAH', date '2026-11-10');  -- a second action on a day already counted
+select pg_temp.verify(15, 'MAH', 4);
+select is(gamecore.active_days(pg_temp.u(15), date '2026-12-05'), 13, 'active days: distinct Calgary days with an action, in any community');
+select is(posts.can_post_at(pg_temp.u(15), pg_temp.noon(4)) - 'community_id',
+  '{"allowed": true, "active_days": 13, "kinds": ["talk", "lost_found", "safety"], "next": {"kinds": ["event", "deal"], "days": 14, "to_go": 1}}'::jsonb,
+  'step 2: Free talk, Lost & found and Safety; the next step and the days to go');
+select is(pg_temp.post(15, 'Skating party Saturday', 4, 'event'), 'kind_locked', 'Events wait for 14 active days (13 is not enough)');
+select is(pg_temp.post(15, 'Bakery sale', 4, 'deal'), 'kind_locked', 'Local deals too');
+select is(pg_temp.post(15, 'Lock your cars tonight', 4, 'safety'), 'ok', 'Safety is open at step 2');
+select pg_temp.act_on(15, 'MAH', date '2026-12-06');
+select is(posts.can_post_at(pg_temp.u(15), pg_temp.noon(5)) -> 'next', 'null'::jsonb, 'step 3 at exactly 14 active days (today''s action counts)');
+select is(pg_temp.post(15, 'Skating party Saturday', 5, 'event'), 'ok', 'step 3: Events open');
+select is(posts.can_post_at(pg_temp.u(15), pg_temp.noon(4)) ->> 'reason', 'daily_limit', 'a refused kind does not use up the day, a post does');
 
 select * from finish();
 rollback;

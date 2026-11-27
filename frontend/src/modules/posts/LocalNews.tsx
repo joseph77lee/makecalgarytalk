@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { POST_KINDS, postsApi, type CanPost, type Post, type PostKind } from './api';
+import { normalizeCanPost, postsApi, type CanPost, type Post, type PostKind } from './api';
 import { postsClient } from './client';
-import { KIND_LABEL, MAX_CHARS, PROBLEM_TEXT, REPORT_PROBLEM, SAFETY_NOTE, ageText, cannotPostText } from './postText';
+import { KIND_LABEL, MAX_CHARS, PROBLEM_TEXT, REPORT_PROBLEM, SAFETY_NOTE, ageText, cannotPostText, nextStepText } from './postText';
 
 interface Props {
   posts: Post[];
@@ -11,14 +11,18 @@ interface Props {
 }
 
 /** Community News → Local news written by Verified Residents (requirement.md v1.28 §14). */
-export function LocalNews({ posts, canPost, onChanged }: Props) {
+export function LocalNews({ posts, canPost: raw, onChanged }: Props) {
   const [writing, setWriting] = useState(false);
+  const canPost = normalizeCanPost(raw);
   const why = cannotPostText(canPost);
+  const next = canPost.allowed ? nextStepText(canPost.next) : null;
   return (
     <div>
       {canPost.allowed ? (
         writing ? (
           <Composer
+            kinds={canPost.kinds}
+            next={next}
             onDone={(posted) => {
               setWriting(false);
               if (posted) onChanged();
@@ -31,6 +35,7 @@ export function LocalNews({ posts, canPost, onChanged }: Props) {
             className="mb-3 w-full rounded-2xl bg-emerald-500 py-2.5 text-sm font-semibold text-white active:scale-[0.98]"
           >
             ✏️ Write a post
+            {next && <span className="mt-0.5 block text-[11px] font-normal text-emerald-50">{next}</span>}
           </button>
         )
       ) : (
@@ -49,8 +54,8 @@ export function LocalNews({ posts, canPost, onChanged }: Props) {
   );
 }
 
-function Composer({ onDone }: { onDone: (posted: boolean) => void }) {
-  const [kind, setKind] = useState<PostKind>('talk');
+function Composer({ kinds, next, onDone }: { kinds: PostKind[]; next: string | null; onDone: (posted: boolean) => void }) {
+  const [kind, setKind] = useState<PostKind>(kinds[0] ?? 'talk');
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -70,7 +75,7 @@ function Composer({ onDone }: { onDone: (posted: boolean) => void }) {
   return (
     <div className="mb-3 rounded-2xl bg-white p-3 ring-1 ring-slate-200">
       <div className="mb-2 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Kind of post">
-        {POST_KINDS.map((k) => (
+        {kinds.map((k) => (
           <button
             key={k}
             type="button"
@@ -83,6 +88,7 @@ function Composer({ onDone }: { onDone: (posted: boolean) => void }) {
           </button>
         ))}
       </div>
+      {next && <p className="mb-2 text-[11px] text-slate-500">🔒 {next}</p>}
       {kind === 'safety' && <p className="mb-2 rounded-xl bg-rose-50 px-2 py-1.5 text-xs text-rose-800">🚨 {SAFETY_NOTE}</p>}
       <textarea
         value={body}

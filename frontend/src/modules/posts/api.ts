@@ -16,9 +16,21 @@ export interface Post {
   reported: boolean;
 }
 
-export type CanPost = { allowed: true } | { allowed: false; reason: 'not_signed_in' | 'not_verified' | 'locked' | 'daily_limit' | 'other_community' };
+/** The next personal posting step (requirement.md v1.49 §14): its kinds and the active days to go. */
+export interface NextStep {
+  kinds: PostKind[];
+  days: number;
+  to_go: number;
+}
 
-export type PostProblem = 'not_verified' | 'locked' | 'daily_limit' | 'kind' | 'length' | 'link' | 'phone' | 'address' | 'blocked';
+export type CanPost =
+  | { allowed: true; kinds: PostKind[]; active_days: number; next: NextStep | null }
+  | { allowed: false; reason: 'not_signed_in' | 'not_verified' | 'locked' | 'daily_limit' | 'other_community' };
+
+/** Kinds open at step 2 (an older server sends no `kinds`). */
+export const STEP2_KINDS: PostKind[] = ['talk', 'lost_found', 'safety'];
+
+export type PostProblem = 'not_verified' | 'locked' | 'daily_limit' | 'kind' | 'kind_locked' | 'length' | 'link' | 'phone' | 'address' | 'blocked';
 
 export function isPost(v: unknown): v is Post {
   const o = v as Record<string, unknown> | null;
@@ -39,6 +51,23 @@ export function isPost(v: unknown): v is Post {
 export function isCanPost(v: unknown): v is CanPost {
   const o = v as Record<string, unknown> | null;
   return !!o && typeof o.allowed === 'boolean' && (o.allowed === true || typeof o.reason === 'string');
+}
+
+const isKinds = (v: unknown): v is PostKind[] => Array.isArray(v) && v.every((k) => (POST_KINDS as readonly unknown[]).includes(k));
+
+/** A checked `can_post` with the step fields filled in (older servers send only `allowed`). */
+export function normalizeCanPost(v: CanPost): CanPost {
+  if (!v.allowed) return v;
+  const o = v as unknown as Record<string, unknown>;
+  const n = o.next as Record<string, unknown> | null | undefined;
+  const next: NextStep | null =
+    n && isKinds(n.kinds) && Number.isInteger(n.days) && Number.isInteger(n.to_go) ? { kinds: n.kinds, days: n.days as number, to_go: n.to_go as number } : null;
+  return {
+    allowed: true,
+    kinds: isKinds(o.kinds) && o.kinds.length > 0 ? o.kinds : STEP2_KINDS,
+    active_days: Number.isInteger(o.active_days) ? (o.active_days as number) : 0,
+    next,
+  };
 }
 
 async function call(c: SupabaseClient, fn: string, args: Record<string, unknown>): Promise<Record<string, unknown>> {

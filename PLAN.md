@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.99 |
+| Plan version | v2.00 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
 | Based on | `requirement.md` v1.50 |
-| Current module | M26 Community News Steps (next), then M16 |
+| Current module | M26 Community News Steps 🟦 (then M16) |
 
 ---
 
@@ -61,7 +61,7 @@
 | M23 | Art Pass 2 (voxel variety) | FE (R3F) | | M22 | ✅ |
 | M24 | Community Identity | BE + FE (R3F) + data | | M23 | ✅ |
 | M25 | Terrain (decide after M24) | FE (R3F) + data | | M24 | ⬜ |
-| M26 | Community News Steps | BE + FE + data | | M24 | ⬜ |
+| M26 | Community News Steps | BE + FE + data | | M24 | 🟦 |
 | M16 | Deploy & Playtest | All + operator accounts | | M26 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
@@ -670,7 +670,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **In scope (draft):** up to 4 levels from elevation data with an operator override, cliffs facing the camera, stairs/ramps so every level is reachable (avatar and villager pathfinding with height), building lots flat on one level, CTrain on one level
 - **Definition of Done:** to be written when the module is planned
 
-### M26 — Community News Steps ⬜
+### M26 — Community News Steps 🟦
 **Goal:** Writing in Community News becomes a daily reason to visit, opened step by step (`requirement.md` v1.49 §11, §14, §14.1): one newspaper with the community board from the Welcome sign, posting in personal steps (the last after 14 active days), and today's question for the whole city. Builds on M15 (posts) and M8/M9 (newspaper); built after M24, **before M16**.
 - **In scope**
   - [ ] one newspaper: the community board (events, roadmap) is part of it from the Welcome sign; the Warming hut lock and its text removed; the Community hall takes the newspaper over once built; leftover `gateway-arch` keys removed from the news code

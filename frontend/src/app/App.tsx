@@ -8,7 +8,7 @@ import { AdminDashboard } from '../modules/admin';
 import { track } from '../modules/analytics';
 import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, arrivedByInvite, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
 import { installSound, playSound } from '../modules/sound';
-import { NewspaperPanel, newsBuildingKeys, newsReady, useNews, useTodayPostBubbles } from '../modules/news';
+import { NewspaperPanel, newsBuildingKeys, newsReady, opensNews, useNews, useTodayPostBubbles } from '../modules/news';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import { useRanking, weeklyAnnouncement, weeklyCardTitle } from '../modules/ranking';
 import { ShareCardDialog, type ShareCard } from '../modules/share-cards';
@@ -179,7 +179,7 @@ function LiveApp() {
               onBuildingTap={(key) => {
                 // The newspaper lives on the Welcome sign's lot, later the Community hall (§7.6, §11);
                 // tapping the sign's construction site says it opens once the sign is built.
-                if (['welcome-sign', 'gateway-arch', 'community-hall'].includes(key)) void useNews.getState().show(server.community.id);
+                if (opensNews(key)) void useNews.getState().show(server.community.id);
               }}
             />
           )}

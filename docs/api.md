@@ -316,12 +316,14 @@ none yet), or `null` for an unknown code. Works before sign-in (invite landing b
 - `announcements`: global operator notices running today (always shown). Add one with SQL:
   `insert into news.announcements (title, body, starts_on, ends_on) values ('…', '…', '2026-12-01', '2026-12-03');`
 - `posts`: residents' local news, newest first: `{id, kind, body, nickname, days_ago, thanks, mine,
-  thanked, reported}` (no times, no user ids); `can_post`: `{allowed: true}` or `{allowed: false,
-  reason: not_signed_in | not_verified | locked | daily_limit | other_community}` for the viewer.
-- `board.open` once the Warming hut is built; `board.roadmap` = "Coming soon" items from
-  `news.roadmap` (set `done = true` to hide one).
-- The app opens it when the player taps the Welcome sign's lot (sign or Gateway arch), later the
-  Community hall; a "📰 News" chip marks it.
+  thanked, reported}` (no times, no user ids); `can_post`: `{allowed: true, kinds, active_days,
+  next}` (`kinds` open to the viewer; `next` = `{kinds, days, to_go}` for the next personal step,
+  null at the last) or `{allowed: false, reason: not_signed_in | not_verified | locked |
+  daily_limit | other_community}` for the viewer.
+- `board.open` together with the newspaper (Welcome sign); `board.roadmap` = "Coming soon" items
+  from `news.roadmap` (set `done = true` to hide one).
+- The app opens it when the player taps the Welcome sign, later the Community hall; a "📰 News"
+  chip marks it.
 
 ## `ranking_weekly()`
 ```json
@@ -349,9 +351,11 @@ community (null for visitors). `champions` of last week wear the crown on the Wo
 
 ## `posts_create(p_kind text, p_body text)` and friends
 - `posts_create`: Verified Residents, own community, once the Welcome sign is built; `kind` =
-  `safety | deal | event | lost_found | talk`; 1–300 characters (spaces tidied); 1 per Calgary day
-  (a deleted post still counts). `{ok: true, post_id}` or `{ok: false, problem}`:
-  `not_verified | locked | daily_limit | kind | length | link | phone | address | blocked`.
+  `talk | lost_found | safety`, plus `event | deal` after 14 active days (Calgary days with at
+  least one daily action, any community; requirement §14 personal steps); 1–300 characters (spaces
+  tidied); 1 per Calgary day (a deleted post still counts). `{ok: true, post_id}` or `{ok: false,
+  problem}`: `not_verified | locked | daily_limit | kind | kind_locked | length | link | phone |
+  address | blocked`.
   Links, phone numbers, street addresses (house number + street type, or + NW/NE/SW/SE) and
   blocked words are refused. Visible for 3 Calgary days.
 - `posts_delete(id)`: my own post. `posts_report(id)`: once per player per post, at most 3 per
