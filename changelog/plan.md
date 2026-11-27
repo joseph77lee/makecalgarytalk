@@ -13,7 +13,7 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 
 
 ### 2026-11-27 — v2.09
-**Changed:** M24 🔁 → 🟨 (header, table row, heading); the v1.53 scope item ticked; DoD "user has played it" unticked until the fix is checked; a v1.53 note in M24; an "Open before M16" note (starter checklist discussion, first visit away from home, M16 open questions).
+**Changed:** M24 🔁 → 🟨 (header, table row, heading); the v1.53 scope item ticked; DoD "user has played it" unticked until the fix is checked; a v1.53 note in M24; an "Open before M16" note (review of the whole first-visit flow as built, starter checklist discussion, first visit away from home, M16 open questions).
 
 **Why:** v1.53 build map banner fix implemented and screen-checked; the operator asked to prepare the next session and to postpone the checklist decision.
 
