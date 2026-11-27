@@ -12,6 +12,23 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-26 — v1.49
+**Changed:** 11 the newspaper opens **in full** from the Welcome sign (the community board with events and roadmap no longer waits for the Warming hut); the Community hall takes it over once built; the newspaper carries yesterday's today's-question result. 14 posting opens in **personal steps** (read and Thanks → answer today's question → write Free talk, Lost & found, Safety as a Verified Resident → Events and Local deals after 14 active days), rewards for posting stay social. New **14.1 Today's question**: one multiple-choice question a day for the whole city, from a question list kept as data (`supabase/data/daily_questions.csv`), counts only. 5.2, 7.6, 22.1, 22.6 (6g), 23 follow. Header version.
+
+**Why:** Operator decisions 2026-11-26: the two-stage newspaper/board split adds nothing ("두 단계로 나눈게 의미가 없어"); writing should become one of the reasons to visit every day, but giving full writing at once does not motivate, so it comes in steps ("바로 글쓰기를 주면 동기 부여가 안되니깐 어떤 스탭을 줬으면 좋겠어"). Chosen: personal steps (a small community is never held back), today's question as the first step, the last step by active days ("개인 단계로 하고 오늘의 질문도 넣자. 활동일수가 좋을것 같아"); 14 days matches the Neighbour rank (13.2). The operator wrote the question draft (`docs/references/daily-questions.csv`); reviewed version approved ("응 v1.49랑 M26 진행해줘").
+
+**Previous:**
+- Header (verbatim): `| Document version | v1.48 |`
+- 5.2 (verbatim): `4. **Welcome sign / Warming hut / Community hall** (7.6): read the auto-generated community newspaper and the community board (later: resident posts, coupons, new business news)`
+- 7.6 (verbatim): `- The newspaper opens from the **Welcome sign**, the **Warming hut** adds the community board, the **Community hall** takes both over (11)`
+- 11 (verbatim): `- **Available from the MVP**: the newspaper opens from the **Welcome sign**; the **Warming hut** adds the community board (operator announcements, events); the **Community hall** takes both over and expands them (7.6)`
+- 11 (verbatim): `  - Always at the top of the newspaper (also before the Warming hut). The **community board** section (events and roadmap) opens with the Warming hut; before that it shows a lock ("Opens with the Warming hut"). MVP: the operator adds announcements with SQL in the Supabase dashboard (an admin screen comes later)`
+- 14 (verbatim): `- **Verified Residents only**, in their own community. Opens when the community's **Welcome sign** is built (together with the newspaper)`
+- 22.1 (verbatim): `- Auto community newspaper + roadmap notice + "Coming soon"`
+- 22.1 (verbatim): `5. Community newspaper with my name (recognition)`
+- 14.1, 22.6 row 6g and the glossary rows "Active day", "Today's question", "Posting steps" did not exist.
+
+
 ### 2026-11-26 — v1.48
 **Changed:** 7.6 the build map gets **one root** (the Welcome sign, first day) that opens the three tracks (the community track starts at the Fire pit); **a place appears at most once** on a community's build map; the **Community hall and Neighbourhood park take a persona design**. 7.6a the build map screen is drawn **like an RPG skill tree** (root, three lanes, resident-count bands, node states, gold landmark nodes, pre-rendered node pictures, no branch choices, visitors read-only). 10.1 the camera **turns all the way round**, zooms in closer and pans while zoomed in; 7.8 the compass resets the view and places face their site, not the camera; 19.1 every model finished on all sides. 7.1, 7.9, 22.1, 22.6 (6e), 23 follow. Header version.
 

@@ -12,6 +12,19 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-26 — v1.96
+**Changed:** New module **M26 Community News Steps** (requirement v1.49: one newspaper with the board from the Welcome sign, personal posting steps, today's question), after M24/M25 and before M16; M16 now depends on M26. Header: plan version, `Based on` v1.49, current module line. Dependency diagram.
+
+**Why:** Requirement v1.49 (operator decisions 2026-11-26): "응 v1.49랑 M26 진행해줘".
+
+**Previous (verbatim):**
+- `| Plan version | v1.95 |`
+- `| Based on | \`requirement.md\` v1.48 |`
+- `| Current module | M24 Community Identity 🟦 (then M16) |`
+- `| M16 | Deploy & Playtest | All + operator accounts | | M24 | ⬜ |`
+- `    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M16 ── M17 ── M18`
+- M26 did not exist.
+
 ### 2026-11-26 — v1.95
 **Changed:** M24 Community Identity started (🟦): header, table row, heading.
 

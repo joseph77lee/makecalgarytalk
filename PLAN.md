@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v1.95 |
+| Plan version | v1.96 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-26 |
-| Based on | `requirement.md` v1.48 |
-| Current module | M24 Community Identity 🟦 (then M16) |
+| Based on | `requirement.md` v1.49 |
+| Current module | M24 Community Identity 🟦 (then M26, M16) |
 
 ---
 
@@ -61,7 +61,8 @@
 | M23 | Art Pass 2 (voxel variety) | FE (R3F) | | M22 | ✅ |
 | M24 | Community Identity | BE + FE (R3F) + data | | M23 | 🟦 |
 | M25 | Terrain (decide after M24) | FE (R3F) + data | | M24 | ⬜ |
-| M16 | Deploy & Playtest | All + operator accounts | | M24 | ⬜ |
+| M26 | Community News Steps | BE + FE + data | | M24 | ⬜ |
+| M16 | Deploy & Playtest | All + operator accounts | | M26 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -82,7 +83,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M26 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -666,6 +667,20 @@ M0 ─┬─ M1 ── M2 ─┐
 **Goal:** Hills, escarpments and ravines as levels of the island floor (handoff §4.1; gallery concept on `spike/terrain-concept`). Whether it comes before M16 is decided after playing M24.
 - **In scope (draft):** up to 4 levels from elevation data with an operator override, cliffs facing the camera, stairs/ramps so every level is reachable (avatar and villager pathfinding with height), building lots flat on one level, CTrain on one level
 - **Definition of Done:** to be written when the module is planned
+
+### M26 — Community News Steps ⬜
+**Goal:** Writing in Community News becomes a daily reason to visit, opened step by step (`requirement.md` v1.49 §11, §14, §14.1): one newspaper with the community board from the Welcome sign, posting in personal steps (the last after 14 active days), and today's question for the whole city. Builds on M15 (posts) and M8/M9 (newspaper); built after M24, **before M16**.
+- **In scope**
+  - [ ] one newspaper: the community board (events, roadmap) is part of it from the Welcome sign; the Warming hut lock and its text removed; the Community hall takes the newspaper over once built; leftover `gateway-arch` keys removed from the news code
+  - [ ] personal posting steps on the server: a player's step (0 read/Thanks, 1 today's question, 2 Free talk/Lost & found/Safety, 3 Events/Local deals) and total active days computed on read from the action log (no counter; follows the person across moves); post kinds checked on the server; the write box shows the next step and days to go
+  - [ ] today's question data: `supabase/data/daily_questions.csv` (from the reviewed operator draft) seeded by a script into the module's schema; a data test for the writing rules (2–4 choices, distinct emoji, ≤ 32 characters, known seasons/situations/categories)
+  - [ ] today's question rules: one question per Calgary day for the whole city, deterministic (season by month, weekday/weekend, not shown in the last 60 days, not yesterday's category), an answer RPC (residents of the community they play in, verified or verifying; one per player per Calgary day; idempotent; final), community counts on read (no who-chose-what anywhere)
+  - [ ] today's question card on the first open of the day (after the changes panel), counts after answering, visitors read-only; the question and yesterday's result in Community News
+- **Out of scope:** situations other than weekday/weekend (game days, Stampede week), city-wide comparisons, an operator screen for questions, free-text replies
+- **Definition of Done**
+  - [ ] DB tests: Calgary day boundary for the question and the one-answer rule, season edges (Mar 31/Apr 1, May 31/Jun 1, Aug 31/Sep 1, Oct 31/Nov 1), weekday/weekend, no repeat within 60 days and never yesterday's category (including a short pool), same question for every community, step 3 at exactly 14 active days (13 is not enough), active days kept after a move, question-only days not counted, visitors and other communities' residents cannot answer, counts never expose who answered
+  - [ ] screen check on desktop and a phone (card, answered state, newspaper result, write box with the next step)
+  - [ ] user has played it
 
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
