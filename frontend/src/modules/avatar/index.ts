@@ -4,3 +4,4 @@ export { moveTo, playWork, useAvatarStore, type DestinationEvent } from './avata
 export { findPath, nearestWalkable } from './pathfinding';
 export { AvatarPreview } from './AvatarPreview';
 export { currentLook, nicknameSeed } from './look';
+export { AvatarFace } from './AvatarFace';

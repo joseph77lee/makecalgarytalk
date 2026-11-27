@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isAvatarLook } from '../../common';
-import { LOOK_HAIR_COLOURS, LOOK_HAIR_STYLES, SKIN_TONES, avatarLookFromSeed, personLook, personLookFrom } from './voxel/samples';
+import { LOOK_HAIR_COLOURS, LOOK_HAIR_STYLES, SCARF_COLOURS, SKIN_TONES, avatarLookFromSeed, personLook, personLookFrom } from './voxel/samples';
 
 describe('a chosen look drawn as a voxel person (requirement.md v1.52 §10.2)', () => {
   it('uses every chosen part and the shirt; no coat or hat', () => {
@@ -17,6 +17,7 @@ describe('a chosen look drawn as a voxel person (requirement.md v1.52 §10.2)', 
       hat: 'none',
       glasses: true,
       beard: true,
+      scarf: SCARF_COLOURS[9 % 5],
     });
     expect(personLookFrom({ age: 1, skin: 0, hair: 0, hair_colour: 0, skirt: false, beard: true, glasses: false }, '#fff').beard).toBe(false);
   });
@@ -25,6 +26,12 @@ describe('a chosen look drawn as a voxel person (requirement.md v1.52 §10.2)', 
     expect(LOOK_HAIR_COLOURS).toHaveLength(10);
     expect(new Set(LOOK_HAIR_COLOURS).size).toBe(10);
     expect(SKIN_TONES).toHaveLength(6);
+  });
+  it('with a headscarf the colour choice picks the scarf colour', () => {
+    const scarf = (hair_colour: number) => personLookFrom({ age: 0, skin: 0, hair: 6, hair_colour, skirt: false, beard: false, glasses: false }, '#fff').scarf;
+    expect(scarf(0)).toBe(SCARF_COLOURS[0]);
+    expect(scarf(4)).toBe(SCARF_COLOURS[4]);
+    expect(scarf(7)).toBe(SCARF_COLOURS[2]);
   });
   it('a player without a saved look starts from the look their nickname gave them', () => {
     for (let seed = 1; seed < 400; seed += 7) {

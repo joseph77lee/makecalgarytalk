@@ -348,6 +348,8 @@ export interface PersonLook {
   hat: 'none' | 'beanie' | 'cap';
   glasses: boolean;
   beard: boolean;
+  /** Headscarf colour when chosen (otherwise the seed picks one). */
+  scarf?: string;
 }
 
 /** How a person looks, fixed by their seed: age, skin tone, hair, clothes and accessories (M23 variety). */
@@ -374,6 +376,8 @@ export function personLook(seed: number, shirt?: string): PersonLook {
 export const LOOK_AGES: PersonAge[] = ['adult', 'child', 'elder'];
 export const LOOK_HAIR_STYLES: HairStyle[] = ['short', 'long', 'bun', 'curly', 'ponytail', 'bald', 'headscarf'];
 export const LOOK_HAIR_COLOURS: string[] = [...HAIR, ...GREY_HAIR];
+/** Headscarf colours; with a headscarf the hair colour choice picks one of these (index mod 5). */
+export const SCARF_COLOURS = ['#a77bd1', '#5b8fd6', '#6fbf8a', '#e3a1a6', '#2f3448'];
 const LOOK_BOTTOM = '#3b4260';
 
 /** The person drawn from a look the player chose (no coat or hat: those are earned later). */
@@ -391,6 +395,7 @@ export function personLookFrom(look: AvatarLook, shirt: string): PersonLook {
     hat: 'none',
     glasses: look.glasses,
     beard: look.beard && age !== 'child',
+    scarf: SCARF_COLOURS[look.hair_colour % SCARF_COLOURS.length],
   };
 }
 
@@ -457,7 +462,7 @@ export function person(seed: number, shirt?: string, look: PersonLook = personLo
       parts.push(vb(-1.5, 7.6, -1.3, 1.5, 8.6, -0.9, hair));
       break;
     case 'headscarf': {
-      const scarf = pick(['#a77bd1', '#5b8fd6', '#6fbf8a', '#e3a1a6', '#2f3448'], rnd(seed, 31));
+      const scarf = look.scarf ?? pick(SCARF_COLOURS, rnd(seed, 31));
       parts.push(vb(-1.6, 6.4, -1.4, 1.6, 10, -0.8, scarf), vb(-1.6, 9.2, -1.4, 1.6, 10, 1.3, scarf), vb(-1.6, 6.4, -1, -1.35, 9.2, 1.2, scarf), vb(1.35, 6.4, -1, 1.6, 9.2, 1.2, scarf));
       break;
     }

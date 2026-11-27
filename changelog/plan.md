@@ -13,7 +13,7 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 
 
 ### 2026-11-27 — v2.06
-**Changed:** M27 Avatar Look 🟦 → 🟨 Ready for playtest (header, table row, heading); scope and first two DoD items ticked; Handoff added.
+**Changed:** M27 Avatar Look 🟦 → 🟨 Ready for playtest (header, table row, heading); scope and first two DoD items ticked; Handoff added; a ticked scope item for the profile button face (operator request the same day).
 
 **Why:** M27 implemented, tested and screen-checked; waiting for the operator to play it.
 

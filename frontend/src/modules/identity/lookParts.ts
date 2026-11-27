@@ -3,6 +3,8 @@ import { AGE_CHILD, fixLook, type AvatarLook } from '../common';
 
 export const AGE_LABELS = ['Adult', 'Child', 'Elder'] as const;
 export const HAIR_LABELS = ['Short', 'Long', 'Bun', 'Curly', 'Ponytail', 'Bald', 'Headscarf'] as const;
+/** The headscarf's index: then the colour choice is the scarf's. */
+export const HEADSCARF = 6;
 
 /** A look with one part changed, the rules applied (choosing Child takes the beard off). */
 export function withPart<K extends keyof AvatarLook>(look: AvatarLook, key: K, value: AvatarLook[K]): AvatarLook {

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { EmailUpdatesSection } from './EmailUpdatesSection';
-import { currentLook } from '../avatar';
+import { AvatarFace, currentLook } from '../avatar';
 import { ProfileForm } from './ProfileForm';
 import { LegalLinks } from './LegalLinks';
 import { GOOGLE_LINKING, useIdentity } from './liveStore';
@@ -19,9 +19,9 @@ export function ProfileButton({ children }: { children?: ReactNode }) {
         onClick={() => setOpen(true)}
         aria-label={`My villager: ${profile.nickname}`}
         title={profile.nickname}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur"
+        className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white bg-sky-100 shadow-sm"
       >
-        <span className="h-7 w-7 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: shirtColor(profile.shirt) }} aria-hidden />
+        <AvatarFace look={currentLook(profile.nickname, profile.look)} shirt={shirtColor(profile.shirt)} className="h-full w-full" />
       </button>
       {/* Portal: the chip sits inside the small top bar; the sheet must cover the whole screen. */}
       {open && createPortal(<ProfileSheet onClose={() => setOpen(false)}>{children}</ProfileSheet>, document.body)}

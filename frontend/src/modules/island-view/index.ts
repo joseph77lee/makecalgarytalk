@@ -10,7 +10,7 @@ export { IslandDevPanel } from './dev/IslandDevPanel';
 export { AssetGallery } from './dev/AssetGallery';
 export { PicturePrinter } from './dev/PicturePrinter';
 export { VoxelPerson, PERSON_SCALE, type PersonMotion } from './assets/VoxelPerson';
-export { LOOK_AGES, LOOK_HAIR_COLOURS, LOOK_HAIR_STYLES, SKIN_TONES, avatarLookFromSeed, personLookFrom, type PersonLook } from './assets/voxel/samples';
+export { LOOK_AGES, LOOK_HAIR_COLOURS, LOOK_HAIR_STYLES, SCARF_COLOURS, SKIN_TONES, avatarLookFromSeed, personLookFrom, type PersonLook } from './assets/voxel/samples';
 export { useMockCommunityStore } from './mockStore';
 export { parseCommunityViewState, type ParseResult } from './parseState';
 export { MOOD_PALETTES } from './mood';

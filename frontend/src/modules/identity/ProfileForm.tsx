@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { AvatarPreview } from '../avatar';
 import { randomLook, type AvatarLook } from '../common';
-import { LOOK_HAIR_COLOURS, SKIN_TONES } from '../island-view';
-import { AGE_LABELS, HAIR_LABELS, beardAllowed, withPart } from './lookParts';
+import { LOOK_HAIR_COLOURS, SCARF_COLOURS, SKIN_TONES } from '../island-view';
+import { AGE_LABELS, HAIR_LABELS, HEADSCARF, beardAllowed, withPart } from './lookParts';
 import { nicknameHint, NICKNAME_MESSAGES, suggestNickname } from './nickname';
 import { SHIRT_COLORS } from './shirts';
 
@@ -120,11 +120,19 @@ export function ProfileForm({ initialNickname, initialShirt = 0, initialLook, su
           </Chip>
         ))}
       </Row>
-      <Row label="Hair colour">
-        {LOOK_HAIR_COLOURS.map((c, i) => (
-          <Swatch key={c} colour={c} on={look.hair_colour === i} label={`Hair colour ${i + 1}`} onClick={() => set('hair_colour', i)} />
-        ))}
-      </Row>
+      {look.hair === HEADSCARF ? (
+        <Row label="Scarf colour">
+          {SCARF_COLOURS.map((c, i) => (
+            <Swatch key={c} colour={c} on={look.hair_colour % SCARF_COLOURS.length === i} label={`Scarf colour ${i + 1}`} onClick={() => set('hair_colour', i)} />
+          ))}
+        </Row>
+      ) : (
+        <Row label="Hair colour">
+          {LOOK_HAIR_COLOURS.map((c, i) => (
+            <Swatch key={c} colour={c} on={look.hair_colour === i} label={`Hair colour ${i + 1}`} onClick={() => set('hair_colour', i)} />
+          ))}
+        </Row>
+      )}
       <Row label="Clothes and more">
         <Chip on={!look.skirt} onClick={() => set('skirt', false)}>
           Trousers
