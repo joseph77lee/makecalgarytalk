@@ -187,7 +187,7 @@ export function stormPond(seed: number): BoxPart[] {
   const nearPond = (x: number, z: number) => ((x + 0.5) / 22) ** 2 + ((z + 0.5) / 15) ** 2 < 1;
   for (let x = -24; x < 24; x += 2)
     for (let z = -18; z < 18; z += 2) {
-      if (inPond(x + 1, z + 1)) parts.push(vb(x, 0, z, x + 2, 0.4, z + 2, WATER));
+      if (inPond(x + 1, z + 1)) parts.push({ ...vb(x, 0, z, x + 2, 0.4, z + 2, WATER), tag: 'water' });
       else if (inPond(x - 1, z + 1) || inPond(x + 3, z + 1) || inPond(x + 1, z - 1) || inPond(x + 1, z + 3)) parts.push(vb(x, 0, z, x + 2, 0.8, z + 2, shade(STONE, (rnd(seed, x, z) - 0.5) * 0.15)));
       else if (nearPond(x + 1, z + 1)) parts.push(vb(x, 0.25, z, x + 2, 0.32, z + 2, '#d6d0c4'));
     }

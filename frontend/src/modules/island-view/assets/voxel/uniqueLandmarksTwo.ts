@@ -18,7 +18,7 @@ const BRIGHT = ['#e46a5c', '#f2c14e', '#6fbf8a', '#5b8fd6', '#a77bd1'];
 /** Water over a rectangle (voxels), drawn in 2-voxel cells where `inside` says so. */
 function water(x0: number, z0: number, x1: number, z1: number, inside: (x: number, z: number) => boolean = () => true): BoxPart[] {
   const parts: BoxPart[] = [];
-  for (let x = x0; x < x1; x += 2) for (let z = z0; z < z1; z += 2) if (inside(x + 1, z + 1)) parts.push(vb(x, 0, z, x + 2, 0.35, z + 2, WATER));
+  for (let x = x0; x < x1; x += 2) for (let z = z0; z < z1; z += 2) if (inside(x + 1, z + 1)) parts.push({ ...vb(x, 0, z, x + 2, 0.35, z + 2, WATER), tag: 'water' });
   return parts;
 }
 
@@ -216,11 +216,11 @@ export function waterfallHillLake(seed: number): BoxPart[] {
     parts.push(vb(x0, 0, z0, x0 + size, 4 + i * 4, z0 + size, shade('#9c9488', (rnd(seed, i) - 0.5) * 0.1)), vb(x0, 4 + i * 4, z0, x0 + size, 5 + i * 4, z0 + size, '#8cc867'));
   });
   // a pool on the top level spills down the three front faces into the lake
-  parts.push(vb(-17, 13, -15, -13, 13.4, -12, WATER));
+  parts.push({ ...vb(-17, 13, -15, -13, 13.4, -12, WATER), tag: 'water' });
   for (const [z, y0, y1] of [[-12, 9, 13.2], [-9, 5, 9.2], [-6, 0.3, 5.2]] as const) {
     parts.push(vb(-17, y0, z, -13, y1, z + 0.6, '#cfeefc'));
     for (let i = 0; i < 3; i++) parts.push(vb(-16.6 + i * 1.3, y0 + 0.5 + rnd(seed, z, i) * 2, z + 0.5, -16.1 + i * 1.3, y0 + 2 + rnd(seed, z, i) * 2, z + 0.75, '#ffffff'));
-    if (z > -12) parts.push(vb(-17, y0, z - 3, -13, y0 + 0.4, z, WATER));
+    if (z > -12) parts.push({ ...vb(-17, y0, z - 3, -13, y0 + 0.4, z, WATER), tag: 'water' });
   }
   parts.push(vb(-18, 0.3, -5.4, -12, 0.8, -3, '#f2fbff'));
   // gazebo on top

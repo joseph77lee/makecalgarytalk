@@ -15,6 +15,11 @@ const LAMP_OFF = '#f1ece0';
 const DARK_GLASS = '#2b3550';
 export const SNOW_WHITE = '#f6f8fb';
 
+/** Water a model draws itself takes the island's water colour (icy with snow; v1.48 §7.6b). */
+export function withWater(parts: BoxPart[], water: string): BoxPart[] {
+  return parts.some((b) => b.tag === 'water') ? parts.map((b) => (b.tag === 'water' ? { ...b, c: water } : b)) : parts;
+}
+
 export function withLights(parts: BoxPart[], on: boolean): BoxPart[] {
   const out: BoxPart[] = [];
   for (const b of parts) {

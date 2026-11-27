@@ -78,3 +78,25 @@ describe('withSnow', () => {
     expect(parts.filter((p) => p.layer === 'solid').every((p) => p.p[1] - p.s[1] / 2 <= 0.3)).toBe(true);
   });
 });
+
+describe('water a model draws itself (requirement v1.48 §7.6b)', () => {
+  it('takes the island water colour, other parts unchanged', async () => {
+    const { withWater } = await import('./environmentParts');
+    const parts = [
+      { layer: 'solid' as const, p: [0, 0, 0] as [number, number, number], s: [1, 1, 1] as [number, number, number], c: '#8ec5ea', tag: 'water' as const },
+      { layer: 'solid' as const, p: [0, 0, 0] as [number, number, number], s: [1, 1, 1] as [number, number, number], c: '#8ec5ea' },
+    ];
+    const out = withWater(parts, '#a6d2ef');
+    expect(out[0]!.c).toBe('#a6d2ef');
+    expect(out[1]!.c).toBe('#8ec5ea'); // a pool or fountain keeps its own blue
+  });
+
+  it('every lake landmark tags its water', async () => {
+    const { LANDMARK_LIBRARY } = await import('./voxel/landmarkLibrary');
+    for (const key of ['landmark.mah', 'landmark.lkb', 'landmark.mck', 'landmark.byv', 'landmark.bow'] as const) {
+      const parts = LANDMARK_LIBRARY[key].build(3);
+      const water = parts.filter((b) => b.tag === 'water');
+      expect(water.length, key).toBeGreaterThan(0);
+    }
+  });
+});
