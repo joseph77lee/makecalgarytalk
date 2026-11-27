@@ -74,6 +74,13 @@ describe('invite nudges', () => {
     expect(inviteNudge({ ...none, landGrew: true, builtSinceYesterday: 'Fire pit' })).toMatch(/community grew/);
     expect(inviteNudge({ ...none, builtSinceYesterday: 'Fire pit' })).toBe('The Fire pit is built! Share it with your neighbours.');
     expect(inviteNudge({ ...none, nextLandResidents: null })).toBeNull();
+    // the landmark is the reason to invite (§7.9): named up to 5 neighbours away, after closer goals
+    expect(inviteNudge({ ...none, closestLandmarkResidents: 5, closestLandmarkTitle: 'Lighthouse' })).toBe(
+      '5 more neighbours and we can build our landmark, the Lighthouse! Invite someone nearby.',
+    );
+    expect(inviteNudge({ ...none, closestLandmarkResidents: 6, closestLandmarkTitle: 'Lighthouse' })).toBeNull();
+    expect(inviteNudge({ ...none, closestLandmarkResidents: 0, closestLandmarkTitle: 'Lighthouse' })).toBeNull();
+    expect(inviteNudge({ ...none, closestBuildingResidents: 1, closestBuildingTitle: 'Skating rink', closestLandmarkResidents: 3, closestLandmarkTitle: 'Lighthouse' })).toMatch(/Skating rink/);
   });
 });
 

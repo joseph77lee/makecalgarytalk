@@ -6,7 +6,7 @@ export interface RpcClient {
   rpc: (fn: string, args?: Record<string, unknown>) => PromiseLike<{ error: unknown }>;
 }
 
-export type ShareDetail = 'weekly' | 'built' | 'revival' | 'invite';
+export type ShareDetail = 'weekly' | 'built' | 'landmark' | 'revival' | 'invite';
 
 export function createTracker(getClient: () => RpcClient | null) {
   // A page session sends each visit/community once.

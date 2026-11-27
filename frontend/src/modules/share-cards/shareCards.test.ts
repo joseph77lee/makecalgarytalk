@@ -10,6 +10,8 @@ describe('share card text', () => {
       'Mahogany: Fire pit was built! Help our community grow on MakeCalgaryTalk: https://makecalgarytalk.com',
     );
     expect(cardShareText({ ...card, kind: 'weekly', title: '#2 in Calgary last week' }, 'x')).toContain('Mahogany: #2 in Calgary last week');
+    // a landmark card (§7.9) names the place once, with the community
+    expect(cardShareText({ ...card, kind: 'landmark', title: 'Lake Bonavista beach' }, 'x')).toContain('Mahogany built its landmark, the Lake Bonavista beach!');
   });
   it('file names are safe', () => {
     expect(cardFileName(card)).toBe('makecalgarytalk-mahogany-built.png');

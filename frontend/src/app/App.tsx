@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Avatar, moveTo } from '../modules/avatar';
-import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen, type ChangeCard, type ChangeItem } from '../modules/community-state';
+import { BuildMap, ChangesPanel, StreakBar, changesPanelOpen, isLandmarkKey, type ChangeCard, type ChangeItem } from '../modules/community-state';
 import { ActionBar, SessionScreen, Toast, useDailyActions, type ServerCommunityState } from '../modules/daily-actions';
 import { mockResidents, mockServerBuildings } from './mockBuildMap';
 import { FirstVisit, IdentityScreen, ProfileButton, shirtColor, useIdentity } from '../modules/identity';
@@ -129,14 +129,19 @@ function LiveApp() {
       });
   };
   // A nudge for the floating Invite button at a good moment (closest goal wins).
-  const closest = view?.buildings
-    .filter((b) => b.status === 'locked' && b.remaining && b.remaining.residents > 0)
-    .sort((x, y) => (x.remaining?.residents ?? 0) - (y.remaining?.residents ?? 0))[0];
+  const waiting = (landmark: boolean) =>
+    server?.buildings
+      .filter((b) => b.status === 'locked' && b.remaining && b.remaining.residents > 0 && isLandmarkKey(b.key) === landmark)
+      .sort((x, y) => (x.remaining?.residents ?? 0) - (y.remaining?.residents ?? 0))[0];
+  const closest = waiting(false);
+  const closestLandmark = waiting(true);
   const nudge = server
     ? inviteNudge({
         nextLandResidents: server.community.next_land_residents,
         closestBuildingResidents: closest?.remaining?.residents ?? null,
-        closestBuildingTitle: closest?.title ?? null,
+        closestBuildingTitle: closest?.name ?? null,
+        closestLandmarkResidents: closestLandmark?.remaining?.residents ?? null,
+        closestLandmarkTitle: closestLandmark?.name ?? null,
         builtSinceYesterday: server.changes.built[0]?.title ?? null,
         landGrew: server.changes.land_grew,
       })

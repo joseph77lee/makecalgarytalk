@@ -1,6 +1,6 @@
 /** Share cards (requirement.md v1.31 §12.2): made on the phone, always naming the community. */
 
-export type ShareCardKind = 'weekly' | 'built';
+export type ShareCardKind = 'weekly' | 'built' | 'landmark';
 
 export interface ShareCard {
   kind: ShareCardKind;
@@ -15,6 +15,8 @@ export const CARD_HEIGHT = 1350;
 const THEMES: Record<ShareCardKind, { emoji: string; top: string; bottom: string; accent: string }> = {
   weekly: { emoji: '🏆', top: '#fde68a', bottom: '#e0e7ff', accent: '#b45309' },
   built: { emoji: '🎉', top: '#bae6fd', bottom: '#ede9fe', accent: '#4338ca' },
+  // the community's signature landmark (§7.9): gold
+  landmark: { emoji: '⭐', top: '#fde68a', bottom: '#fff7ed', accent: '#a16207' },
 };
 
 export function cardTheme(kind: ShareCardKind) {
@@ -23,7 +25,11 @@ export function cardTheme(kind: ShareCardKind) {
 
 /** The text that goes with the image (the image itself carries the community name too). */
 export function cardShareText(card: ShareCard, siteUrl: string): string {
-  const lead = { weekly: `${card.communityName}: ${card.title}`, built: `${card.communityName}: ${card.title}!` }[card.kind];
+  const lead = {
+    weekly: `${card.communityName}: ${card.title}`,
+    built: `${card.communityName}: ${card.title}!`,
+    landmark: `${card.communityName} built its landmark, the ${card.title}!`,
+  }[card.kind];
   return `${lead} Help our community grow on MakeCalgaryTalk: ${siteUrl}`;
 }
 
@@ -72,7 +78,7 @@ export function drawCard(ctx: CanvasRenderingContext2D, card: ShareCard, island:
   ctx.fillText('Calgary', W / 2, 228);
 
   // Island picture, fitted into the middle area
-  const box = { x: 60, y: 270, w: W - 120, h: 700 };
+  const box = { x: 60, y: 270, w: W - 120, h: card.kind === 'landmark' ? 640 : 700 }; // room for the landmark line
   if (island && islandSize && islandSize[0] > 0 && islandSize[1] > 0) {
     const k = Math.min(box.w / islandSize[0], box.h / islandSize[1]);
     const w = islandSize[0] * k;
@@ -81,6 +87,13 @@ export function drawCard(ctx: CanvasRenderingContext2D, card: ShareCard, island:
   } else {
     ctx.font = font(400, 260);
     ctx.fillText(t.emoji, W / 2, box.y + box.h / 2 + 90);
+  }
+
+  // A landmark card says so above the place's name (§7.9)
+  if (card.kind === 'landmark') {
+    ctx.font = font(700, 44);
+    ctx.fillStyle = '#92400e';
+    ctx.fillText('Our landmark is built!', W / 2, 975);
   }
 
   // Event line

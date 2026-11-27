@@ -54,7 +54,7 @@ describe('what changed since yesterday', () => {
     expect(items).toEqual([
       'Frozen pond was built',
       'Welcome sign upgraded to Lv 2',
-      'Playground unlocked',
+      'Playground is ready to build',
       'Your community grew!',
       '2 new neighbours joined',
       '4 actions yesterday: Fire pit +3, Welcome sign Lv 2 +1',
@@ -64,6 +64,18 @@ describe('what changed since yesterday', () => {
     const items = changeItems(changes({ built: [{ building_key: 'fire-pit', title: 'Fire pit', level: 1 }], new_residents: 1 }));
     expect(items[0]?.card).toEqual({ kind: 'built', title: 'Fire pit was built' });
     expect(items[1]?.card).toBeUndefined();
+  });
+  it('names landmarks as "our landmark", first, with a share card (requirement.md §7.9)', () => {
+    const items = changeItems(
+      changes({
+        built: [{ building_key: 'fire-pit', title: 'Fire pit', level: 1 }, { building_key: 'landmark.lkb', title: 'Lake Bonavista beach', level: 1 }],
+        opened: [{ building_key: 'place.lake.lighthouse', title: 'Lighthouse' }],
+      }),
+    );
+    expect(items.map((i) => i.text)).toEqual(['Our landmark, the Lake Bonavista beach, was built!', 'Fire pit was built', 'Our landmark, the Lighthouse, is ready to build']);
+    expect(items[0]?.icon).toBe('⭐');
+    expect(items[0]?.card).toEqual({ kind: 'landmark', title: 'Lake Bonavista beach' });
+    expect(items[2]?.card).toBeUndefined();
   });
   it('no Community Revival any more, even when a quiet community picks up (v1.41 §7.4)', () => {
     const items = changeItems(changes({ vitality_before: 10 }));
