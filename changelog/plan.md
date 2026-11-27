@@ -12,6 +12,18 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.08
+**Changed:** M24 ✅ → 🔁 Reopened for requirement v1.53 (header, table row, heading); new scope item for the build map banner, secret landmarks, grouped decorations and the first-visit card. Header: plan version, `Based on` v1.53, current module.
+
+**Why:** Playtest feedback (requirement v1.53).
+
+**Previous (verbatim):**
+- `| Plan version | v2.07 |`
+- `| Based on | \`requirement.md\` v1.52 |`
+- `| Current module | M16 Deploy & Playtest (next) |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | ✅ |`
+- `### M24 — Community Identity ✅`
+
 ### 2026-11-27 — v2.07
 **Changed:** M27 Avatar Look 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M16 next.
 

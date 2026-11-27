@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v2.07 |
+| Plan version | v2.08 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
-| Based on | `requirement.md` v1.52 |
-| Current module | M16 Deploy & Playtest (next) |
+| Based on | `requirement.md` v1.53 |
+| Current module | M24 🔁 (build map banner), then M16 Deploy & Playtest |
 
 ---
 
@@ -59,7 +59,7 @@
 | M21 | Living Community | FE + BE | | M20 | ✅ |
 | M22 | Sound | FE | | M21 | ✅ |
 | M23 | Art Pass 2 (voxel variety) | FE (R3F) | | M22 | ✅ |
-| M24 | Community Identity | BE + FE (R3F) + data | | M23 | ✅ |
+| M24 | Community Identity | BE + FE (R3F) + data | | M23 | 🔁 |
 | M25 | Terrain (decide after M24) | FE (R3F) + data | | M24 | ⬜ |
 | M26 | Community News Steps | BE + FE + data | | M24 | ✅ |
 | M27 | Avatar Look | BE + FE (R3F) | | M26 | ✅ |
@@ -639,7 +639,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Dev tools kept from the Polyfork attempt:** `?meter` render readout (fps, triangles, draw calls), gallery camera pad and labels switch.
 
 
-### M24 — Community Identity ✅
+### M24 — Community Identity 🔁
 **Goal:** Each island grows into a beautiful place with its own signature places and landmarks (`requirement.md` v1.47 §7.2, §7.4, §7.6–§7.9): a build map of three tracks built in order, houses as scenery with only "My house" personal, places laid out by meaning. Built after M23, **before M16**. Design and gallery work so far: `docs/community-identity-handoff.md`, branch `spike/model-library` (place library, 31 unique landmarks), `supabase/data/community_personas.csv`.
 - **In scope**
   - [x] persona and landmark list per community as data (from `community_personas.csv`; landmark order 1–3, signature = 1) — `gamecore.community_personas`, landmark steps in `supabase/data/build_map.json`
@@ -651,6 +651,7 @@ M0 ─┬─ M1 ── M2 ─┐
   - [x] build map screen as a skill tree: root, three lanes, resident-count bands, node states, gold landmark nodes, node detail with "Help build it today", finished island picture, completion %; pre-rendered node pictures; read-only for visitors — `community-state/BuildMap.tsx` + `skillTree.ts`; pictures printed at `?pictures` (dev server) into `public/places/<key>.png` and `public/islands/finished/<CODE>.webp`; "See it on the island" glides the camera (`requestLookAt`); "Help build it today" makes that construction glow in the action bar; `?mock` has a 🌳 button for the map (`?mock&streak=N`)
   - [x] development level from the build map; World Map landmark icon at level 4 — level computed on the server (`gamecore.development_level`); `gamecore.world_map()` names the persona step-4 landmark at level 4 (`20261127120000_gamecore_world_map_landmark.sql`) and the map draws its pre-rendered picture (`/places/<key>.png`, a gold stand-in while it loads)
   - [x] "What changed since yesterday", share cards and invites name the new places and landmarks — places already came by name; landmarks now say "Our landmark, the X, was built!" (first, ⭐), "is ready to build" replaces "unlocked", a gold `landmark` share card ("Our landmark is built!"), and an invite nudge up to 5 neighbours away ("…and we can build our landmark, the X!"); `isLandmarkKey` in `community-state`
+  - [ ] 🔁 build map top and first visit without finished pictures (requirement v1.53): "Let's build <community> together" banner (persona icon, next band's places by name) instead of the finished-island picture and "See a finished example"; first visit opens with a "Let's build Calgary together" card; ⭐2/⭐3 landmarks are a "Secret landmark" until ready; decorations are one "Decorations (N)" node; finished-island pictures removed
 - **Out of scope:** terrain (M25), more unique landmarks beyond the 31 (data-only additions later), interiors (22.3)
 - **Definition of Done**
   - [x] DB tests for every condition (track order, residents, streak, land fit, at most 3 constructions, day boundary), plan generator tests (zones, sites, no overlap, every lot reachable) — `gamecore_rules`/`gamecore_state` (landmark 11 residents + 14-day streak added), `islandPlans.test.ts` (per island: no overlap, lots on risen land, every lot and house reachable on every stage, water places on the shore, houses in zones)

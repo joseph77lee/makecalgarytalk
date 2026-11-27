@@ -12,6 +12,22 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v1.53
+**Changed:** 5.1 the first visit opens with a "Let's build Calgary together" card instead of the finished-neighbourhood example. 7.6a the build map's top shows a banner ("Let's build <community> together", persona icon and name, the next band's places by name) instead of the finished-island picture; the "See a finished example" button is gone; the 2nd and 3rd landmarks stay a "Secret landmark" until ready to build; the decoration steps are one "Decorations (N)" node. 22.1 follows. Header version.
+
+**Why:** Playtest 2026-11-27: the finished-island picture and the example gave no "wow" moment and took away the curiosity ("이걸 보고 '우와~' 모먼트가 없어… 사람들이 최종 모습을 상상하게 만드는거야"); placeholder names ("Landmark 2", "Decoration") looked unfinished; "Coming at 6 neighbours: Big park, School" named things that are not in the tree. Operator: do D, E and the banner now; the starter checklist is postponed to a later session.
+
+**Previous (verbatim):**
+- Header: `| Document version | v1.52 |`
+- `1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → nickname and how my villager looks (10.2). Shown on the first visit only; afterwards the example is available from the build map ("See a finished example"), not on every entry`
+- `   - The first-visit example says that a community can only be finished together ("You can't finish it alone")`
+- `  - **Landmarks** are large gold nodes at the end of the persona lane; locked landmarks still show their name and silhouette (the reason to invite neighbours)`
+- `  - The endless decoration steps show the next one or two, then "…"`
+- `- At the top: a picture of the community's **finished island** (its own plan with every place built), tap to enlarge; the overall **completion %**`
+- `- A "See a finished example" button reopens the completed-neighbourhood example (5.1)`
+- `- Completed-neighbourhood example on the first visit (5.1)`
+- `- **Build map screen** (7.6a) drawn like a skill tree: three lanes, resident-count bands, node states, landmark nodes; the finished island picture on top`
+
 ### 2026-11-27 — v1.52
 **Changed:** 10.2 the player makes their own villager on the first visit: age (adult, child, elder), skin tone, hair style and colour, trousers or skirt, beard, glasses and shirt colour; parts, not "race"/"gender" labels; the form starts with a random look and a 🎲 shuffle; stored with the profile and kept when the nickname changes; extra customization stays earned, never by chance draws. 5.1, 6.1 (nickname line) and 22.1 follow. Header version.
 
