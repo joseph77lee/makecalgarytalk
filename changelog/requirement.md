@@ -12,6 +12,18 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v1.52
+**Changed:** 10.2 the player makes their own villager on the first visit: age (adult, child, elder), skin tone, hair style and colour, trousers or skirt, beard, glasses and shirt colour; parts, not "race"/"gender" labels; the form starts with a random look and a 🎲 shuffle; stored with the profile and kept when the nickname changes; extra customization stays earned, never by chance draws. 5.1, 6.1 (nickname line) and 22.1 follow. Header version.
+
+**Why:** Playtest 2026-11-27: the villager's skin, hair and even age came from the nickname, so looks felt random (a grown-up could get a child) and changed with the nickname ("현재는 너무 랜덤하게 나오고 있어"). Operator decisions: choose directly with a dice shuffle for a quick start (not a chance draw to chase), three ages, before the deploy ("응 그렇게 하자. 나이는 세 가지로, 배포 전에 진행해줘").
+
+**Previous:**
+- Header (verbatim): `| Document version | v1.51 |`
+- 5.1 (verbatim): `1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → nickname and shirt. Shown on the first visit only; afterwards the example is available from the build map ("See a finished example"), not on every entry`
+- 6.1 (verbatim): `- **Nickname on the first visit**, together with the avatar shirt colour (10.2): a suggested nickname is pre-filled (e.g. "Snowy Moose 42") so the player can just continue; 2–16 characters, a basic blocked-words filter, checked on the server; changeable later. Shown on house name tags (7.2) and in the newspaper (11)`
+- 10.2 (verbatim): `- **MVP: choose a shirt colour** from a small palette on first visit (changeable later); more customization (hats, accessories, emotes) is earned through ranks (13.3, Phase 2)`
+- 22.1 (verbatim): `- Avatar shirt colour choice (10.2)`
+
 ### 2026-11-27 — v1.51
 **Changed:** 14.1 after answering, the card shows the counts in place and closes by itself after a few seconds (a tap closes it sooner); with fewer than 3 answers a thank-you line replaces the bars. The pop-up is only shown while the player can still answer. Header version.
 

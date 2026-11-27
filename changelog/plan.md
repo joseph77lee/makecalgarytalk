@@ -12,6 +12,18 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.05
+**Changed:** New module **M27 Avatar Look** (🟦 In progress) before M16 (table, build order, section); M16 depends on M27. Header: plan version, `Based on` v1.52, current module.
+
+**Why:** Requirement v1.52 (operator: the villager's look should be chosen, not random; before the deploy).
+
+**Previous (verbatim):**
+- `| M16 | Deploy & Playtest | All + operator accounts | | M26 | ⬜ |`
+- `    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M26 ── M16 ── M17 ── M18`
+- `| Plan version | v2.04 |`
+- `| Based on | \`requirement.md\` v1.51 |`
+- `| Current module | M16 Deploy & Playtest (next) |`
+
 ### 2026-11-27 — v2.04
 **Changed:** M26 🟨 → ✅ Done again (header, table row, heading, DoD "user has played it" ticked, Handoff). Header current module: M16 next.
 
