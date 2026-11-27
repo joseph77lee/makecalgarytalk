@@ -12,6 +12,19 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.02
+**Changed:** M26 Community News Steps 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M16 next.
+
+**Why:** The operator played M26 and confirmed ("플레이해봤어. main에 병합하고 M16 시작해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v2.01 |`
+- `| Current module | M26 Community News Steps 🟨 (then M16) |`
+- `| M26 | Community News Steps | BE + FE + data | | M24 | 🟨 |`
+- `### M26 — Community News Steps 🟨`
+- `  - [ ] user has played it` (M26 DoD)
+- `  - **Next:** the operator plays M26 (Ready for playtest); then M16.`
+
 ### 2026-11-27 — v2.01
 **Changed:** M26 Community News Steps 🟦 → 🟨 Ready for playtest (header, table row, heading); all scope items and the first two DoD items ticked with where they live; Handoff added.
 

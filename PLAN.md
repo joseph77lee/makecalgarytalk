@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v2.01 |
+| Plan version | v2.02 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
 | Based on | `requirement.md` v1.50 |
-| Current module | M26 Community News Steps 🟨 (then M16) |
+| Current module | M16 Deploy & Playtest (next) |
 
 ---
 
@@ -61,7 +61,7 @@
 | M23 | Art Pass 2 (voxel variety) | FE (R3F) | | M22 | ✅ |
 | M24 | Community Identity | BE + FE (R3F) + data | | M23 | ✅ |
 | M25 | Terrain (decide after M24) | FE (R3F) + data | | M24 | ⬜ |
-| M26 | Community News Steps | BE + FE + data | | M24 | 🟨 |
+| M26 | Community News Steps | BE + FE + data | | M24 | ✅ |
 | M16 | Deploy & Playtest | All + operator accounts | | M26 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
@@ -670,7 +670,7 @@ M0 ─┬─ M1 ── M2 ─┐
 - **In scope (draft):** up to 4 levels from elevation data with an operator override, cliffs facing the camera, stairs/ramps so every level is reachable (avatar and villager pathfinding with height), building lots flat on one level, CTrain on one level
 - **Definition of Done:** to be written when the module is planned
 
-### M26 — Community News Steps 🟨
+### M26 — Community News Steps ✅
 **Goal:** Writing in Community News becomes a daily reason to visit, opened step by step (`requirement.md` v1.49 §11, §14, §14.1): one newspaper with the community board from the Welcome sign, posting in personal steps (the last after 14 active days), and today's question for the whole city. Builds on M15 (posts) and M8/M9 (newspaper); built after M24, **before M16**.
 - **In scope**
   - [x] one newspaper: the community board (events, roadmap) is part of it from the Welcome sign; the Warming hut lock and its text removed; the Community hall takes the newspaper over once built; leftover `gateway-arch` keys removed from the news code — `20261127130200_news_one_newspaper.sql` (board with the Welcome sign), `newsText.ts` `opensNews` (Welcome sign, later the Community hall)
@@ -682,12 +682,12 @@ M0 ─┬─ M1 ── M2 ─┐
 - **Definition of Done**
   - [x] DB tests: Calgary day boundary for the question and the one-answer rule, season edges (Mar 31/Apr 1, May 31/Jun 1, Aug 31/Sep 1, Oct 31/Nov 1), weekday/weekend, no repeat within 60 days and never yesterday's category (including a short pool), same question for every community, step 3 at exactly 14 active days (13 is not enough), active days kept after a move, question-only days not counted, visitors and other communities' residents cannot answer, counts never expose who answered — `questions_rules.test.sql` (48), `posts_rules.test.sql` steps, `news_rules.test.sql` board and question result; "kept after a move" is covered by counting actions in every community (a player's actions in Auburn Bay count after joining Mahogany), not by a full residency move
   - [x] screen check on desktop and a phone (card, answered state, newspaper result, write box with the next step) — local server as dev users: desktop (card after the changes panel, answered with counts, newspaper with yesterday's result and the write box) and phone 390×844 (bottom card, answered); visitors' read-only card only in tests
-  - [ ] user has played it
+  - [x] user has played it (2026-11-27)
 - **Handoff (2026-11-27)**
   - **Decisions:** the day's question is picked on the first read and stored (`questions.days`), because the 60-day rule needs the earlier picks; the same day always gives the same question. The pop-up shows only to players who can still answer in their own community; visitors and players without a community read it in Community News. Closing the card without answering is remembered on the device for that Calgary day (`mct.question.closedDay`, the day comes from the server); an answered card is not remembered, so another player on the same device still gets theirs. Active days count today's action too.
   - **Not tested:** a full residency move with active days (covered by the any-community count), visitors' read-only card on screen, real phone touch, emoji from Unicode 12 or older (not checked automatically).
   - **Gotchas:** after editing `supabase/data/daily_questions.csv` rerun `python3 -I supabase/data/daily_questions_seed.py supabase/migrations/20261127140100_questions_seed.sql` (pre-launch; after launch write a new seed migration); questions already shown are never deleted.
-  - **Next:** the operator plays M26 (Ready for playtest); then M16.
+  - **Done:** the operator played M26 and confirmed on 2026-11-27; next is M16.
 
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
