@@ -455,7 +455,7 @@ function Island({
       postBubbles={postBubbles}
       onPostTap={communityId ? () => void useNews.getState().show(communityId) : undefined}
     >
-      {showAvatar && <Avatar nickname={profile?.nickname ?? 'You'} shirtColor={shirtColor(profile?.shirt)} />}
+      {showAvatar && <Avatar nickname={profile?.nickname ?? 'You'} shirtColor={shirtColor(profile?.shirt)} look={profile?.look ?? null} />}
     </IslandView>
   );
 }

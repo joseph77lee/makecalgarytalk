@@ -2,9 +2,11 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import type { Group } from 'three';
-import { VoxelPerson, type PersonMotion, clearCameraFocus, useIslandCrowd, useIslandSnow, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
+import type { AvatarLook } from '../common';
+import { VoxelPerson, personLookFrom, type PersonMotion, clearCameraFocus, useIslandCrowd, useIslandSnow, setCameraFocus, useHtmlPortal, useIslandWalkable, type Tile } from '../island-view';
 import { playSound } from '../sound';
 import { useAvatarStore } from './avatarStore';
+import { nicknameSeed } from './look';
 import { stepCandidates } from './keyboard';
 import { usePressedKeys } from './usePressedKeys';
 import { AvatarWalker } from './walker';
@@ -17,12 +19,15 @@ interface Props {
   nickname: string;
   /** Shirt colour chosen on the first visit (Identity, §10.2). */
   shirtColor?: string;
+  /** The look the player chose (§10.2); null for profiles saved before, which keep the nickname look. */
+  look?: AvatarLook | null;
 }
 
 /** The player's avatar: box character, name label, tap/click/keyboard movement (requirement.md §10.2). */
-export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
-  // Hair and skin follow the nickname, so my villager keeps its look.
-  const nickSeed = useMemo(() => [...nickname].reduce((h, ch) => Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0, 2166136261), [nickname]);
+export function Avatar({ nickname, shirtColor = '#ff8a5c', look = null }: Props) {
+  // Without a chosen look, hair and skin follow the nickname (profiles saved before v1.52).
+  const nickSeed = useMemo(() => nicknameSeed(nickname), [nickname]);
+  const person = useMemo(() => (look ? personLookFrom(look, shirtColor) : undefined), [look, shirtColor]);
   const { walkable, walkableKeys } = useIslandWalkable();
   const crowd = useIslandCrowd();
   const snow = useIslandSnow();
@@ -122,7 +127,7 @@ export function Avatar({ nickname, shirtColor = '#ff8a5c' }: Props) {
     <>
       <group ref={group} position={[SPAWN.x + 0.5, 0, SPAWN.z + 0.5]}>
         <group ref={body}>
-          <VoxelPerson seed={nickSeed} shirt={shirtColor} motion={motion} />
+          <VoxelPerson seed={nickSeed} shirt={shirtColor} look={person} motion={motion} />
         </group>
         {/* My own name always shows (even with labels off), so I can find myself on screen. */}
         <Html portal={portal} position={[0, 1.05, 0]} center zIndexRange={[28, 21]} style={{ pointerEvents: 'none' }}>

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { EmailUpdatesSection } from './EmailUpdatesSection';
+import { AvatarFace, currentLook } from '../avatar';
 import { ProfileForm } from './ProfileForm';
 import { LegalLinks } from './LegalLinks';
 import { GOOGLE_LINKING, useIdentity } from './liveStore';
@@ -18,9 +19,9 @@ export function ProfileButton({ children }: { children?: ReactNode }) {
         onClick={() => setOpen(true)}
         aria-label={`My villager: ${profile.nickname}`}
         title={profile.nickname}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur"
+        className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white bg-sky-100 shadow-sm"
       >
-        <span className="h-7 w-7 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: shirtColor(profile.shirt) }} aria-hidden />
+        <AvatarFace look={currentLook(profile.nickname, profile.look)} shirt={shirtColor(profile.shirt)} className="h-full w-full" />
       </button>
       {/* Portal: the chip sits inside the small top bar; the sheet must cover the whole screen. */}
       {open && createPortal(<ProfileSheet onClose={() => setOpen(false)}>{children}</ProfileSheet>, document.body)}
@@ -38,7 +39,7 @@ function ProfileSheet({ onClose, children }: { onClose: () => void; children?: R
   if (!profile) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/25 p-4 sm:items-center" onClick={onClose}>
-      <div role="dialog" aria-label="My villager" className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-label="My villager" className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-3xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-800">My villager</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
@@ -48,9 +49,10 @@ function ProfileSheet({ onClose, children }: { onClose: () => void; children?: R
         <ProfileForm
           initialNickname={profile.nickname}
           initialShirt={profile.shirt}
+          initialLook={currentLook(profile.nickname, profile.look)}
           submitLabel="Save"
-          onSubmit={async (n, s) => {
-            const err = await saveProfile(n, s);
+          onSubmit={async (n, s, l) => {
+            const err = await saveProfile(n, s, l);
             if (!err) onClose();
             return err;
           }}

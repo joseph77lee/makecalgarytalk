@@ -2,10 +2,10 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v2.04 |
+| Plan version | v2.07 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
-| Based on | `requirement.md` v1.51 |
+| Based on | `requirement.md` v1.52 |
 | Current module | M16 Deploy & Playtest (next) |
 
 ---
@@ -62,7 +62,8 @@
 | M24 | Community Identity | BE + FE (R3F) + data | | M23 | ✅ |
 | M25 | Terrain (decide after M24) | FE (R3F) + data | | M24 | ⬜ |
 | M26 | Community News Steps | BE + FE + data | | M24 | ✅ |
-| M16 | Deploy & Playtest | All + operator accounts | | M26 | ⬜ |
+| M27 | Avatar Look | BE + FE (R3F) | | M26 | ✅ |
+| M16 | Deploy & Playtest | All + operator accounts | | M27 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -83,7 +84,7 @@ M0 ─┬─ M1 ── M2 ─┐
                      └─ M6 ── M7 ─┬─ M8
                                   └─ M12
     M1 ── M13
-    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M26 ── M16 ── M17 ── M18
+    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M26 ── M27 ── M16 ── M17 ── M18
 ```
 
 ---
@@ -689,6 +690,24 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested:** a full residency move with active days (covered by the any-community count), visitors' read-only card on screen, real phone touch, emoji from Unicode 12 or older (not checked automatically).
   - **Gotchas:** after editing `supabase/data/daily_questions.csv` rerun `python3 -I supabase/data/daily_questions_seed.py supabase/migrations/20261127140100_questions_seed.sql` (pre-launch; after launch write a new seed migration); questions already shown are never deleted.
   - **Done:** the operator played M26 and confirmed on 2026-11-27. **Reopened** the same day for v1.51 (answered card closes by itself; thank-you line below 3 answers) on `fix/m26-question-card`; the operator checked the fix the same day; next is M16.
+
+### M27 — Avatar Look ✅
+**Goal:** Players make their own villager (`requirement.md` v1.52 §10.2): age, skin tone, hair, clothes and shirt colour chosen directly, a random start with a 🎲 shuffle, stored with the profile. Built after M26, **before M16**.
+- **In scope**
+  - [x] server: the look stored with the profile (`identity`), checked on save (known values only; no beard for children), kept when the nickname changes; profiles without a look keep the nickname-based one — `20261127150000_identity_avatar_look.sql` (`identity.profiles.look` jsonb, `look_problem`, `identity_save_profile(p_nickname, p_shirt, p_look)`; null keeps the stored look)
+  - [x] renderer: the voxel person drawn from a chosen look (`island-view`), the avatar uses it; mini villagers stay random — `samples.ts` `personLookFrom` / `avatarLookFromSeed`, `VoxelPerson` `look` prop, `Avatar` `look`; shared type `common/avatarLook.ts`
+  - [x] first-visit and profile form: live preview, a part picker for each choice, random start, 🎲 shuffle — `identity/ProfileForm.tsx` (age, skin, shirt, hair, hair colour, trousers/skirt, beard, glasses; Child turns the beard off), `avatar/AvatarPreview.tsx` (a small turning figure); both cards scroll on short phones
+  - [x] profile button shows my villager's face (operator request 2026-11-27, same v1.52 look) — `avatar/AvatarFace.tsx` (flat 16×16 SVG: skin, hair or headscarf, glasses, beard, shirt; no extra 3D canvas); with a headscarf the colour choice is the scarf's (`SCARF_COLOURS`)
+- **Out of scope:** earned cosmetics (hats, accessories, emotes; 13.3 Phase 2), other residents' avatars (10.3)
+- **Definition of Done**
+  - [x] DB tests: every value range, child + beard refused, look kept on nickname change, old profiles without a look; frontend tests: look checks, shuffle stays in range, the old nickname look maps to the same parts — `identity_profiles.test.sql` (45), `common/avatarLook.test.ts`, `island-view/assets/avatarLook.test.ts` (old nickname looks map to the same parts), identity store test
+  - [x] screen check on desktop and a phone (form, preview, shuffle, the avatar on the island for each age) — phone 390×844 on the local server: first-visit form and preview (adult, child, elder, headscarf, beard, skirt), saved look on the server, profile sheet reloads and saves a change (Child), the avatar on the island; desktop not checked separately (same card)
+  - [x] user has played it (2026-11-27)
+- **Handoff (2026-11-27)**
+  - **Decisions:** parts, not "race"/"gender" labels; three ages; the form starts from a random look and 🎲 shuffles look and shirt. Profiles saved before v1.52 have no look and keep the nickname-based one until they save the profile (the form opens with that look, `avatarLookFromSeed`). No coat or hat for chosen looks (earned later). Choosing Elder does not change the hair colour by itself.
+  - **Also done:** privacy policy updated (villager look, today's question answers, house no longer listed as public; dated Nov 27).
+  - **Not tested:** real phone touch, very short phones below 700 px (the cards scroll), the avatar's close-up look on the island (only a small crop seen).
+  - **Done:** the operator played M27 and confirmed on 2026-11-27; next is M16.
 
 ### M16 — Deploy & Playtest ⬜
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.

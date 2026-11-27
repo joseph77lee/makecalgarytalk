@@ -3,3 +3,4 @@ export { readSupabaseConfig, type ConfigResult, type SupabaseConfig } from './en
 export { getSupabaseClient } from './supabase';
 export { formatCountdown, msUntil } from './time';
 export { useNow } from './useNow';
+export { AGE_ADULT, AGE_CHILD, AGE_ELDER, FIRST_GREY, LOOK_MAX, fixLook, isAvatarLook, randomLook, type AvatarLook } from './avatarLook';

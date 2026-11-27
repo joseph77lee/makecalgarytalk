@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.51 |
+| Document version | v1.52 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
 | Status | Initial draft for starting MVP development |
@@ -84,7 +84,7 @@ The service grows in this order; features are judged by how they serve it. The *
 ## 5. Core user flows
 
 ### 5.1 First visit (60 seconds)
-1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → nickname and shirt. Shown on the first visit only; afterwards the example is available from the build map ("See a finished example"), not on every entry
+1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → nickname and how my villager looks (10.2). Shown on the first visit only; afterwards the example is available from the build map ("See a finished example"), not on every entry
 2. "Which community do you live in?" → allow location. "Just look around first" opens the **Calgary World Map** (9) instead; the map is also always one tap away (🗺 Calgary button)
 3. Tap into their community → the community's voxel diorama island appears, with **my avatar** standing in it
 4. First action click → **immediate visible change**
@@ -109,7 +109,7 @@ The service grows in this order; features are judged by how they serve it. The *
 - **Anonymous account auto-created** on first visit (Supabase Anonymous Sign-in). No email/password
 - **Bot protection**: Cloudflare Turnstile
 - **Sign-up rate limit**: cap accounts created per IP/device per day
-- **Nickname on the first visit**, together with the avatar shirt colour (10.2): a suggested nickname is pre-filled (e.g. "Snowy Moose 42") so the player can just continue; 2–16 characters, a basic blocked-words filter, checked on the server; changeable later. Shown on house name tags (7.2) and in the newspaper (11)
+- **Nickname on the first visit**, together with how the avatar looks (10.2): a suggested nickname is pre-filled (e.g. "Snowy Moose 42") so the player can just continue; 2–16 characters, a basic blocked-words filter, checked on the server; changeable later. Shown on house name tags (7.2) and in the newspaper (11)
 - **Link Google account (optional)**: prompt "Link Google to keep your progress" once the community grows or the user becomes verified
 - Re-joining with the same Google account **restores the existing record** instead of creating a new one (deleted accounts keep only a hashed identifier)
 
@@ -385,7 +385,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Camera gently follows the avatar
 - **Action buttons stay at the bottom**: pressing an action makes the avatar run to the related spot (e.g. construction site) and perform it. Walking up and tapping the spot directly is also allowed (Art Pass polish)
 - Tap a place to see info (e.g. Welcome sign / Community hall → newspaper); other houses do nothing when tapped (7.2)
-- **MVP: choose a shirt colour** from a small palette on first visit (changeable later); more customization (hats, accessories, emotes) is earned through ranks (13.3, Phase 2)
+- **MVP: the player makes their own villager** on the first visit (changeable later): **age** (adult, child, elder), **skin tone** (6), **hair style** (short, long, bun, curly, ponytail, bald, headscarf), **hair colour** (including greys), **trousers or skirt**, **beard** (not for children), **glasses**, and the **shirt colour**. Parts, not labels: no "race" or "gender" buttons, so anyone can look like themselves. The form opens filled with a random look and a 🎲 button shuffles it, so "Continue" works at once; every part can be changed on its own. The look is stored with the profile (checked on the server) and stays when the nickname changes; mini villagers stay random. More customization (hats, accessories, emotes) is earned through ranks (13.3, Phase 2), never by chance draws
 - Movement is driven by **destination events** ("avatar X moves to tile (5,7)"), not per-frame positions, so the same events can be broadcast for real-time presence later (22.3)
 
 ### 10.3 Other residents' avatars (asynchronous)
@@ -734,7 +734,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - 3 daily energy + project choice + satisfying click feedback + a few surprises
 - Community streak, **build map** (7.6: the Welcome sign as root, three tracks built in order, persona places, up to 3 landmarks per community, no place twice), ready-to-build silhouettes
 - **Build map screen** (7.6a) drawn like a skill tree: three lanes, resident-count bands, node states, landmark nodes; the finished island picture on top
-- Avatar shirt colour choice (10.2)
+- Avatar look: age, skin tone, hair, clothes and shirt colour chosen by the player (10.2)
 - Next-day construction progress + "What changed since yesterday"
 - Auto community newspaper with the community board (from the Welcome sign) + roadmap notice + "Coming soon"
 - **Today's question** (14.1) and resident posts opening in personal steps (14)

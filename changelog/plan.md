@@ -12,6 +12,47 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.07
+**Changed:** M27 Avatar Look 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M16 next.
+
+**Why:** The operator played M27 and confirmed ("main에 병합해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v2.06 |`
+- `| Current module | M27 Avatar Look 🟨 (then M16) |`
+- `| M27 | Avatar Look | BE + FE (R3F) | | M26 | 🟨 |`
+- `### M27 — Avatar Look 🟨`
+- `  - [ ] user has played it` (M27 DoD)
+- `  - **Next:** the operator plays M27; then M16.`
+
+### 2026-11-27 — v2.06
+**Changed:** M27 Avatar Look 🟦 → 🟨 Ready for playtest (header, table row, heading); scope and first two DoD items ticked; Handoff added; a ticked scope item for the profile button face (operator request the same day).
+
+**Why:** M27 implemented, tested and screen-checked; waiting for the operator to play it.
+
+**Previous (verbatim):**
+- `| Plan version | v2.05 |`
+- `| Current module | M27 Avatar Look 🟦 (then M16) |`
+- `| M27 | Avatar Look | BE + FE (R3F) | | M26 | 🟦 |`
+- `### M27 — Avatar Look 🟦`
+- `  - [ ] server: the look stored with the profile (`identity`), checked on save (known values only; no beard for children), kept when the nickname changes; profiles without a look keep the nickname-based one`
+- `  - [ ] renderer: the voxel person drawn from a chosen look (`island-view`), the avatar uses it; mini villagers stay random`
+- `  - [ ] first-visit and profile form: live preview, a part picker for each choice, random start, 🎲 shuffle`
+- `  - [ ] DB tests: every value range, child + beard refused, look kept on nickname change, old profiles without a look; frontend tests: look checks, shuffle stays in range, the old nickname look maps to the same parts`
+- `  - [ ] screen check on desktop and a phone (form, preview, shuffle, the avatar on the island for each age)`
+
+### 2026-11-27 — v2.05
+**Changed:** New module **M27 Avatar Look** (🟦 In progress) before M16 (table, build order, section); M16 depends on M27. Header: plan version, `Based on` v1.52, current module.
+
+**Why:** Requirement v1.52 (operator: the villager's look should be chosen, not random; before the deploy).
+
+**Previous (verbatim):**
+- `| M16 | Deploy & Playtest | All + operator accounts | | M26 | ⬜ |`
+- `    (all) ── M14 ── M19 ── M20 ── M21 ── M22 ── M23 ── M24 ── (M25?) ── M26 ── M16 ── M17 ── M18`
+- `| Plan version | v2.04 |`
+- `| Based on | \`requirement.md\` v1.51 |`
+- `| Current module | M16 Deploy & Playtest (next) |`
+
 ### 2026-11-27 — v2.04
 **Changed:** M26 🟨 → ✅ Done again (header, table row, heading, DoD "user has played it" ticked, Handoff). Header current module: M16 next.
 

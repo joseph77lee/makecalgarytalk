@@ -42,7 +42,7 @@ export function FirstVisit({ banner }: { banner?: ReactNode }) {
         </div>
       ) : (
         <div className="absolute inset-0 z-40 flex items-end justify-center bg-slate-900/20 p-4 sm:items-center">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl">
+          <div className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-3xl bg-white p-5 shadow-xl">
             <h2 className="mb-4 text-lg font-bold text-slate-800">Make your villager</h2>
             <ProfileForm submitLabel="Start" onSubmit={saveProfile} />
             <p className="mt-3 text-center text-[11px] text-slate-400">
