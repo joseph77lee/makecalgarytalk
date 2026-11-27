@@ -12,6 +12,19 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.07
+**Changed:** M27 Avatar Look 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M16 next.
+
+**Why:** The operator played M27 and confirmed ("main에 병합해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v2.06 |`
+- `| Current module | M27 Avatar Look 🟨 (then M16) |`
+- `| M27 | Avatar Look | BE + FE (R3F) | | M26 | 🟨 |`
+- `### M27 — Avatar Look 🟨`
+- `  - [ ] user has played it` (M27 DoD)
+- `  - **Next:** the operator plays M27; then M16.`
+
 ### 2026-11-27 — v2.06
 **Changed:** M27 Avatar Look 🟦 → 🟨 Ready for playtest (header, table row, heading); scope and first two DoD items ticked; Handoff added; a ticked scope item for the profile button face (operator request the same day).
 
