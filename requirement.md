@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.52 |
+| Document version | v1.53 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
 | Status | Initial draft for starting MVP development |
@@ -84,7 +84,7 @@ The service grows in this order; features are judged by how they serve it. The *
 ## 5. Core user flows
 
 ### 5.1 First visit (60 seconds)
-1. Land on the site → a short **completed-neighbourhood example** (one image or a short animated scene, rendered with the real game engine so it shows only what can really be built) → "Let's build ours together" → nickname and how my villager looks (10.2). Shown on the first visit only; afterwards the example is available from the build map ("See a finished example"), not on every entry
+1. Land on the site → a **"Let's build Calgary together" card** (a designed banner and a few words on how neighbours grow their community together; no finished island is shown, so players imagine the final look themselves) → "Let's start" → nickname and how my villager looks (10.2). Shown on the first visit only
 2. "Which community do you live in?" → allow location. "Just look around first" opens the **Calgary World Map** (9) instead; the map is also always one tap away (🗺 Calgary button)
 3. Tap into their community → the community's voxel diorama island appears, with **my avatar** standing in it
 4. First action click → **immediate visible change**
@@ -93,7 +93,7 @@ The service grows in this order; features are judged by how they serve it. The *
 5. The next goal from the build map, e.g. "2 more neighbours to build our skating rink" or "11 neighbours to build our landmark" + **Invite button**
    - Shown as a **welcome card** right after the first counted check-in ("Welcome to <community>! N more neighbours and the island grows") with Invite neighbours / Look around first; "N more neighbours" goals elsewhere (streak bar, build map) also open the invite
    - A floating **Invite** button is always visible at the bottom right of my community; a small × hides it for the rest of the Calgary day. At good moments (the island or a building is 1–2 neighbours away, something was built, the island grew) it shows a one-line nudge, at most once a day and not on a hidden day
-   - The first-visit example says that a community can only be finished together ("You can't finish it alone")
+   - The first-visit card says that a community can only be built together ("You can't finish it alone")
 
 ### 5.2 Daily routine
 1. **World Map**: see how developed all of Calgary is. Tap an empty community to invite a friend who lives there
@@ -241,12 +241,11 @@ The Gateway arch and Lit hockey rink models stay in the library for later steps.
   - The **Welcome sign** at the top as the root, then **three vertical lanes** (community, persona, nature & leisure) read top to bottom on a phone; vertical scrolling only
   - **Horizontal bands for the resident counts** that open steps (1, 3, 6, 11, 26, 51 neighbours; they also match the land stages, 7.8), with "N more neighbours" on the next band, so the whole tree reads as a progress bar
   - **Nodes** with a small picture of each place (pre-rendered images served as static files, not live 3D) in four states: built ✅ (colour), building 🔨 (progress ring), ready to build ✨ (glowing), locked 🔒 (grey silhouette with the missing conditions: 👥 neighbours, 🔥 streak days, 🗺️ land)
-  - **Landmarks** are large gold nodes at the end of the persona lane; locked landmarks still show their name and silhouette (the reason to invite neighbours)
-  - The endless decoration steps show the next one or two, then "…"
+  - **Landmarks** are large gold nodes at the end of the persona lane; a locked landmark shows its name and silhouette (the reason to invite neighbours), except the **2nd and 3rd landmarks**, which stay a **"⭐ Secret landmark"** with a question-mark silhouette until their step is ready to build (curiosity, and their models come later)
+  - The endless decoration steps are **one node, "Decorations (N)"**, showing how many are built and what the next one needs
   - Tapping a node shows what the place is, each condition's progress, "See it on the island", and **"Help build it today"** while it is under construction
-- At the top: a picture of the community's **finished island** (its own plan with every place built), tap to enlarge; the overall **completion %**
+- At the top: a **banner** "Let's build <community> together" with the persona's icon and name (e.g. 🛶 Lake life) and the next band's places by name ("Next at 3 neighbours: Skating rink · Beach house · Off-leash dog park"); the overall **completion %**. No finished-island picture (players imagine the final look)
 - No branch choices (every resident fills the same tree; the daily choice is which construction to help, 7.7)
-- A "See a finished example" button reopens the completed-neighbourhood example (5.1)
 - Read-only, built from server-computed values (streak, cumulative Verified Residents, step status); no game rules on the client
 - Shares one screen with the personal growth view (13.3, Phase 2) as tabs: **Village | Me**
 
@@ -729,11 +728,11 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Location-based community detection, 3-of-7-days resident verification
 - Calgary World Map from **real community boundary polygons**, each showing **small development illustrations** (houses, welcome sign, playground, community hall, park by level) with Vitality mood, #1 crown, tap-to-zoom and invite for unsettled communities
 - Community view as a **box-built three.js voxel diorama island in the community's real shape** (outline from day one, land growth by residents, build map, houses as scenery with my own house, persona places and landmarks, mini villagers, 3 Vitality levels, action replay with speech bubbles, a few signature features from the feature library)
-- Completed-neighbourhood example on the first visit (5.1)
+- "Let's build Calgary together" card on the first visit (5.1)
 - **My avatar**: tap/click to move with pathfinding; action buttons make the avatar run to the spot and act
 - 3 daily energy + project choice + satisfying click feedback + a few surprises
 - Community streak, **build map** (7.6: the Welcome sign as root, three tracks built in order, persona places, up to 3 landmarks per community, no place twice), ready-to-build silhouettes
-- **Build map screen** (7.6a) drawn like a skill tree: three lanes, resident-count bands, node states, landmark nodes; the finished island picture on top
+- **Build map screen** (7.6a) drawn like a skill tree: three lanes, resident-count bands, node states, landmark nodes; the "Let's build <community> together" banner on top
 - Avatar look: age, skin tone, hair, clothes and shirt colour chosen by the player (10.2)
 - Next-day construction progress + "What changed since yesterday"
 - Auto community newspaper with the community board (from the Welcome sign) + roadmap notice + "Coming soon"

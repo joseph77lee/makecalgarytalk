@@ -12,6 +12,44 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.10
+**Changed:** M24 🟨 → ✅ Done again (header, table row, heading, DoD "user has played it" ticked, v1.53 note). Header current module: next session reviews the first-visit flow, then M16.
+
+**Why:** The operator checked the v1.53 banner fix ("main에 병합해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v2.09 |`
+- `| Current module | M24 🟨 (build map banner fix), then M16 Deploy & Playtest |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | 🟨 |`
+- `### M24 — Community Identity 🟨`
+- `  - [ ] user has played it (played 2026-11-27; again for the v1.53 banner fix)`
+- `Waiting for the operator to check it.` (end of the M24 v1.53 note)
+
+### 2026-11-27 — v2.09
+**Changed:** M24 🔁 → 🟨 (header, table row, heading); the v1.53 scope item ticked; DoD "user has played it" unticked until the fix is checked; a v1.53 note in M24; an "Open before M16" note (review of the whole first-visit flow as built, starter checklist discussion, first visit away from home, M16 open questions).
+
+**Why:** v1.53 build map banner fix implemented and screen-checked; the operator asked to prepare the next session and to postpone the checklist decision.
+
+**Previous (verbatim):**
+- `| Plan version | v2.08 |`
+- `| Current module | M24 🔁 (build map banner), then M16 Deploy & Playtest |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | 🔁 |`
+- `### M24 — Community Identity 🔁`
+- `  - [x] user has played it` (M24 DoD)
+- `### M16 — Deploy & Playtest ⬜` (no note under it)
+
+### 2026-11-27 — v2.08
+**Changed:** M24 ✅ → 🔁 Reopened for requirement v1.53 (header, table row, heading); new scope item for the build map banner, secret landmarks, grouped decorations and the first-visit card. Header: plan version, `Based on` v1.53, current module.
+
+**Why:** Playtest feedback (requirement v1.53).
+
+**Previous (verbatim):**
+- `| Plan version | v2.07 |`
+- `| Based on | \`requirement.md\` v1.52 |`
+- `| Current module | M16 Deploy & Playtest (next) |`
+- `| M24 | Community Identity | BE + FE (R3F) + data | | M23 | ✅ |`
+- `### M24 — Community Identity ✅`
+
 ### 2026-11-27 — v2.07
 **Changed:** M27 Avatar Look 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M16 next.
 

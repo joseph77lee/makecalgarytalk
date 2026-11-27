@@ -8,10 +8,10 @@ import { defineConfig, type Plugin } from 'vite';
 
 /**
  * Dev server only: saves the build map pictures printed at `?pictures` (requirement v1.48 §7.6a)
- * into public/. Only `places/<key>.png` and `islands/finished/<CODE>.webp` paths are accepted.
+ * into public/. Only `places/<key>.png` paths are accepted.
  */
 function savePictures(): Plugin {
-  const allowed = /^(places\/[a-z0-9.-]+\.png|islands\/finished\/[A-Z0-9]{2,4}\.webp)$/;
+  const allowed = /^places\/[a-z0-9.-]+\.png$/;
   return {
     name: 'save-pictures',
     apply: 'serve',
