@@ -1,5 +1,5 @@
 /** Community post texts (pure functions, tested). */
-import type { CanPost, PostKind, PostProblem } from './api';
+import type { CanPost, NextStep, PostKind, PostProblem } from './api';
 
 /** Kinds of local news: what is really happening in the community (requirement.md v1.28 §14). */
 export const KIND_LABEL: Record<PostKind, { icon: string; label: string; hint: string }> = {
@@ -27,6 +27,7 @@ export const PROBLEM_TEXT: Record<PostProblem, string> = {
   locked: 'Posts open once the Welcome sign is built.',
   daily_limit: 'You already posted today. Come back tomorrow!',
   kind: 'Pick what kind of post this is.',
+  kind_locked: 'That kind of post opens at a later step.',
   length: 'Write 1 to 300 characters.',
   link: 'Links are not allowed. Describe it in words instead.',
   phone: 'Please do not share phone numbers.',
@@ -39,8 +40,9 @@ export function cannotPostText(c: CanPost): string | null {
   if (c.allowed) return null;
   switch (c.reason) {
     case 'not_signed_in':
-    case 'not_verified':
       return 'Become a Verified Resident to post local news here.';
+    case 'not_verified':
+      return 'Posts open once you are a Verified Resident. Until then, answer today\'s question!';
     case 'locked':
       return 'Posts open once the Welcome sign is built.';
     case 'daily_limit':
@@ -51,3 +53,12 @@ export function cannotPostText(c: CanPost): string | null {
 }
 
 export const MAX_CHARS = 300;
+
+/** "🎉 Events and 🏷️ Local deals open after 14 active days (9 to go)" — the write box's next step. */
+export function nextStepText(next: NextStep | null): string | null {
+  if (!next || next.kinds.length === 0) return null;
+  const names = next.kinds.map((k) => `${KIND_LABEL[k].icon} ${KIND_LABEL[k].label}`);
+  const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  const verb = names.length === 1 ? 'opens' : 'open';
+  return `${list} ${verb} after ${next.days} active days (${next.to_go} to go)`;
+}

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it, vi } from 'vitest';
 import { assertNewspaper, type Newspaper } from './api';
-import { newsBuildingKeys, newsReady, yesterdayLabel } from './newsText';
+import { newsBuildingKeys, newsReady, opensNews, yesterdayLabel } from './newsText';
 import { createNewsStore } from './store';
 
 const paper = (patch: Partial<Newspaper> = {}): Newspaper => ({
@@ -12,6 +12,7 @@ const paper = (patch: Partial<Newspaper> = {}): Newspaper => ({
   lines: [{ icon: '👋', text: '2 new neighbours joined yesterday: A and B. Welcome!' }],
   posts: [{ id: 'p1', kind: 'event', body: 'Skating Saturday', nickname: 'Maple Fox', days_ago: 1, thanks: 2, mine: false, thanked: false, reported: false }],
   can_post: { allowed: false, reason: 'not_verified' },
+  question: null,
   board: { open: false, roadmap: [] },
   ...patch,
 });
@@ -23,7 +24,11 @@ describe('newspaper texts', () => {
     expect(yesterdayLabel('2027-01-01')).toBe('Dec 31');
   });
   it('the newspaper lives on the Welcome sign lot (sign or arch), then moves to the Community hall', () => {
-    expect(newsBuildingKeys(['welcome-sign', 'fire-pit'])).toEqual(['welcome-sign', 'gateway-arch']);
+    expect(newsBuildingKeys(['welcome-sign', 'fire-pit'])).toEqual(['welcome-sign']);
+    expect(opensNews('welcome-sign')).toBe(true);
+    expect(opensNews('community-hall')).toBe(true);
+    expect(opensNews('gateway-arch')).toBe(false);
+    expect(opensNews('warming-hut')).toBe(false);
     expect(newsBuildingKeys(['welcome-sign', 'community-hall'])).toEqual(['community-hall']);
     expect(newsReady(['fire-pit'])).toBe(false);
     expect(newsReady(['welcome-sign'])).toBe(true);
@@ -31,6 +36,14 @@ describe('newspaper texts', () => {
 });
 
 describe('newspaper API checks', () => {
+  it('accepts yesterday\'s question result and refuses a broken one', () => {
+    const question = { id: 'Q001', category: 'weather', text: 'Snow?', choices: [{ emoji: '🧹', text: 'Shovel' }, { emoji: '😴', text: 'Sleep' }] };
+    expect(() => assertNewspaper(paper({ question: { question, counts: { total: 3, choices: [2, 1] } } }))).not.toThrow();
+    expect(() => assertNewspaper({ ...paper(), question: { question, counts: { total: 3, choices: [2] } } })).toThrow();
+    const { question: _omit, ...older } = paper();
+    expect(() => assertNewspaper(older)).not.toThrow();
+  });
+
   it('accepts open, locked and board states', () => {
     expect(() => assertNewspaper(paper())).not.toThrow();
     expect(() => assertNewspaper(paper({ locked: 'welcome_sign', lines: [] }))).not.toThrow();

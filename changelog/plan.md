@@ -12,6 +12,49 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.02
+**Changed:** M26 Community News Steps 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M16 next.
+
+**Why:** The operator played M26 and confirmed ("플레이해봤어. main에 병합하고 M16 시작해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v2.01 |`
+- `| Current module | M26 Community News Steps 🟨 (then M16) |`
+- `| M26 | Community News Steps | BE + FE + data | | M24 | 🟨 |`
+- `### M26 — Community News Steps 🟨`
+- `  - [ ] user has played it` (M26 DoD)
+- `  - **Next:** the operator plays M26 (Ready for playtest); then M16.`
+
+### 2026-11-27 — v2.01
+**Changed:** M26 Community News Steps 🟦 → 🟨 Ready for playtest (header, table row, heading); all scope items and the first two DoD items ticked with where they live; Handoff added.
+
+**Why:** M26 implemented, tested and screen-checked; waiting for the operator to play it.
+
+**Previous (verbatim):**
+- `| Plan version | v2.00 |`
+- `| Current module | M26 Community News Steps 🟦 (then M16) |`
+- `| M26 | Community News Steps | BE + FE + data | | M24 | 🟦 |`
+- `### M26 — Community News Steps 🟦`
+- `  - [ ] one newspaper: the community board (events, roadmap) is part of it from the Welcome sign; the Warming hut lock and its text removed; the Community hall takes the newspaper over once built; leftover `gateway-arch` keys removed from the news code`
+- `  - [ ] personal posting steps on the server: a player's step (0 read/Thanks, 1 today's question, 2 Free talk/Lost & found/Safety, 3 Events/Local deals) and total active days computed on read from the action log (no counter; follows the person across moves); post kinds checked on the server; the write box shows the next step and days to go`
+- `  - [ ] today's question data: `supabase/data/daily_questions.csv` (from the reviewed operator draft) seeded by a script into the module's schema; a data test for the writing rules (2–4 choices, distinct emoji, ≤ 32 characters, known seasons/situations/categories)`
+- `  - [ ] today's question rules: one question per Calgary day for the whole city, deterministic (season by month, weekday/weekend, not shown in the last 60 days, not yesterday's category), an answer RPC (residents of the community they play in, verified or verifying; one per player per Calgary day; idempotent; final), community counts on read (no who-chose-what anywhere)`
+- `  - [ ] today's question card on the first open of the day (after the changes panel), counts after answering, visitors read-only; the question and yesterday's result in Community News`
+- `  - [ ] DB tests: Calgary day boundary for the question and the one-answer rule, season edges (Mar 31/Apr 1, May 31/Jun 1, Aug 31/Sep 1, Oct 31/Nov 1), weekday/weekend, no repeat within 60 days and never yesterday's category (including a short pool), same question for every community, step 3 at exactly 14 active days (13 is not enough), active days kept after a move, question-only days not counted, visitors and other communities' residents cannot answer, counts never expose who answered`
+- `  - [ ] screen check on desktop and a phone (card, answered state, newspaper result, write box with the next step)`
+- `  - [ ] user has played it`
+
+### 2026-11-27 — v2.00
+**Changed:** M26 Community News Steps ⬜ → 🟦 In progress (header, table row, heading).
+
+**Why:** M24 is done; the operator approved the M26 plan ("응 그대로 진행해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v1.99 |`
+- `| Current module | M26 Community News Steps (next), then M16 |`
+- `| M26 | Community News Steps | BE + FE + data | | M24 | ⬜ |`
+- `### M26 — Community News Steps ⬜`
+
 ### 2026-11-27 — v1.99
 **Changed:** M24 Community Identity 🟨 → ✅ Done (header, table row, heading, DoD "user has played it" ticked, Handoff "Next"). Header current module: M26 next.
 

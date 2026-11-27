@@ -32,6 +32,8 @@ client never computes time zones; it only counts down to `next_day_start`.
 | `posts_delete(p_post_id)` | authenticated | Delete my post |
 | `posts_report(p_post_id)` / `posts_unreport(p_post_id)` | authenticated | Report a post / take it back |
 | `posts_thank(p_post_id)` | authenticated | Thank a post |
+| `questions_today(p_community_id)` | anon, authenticated | Today's question for the whole city, as a viewer of this community sees it |
+| `questions_answer(p_choice)` | authenticated | Answer today's question (once per Calgary day, final) |
 
 **Accounts (Identity, M6):** every visitor gets a Supabase Auth account on the first visit
 with `signInAnonymously` (no form). Sign-ups need a Cloudflare **Turnstile** token
@@ -316,12 +318,14 @@ none yet), or `null` for an unknown code. Works before sign-in (invite landing b
 - `announcements`: global operator notices running today (always shown). Add one with SQL:
   `insert into news.announcements (title, body, starts_on, ends_on) values ('…', '…', '2026-12-01', '2026-12-03');`
 - `posts`: residents' local news, newest first: `{id, kind, body, nickname, days_ago, thanks, mine,
-  thanked, reported}` (no times, no user ids); `can_post`: `{allowed: true}` or `{allowed: false,
-  reason: not_signed_in | not_verified | locked | daily_limit | other_community}` for the viewer.
-- `board.open` once the Warming hut is built; `board.roadmap` = "Coming soon" items from
-  `news.roadmap` (set `done = true` to hide one).
-- The app opens it when the player taps the Welcome sign's lot (sign or Gateway arch), later the
-  Community hall; a "📰 News" chip marks it.
+  thanked, reported}` (no times, no user ids); `can_post`: `{allowed: true, kinds, active_days,
+  next}` (`kinds` open to the viewer; `next` = `{kinds, days, to_go}` for the next personal step,
+  null at the last) or `{allowed: false, reason: not_signed_in | not_verified | locked |
+  daily_limit | other_community}` for the viewer.
+- `board.open` together with the newspaper (Welcome sign); `board.roadmap` = "Coming soon" items
+  from `news.roadmap` (set `done = true` to hide one).
+- The app opens it when the player taps the Welcome sign, later the Community hall; a "📰 News"
+  chip marks it.
 
 ## `ranking_weekly()`
 ```json
@@ -349,15 +353,42 @@ community (null for visitors). `champions` of last week wear the crown on the Wo
 
 ## `posts_create(p_kind text, p_body text)` and friends
 - `posts_create`: Verified Residents, own community, once the Welcome sign is built; `kind` =
-  `safety | deal | event | lost_found | talk`; 1–300 characters (spaces tidied); 1 per Calgary day
-  (a deleted post still counts). `{ok: true, post_id}` or `{ok: false, problem}`:
-  `not_verified | locked | daily_limit | kind | length | link | phone | address | blocked`.
+  `talk | lost_found | safety`, plus `event | deal` after 14 active days (Calgary days with at
+  least one daily action, any community; requirement §14 personal steps); 1–300 characters (spaces
+  tidied); 1 per Calgary day (a deleted post still counts). `{ok: true, post_id}` or `{ok: false,
+  problem}`: `not_verified | locked | daily_limit | kind | kind_locked | length | link | phone |
+  address | blocked`.
   Links, phone numbers, street addresses (house number + street type, or + NW/NE/SW/SE) and
   blocked words are refused. Visible for 3 Calgary days.
 - `posts_delete(id)`: my own post. `posts_report(id)`: once per player per post, at most 3 per
   Calgary day (`limit`); Verified Residents 2 points, others 1; 3 points hide the post; not my own;
   refused (`blocked`) for accounts in `posts.report_blocks`. `posts_unreport(id)`: take my report
   back (removes its points, frees the day's slot). `posts_thank(id)`: once per player, not my own.
+
+## `questions_today(p_community_id uuid)` and `questions_answer(p_choice integer)`
+```json
+{
+  "calgary_day": "2026-12-02",
+  "question": { "id": "Q002", "category": "weather", "text": "On a Chinook day…?",
+                "choices": [{ "emoji": "🧥", "text": "Winter coat all day" }, { "emoji": "🧅", "text": "Layers, peeling off by noon" }] },
+  "can_answer": false,
+  "reason": "answered",
+  "answered": 2,
+  "counts": { "total": 5, "choices": [1, 3] }
+}
+```
+Requirement §14.1. One question per Calgary day for the whole city, picked on the first read of
+the day and stored (`questions.days`): season (winter Nov–Mar, spring Apr–May, summer Jun–Aug,
+fall Sep–Oct) + year-round, weekday/weekend questions only on those days, not shown in the last
+60 days, never yesterday's category (a short pool relaxes the 60 days first). `reason`:
+`not_signed_in | not_resident | other_community | answered` or null (`can_answer`). `counts` (this
+community, today) come after answering and for those who cannot answer; never before answering,
+never who chose what. `questions_answer`: residents of the community they play in (verified or
+verifying), 1-based choice; `{ok: true, choice}` (also for the same answer again) or `{ok: false,
+problem: not_resident | choice | answered, choice?}`. Answering is not an active day. Questions
+come from `supabase/data/daily_questions.csv` (`daily_questions_seed.py` writes the seed
+migration). The newspaper's `question` is yesterday's `{question, counts}` for the community, or
+null when nobody answered.
 - Operator (SQL):
   - hide a post: `update posts.posts set hidden = true where id = '…';`
   - restore a post hidden by reports (it then ignores reports): `update posts.posts set restored = true where id = '…';`

@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
+import { NewsQuestion } from '../daily-question';
 import { LocalNews } from '../posts';
 import { playSound } from '../sound';
 import { useNews } from './liveStore';
 import { yesterdayLabel } from './newsText';
 
-/** The community newspaper (requirement.md v1.27 §11): announcements, yesterday's news, board. */
+/** The community newspaper (requirement.md v1.49 §11): announcements, yesterday's news, local news, board — all from the Welcome sign. */
 export function NewspaperPanel() {
   const open = useNews((s) => s.open);
   const loading = useNews((s) => s.loading);
@@ -75,32 +76,35 @@ export function NewspaperPanel() {
                     <p className="text-sm text-slate-500">No new neighbours yesterday. Invite someone nearby!</p>
                   )}
 
+                  {communityId && (
+                    <>
+                      <h3 className="mb-2 mt-5 font-serif text-lg font-bold text-slate-900">Today's question</h3>
+                      <NewsQuestion communityId={communityId} community={paper.community} yesterday={paper.question} />
+                    </>
+                  )}
+
                   <h3 className="mb-2 mt-5 font-serif text-lg font-bold text-slate-900">Local news</h3>
                   <LocalNews posts={paper.posts} canPost={paper.can_post} onChanged={() => communityId && void show(communityId, { quiet: true })} />
                 </>
               )}
 
-              <div className="mt-5 border-t border-slate-300 pt-4">
-                <h3 className="mb-2 font-serif text-lg font-bold text-slate-900">Community board</h3>
-                {paper.board.open ? (
-                  <>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Coming soon</p>
-                    <ul className="space-y-1.5">
-                      {paper.board.roadmap.map((r, i) => (
-                        <li key={i} className="flex gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-slate-200">
-                          <span aria-hidden>🔒</span>
-                          <span className="min-w-0">
-                            <span className="block text-sm font-semibold text-slate-700">{r.title}</span>
-                            {r.detail && <span className="block text-[11px] text-slate-500">{r.detail}</span>}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                ) : (
-                  <p className="rounded-xl bg-white px-3 py-2 text-sm text-slate-500 ring-1 ring-slate-200">🔒 Opens with the Warming hut.</p>
-                )}
-              </div>
+              {paper.board.open && (
+                <div className="mt-5 border-t border-slate-300 pt-4">
+                  <h3 className="mb-2 font-serif text-lg font-bold text-slate-900">Community board</h3>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Coming soon</p>
+                  <ul className="space-y-1.5">
+                    {paper.board.roadmap.map((r, i) => (
+                      <li key={i} className="flex gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-slate-200">
+                        <span aria-hidden>🔒</span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-slate-700">{r.title}</span>
+                          {r.detail && <span className="block text-[11px] text-slate-500">{r.detail}</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </>
           )}
         </div>

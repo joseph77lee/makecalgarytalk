@@ -1,7 +1,7 @@
 -- Module: news — newspaper lines from yesterday's real records, stored edition, locks,
 -- announcements, roadmap, permissions (requirement.md v1.27 §11). Day N = 2026-12-01 + N.
 begin;
-select plan(23);
+select plan(27);
 
 delete from news.editions;
 delete from news.announcements;
@@ -96,8 +96,19 @@ select pg_temp.verify(9, 'AUB', 4);
 select ok(pg_temp.text(5) ~ 'Neighbour 9 moved to Auburn Bay — thanks for everything, neighbour!', 'farewell line with the new community');
 select is(jsonb_array_length(pg_temp.paper(5) -> 'lines'), 1, 'only the farewell that day');
 
--- Board: opens with the Warming hut
-select is(pg_temp.paper(5) -> 'board', '{"open": false, "roadmap": []}'::jsonb, 'the board is locked before the Warming hut');
+-- Board: part of the newspaper from the Welcome sign on (v1.49: no Warming hut lock)
+select is(pg_temp.paper(0) -> 'board', '{"open": false, "roadmap": []}'::jsonb, 'no board before the Welcome sign');
+select is(pg_temp.paper(5) -> 'board' -> 'roadmap', coalesce((select jsonb_agg(jsonb_build_object('title', r.title, 'detail', r.detail) order by r.position) from news.roadmap r where not r.done), '[]'::jsonb),
+  'the board (roadmap) opens with the newspaper, without a Warming hut');
+
+-- Yesterday's today's-question result (v1.49 §11, §14.1): counts only, none when nobody answered
+delete from questions.answers;
+delete from questions.days;
+select is(pg_temp.paper(5) -> 'question', 'null'::jsonb, 'no question result when nobody answered yesterday');
+select questions.answer_at(pg_temp.u(1), 1, pg_temp.noon(4)) ->> 'ok';
+select questions.answer_at(pg_temp.u(2), 1, pg_temp.noon(4)) ->> 'ok';
+select is(pg_temp.paper(5) -> 'question' -> 'counts' -> 'total', '2'::jsonb, 'yesterday''s result for the community');
+select is(pg_temp.paper(5) -> 'question' -> 'question' ->> 'id', (select question_id from questions.days where calgary_day = pg_temp.d(4)), 'with yesterday''s question');
 
 -- Permissions ---------------------------------------------------------------------------------
 create temp table aub as select pg_temp.c('AUB') as id;
