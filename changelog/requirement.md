@@ -12,6 +12,67 @@ History of every change to [`requirement.md`](../requirement.md) (moved out of �
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v1.54
+**Changed:** First visit and residency redesigned ("First visit & open residency"). 5.1 the World Map fills the screen behind one "Let's build Calgary together" card with a community name search (and an optional "📍 Find communities near me"); "Start with this community" creates the account with a random villager look and the suggested nickname and opens the island (two taps, no form, no location prompt); invite links pre-pick the inviter's community; a "🏠 Verify I live here" chip that never pops up. 6.2 location is only for suggesting a community and for verification, asked when tapped, then checked automatically on opening until verified (or during a move); PCs may try, the server decides. 6.3 two roles, **Visitor** and **Verified Resident**, with **my community** as a home setting; verification only in my community, a check elsewhere asks to switch; Visitor help counts like a resident's (next day) with no pending step, never for streak, Vitality or ranking, within a **daily visitor help limit of 9 actions per community** (operator setting); a role table. 6.4 one "Change my community" (instant before verification, a move after); during a move help goes to the new community as a Visitor's and Thanks, question and posting stay with the old one; moving out of Calgary keeps the old community. 11 every newspaper is readable by everyone from the first day (no Welcome sign gate; a first-edition line when there is no news). 14 Thanks and today's question move to Verified Residents (posting steps 0–2); a post is hidden at 3 report points only when a Verified Resident of that community reported it. 14.1 visitors get no question pop-up. 1.4, 7.1, 7.6, 9, 10.2, 17, 18, 21, 22.1, 22.6 (6h) and 23 (My community, Visitor, Daily visitor help limit) follow. Header version.
+
+**Why:** First-visit review 2026-11-27: five screens (intro card, villager form, location, welcome card, question) before playing raise drop-off ("스텝이 많으면 이탈률이 높아져"); a first visit away from home recorded the wrong community; a new player's help showed nothing for three days and the newspaper stayed locked. Operator decisions in the same session: pick the community directly, GPS only to suggest and verify ("임의로 선택하고 그 자기 동네에 왔을때 다시 접속해서 인증"); no preview screen; two roles only ("방문자, 인증된 주민. 이렇게 2개만"); visitors may keep helping (option A) with a daily visitor help limit ("하루 방문자 도움 상한이 마음에 드는데"); newspaper readable by all, Thanks and posting for residents; reports stay open to all but visitors alone cannot hide a post; all of Claude's recommendations accepted ("둘 다 추천대로 해줘", "너의 추천대로 할게"). Note: construction still shows on the bar the next day for everyone (7.6); "counts at once" means no waiting for verification.
+
+**Previous (verbatim, every removed line):**
+- `| Document version | v1.53 |`
+- `1. **Show the finished neighbourhood** → "I want to build that" (a completed example on the first visit, 5.1)`
+- `1. Land on the site → a **"Let's build Calgary together" card** (a designed banner and a few words on how neighbours grow their community together; no finished island is shown, so players imagine the final look themselves) → "Let's start" → nickname and how my villager looks (10.2). Shown on the first visit only`
+- `2. "Which community do you live in?" → allow location. "Just look around first" opens the **Calgary World Map** (9) instead; the map is also always one tap away (🗺 Calgary button)`
+- `3. Tap into their community → the community's voxel diorama island appears, with **my avatar** standing in it`
+- `4. First action click → **immediate visible change**`
+- `   - Empty community: fog clears, "You are the Founding Resident!"`
+- `   - Existing community: construction progress bar rises, mini villagers cheer`
+- `   - Shown as a **welcome card** right after the first counted check-in ("Welcome to <community>! N more neighbours and the island grows") with Invite neighbours / Look around first; "N more neighbours" goals elsewhere (streak bar, build map) also open the invite`
+- `4. **Community News** (Welcome sign, later the Community hall; 11): answer **today's question** (14.1), read the newspaper with the community board and residents' local news (14)`
+- `- **Nickname on the first visit**, together with how the avatar looks (10.2): a suggested nickname is pre-filled (e.g. "Snowy Moose 42") so the player can just continue; 2–16 characters, a basic blocked-words filter, checked on the server; changeable later. Shown on house name tags (7.2) and in the newspaper (11)`
+- `- **Link Google account (optional)**: prompt "Link Google to keep your progress" once the community grows or the user becomes verified`
+- `- Determine the current community from browser geolocation`
+- `- Show "Please verify residency on your phone" (PCs use Wi-Fi-based location and are inaccurate)`
+- `- A check whose reported accuracy is worse than **1 km** is not counted (the player is asked to try on their phone). At most **20 checks per account per Calgary day**`
+- `- Open the site from inside the same community on **3 different days within 7 days** → **Verified Resident**`
+- `- While verifying (days 1–3)`
+- `  - Full gameplay allowed; contributions are stored as "pending"`
+- `  - The player plays in their **candidate community** = the community with the most check-in days in the last 7 Calgary days (tie → the most recent check-in); verification happens in whichever community first reaches 3 days`
+- `  - A visit from another community (e.g. workplace) doesn't count as a verification day; a visit from home later the same day does`
+- `  - Pending contributions are applied to the community **from the verification day**: they count toward the construction projects they were given to; earlier days' attendance and Vitality do not change; contributions to a project that already finished are not carried over. Pending contributions given in another community are not applied`
+- `- **Changing community**: see 6.4 (moving)`
+- `- **Started by the user** ("I moved" in settings). Starts a location check and re-verification in the new community (3 different days within 7 days, same rules as 6.3). Moves cannot be detected automatically because Verified Residents are no longer location-checked.`
+- `  - The user stays a Verified Resident of the old community and keeps their house there (no limbo)`
+- `  - Their actions are stored as pending contributions for the new community (6.3)`
+- `  - Their house moves to the new community and pending contributions are applied there`
+- `- **Settled**: the community's **Welcome sign** (the root of the build map, 7.6) is built → fog clears on the World Map; the first resident (the community's **first Verified Resident**) gets the "Founding Resident" badge. A first resident can build it on their first day`
+- `- The newspaper (with the community board) opens from the **Welcome sign**; the **Community hall** takes it over once built (11)`
+- `- **Interaction**: tap a community → smooth zoom to it + info card (name, level, residents) → "Enter island"; tap an unsettled community → **"Invite a friend from this community"** (pre-filled message)`
+- `  - **Any community can be visited** (view only), settled or not, including its Community News (reading, thanks and reports; posting only in your own community). A "Visiting <community> · Back home" bar returns to your own community; the "What changed since yesterday" panel only shows in your own community`
+- `- **MVP: the player makes their own villager** on the first visit (changeable later): **age** (adult, child, elder), **skin tone** (6), **hair style** (short, long, bun, curly, ponytail, bald, headscarf), **hair colour** (including greys), **trousers or skirt**, **beard** (not for children), **glasses**, and the **shirt colour**. Parts, not labels: no "race" or "gender" buttons, so anyone can look like themselves. The form opens filled with a random look and a 🎲 button shuffles it, so "Continue" works at once; every part can be changed on its own. The look is stored with the profile (checked on the server) and stays when the nickname changes; mini villagers stay random. More customization (hats, accessories, emotes) is earned through ranks (13.3, Phase 2), never by chance draws`
+- `- **Available from the MVP**: the newspaper opens **in full** from the **Welcome sign** (newspaper, operator announcements, the community board with events and roadmap, local news); the **Community hall** takes it over once built (7.6)`
+- `  - Opens when the player taps the building; the avatar does not need to walk there`
+- `  - Before the Welcome sign is built, tapping its spot says "Build the Welcome sign to open the community newspaper"`
+- `  - Always at the top of the newspaper. The **community board** section (events and roadmap) is part of the newspaper from the Welcome sign on. MVP: the operator adds announcements with SQL in the Supabase dashboard (an admin screen comes later)`
+- `- Opens when the community's **Welcome sign** is built (together with the newspaper). What a player can do grows in **personal steps** (not community ones, so a small community is never held back); the write box shows the next step and what it needs (e.g. "🎉 Events opens after 14 active days (9 to go)")`
+- `| 0 | Anyone signed in (visitors too) | Read, 👍 Thanks, report |`
+- `| 1 | Residents of the community they play in (verifying included) | Answer **today's question** (14.1) |`
+- `| 2 | Verified Residents, in their own community | Write posts: 💬 Free talk, 🔎 Lost & found, 🚨 Safety |`
+- `| 3 | Verified Residents with **14 active days** | Also 🎉 Events and 🏷️ Local deals |`
+- `  - Safety comes at step 2 (urgent news must not wait); Events and Local deals wait because they are the kinds most open to promotion and spam`
+- `  - **Reports**: any signed-in player can report a post once, **at most 3 reports per day**; reports from Verified Residents count 2, others 1; **3 points hide the post** (one person alone cannot hide a post). Reporting asks to confirm, and a report can be **taken back** (a mistake), which removes its points and frees that day's report. Thanks and a report exclude each other: reporting takes back my thanks, and a post I reported is folded away for me ("You reported this post · Undo") until I take the report back The operator can hide any post, **restore** a hidden one (a restored post ignores reports), see who reported restored posts, and block an account from reporting`
+- `  - 👍 **Thanks**: any signed-in player, once per post; the count is shown (no ranking)`
+- `- **Who answers**: residents of the community they play in, verified or verifying (14 step 1); **one answer per player per Calgary day**, final (no changing). Visitors see the question and today's counts but cannot answer`
+- `- 3-of-7-days location verification`
+- `- Pages: \`/terms.html\`, \`/privacy.html\`, \`/credits.html\` (static; linked from the first visit and the profile sheet). The first-visit screen states "By tapping Start you confirm you are 13 or older and agree to the Terms and Privacy Policy"`
+- `- Location-based community detection, 3-of-7-days resident verification`
+- `- "Let's build Calgary together" card on the first visit (5.1)`
+- `- Avatar look: age, skin tone, hair, clothes and shirt colour chosen by the player (10.2)`
+- `- Auto community newspaper with the community board (from the Welcome sign) + roadmap notice + "Coming soon"`
+- `| Resident | A user who belongs to a community |`
+- `| Newcomer | A user who has not finished resident verification |`
+- `| Posting steps | What a player can do in Community News, growing with their own progress: read → today's question → posts → Events and Local deals (14) |`
+- `| Today's question | One multiple-choice question a day for the whole city, answered by residents, shown as community counts only (14.1) |`
+
 ### 2026-11-27 — v1.53
 **Changed:** 5.1 the first visit opens with a "Let's build Calgary together" card instead of the finished-neighbourhood example. 7.6a the build map's top shows a banner ("Let's build <community> together", persona icon and name, the next band's places by name) instead of the finished-island picture; the "See a finished example" button is gone; the 2nd and 3rd landmarks stay a "Secret landmark" until ready to build; the decoration steps are one "Decorations (N)" node. 22.1 follows. Header version.
 

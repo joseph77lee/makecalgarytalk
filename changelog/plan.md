@@ -12,6 +12,18 @@ History of every change to [`PLAN.md`](../PLAN.md) (moved out of PLAN.md on 2026
 > New sessions: read only the first few entries (the top of this file).
 
 
+### 2026-11-27 — v2.11
+**Changed:** New module **M28 First Visit & Open Residency** 🟦 before M16 (table row, section with scope and Definition of Done); M16 now depends on M28. Header: version, based on `requirement.md` v1.54, current module M28. The "Open before M16" note is replaced by a shorter one: the review is done; the starter checklist and the M16 account questions stay open.
+
+**Why:** The first-visit review with the operator (2026-11-27) led to `requirement.md` v1.54 (two-tap first visit, Visitor / Verified Resident, daily visitor help limit, newspaper open from the first day); the operator asked to write the change and plan it ("그 순서로 변경안 작성 시작해줘").
+
+**Previous (verbatim):**
+- `| Plan version | v2.10 |`
+- `| Based on | \`requirement.md\` v1.53 |`
+- `| Current module | First-visit flow review (see the note above M16), then M16 Deploy & Playtest |`
+- `| M16 | Deploy & Playtest | All + operator accounts | | M27 | ⬜ |`
+- `> **Open before M16 (2026-11-27, for the next session) — review the whole first-visit flow first**, then decide the checklist inside it. The flow as built today (requirement §5.1, after v1.53): (1) anonymous account after the Turnstile check, no form → (2) "Let's build Calgary together" card → "Let's start" → (3) "Make your villager" (look, shirt, nickname, 13+ notice) → (4) "Find your community": "Use my location" records a check-in at once (no "Do you live here?"), or "Just look around first" opens the World Map → (5) the island: welcome card after the first counted check-in ("Nobody lives here yet: you are the first!" / "N neighbours live here", Invite / Look around), the "Since yesterday" panel when there is something, today's question pop-up, then the action bar (the Welcome sign: 3 taps that show tomorrow) → (6) little else to do on day 1: Community News is locked until the Welcome sign is built. Points to look at together: where a first visit away from home breaks this (step 4), how long steps 2–4 feel before the island, what the first minute on the island offers, where the checklist and the "first neighbour" moment fit, and whether News opens earlier. Then the checklist itself: the operator wants to think more about a **starter checklist** for the first days (draft discussed: make villager ✓ · check in from home · help build · answer today's question · visit a neighbouring community · share the invite link; finishing it opens Community News for that player, "Founding Neighbour" badge, a first-resident celebration). Open questions: what to do when the **first visit happens away from home** (draft: ask "Do you live here?" before recording the check-in, so nothing is stored for "No"; split the list into "anywhere" and "at home"), whether the invite item counts on sharing, and whether the newspaper gate moves from the Welcome sign to the checklist. Nothing is decided or built; no requirement text yet. M16 questions still open: are the Supabase, Cloudflare (domain) and Google Cloud accounts ready, and should the operator steps run in parallel with the pre-deploy fixes (privacy done in M27; bundle size 540 KB gzip > 500 KB budget; \`docs/launch.md\` refresh).`
+
 ### 2026-11-27 — v2.10
 **Changed:** M24 🟨 → ✅ Done again (header, table row, heading, DoD "user has played it" ticked, v1.53 note). Header current module: next session reviews the first-visit flow, then M16.
 

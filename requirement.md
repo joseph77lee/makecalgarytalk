@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Document version | v1.53 |
+| Document version | v1.54 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
 | Status | Initial draft for starting MVP development |
@@ -45,7 +45,7 @@ This document will keep changing during development. To never lose the reasons b
 
 ### 1.4 Growth strategy (product principle)
 The service grows in this order; features are judged by how they serve it. The **build map (7.6) connects every step.**
-1. **Show the finished neighbourhood** → "I want to build that" (a completed example on the first visit, 5.1)
+1. **Pick your community and see what it could become** → "I want to build that" (the island in two taps and the build map's next places, 5.1, 7.6a)
 2. **Daily visit + one action**, repeated, to complete it (near goals, next-day reveals, streaks)
 3. **Fun and useful local information** once people visit often (newspaper, notices, events; unlocked by buildings, 7.6 / 11)
 4. **Local business placements** once traffic is steady (Main Street lots, 22.4)
@@ -84,22 +84,24 @@ The service grows in this order; features are judged by how they serve it. The *
 ## 5. Core user flows
 
 ### 5.1 First visit (60 seconds)
-1. Land on the site → a **"Let's build Calgary together" card** (a designed banner and a few words on how neighbours grow their community together; no finished island is shown, so players imagine the final look themselves) → "Let's start" → nickname and how my villager looks (10.2). Shown on the first visit only
-2. "Which community do you live in?" → allow location. "Just look around first" opens the **Calgary World Map** (9) instead; the map is also always one tap away (🗺 Calgary button)
-3. Tap into their community → the community's voxel diorama island appears, with **my avatar** standing in it
-4. First action click → **immediate visible change**
-   - Empty community: fog clears, "You are the Founding Resident!"
-   - Existing community: construction progress bar rises, mini villagers cheer
+Goal: the player reaches their community's island in **two taps**, with no form, no location prompt and no sign-up first (operator decision 2026-11-27).
+1. Land on the site → the **Calgary World Map** (9) fills the screen behind **one card**: "Let's build Calgary together" (a few words on how neighbours grow their community together; no finished island is shown, so players imagine the final look themselves), a **community name search** (type-ahead over the residential communities) and a small "📍 Find communities near me". Tapping a community on the map works too. Shown until the player has a community
+2. Picking a community shows a short sheet (name, neighbours, the next place and what it needs, e.g. "1 more neighbour for the skating rink") → **"Start with this community"**; the 13+ and Terms line sits under this button (18)
+3. Starting creates the anonymous account (6.1), gives a **random villager look and the suggested nickname** (both changeable any time from the profile button, 6.1, 10.2) and makes the picked community **my community** (6.3) → its voxel diorama island appears, with **my avatar** standing in it
+   - "📍 Find communities near me" asks for location only when tapped (6.2) and suggests the community the player is in; starting from it counts that check as the **first verification day** (6.3), so the player is not asked again. When location fails (permission denied, accuracy worse than 1 km) it says so, with "Computers locate by Wi-Fi and are often wrong: try your phone", and returns to the search
+   - An **invite link** opens the card with the inviter's community already picked (12.3)
+4. A short **welcome card**: "Welcome to <community>! N neighbours live here" (or "Nobody lives here yet: you are the first!") and the next goal from the build map ("N more neighbours and the island grows") with Invite neighbours / Look around first. Then the action bar: the first help shows "+1 today" at once and the bar rises the next morning, like everyone's help (7.6, 8)
 5. The next goal from the build map, e.g. "2 more neighbours to build our skating rink" or "11 neighbours to build our landmark" + **Invite button**
-   - Shown as a **welcome card** right after the first counted check-in ("Welcome to <community>! N more neighbours and the island grows") with Invite neighbours / Look around first; "N more neighbours" goals elsewhere (streak bar, build map) also open the invite
+   - "N more neighbours" goals (welcome card, streak bar, build map) open the invite
    - A floating **Invite** button is always visible at the bottom right of my community; a small × hides it for the rest of the Calgary day. At good moments (the island or a building is 1–2 neighbours away, something was built, the island grew) it shows a one-line nudge, at most once a day and not on a hidden day
    - The first-visit card says that a community can only be built together ("You can't finish it alone")
+6. A small **"🏠 Verify I live here (N/3)"** chip stays on my community until the player is verified; it never pops up by itself (6.3)
 
 ### 5.2 Daily routine
 1. **World Map**: see how developed all of Calgary is. Tap an empty community to invite a friend who lives there
 2. **My community**: "What changed since yesterday" summary + life on the island (mini villagers, today's local posts)
 3. **Today's 3 actions**: pick one of the active projects and click
-4. **Community News** (Welcome sign, later the Community hall; 11): answer **today's question** (14.1), read the newspaper with the community board and residents' local news (14)
+4. **Community News** (11, open from the first day): read the newspaper with the community board and residents' local news (14); Verified Residents also answer **today's question** (14.1)
 
 ---
 
@@ -109,47 +111,61 @@ The service grows in this order; features are judged by how they serve it. The *
 - **Anonymous account auto-created** on first visit (Supabase Anonymous Sign-in). No email/password
 - **Bot protection**: Cloudflare Turnstile
 - **Sign-up rate limit**: cap accounts created per IP/device per day
-- **Nickname on the first visit**, together with how the avatar looks (10.2): a suggested nickname is pre-filled (e.g. "Snowy Moose 42") so the player can just continue; 2–16 characters, a basic blocked-words filter, checked on the server; changeable later. Shown on house name tags (7.2) and in the newspaper (11)
-- **Link Google account (optional)**: prompt "Link Google to keep your progress" once the community grows or the user becomes verified
+- **Nickname**: the first visit gives a suggested nickname (e.g. "Snowy Moose 42") together with a random villager look (10.2), with no form (5.1); both can be changed any time from the profile button; 2–16 characters, a basic blocked-words filter, checked on the server. Shown on house name tags (7.2) and in the newspaper (11)
+- **Link Google account (optional)**: prompt "Link Google to keep your progress" once the community grows or the user becomes verified; never as a step of verification or of the first visit
 - Re-joining with the same Google account **restores the existing record** instead of creating a new one (deleted accounts keep only a hashed identifier)
 
 ### 6.2 Location check
-- Determine the current community from browser geolocation
+- Location is used for two things only: **suggesting a community** ("📍 Find communities near me" on the first-visit card and in "Change my community") and **resident verification** in my community (6.3). Picking a community never needs it (5.1)
+- The browser's location permission is asked only when the player taps one of those. Once it is granted, a check runs **automatically when the game opens** while the player is not yet verified or has a move in progress (6.4); never after that
 - **Never store exact coordinates.** The server checks inside/outside the community boundary, discards the coordinates immediately, and stores only the result (community ID)
 - Never collect home addresses
-- Show "Please verify residency on your phone" (PCs use Wi-Fi-based location and are inaccurate)
-- A check whose reported accuracy is worse than **1 km** is not counted (the player is asked to try on their phone). At most **20 checks per account per Calgary day**
+- Computers may try too; the server decides. A check whose reported accuracy is worse than **1 km** is not counted, and only then the player sees "Location is not accurate here: try on your phone" (PCs use Wi-Fi-based location and are often wrong). At most **20 checks per account per Calgary day**
 - Only residential communities count; a check outside every residential boundary (or outside Calgary) finds no community
 
 ### 6.3 Resident verification
-- Open the site from inside the same community on **3 different days within 7 days** → **Verified Resident**
-- While verifying (days 1–3)
-  - Full gameplay allowed; contributions are stored as "pending"
-  - The player plays in their **candidate community** = the community with the most check-in days in the last 7 Calgary days (tie → the most recent check-in); verification happens in whichever community first reaches 3 days
-  - A visit from another community (e.g. workplace) doesn't count as a verification day; a visit from home later the same day does
+- **Two roles only** (operator decision 2026-11-27): **Visitor** (everyone who is not a Verified Resident of that community, including a player who picked it but is not verified yet) and **Verified Resident**. **My community** is the community the player picked (5.1); it is a home setting, not a role: the island the game opens on, where the player's daily help goes and where verification is counted
+- A check from inside **my community** on **3 different days within 7 days** → **Verified Resident** of it
+  - The check runs from the "🏠 Verify I live here" chip, or automatically when the game opens once location is allowed (6.2); at most one verification day per Calgary day
+  - A check from **another** residential community asks "You are in <community>. Make it your community?": yes changes my community (free before verification, 6.4) and counts the check as its first day; no records nothing, and automatic checks do not ask again for 7 days (the chip still works). A check outside every residential community says so and records nothing
+  - Check days from a community that is no longer my community do not carry over
+- **What each role can do**
+
+| | Visitor | Verified Resident (in their community) |
+|---|---|---|
+| See any island and build map, read any community's newspaper (11) | ✅ | ✅ |
+| Report a post (14) | ✅ (1 point) | ✅ (2 points) |
+| Help build with the daily energy (8) | ✅ in my community only, within the community's **daily visitor help limit** | ✅ |
+| 👍 Thanks, answer today's question, write posts (14) | — | ✅ |
+| Counted as a neighbour (cumulative Verified Residents: unlocks, island growth, 7.6, 7.8), my house (7.2), streak (7.5), Vitality (7.4), ranking (12.1) | — | ✅ |
+
+- **Visitor help** counts toward construction exactly like a resident's (shown as "+1 today", on the bar the next day, 7.6), with no waiting for verification, and a Visitor may keep helping without ever verifying (e.g. a former resident cheering on their old community). It never counts for the streak, Vitality or ranking
+- **Daily visitor help limit**: all Visitors together give at most **9 actions per community per Calgary day** (an operator setting, not code). When it is reached, a Visitor's action is refused without using energy: "Today's visitor help in <community> is full. Thanks! 🏠 Verified Residents can always help". The operator dashboard lists the communities that reached it (21)
 - After verification
+  - A celebration ("Welcome home, <community> resident!"), my house appears (7.2) and the community counts one more neighbour; Thanks, today's question and posting open
   - **No more location checks** (play from anywhere)
-  - Pending contributions are applied to the community **from the verification day**: they count toward the construction projects they were given to; earlier days' attendance and Vitality do not change; contributions to a project that already finished are not carried over. Pending contributions given in another community are not applied
-- **Changing community**: see 6.4 (moving)
+- **Changing community**: "Change my community" in the profile (6.4)
 - Users getting verified in their workplace community are allowed in the MVP (keep rules simple); a free correction is available (6.4)
 
 ### 6.4 Moving to another community
 Goal: moving never punishes the person who moves or the residents who stay.
-- **Started by the user** ("I moved" in settings). Starts a location check and re-verification in the new community (3 different days within 7 days, same rules as 6.3). Moves cannot be detected automatically because Verified Residents are no longer location-checked.
+- **Started by the user** with "Change my community" in the profile (community search or "📍 near me"). **Before verification** it simply changes my community, with no rules (help already given stays where it was given). **For a Verified Resident** it starts a move: location checks and re-verification in the new community (3 different days within 7 days, same rules as 6.3). Moves cannot be detected automatically because Verified Residents are no longer location-checked.
 - **During a move** (until re-verification completes):
-  - The user stays a Verified Resident of the old community and keeps their house there (no limbo)
+  - The user stays a Verified Resident of the old community and keeps their house there (no limbo); Thanks, today's question and posting stay with the old community until the move completes
+  - The game opens on the new community; location checks run automatically again when the game opens (6.2)
   - From the moment the move starts, they are **excluded from the old community's streak and Vitality denominators** (7.4, 7.5), so they cannot break its streak or drag its mood down
-  - Their actions are stored as pending contributions for the new community (6.3)
+  - Their daily help goes to the new community as a Visitor's (counts the next day, within its daily visitor help limit, 6.3)
   - If re-verification is not completed within **7 days** of starting, the move is **cancelled automatically**: nothing is lost, they count normally in the old community again, the cooldown is not used, and they can start again at any time
   - The user can also **cancel the move themselves** at any time before it completes, with the same result as the automatic cancel
 - **When the move completes**:
-  - Their house moves to the new community and pending contributions are applied there
+  - Their house moves to the new community and they count there as a neighbour
   - The old community **keeps** its cumulative Verified Resident count, completed buildings and unlocks (7.6, 7.8)
   - The old community's newspaper shows a **farewell line** (11)
   - **Personal records follow the person**: badges (including Founding Resident), total active days and, from Phase 2, profile and rank
   - Invite rewards already granted stay; moving never creates a new invite reward (12.3)
 - **Cooldown**: 90 days from the last **completed** move or, before any move, from the **first verification** (cancelled moves do not count)
 - **One free correction**: within **14 days of the first verification**, a user may move once without waiting for the cooldown (e.g. verified at their workplace by mistake). Once per account.
+- **Moving out of Calgary**: MVP has no "leave community"; the player stays a Verified Resident of their community and simply drops out of the streak and Vitality when inactive (7.4, 7.5). Leaving a community comes later
 
 ---
 
@@ -157,7 +173,7 @@ Goal: moving never punishes the person who moves or the residents who stay.
 
 ### 7.1 Community states
 - **Unsettled**: 0 residents. Covered by fog/clouds on the World Map
-- **Settled**: the community's **Welcome sign** (the root of the build map, 7.6) is built → fog clears on the World Map; the first resident (the community's **first Verified Resident**) gets the "Founding Resident" badge. A first resident can build it on their first day
+- **Settled**: the community's **Welcome sign** (the root of the build map, 7.6) is built → fog clears on the World Map; the first resident (the community's **first Verified Resident**) gets the "Founding Resident" badge. A first player can build it on their first day (Visitors too, 6.3)
 
 ### 7.2 Houses: scenery, and my own house
 - **Houses are scenery** (operator decision 2026-11-25): they are placed to make a beautiful island, not one per resident, and never stand for players. They stand in **2–4 residential zones** of the island plan (7.8), together at most about 30 % of the land, each zone filling as its land rises. As the community grows, houses grow **up** inside the zones (townhouses, small apartments) instead of spreading over the island
@@ -231,7 +247,7 @@ The Gateway arch and Lit hockey rink models stay in the library for later steps.
 - Resident counts are **cumulative Verified Residents** (same basis as island size, 7.8); built places and opened steps never re-lock
 - **At most 3 constructions at a time**; other opened steps wait, taking turns between the tracks
 - Construction progress is **applied the next day**; visuals: scaffolding → frame → complete
-- The newspaper (with the community board) opens from the **Welcome sign**; the **Community hall** takes it over once built (11)
+- The newspaper (with the community board) is open to read from the first day; tapping the **Welcome sign**, and once built the **Community hall**, opens it (11)
 - **Locked steps are not drawn on the island** (their lot is plain, walkable land, so the island stays tidy and new places are a surprise); the build map screen (7.6a) shows them with what is missing (e.g. "2 more neighbours", "1 more streak day", "Build the Warming hut first"). A step whose conditions are met appears on its lot as a faded silhouette marked ✨ "Ready to build"
 - Names are generic (no trademarks); landmark rules in 7.9
 - Community level is permanent (separate from the weekly ranking)
@@ -351,8 +367,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
   - **Icon count scales with polygon area** so large and small communities at the same level look equally developed
   - **Zoom-dependent detail**: at city zoom show a few representative icons per community; when zoomed in show more
   - Render with **Canvas** (thousands of small icons) for phone performance; SVG is acceptable for prototypes
-- **Interaction**: tap a community → smooth zoom to it + info card (name, level, residents) → "Enter island"; tap an unsettled community → **"Invite a friend from this community"** (pre-filled message)
-  - **Any community can be visited** (view only), settled or not, including its Community News (reading, thanks and reports; posting only in your own community). A "Visiting <community> · Back home" bar returns to your own community; the "What changed since yesterday" panel only shows in your own community
+- **Interaction**: tap a community → smooth zoom to it + info card (name, level, residents) → "Enter island"; tap an unsettled community → **"Invite a friend from this community"** (pre-filled message). Before the player has a community, the info card offers **"Start with this community"** instead (5.1)
+  - **Any community can be visited** (view only), settled or not, including its Community News (reading and reports; Thanks, today's question and posting only for Verified Residents of their own community, 6.3). A "Visiting <community> · Back home" bar returns to your own community; the "What changed since yesterday" panel only shows in your own community
 - **Art Pass / later enhancements** (target design):
   - **Animated Bow and Elbow rivers** (flowing water), Glenmore Reservoir, major parks (Nose Hill, Fish Creek)
   - **CTrain lines with moving trains** along the real Red and Blue line routes (decorative animation, not a live schedule)
@@ -384,7 +400,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Camera gently follows the avatar
 - **Action buttons stay at the bottom**: pressing an action makes the avatar run to the related spot (e.g. construction site) and perform it. Walking up and tapping the spot directly is also allowed (Art Pass polish)
 - Tap a place to see info (e.g. Welcome sign / Community hall → newspaper); other houses do nothing when tapped (7.2)
-- **MVP: the player makes their own villager** on the first visit (changeable later): **age** (adult, child, elder), **skin tone** (6), **hair style** (short, long, bun, curly, ponytail, bald, headscarf), **hair colour** (including greys), **trousers or skirt**, **beard** (not for children), **glasses**, and the **shirt colour**. Parts, not labels: no "race" or "gender" buttons, so anyone can look like themselves. The form opens filled with a random look and a 🎲 button shuffles it, so "Continue" works at once; every part can be changed on its own. The look is stored with the profile (checked on the server) and stays when the nickname changes; mini villagers stay random. More customization (hats, accessories, emotes) is earned through ranks (13.3, Phase 2), never by chance draws
+- **MVP: the player chooses their own villager's look** from the profile button (the first visit starts with a random look, 5.1; changeable any time): **age** (adult, child, elder), **skin tone** (6), **hair style** (short, long, bun, curly, ponytail, bald, headscarf), **hair colour** (including greys), **trousers or skirt**, **beard** (not for children), **glasses**, and the **shirt colour**. Parts, not labels: no "race" or "gender" buttons, so anyone can look like themselves. The form opens filled with a random look and a 🎲 button shuffles it, so "Continue" works at once; every part can be changed on its own. The look is stored with the profile (checked on the server) and stays when the nickname changes; mini villagers stay random. More customization (hats, accessories, emotes) is earned through ranks (13.3, Phase 2), never by chance draws
 - Movement is driven by **destination events** ("avatar X moves to tile (5,7)"), not per-frame positions, so the same events can be broadcast for real-time presence later (22.3)
 
 ### 10.3 Other residents' avatars (asynchronous)
@@ -418,19 +434,19 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ## 11. Community news (community newspaper)
 
-- **Available from the MVP**: the newspaper opens **in full** from the **Welcome sign** (newspaper, operator announcements, the community board with events and roadmap, local news); the **Community hall** takes it over once built (7.6)
-  - Opens when the player taps the building; the avatar does not need to walk there
+- **Available from the MVP, open from the first day** (operator decision 2026-11-27): every community's newspaper can be **read by everyone**, visitors included (newspaper, operator announcements, the community board with events and roadmap, local news); Thanks, today's question and posting are for Verified Residents of that community (6.3, 14)
+  - Opens from the Community button, and by tapping the **Welcome sign** or, once built, the **Community hall** (7.6); the avatar does not need to walk there
 - **Auto-generated community newspaper** (no operator effort)
   - e.g. "Yesterday in Mahogany: 7 residents cleared snow and the playground was completed."
   - The newspaper is about **real community life, not game events**: how many new neighbours joined yesterday (with nicknames), farewells, and **local news written by Verified Residents** (events, deals, lost & found; see 14, built right after this section's first version). Game events (buildings, island growth, who helped, streak) stay in the "What changed since yesterday" panel. No personal streak lines; day-level only, no times
   - Written **once per community per Calgary day** (the first time someone opens it) and then served as stored (no extra cost per reader)
-  - Before the Welcome sign is built, tapping its spot says "Build the Welcome sign to open the community newspaper"
+  - A community with no news yet shows a first-edition line instead of an empty page, e.g. "<community>'s newspaper is waiting for its first neighbours. Verified Residents can write local news here", under the operator announcements
   - Shows nicknames of active residents (recognition)
   - Yesterday's **today's question** result for the community (14.1), e.g. "Yesterday 3 of 5 neighbours went with 🧅 Layers" (counts only, never who chose what)
   - Farewell line when a resident moves away (6.4), e.g. "Sarah moved to Bridgeland — thanks for everything, neighbour!" (no times)
 - **Upcoming updates (roadmap)**: e.g. "December: Community board opens"
 - **Operator announcements (global)**: short notices written by the operator (events, maintenance, rule changes), shown to **all communities** at the top of the newspaper. No per-community announcements in the MVP
-  - Always at the top of the newspaper. The **community board** section (events and roadmap) is part of the newspaper from the Welcome sign on. MVP: the operator adds announcements with SQL in the Supabase dashboard (an admin screen comes later)
+  - Always at the top of the newspaper. The **community board** section (events and roadmap) is always part of the newspaper. MVP: the operator adds announcements with SQL in the Supabase dashboard (an admin screen comes later)
 - Locked features are shown with a lock icon + "Coming soon"
 
 ---
@@ -494,17 +510,16 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ## 14. Community posts (resident-written local news, MVP)
 
-- Opens when the community's **Welcome sign** is built (together with the newspaper). What a player can do grows in **personal steps** (not community ones, so a small community is never held back); the write box shows the next step and what it needs (e.g. "🎉 Events opens after 14 active days (9 to go)")
+- Part of the newspaper from the first day (11). What a player can do grows in **personal steps** (not community ones, so a small community is never held back); the write box shows the next step and what it needs (e.g. "🎉 Events opens after 14 active days (9 to go)")
 
 | Step | Who | Can do |
 |---|---|---|
-| 0 | Anyone signed in (visitors too) | Read, 👍 Thanks, report |
-| 1 | Residents of the community they play in (verifying included) | Answer **today's question** (14.1) |
-| 2 | Verified Residents, in their own community | Write posts: 💬 Free talk, 🔎 Lost & found, 🚨 Safety |
-| 3 | Verified Residents with **14 active days** | Also 🎉 Events and 🏷️ Local deals |
+| 0 | Anyone signed in (visitors too), in any community | Read, report |
+| 1 | Verified Residents, in their own community | 👍 Thanks, answer **today's question** (14.1), write posts: 💬 Free talk, 🔎 Lost & found, 🚨 Safety |
+| 2 | Verified Residents with **14 active days** | Also 🎉 Events and 🏷️ Local deals |
 
   - **Active day** = a Calgary day on which the player took at least one daily action (answering today's question alone does not count); total active days follow the person across moves (6.4) and are the same count the ranks use (13.2: 14 = Neighbour). Computed on the server from the action log (no counter), checked on the server when posting
-  - Safety comes at step 2 (urgent news must not wait); Events and Local deals wait because they are the kinds most open to promotion and spam
+  - Safety comes at step 1 (urgent news must not wait); Events and Local deals wait because they are the kinds most open to promotion and spam
   - Rewards for posting are **social only** (Thanks, the nickname credit, the post riding a mini villager's bubble, the Community Reporter badge), never energy or construction progress
 - Shown in the **Local news** section of Community News (11), credited by nickname, newest first
 - A post: a kind and up to **300 characters**; **1 post per resident per Calgary day**; **no links or photos**
@@ -514,17 +529,17 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Day-level only: posts show "today", "yesterday", "2 days ago", never a time
 - **Safety**
   - Blocked-words filter (same list as nicknames); **phone numbers and street addresses are blocked** (e.g. "403 555 1234", "123 Main St")
-  - **Reports**: any signed-in player can report a post once, **at most 3 reports per day**; reports from Verified Residents count 2, others 1; **3 points hide the post** (one person alone cannot hide a post). Reporting asks to confirm, and a report can be **taken back** (a mistake), which removes its points and frees that day's report. Thanks and a report exclude each other: reporting takes back my thanks, and a post I reported is folded away for me ("You reported this post · Undo") until I take the report back The operator can hide any post, **restore** a hidden one (a restored post ignores reports), see who reported restored posts, and block an account from reporting
+  - **Reports**: any signed-in player can report a post once, **at most 3 reports per day**; reports from Verified Residents of that community count 2, others 1; **3 points hide the post, and only when at least one of the reports is from a Verified Resident of that community** (one person alone cannot hide a post, and visitors alone never can: their reports go to the operator, 21). Reporting asks to confirm, and a report can be **taken back** (a mistake), which removes its points and frees that day's report. Thanks and a report exclude each other: reporting takes back my thanks, and a post I reported is folded away for me ("You reported this post · Undo") until I take the report back The operator can hide any post, **restore** a hidden one (a restored post ignores reports), see who reported restored posts, and block an account from reporting
   - Hidden posts stay hidden until they expire
 - **Participation**
-  - 👍 **Thanks**: any signed-in player, once per post; the count is shown (no ranking)
+  - 👍 **Thanks**: Verified Residents of that community, once per post; the count is shown (no ranking)
   - **"Community Reporter" badge** once a resident's posts have received 10 thanks in total
   - The write box suggests what to post (an event, a local deal, something lost or found)
 - Paid business ads stay in Phase 4 (22.4); residents may mention a local deal in words (no links)
 
 ### 14.1 Today's question (MVP)
 - **One multiple-choice question a day for the whole city**: a question and 2–4 choices, each an emoji and a short text; one tap and it is done (no free text, so nothing to moderate). A daily reason to visit and the first posting step (14)
-- **Who answers**: residents of the community they play in, verified or verifying (14 step 1); **one answer per player per Calgary day**, final (no changing). Visitors see the question and today's counts but cannot answer
+- **Who answers**: Verified Residents of their own community (14 step 1); **one answer per player per Calgary day**, final (no changing). Visitors (including players not verified yet) see the question and today's counts in Community News with "🏠 Verified Residents answer here", but cannot answer and get no pop-up
 - **Shown** as a small card the first time the player opens the game that Calgary day (after the "What changed since yesterday" panel when that is open), only while the player can still answer; it can be closed and is also in Community News
 - **After answering**: the card turns into the community's counts so far in place (e.g. "Mahogany so far (5 neighbours)", a bar per choice) and **closes by itself after a few seconds** (a tap anywhere closes it sooner; no extra step to start playing). With **fewer than 3 answers** the bars are replaced by "Thanks! See what neighbours chose in tomorrow's paper" (a lone "1 neighbour" says nothing). **Counts only, never who chose what**; the final result goes into the next day's newspaper (11)
 - **Questions are data** (`supabase/data/daily_questions.csv`, seeded into the database): id, category, season, situation, question, up to 4 choices (emoji + text). Writing rules: 2–4 choices, every emoji different within a question, choice text at most 32 characters, one choice anyone can pick (e.g. "🤷 Never tried it"), emoji from Unicode 12 or older and no flags (older phones, Windows); no politics, religion or income, no alcohol as the subject (players are 13+), nothing that reveals where someone lives or when they are out (2)
@@ -564,7 +579,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 ### MVP
 - Turnstile, per-IP/device sign-up rate limits
-- 3-of-7-days location verification
+- 3-of-7-days location verification for everything that counts people (6.3)
+- Daily visitor help limit per community (6.3); visitors' reports alone never hide a post (14)
 - Community score counts each person at most 1 per day
 - Flag on admin screen when a community's daily new verifications exceed 3× its usual level
 - Server-side validation of daily action limits
@@ -588,7 +604,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 - Never expose activity times in public information
 - Petition photos (16.2): location metadata stripped on upload, never published, operator-only, deleted after the decision
 - Provide a contact email: **hello@makecalgarytalk.com** (forwarded by Cloudflare Email Routing)
-- Pages: `/terms.html`, `/privacy.html`, `/credits.html` (static; linked from the first visit and the profile sheet). The first-visit screen states "By tapping Start you confirm you are 13 or older and agree to the Terms and Privacy Policy"
+- Pages: `/terms.html`, `/privacy.html`, `/credits.html` (static; linked from the first visit and the profile sheet). The first-visit card states, under "Start with this community", "By tapping Start you confirm you are 13 or older and agree to the Terms and Privacy Policy"
 - Data is hosted in Canada (Supabase, Canada Central region); account deletion on request by email within 30 days (all game data is deleted with the account)
 - Email updates: the profile sheet has an unticked checkbox with the consent wording; the address is asked only after ticking; consent time and wording version are recorded; unticking withdraws at once (the address is deleted, the withdrawal time kept). The MVP only collects; sending comes later
 - Data credits: City of Calgary Open Data (Open Government Licence – City of Calgary) and OpenStreetMap (ODbL) on `/credits.html`
@@ -711,6 +727,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 ### MVP
 - Operator screen at `?admin`, for accounts in the `admin.operators` table (added by hand); the server refuses everyone else
 - Daily new verifications per community + spike flags (at least 3 new verifications and more than 3× the community's daily average over the previous 28 days)
+- Communities that reached the daily visitor help limit (6.3), and posts with 3+ report points from visitors only (14); the limit itself is an operator setting
 - Analytics dashboard (last 28 days): visitors, new visitors (first visit that day), % of new visitors acting on their first day, D1 / D7 retention (share of a day's new visitors who visit again 1 / 7 days later; shown once that day has passed), shares, invite-link visits, visits by community (last 7 days), number of email opt-ins
 - Analytics data is day-level only (no times, no location, no device data), capped at 50 events per player per day, and deleted with the account
 
@@ -725,17 +742,17 @@ Each community gets its identity from its **real shape** (7.8) and from:
 
 **Included**
 - Anonymous account + Turnstile + Google linking
-- Location-based community detection, 3-of-7-days resident verification
+- Community picked by the player (search, World Map, optional "near me"); 3-of-7-days resident verification in it; Visitor / Verified Resident roles with a daily visitor help limit (6.3)
 - Calgary World Map from **real community boundary polygons**, each showing **small development illustrations** (houses, welcome sign, playground, community hall, park by level) with Vitality mood, #1 crown, tap-to-zoom and invite for unsettled communities
 - Community view as a **box-built three.js voxel diorama island in the community's real shape** (outline from day one, land growth by residents, build map, houses as scenery with my own house, persona places and landmarks, mini villagers, 3 Vitality levels, action replay with speech bubbles, a few signature features from the feature library)
-- "Let's build Calgary together" card on the first visit (5.1)
+- First visit: the World Map behind one "Let's build Calgary together" card with community search, island in two taps (5.1)
 - **My avatar**: tap/click to move with pathfinding; action buttons make the avatar run to the spot and act
 - 3 daily energy + project choice + satisfying click feedback + a few surprises
 - Community streak, **build map** (7.6: the Welcome sign as root, three tracks built in order, persona places, up to 3 landmarks per community, no place twice), ready-to-build silhouettes
 - **Build map screen** (7.6a) drawn like a skill tree: three lanes, resident-count bands, node states, landmark nodes; the "Let's build <community> together" banner on top
-- Avatar look: age, skin tone, hair, clothes and shirt colour chosen by the player (10.2)
+- Avatar look: random at first, then age, skin tone, hair, clothes and shirt colour chosen by the player (10.2)
 - Next-day construction progress + "What changed since yesterday"
-- Auto community newspaper with the community board (from the Welcome sign) + roadmap notice + "Coming soon"
+- Auto community newspaper with the community board (open to read from the first day) + roadmap notice + "Coming soon"
 - **Today's question** (14.1) and resident posts opening in personal steps (14)
 - Weekly ranking (basic) + share cards
 - Invite link + invite rewards + Pioneer Sponsor badge
@@ -805,6 +822,7 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | 6e | **Community identity** (decided with the operator 2026-11-25/26, details in 7.2, 7.6–7.9): a build map with the Welcome sign as root and three tracks built in order (community, persona, nature & leisure), shown as a skill tree, personas and up to 3 landmarks per community (31 unique signature landmarks at launch), houses as scenery with only my own house personal, places laid out by meaning and every island plan regenerated, a camera that turns all the way round and zooms in close |
 | 6f | **Terrain** (hills, escarpments, ravines as island levels): a separate step after 6e; whether it comes before the launch is decided after playing 6e |
 | 6g | **Community News steps** (decided with the operator 2026-11-26, details in 11, 14, 14.1): one newspaper with the community board from the Welcome sign, posting in personal steps (the last by active days), today's question for the whole city; before the launch |
+| 6h | **First visit & open residency** (decided with the operator 2026-11-27, details in 5.1, 6.2–6.4, 11, 14): the World Map behind one card, community picked by search or map, the island in two taps with a random villager; Visitor / Verified Resident roles, visitor help counted with a daily limit, verification in my community, newspaper readable from the first day; before the launch |
 | 7 | Deploy with **all communities open** → family/friends playtest → public launch |
 
 ### 22.7 Launch
@@ -839,9 +857,10 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Term | Meaning |
 |---|---|
 | Community | A real City of Calgary community (neighbourhood), e.g. Mahogany. The team unit of the game |
-| Resident | A user who belongs to a community |
-| Newcomer | A user who has not finished resident verification |
+| My community | The community a player picked (5.1); the island the game opens on, where their daily help goes and where verification counts. A home setting, not a role (6.3) |
+| Visitor | Anyone who is not a Verified Resident of a community, including a player who picked it but is not verified yet; can read, report and help build their own community within the daily visitor help limit (6.3) |
 | Verified Resident | A user who opened the site from inside their community on 3 different days within 7 days |
+| Daily visitor help limit | The most actions all Visitors together can give one community in a Calgary day (9 at launch, an operator setting, 6.3) |
 | House | Scenery in the residential zones of an island (7.2); only "My house" is personal, and only its owner sees it as theirs |
 | Mini villager | Ambient voxel character that makes the island feel lived in (random count by island size); never represents or impersonates a real player |
 | Avatar | The user's own controllable character in their community's island (tap/click to move) |
@@ -863,8 +882,8 @@ Each community gets its identity from its **real shape** (7.8) and from:
 | Cumulative Verified Residents | Distinct people who have ever been Verified Residents of a community; never decreases (movers stay counted, returners are not counted twice) |
 | Build map | The data-driven community places, shaped like a skill tree: the Welcome sign as root, then three tracks (community, persona, nature & leisure), each built in order: the previous step plus residents, streak and land open a step, residents build it (7.6) |
 | Active day | A Calgary day on which a player took at least one daily action; counted per person across moves; opens posting step 3 at 14 (14) and the ranks (13.2) |
-| Posting steps | What a player can do in Community News, growing with their own progress: read → today's question → posts → Events and Local deals (14) |
-| Today's question | One multiple-choice question a day for the whole city, answered by residents, shown as community counts only (14.1) |
+| Posting steps | What a player can do in Community News, growing with their own progress: read and report → (Verified Resident) Thanks, today's question and posts → Events and Local deals (14) |
+| Today's question | One multiple-choice question a day for the whole city, answered by Verified Residents, shown as community counts only (14.1) |
 | Unlock | A build map step whose conditions are met (it can now be built) |
 | Main Street | Reserved temporary lots for local business shops (Phase 4, 22.4) |
 | Silhouette | Faded preview of a step that is ready to build |

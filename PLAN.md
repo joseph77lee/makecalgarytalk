@@ -2,11 +2,11 @@
 
 | Item | Value |
 |---|---|
-| Plan version | v2.10 |
+| Plan version | v2.11 |
 | First written | 2026-11-16 |
 | Last updated | 2026-11-27 |
-| Based on | `requirement.md` v1.53 |
-| Current module | First-visit flow review (see the note above M16), then M16 Deploy & Playtest |
+| Based on | `requirement.md` v1.54 |
+| Current module | M28 First Visit & Open Residency 🟦, then M16 Deploy & Playtest |
 
 ---
 
@@ -63,7 +63,8 @@
 | M25 | Terrain (decide after M24) | FE (R3F) + data | | M24 | ⬜ |
 | M26 | Community News Steps | BE + FE + data | | M24 | ✅ |
 | M27 | Avatar Look | BE + FE (R3F) | | M26 | ✅ |
-| M16 | Deploy & Playtest | All + operator accounts | | M27 | ⬜ |
+| M28 | First Visit & Open Residency | BE + FE | | M27 | 🟦 |
+| M16 | Deploy & Playtest | All + operator accounts | | M28 | ⬜ |
 | M17 | Return Reminders | BE + FE | | M16 | ⬜ |
 | M18 | Association Partnership | BE + FE + operator | | M16, M9 | ⬜ |
 
@@ -711,8 +712,26 @@ M0 ─┬─ M1 ── M2 ─┐
   - **Not tested:** real phone touch, very short phones below 700 px (the cards scroll), the avatar's close-up look on the island (only a small crop seen).
   - **Done:** the operator played M27 and confirmed on 2026-11-27; next is M16.
 
+### M28 — First Visit & Open Residency 🟦
+**Goal:** A first-time player reaches their community's island in two taps, and residency works with two roles (`requirement.md` v1.54 §5.1, 6.2–6.4, 11, 14, 14.1): the World Map behind one card, the community picked by search or map, a random villager; Visitor / Verified Resident, Visitor help counted with a daily visitor help limit, verification only in my community, the newspaper readable from the first day. Built after M27, **before M16**.
+- **In scope**
+  - [ ] server, `residency`: my community set by the player (set/change, instant before verification); verification days only in my community; a check elsewhere answers "switch?" instead of counting; starting from "near me" counts that check as day 1; the candidate-community rule is gone; moves follow 6.4 (help goes to the new community, Thanks/question/posting stay with the old one, automatic checks during a move)
+  - [ ] server, `gamecore`: no pending contributions: Visitor help counts toward construction like a resident's (next day); the **daily visitor help limit** per community (operator setting, 9; refused without using energy); streak, Vitality and ranking stay Verified-only; existing local pending rows handled in the migration (no production data yet)
+  - [ ] server, `news` / `posts` / `questions`: every newspaper readable by everyone from the first day with a first-edition line; Thanks and today's question for Verified Residents of that community; report points by that community's Verified Residents; hiding needs at least one such report
+  - [ ] admin dashboard: communities that reached the visitor limit, posts with 3+ points from visitors only, the limit value
+  - [ ] first visit (frontend): the World Map behind one card, community name search, the map's "Start with this community" sheet, "📍 near me", invite links pre-pick the community, random look and nickname with no form, no location card; the 13+ and Terms line under the start button
+  - [ ] island (frontend): welcome card; "🏠 Verify I live here (N/3)" chip (never a pop-up); automatic check on opening once location is allowed; the switch question (quiet for 7 days after "no"); the visitor-limit message; visitors get no question pop-up and no Thanks button; the verification celebration
+  - [ ] profile (frontend): "Change my community" (instant before verification, a move after); the villager look form stays here
+  - [ ] privacy policy and terms: location wording (suggesting a community and verification only)
+- **Out of scope:** the starter checklist (still open, see the note above M16), visitors building decorations (Phase 2 idea), leaving a community, Google linking changes (M16)
+- **Definition of Done**
+  - [ ] DB tests: the role table (visitors cannot Thank, answer or post; they report for 1 point; visitor-only reports never hide), Visitor help counts the next day, the visitor limit (the 9th action counts, the 10th is refused and keeps the energy, per community, resets at Calgary midnight), verification only in my community (3 of 7 days including the day-7 edge, a check elsewhere does not count, switching drops the old days), "near me" start = day 1, moves (help to the new community, old powers kept, auto-cancel after 7 days)
+  - [ ] frontend tests: first-visit states, chip states, the switch question's quiet days; no Calgary time math on the client
+  - [ ] screen check on a phone-sized viewport from a fresh browser: two taps to the island, the scenarios (pick then verify at home, stay a visitor, verify from the start, picked the wrong community) and a move; console clean; the World Map's first-load size measured
+  - [ ] user has played it
+
 ### M16 — Deploy & Playtest ⬜
-> **Open before M16 (2026-11-27, for the next session) — review the whole first-visit flow first**, then decide the checklist inside it. The flow as built today (requirement §5.1, after v1.53): (1) anonymous account after the Turnstile check, no form → (2) "Let's build Calgary together" card → "Let's start" → (3) "Make your villager" (look, shirt, nickname, 13+ notice) → (4) "Find your community": "Use my location" records a check-in at once (no "Do you live here?"), or "Just look around first" opens the World Map → (5) the island: welcome card after the first counted check-in ("Nobody lives here yet: you are the first!" / "N neighbours live here", Invite / Look around), the "Since yesterday" panel when there is something, today's question pop-up, then the action bar (the Welcome sign: 3 taps that show tomorrow) → (6) little else to do on day 1: Community News is locked until the Welcome sign is built. Points to look at together: where a first visit away from home breaks this (step 4), how long steps 2–4 feel before the island, what the first minute on the island offers, where the checklist and the "first neighbour" moment fit, and whether News opens earlier. Then the checklist itself: the operator wants to think more about a **starter checklist** for the first days (draft discussed: make villager ✓ · check in from home · help build · answer today's question · visit a neighbouring community · share the invite link; finishing it opens Community News for that player, "Founding Neighbour" badge, a first-resident celebration). Open questions: what to do when the **first visit happens away from home** (draft: ask "Do you live here?" before recording the check-in, so nothing is stored for "No"; split the list into "anywhere" and "at home"), whether the invite item counts on sharing, and whether the newspaper gate moves from the Welcome sign to the checklist. Nothing is decided or built; no requirement text yet. M16 questions still open: are the Supabase, Cloudflare (domain) and Google Cloud accounts ready, and should the operator steps run in parallel with the pre-deploy fixes (privacy done in M27; bundle size 540 KB gzip > 500 KB budget; `docs/launch.md` refresh).
+> **Before M16:** M28 First Visit & Open Residency (the first-visit review happened on 2026-11-27; its decisions are `requirement.md` v1.54). Still open: the **starter checklist** for the first days (draft items to redo for the new flow: customize my villager · verify I live here 1/3 · help build · read the newspaper · visit a neighbouring community · share the invite link; the newspaper is no longer a gate), and the M16 questions: are the Supabase, Cloudflare (domain) and Google Cloud accounts ready, and should the operator steps run in parallel with the pre-deploy fixes (bundle size 540 KB gzip > 500 KB budget; `docs/launch.md` refresh).
 **Goal:** The game runs on makecalgarytalk.com and family/friends have played it.
 - **In scope** (`docs/launch.md` has every step; most need the operator's accounts)
   - [ ] production deploy: Supabase project (Canada Central, Free plan) linked and migrated; Cloudflare Pages with env vars; Turnstile; custom domain; email routing; operator added
