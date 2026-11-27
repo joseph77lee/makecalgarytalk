@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { NewsQuestion } from '../daily-question';
 import { LocalNews } from '../posts';
 import { playSound } from '../sound';
 import { useNews } from './liveStore';
@@ -73,6 +74,13 @@ export function NewspaperPanel() {
                     </ul>
                   ) : (
                     <p className="text-sm text-slate-500">No new neighbours yesterday. Invite someone nearby!</p>
+                  )}
+
+                  {communityId && (
+                    <>
+                      <h3 className="mb-2 mt-5 font-serif text-lg font-bold text-slate-900">Today's question</h3>
+                      <NewsQuestion communityId={communityId} community={paper.community} yesterday={paper.question} />
+                    </>
                   )}
 
                   <h3 className="mb-2 mt-5 font-serif text-lg font-bold text-slate-900">Local news</h3>

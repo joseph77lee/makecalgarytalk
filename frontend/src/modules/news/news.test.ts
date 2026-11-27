@@ -12,6 +12,7 @@ const paper = (patch: Partial<Newspaper> = {}): Newspaper => ({
   lines: [{ icon: '👋', text: '2 new neighbours joined yesterday: A and B. Welcome!' }],
   posts: [{ id: 'p1', kind: 'event', body: 'Skating Saturday', nickname: 'Maple Fox', days_ago: 1, thanks: 2, mine: false, thanked: false, reported: false }],
   can_post: { allowed: false, reason: 'not_verified' },
+  question: null,
   board: { open: false, roadmap: [] },
   ...patch,
 });
@@ -35,6 +36,14 @@ describe('newspaper texts', () => {
 });
 
 describe('newspaper API checks', () => {
+  it('accepts yesterday\'s question result and refuses a broken one', () => {
+    const question = { id: 'Q001', category: 'weather', text: 'Snow?', choices: [{ emoji: '🧹', text: 'Shovel' }, { emoji: '😴', text: 'Sleep' }] };
+    expect(() => assertNewspaper(paper({ question: { question, counts: { total: 3, choices: [2, 1] } } }))).not.toThrow();
+    expect(() => assertNewspaper({ ...paper(), question: { question, counts: { total: 3, choices: [2] } } })).toThrow();
+    const { question: _omit, ...older } = paper();
+    expect(() => assertNewspaper(older)).not.toThrow();
+  });
+
   it('accepts open, locked and board states', () => {
     expect(() => assertNewspaper(paper())).not.toThrow();
     expect(() => assertNewspaper(paper({ locked: 'welcome_sign', lines: [] }))).not.toThrow();

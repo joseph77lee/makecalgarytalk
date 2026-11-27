@@ -8,6 +8,7 @@ import { AdminDashboard } from '../modules/admin';
 import { track } from '../modules/analytics';
 import { InviteFab, InviteLandingBanner, InviteSection, WelcomeCard, arrivedByInvite, inviteNudge, shareOutcomeText, useInvites } from '../modules/invites';
 import { installSound, playSound } from '../modules/sound';
+import { QuestionPopUp, useQuestion } from '../modules/daily-question';
 import { NewspaperPanel, newsBuildingKeys, newsReady, opensNews, useNews, useTodayPostBubbles } from '../modules/news';
 import { FindCommunity, MoveSection, ResidencyChip, useResidency } from '../modules/residency';
 import { useRanking, weeklyAnnouncement, weeklyCardTitle } from '../modules/ranking';
@@ -159,6 +160,12 @@ function LiveApp() {
     server.me.pending &&
     (residencyStatus === 'verifying' || residencyStatus === 'moving') &&
     !welcomedIds.includes(server.community.id);
+  // Today's question pops up once the changes panel (and the welcome card) are out of the way,
+  // for players who can still answer it in their own community (§14.1).
+  const questionCommunity = status === 'ready' && server?.me?.member && !panelOpen && !showWelcome ? server.community.id : null;
+  useEffect(() => {
+    if (questionCommunity) void useQuestion.getState().load(questionCommunity, { popUp: true });
+  }, [questionCommunity, server?.calgary_day]);
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-gradient-to-b from-sky-100 to-indigo-50">
@@ -327,6 +334,7 @@ function LiveApp() {
           onShared={(kind) => track.share(kind)}
         />
       )}
+      {questionCommunity && server && <QuestionPopUp community={server.community.name} />}
       <NewspaperPanel />
       <SessionScreen />
       <Toast />
